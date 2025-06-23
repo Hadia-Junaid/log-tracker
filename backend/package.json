@@ -1,15 +1,27 @@
 {
-  "name": "backend",
+  "name": "log-tracker-backend",
   "version": "1.0.0",
+  "description": "Backend for log tracker application",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js",
+    "create-collections": "node create-collections.js",
+    "create-collections:ts": "ts-node create-collections.ts",
+    "dev": "nodemon index.js",
+    "build": "tsc",
+    "build:collections": "tsc create-collections.ts"
   },
-  "author": "",
-  "license": "ISC",
-  "description": "",
   "dependencies": {
-    "express": "^5.1.0",
-    "mongoose": "^8.16.0"
-  }
+    "mongoose": "^8.0.0",
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0",
+    "typescript": "^5.0.0",
+    "ts-node": "^10.9.0",
+    "@types/node": "^20.0.0"
+  },
+  "keywords": ["log-tracker", "mongodb", "mongoose"],
+  "author": "",
+  "license": "ISC"
 }

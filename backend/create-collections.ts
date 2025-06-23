@@ -1,10 +1,18 @@
 // Load environment variables
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
+
+// Import existing models
+import Application from './src/models/Application';
+import User from './src/models/User';
+import UserGroup from './src/models/UserGroup';
+import Log from './src/models/Log';
+import AtRiskRule from './src/models/AtRiskRule';
 
 // MongoDB connection string from environment variables
-const MONGODB_URI = process.env.MONGODB_URI;
+const MONGODB_URI: string | undefined = process.env['MONGODB_URI'];
 
 // Validate that MONGODB_URI is provided
 if (!MONGODB_URI) {
@@ -12,59 +20,11 @@ if (!MONGODB_URI) {
   process.exit(1);
 }
 
-// Define schemas
-const ApplicationSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  hostname: { type: String, required: true },
-  environment: { type: String, required: true },
-  description: { type: String }
-}, { timestamps: true });
-
-const UserSchema = new mongoose.Schema({
-  email: { type: String, required: true },
-  name: { type: String, required: true },
-  pinned_applications: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Application' }],
-  settings: {
-    autoRefresh: Boolean,
-    autoRefreshTime: Number,
-    logsPerPage: Number,
-  }
-}, { timestamps: true });
-
-const UserGroupSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  is_admin: { type: Boolean, default: false },
-  assigned_applications: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Application' }],
-  members: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-}, { timestamps: true });
-
-const LogSchema = new mongoose.Schema({
-  application_id: { type: mongoose.Schema.Types.ObjectId, ref: 'Application', required: true },
-  timestamp: { type: Date, required: true },
-  log_level: { type: String, required: true },
-  message: { type: String, required: true },
-}, { timestamps: true });
-
-const AtRiskRuleSchema = new mongoose.Schema({
-  type_of_logs: { type: String, required: true },
-  operator: { type: String, required: true },
-  unit: { type: String, required: true },
-  time: { type: Number, required: true },
-  number_of_logs: { type: Number, required: true }
-}, { timestamps: true });
-
-// Create models
-const Application = mongoose.model('Application', ApplicationSchema);
-const User = mongoose.model('User', UserSchema);
-const UserGroup = mongoose.model('UserGroup', UserGroupSchema);
-const Log = mongoose.model('Log', LogSchema);
-const AtRiskRule = mongoose.model('AtRiskRule', AtRiskRuleSchema);
-
-async function createCollections() {
+async function createCollections(): Promise<void> {
   try {
     // Connect to MongoDB
     console.log('Connecting to MongoDB...');
-    await mongoose.connect(MONGODB_URI, {
+    await mongoose.connect(MONGODB_URI!, {
       // MongoDB Atlas connection options
       retryWrites: true,
       w: 'majority'
@@ -73,6 +33,10 @@ async function createCollections() {
 
     // Get database instance
     const db = mongoose.connection.db;
+    
+    if (!db) {
+      throw new Error('Database connection failed');
+    }
     
     // Create the LogTracker database by inserting a dummy document
     console.log('Creating LogTracker database...');
@@ -90,18 +54,18 @@ async function createCollections() {
       
       console.log('✅ LogTracker database created successfully!');
     } catch (error) {
-      console.log('ℹ️  LogTracker database may already exist or creation failed:', error.message);
+      console.log('ℹ️  LogTracker database may already exist or creation failed:', (error as Error).message);
     }
 
     // Create collections if they don't exist
-    const collections = ['applications', 'users', 'usergroups', 'logs', 'atriskrules'];
+    const collections: string[] = ['applications', 'users', 'usergroups', 'logs', 'atriskrules'];
     
     for (const collectionName of collections) {
       try {
         // Check if collection exists
-        const collections = await db.listCollections({ name: collectionName }).toArray();
+        const existingCollections = await db.listCollections({ name: collectionName }).toArray();
         
-        if (collections.length === 0) {
+        if (existingCollections.length === 0) {
           // Create collection
           await db.createCollection(collectionName);
           console.log(`✅ Created collection: ${collectionName}`);
@@ -109,7 +73,7 @@ async function createCollections() {
           console.log(`ℹ️  Collection already exists: ${collectionName}`);
         }
       } catch (error) {
-        console.error(`❌ Error creating collection ${collectionName}:`, error.message);
+        console.error(`❌ Error creating collection ${collectionName}:`, (error as Error).message);
       }
     }
 
@@ -146,7 +110,7 @@ async function createCollections() {
     });
 
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.error('❌ Error:', (error as Error).message);
   } finally {
     // Close the connection
     await mongoose.connection.close();
@@ -155,4 +119,7 @@ async function createCollections() {
 }
 
 // Run the script
-createCollections(); 
+createCollections().catch((error: Error) => {
+  console.error('❌ Unhandled error:', error.message);
+  process.exit(1);
+}); 
