@@ -5,11 +5,11 @@ dotenv.config();
 import mongoose from 'mongoose';
 
 // Import existing models
-import Application from './src/models/Application';
-import User from './src/models/User';
-import UserGroup from './src/models/UserGroup';
-import Log from './src/models/Log';
-import AtRiskRule from './src/models/AtRiskRule';
+import Application from './models/Application';
+import User from './models/User';
+import UserGroup from './models/UserGroup';
+import Log from './models/Log';
+import AtRiskRule from './models/AtRiskRule';
 
 // MongoDB connection string from environment variables
 const MONGODB_URI: string | undefined = process.env['MONGODB_URI'];
