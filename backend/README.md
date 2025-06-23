@@ -60,11 +60,12 @@ NODE_ENV=development
 
 ### 4. Initialize Database Collections
 
-Run the database initialization script to create all necessary collections and indexes:
+You can run the database initialization script:
 
 ```bash
-npm run create-collections
+npm run create-collections:ts
 ```
+
 
 This script will:
 - Connect to your MongoDB instance
