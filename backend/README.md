@@ -1,102 +1,87 @@
-# Log Tracker Backend
+# LogTracker Backend
 
-This is the backend service for the Log Tracker application, built with Node.js, Express, and MongoDB.
+This is the backend for **LogTracker**, a logging microservice project built with:
 
-## Prerequisites
+- Node.js
+- Express
+- TypeScript
+- MongoDB Atlas
+- Docker
 
-- Node.js (v16 or higher)
-- npm or yarn
-- MongoDB Atlas account (or local MongoDB instance)
+## Features
 
-## Setup Instructions
+- RESTful API using Express
+- MongoDB Atlas integration via Mongoose
+- Environment-based configuration
+- Dockerized for development
 
-### 1. Install Dependencies
+---
 
-Navigate to the backend directory and install the required dependencies:
+## Tech Stack
 
-```bash
-cd backend
-npm install
-```
+- **Backend:** Node.js, Express
+- **Language:** TypeScript
+- **Database:** MongoDB Atlas
+- **ORM:** Mongoose
+- **Dev Tools:** ts-node-dev, dotenv, Docker, docker-compose
 
-### 2. Environment Configuration
+---
 
-Create a `.env` file in the backend directory with the following variables:
+## Project Structure
 
-```env
-# MongoDB Connection String
-MONGODB_URI=mongodb+srv://your_username:your_password@your_cluster.mongodb.net/LogTracker
+Backend/
+├── src/
+│ └── index.ts              # Entry point
+├── .env                    # Environment variables
+├── .gitignore
+├── package.json
+├── tsconfig.json
+├── Dockerfile
+├── docker-compose.yml
+└── README.md
 
-# Other environment variables
-NODE_ENV=development
-```
+---
 
-**Important Security Notes:**
-- Never commit your `.env` file to version control
-- The `.env` file is already added to `.gitignore`
-- Replace the MongoDB URI with your actual connection string
+## Getting Started
 
-### 3. MongoDB Setup
-
-#### Local MongoDB
-
-1. **Install MongoDB Community Edition**
-   - Download from [MongoDB Download Center](https://www.mongodb.com/try/download/community)
-   - Follow installation instructions for your OS
-
-2. **Start MongoDB Service**
-   ```bash
-   # On Windows
-   net start MongoDB
-   
-   # On macOS/Linux
-   sudo systemctl start mongod
-   ```
-
-3. **Use Local Connection String**
-   ```env
-   MONGODB_URI=mongodb://localhost:27017/LogTracker
-   ```
-
-### 4. Initialize Database Collections
-
-You can run the database initialization script:
+### 1. Clone the repository
 
 ```bash
-npm run create-collections:ts
-```
-
-
-This script will:
-- Connect to your MongoDB instance
-- Create the `LogTracker` database
-- Create all required collections:
-  - `applications` - Stores application information
-  - `users` - Stores user data and preferences
-  - `usergroups` - Stores user groups and permissions
-  - `logs` - Stores application logs
-  - `atriskrules` - Stores risk assessment rules
-- Create appropriate indexes for better performance
-
-### 5. Verify Setup
-
-After running the initialization script, you should see output similar to:
+git clone https://github.com/your-username/logtracker-backend.git
+cd logtracker-backend
 
 ```
-Connecting to MongoDB...
-Connected to MongoDB successfully!
-Creating LogTracker database...
-✅ LogTracker database created successfully!
-✅ Created collection: applications
-✅ Created collection: users
-✅ Created collection: usergroups
-✅ Created collection: logs
-✅ Created collection: atriskrules
-Creating indexes...
-✅ Created indexes for Application collection
-✅ Created indexes for User collection
-✅ Created indexes for UserGroup collection
-✅ Created indexes for Log collection
-✅ Created indexes for AtRiskRule collection
-🎉 All collections and indexes created successfully!
-```
+
+### 2. Install Required Dependencies
+
+- Runtime dependencies
+" npm install express mongoose dotenv "
+
+- Development dependencies
+" npm install -D typescript ts-node-dev @types/express @types/node @types/mongoose "
+
+---
+
+### 3. Create .env file
+In the root folder, create a .env file:
+
+MONGO_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<dbname>?retryWrites=true&w=majority
+PORT=3000
+
+'''Replace <username>, <password>, <cluster>, and <dbname> with actual values from your MongoDB Atlas cluster.
+
+---
+
+### 4. Run the Project
+
+Run locally with Node.js:
+- "npm run dev"
+
+Run with Docker
+Ensure Docker is installed, then run:
+
+- "docker-compose up --build"
+
+This will:
+
+Start the backend on http://localhost:3000
