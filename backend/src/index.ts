@@ -2,6 +2,11 @@ import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import logger from './utils/logger'; 
+import errorHandler from './middleware/error';
+import { processErrors } from './startup/processErrors';
+
+
+processErrors(); // Initialize global error handlers
 
 dotenv.config();
 
@@ -24,3 +29,5 @@ mongoose.connect(process.env.MONGO_URI!)
 app.get('/', (req, res) => {
   res.send('API is running!');
 });
+
+app.use(errorHandler);

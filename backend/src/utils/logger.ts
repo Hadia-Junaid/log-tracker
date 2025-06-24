@@ -5,7 +5,7 @@ const { combine, printf, timestamp } = winston.format;
 
 // Define custom log format
 const logFormat = printf(({ level, message, timestamp }) => {
-  return `[${timestamp}] [${level.toUpperCase()}] [trace-id-placeholder]${message}\n`;
+  return `[${timestamp}] [${level.toUpperCase()}] [trace-id-placeholder] ${message}\n`;
 });
 
 // Create the logger
