@@ -1,6 +1,7 @@
 import express from 'express';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import logger from './utils/logger'; 
 
 dotenv.config();
 
@@ -11,13 +12,13 @@ app.use(express.json());
 
 mongoose.connect(process.env.MONGO_URI!)
   .then(() => {
-    console.log('MongoDB connected');
+    logger.info('MongoDB connected');
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      logger.info(`Server running on port ${PORT}`);
     });
   })
   .catch(err => {
-    console.error('MongoDB connection error:', err);
+    logger.error('MongoDB connection error:', err);
   });
 
 app.get('/', (req, res) => {
