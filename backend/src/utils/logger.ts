@@ -1,23 +1,24 @@
+// src/utils/logger.ts
 import winston from 'winston';
 
-const { combine, timestamp, printf, colorize, errors } = winston.format;
+const { combine, printf, timestamp } = winston.format;
 
-const customFormat = printf(({ level, message, timestamp, stack }) => {
-  return `${timestamp} [${level}]: ${stack || message}`;
+// Define custom log format
+const logFormat = printf(({ level, message, timestamp }) => {
+  return `[${timestamp}] [${level.toUpperCase()}] [trace-id-placeholder]${message}\n`;
 });
 
-// Set log level based on environment
-const isProd = process.env.NODE_ENV === 'production';
-
+// Create the logger
 const logger = winston.createLogger({
-  level: isProd ? 'info' : 'debug', // Only show debug in non-prod
+  level: process.env.LOG_LEVEL || 'info',
   format: combine(
-    colorize(),
-    timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
-    errors({ stack: true }),
-    customFormat
+    timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
+    logFormat
   ),
-  transports: [new winston.transports.Console()],
+  transports: [
+    new winston.transports.Console()
+  ],
 });
 
+// Export logger and stream for morgan (optional)
 export default logger;
