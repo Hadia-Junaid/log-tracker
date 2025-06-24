@@ -16,6 +16,7 @@
   "dependencies": {
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "joi": "^17.13.3",
     "lint": "^0.8.19",
     "mongoose": "^8.16.0",
     "winston": "^3.17.0"
@@ -23,6 +24,7 @@
   "devDependencies": {
     "@eslint/js": "^9.29.0",
     "@types/express": "^5.0.3",
+    "@types/joi": "^17.2.2",
     "@types/mongoose": "^5.11.97",
     "@types/node": "^24.0.3",
     "@types/winston": "^2.4.4",
