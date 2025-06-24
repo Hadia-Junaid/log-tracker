@@ -1,33 +1,35 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
-import logger from './utils/logger'; 
-import errorHandler from './middleware/error';
-import { processErrors } from './startup/processErrors';
-
-
-processErrors(); // Initialize global error handlers
-
+import dotenv from "dotenv";
 dotenv.config();
+import express from "express";
+import mongoose from "mongoose";
+import logger from "./utils/logger";
+import errorHandler from "./middleware/error";
+import { processErrors } from "./startup/processErrors";
+import config from "config";
+
+processErrors(); // Initialize process level error handlers
+
+const PORT = config.get<number>("server.port") || 3000;
+const mongoUri = config.get<string>("mongoUri") || "";
 
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 app.use(express.json());
 
-mongoose.connect(process.env.MONGO_URI!)
+mongoose.connect(mongoUri)
   .then(() => {
-    logger.info('MongoDB connected');
+    logger.info("MongoDB connected");
     app.listen(PORT, () => {
-      logger.info(`Server running on port ${PORT}`);
+      logger.info(`Server is running on port ${PORT}`);
     });
   })
-  .catch(err => {
-    logger.error('MongoDB connection error:', err);
+  .catch((err) => {
+    logger.error("MongoDB connection error:", err);
   });
 
-app.get('/', (req, res) => {
-  res.send('API is running!');
+app.get("/", (req, res) => {
+  res.send("API is running!");
 });
 
+// Error handling middleware to catch unhandled errors
 app.use(errorHandler);
