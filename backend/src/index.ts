@@ -2,10 +2,11 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import mongoose from "mongoose";
-import logger from "./utils/logger";
+import logger, {morganStream} from "./utils/logger";
 import errorHandler from "./middleware/error";
 import { processErrors } from "./startup/processErrors";
 import config from "config";
+import morgan from "morgan";
 
 processErrors(); // Initialize process level error handlers
 
@@ -15,6 +16,8 @@ const mongoUri = config.get<string>("mongoUri") || "";
 const app = express();
 
 app.use(express.json());
+app.use(morgan('tiny', { stream: morganStream }));
+
 
 mongoose.connect(mongoUri)
   .then(() => {
