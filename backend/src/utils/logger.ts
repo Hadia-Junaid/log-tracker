@@ -1,11 +1,10 @@
-// src/utils/logger.ts
 import winston from 'winston';
 
 const { combine, printf, timestamp } = winston.format;
 
 // Define custom log format
 const logFormat = printf(({ level, message, timestamp }) => {
-  return `[${timestamp}] [${level.toUpperCase()}] [trace-id-placeholder] ${message}\n`;
+  return `[${timestamp}] [${level.toUpperCase()}] [trace-id-placeholder]${message}\n`;
 });
 
 // Create the logger
@@ -20,5 +19,12 @@ const logger = winston.createLogger({
   ],
 });
 
-// Export logger and stream for morgan (optional)
+
+export const morganStream = {
+  write: (message: string) => {
+    logger.info(message.trim());
+  },
+};
+
+// Export the logger instance
 export default logger;
