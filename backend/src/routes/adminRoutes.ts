@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { searchUsers, patchUserAndGroup } from '../controllers/adminController';
+import { searchUsers } from '../controllers/adminController';
 
 const router = Router();
 
@@ -11,7 +11,5 @@ const asyncHandler = (fn: Function) => (req: any, res: any, next: any) => {
 // GET /api/admin/users/search?searchString=...
 router.get('/users/search', asyncHandler(searchUsers));
 
-// PATCH /api/admin/users/assign-group
-router.patch('/users/assign-group', asyncHandler(patchUserAndGroup));
 
 export default router;

@@ -53,6 +53,3 @@ export const getAdminDirectoryService = async () => {
         throw new Error('Failed to initialize Google Admin SDK Directory Service.');
     }
 };
-
-// Optional: Add a function to get specific API instances if needed (e.g., Reports API)
-// export const getAdminReportsService = async () => { ... };
