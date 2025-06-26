@@ -4,3 +4,4 @@ dist
 credentials/
 redis-server/redis/data/
 collection/logs/
+backend/credentials/service-account-key.json
