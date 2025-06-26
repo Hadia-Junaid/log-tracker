@@ -8,6 +8,7 @@ import { processErrors } from "./startup/processErrors";
 import config from "config";
 import morgan from "morgan";
 import adminRoutes from "./routes/adminRoutes";
+import applications from "./routes/application.routes";
 
 processErrors(); // Initialize process level error handlers
 
@@ -33,9 +34,7 @@ mongoose.connect(mongoUri)
     logger.error("MongoDB connection error:", err);
   });
 
-app.get("/", (req, res) => {
-  res.send("API is running!");
-});
+app.use('/api/applications', applications);
 
 // Error handling middleware to catch unhandled errors
 app.use(errorHandler);
