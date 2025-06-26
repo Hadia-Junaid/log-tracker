@@ -2,3 +2,4 @@ node_modules
 dist
 .env
 redis-server/redis/data/
+collection/logs/
