@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.29.0",
+    "@types/config": "^3.3.5",
     "@types/express": "^5.0.3",
     "@types/joi": "^17.2.2",
     "@types/mongoose": "^5.11.97",
