@@ -3,3 +3,4 @@ dist
 .env
 credentials/
 redis-server/redis/data/
+collection/logs/
