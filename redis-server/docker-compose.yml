@@ -19,6 +19,3 @@ services:
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
-
-volumes:
-  redis-data:
