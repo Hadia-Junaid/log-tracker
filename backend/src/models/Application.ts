@@ -4,7 +4,7 @@ export interface IApplication extends Document {
   name: string;
   hostname: string;
   environment: string;
-  description: string;
+  description?: string;
 }
 
 const ApplicationSchema: Schema = new Schema({
