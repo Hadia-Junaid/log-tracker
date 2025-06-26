@@ -1,12 +1,15 @@
 import dotenv from "dotenv";
 dotenv.config();
+
 import express from "express";
 import mongoose from "mongoose";
-import logger, {morganStream} from "./utils/logger";
+import logger, { morganStream } from "./utils/logger";
 import errorHandler from "./middleware/error";
 import { processErrors } from "./startup/processErrors";
 import config from "config";
 import morgan from "morgan";
+
+import userGroupRoutes from "./routes/userGroup.route"; // 
 
 processErrors(); // Initialize process level error handlers
 
@@ -18,6 +21,8 @@ const app = express();
 app.use(express.json());
 app.use(morgan('tiny', { stream: morganStream }));
 
+// ✅ Mount your routes here
+app.use("/api/user-groups", userGroupRoutes); 
 
 mongoose.connect(mongoUri)
   .then(() => {
@@ -34,5 +39,5 @@ app.get("/", (req, res) => {
   res.send("API is running!");
 });
 
-// Error handling middleware to catch unhandled errors
+// ✅ Error handler last
 app.use(errorHandler);
