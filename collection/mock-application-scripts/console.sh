@@ -1,4 +1,5 @@
 #!/bin/bash
+exec > >(tee -a ../logs/io_logs.log) 2>&1
 
 echo "Starting terminal log simulation... (1 log/second)"
 counter=1
