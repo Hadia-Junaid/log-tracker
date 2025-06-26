@@ -8,7 +8,7 @@ export interface IApplication extends Document {
 }
 
 const ApplicationSchema: Schema = new Schema({
-  name: { type: String, required: true },
+  name: { type: String, required: true, unique: true },
   hostname: { type: String, required: true },
   environment: { type: String, required: true },
   description: { type: String }

@@ -23,8 +23,15 @@ export const createApplication = async (req: Request, res: Response): Promise<vo
 export const getApplications = async (req: Request, res: Response): Promise<void> => {
   const { search = '', page = 1, limit = 10 } = req.query;
 
+  const regex = new RegExp(search.toString(), 'i');
+
   const filter = {
-    name: new RegExp(search.toString(), 'i')
+    $or: [
+      { name: regex },
+      { hostname: regex },
+      { environment: regex },
+      { description: regex }
+    ]
   };
 
   const apps = await Application.find(filter)
@@ -76,7 +83,7 @@ export const deleteApplication = async (req: Request, res: Response): Promise<vo
     return;
   } 
 
-  const deleted = await Application.findByIdAndDelete(id);
+  const deleted = await Application.findByIdAndUpdate(id, {is_active: false});
 
   if (!deleted) {
     logger.warn(`Delete failed: Application not found (ID: ${id})`);
