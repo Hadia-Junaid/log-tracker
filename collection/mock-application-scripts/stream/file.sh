@@ -1,6 +1,6 @@
 #!/bin/bash
 
-LOG_FILE="../logs/app.log"
+LOG_FILE="../../logs/app.log"
 
 echo "Starting file log simulation... (1 log/second)"
 counter=1
