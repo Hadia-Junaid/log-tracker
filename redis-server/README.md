@@ -1,2 +1,3 @@
 ### To Run the Redis Server
-docker-compose up --build
+-Run the following command:
+    docker-compose up --build
