@@ -4,7 +4,8 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "dev": "nodemon --exec ts-node src/index.ts",
+    "dev:watch": "ts-node-dev --respawn --transpile-only src/index.ts",
     "start": "node dist/index.js",
     "build": "tsc"
   },
@@ -13,15 +14,36 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "config": "^4.0.0",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
-    "mongoose": "^8.16.0"
+    "joi": "^17.13.3",
+    "lint": "^0.8.19",
+    "mongoose": "^8.16.0",
+    "morgan": "^1.10.0",
+    "winston": "^3.17.0"
   },
   "devDependencies": {
+    "@eslint/js": "^9.29.0",
     "@types/express": "^5.0.3",
-    "@types/mongoose": "^5.11.96",
+    "@types/joi": "^17.2.2",
+    "@types/mongoose": "^5.11.97",
+    "@types/morgan": "^1.9.10",
     "@types/node": "^24.0.3",
+    "@types/winston": "^2.4.4",
+    "@typescript-eslint/eslint-plugin": "^8.35.0",
+    "@typescript-eslint/parser": "^8.35.0",
+    "eslint": "^9.29.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
+    "globals": "^16.2.0",
+    "nodemon": "^3.1.10",
+    "prettier": "^3.6.0",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "typescript-eslint": "^8.35.0"
   }
 }

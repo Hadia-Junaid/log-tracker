@@ -1,0 +1,29 @@
+services:
+  
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      # Make a copy of .env.example and rename it to .env and 
+      # fill in the values (PORT=3000, MONGO_URI=mongodb://mongodb:27017/mydatabase)
+      # before running the application.
+      - ./backend/.env 
+    volumes:
+      - ./backend:/app
+    command: npm run dev
+  
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app              
+      - /app/node_modules            
+    command: npm run dev -- --host
+    depends_on:
+      - backend

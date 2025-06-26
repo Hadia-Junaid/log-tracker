@@ -85,3 +85,14 @@ Ensure Docker is installed, then run:
 This will:
 
 Start the backend on http://localhost:3000
+
+### 5 . Logging
+
+All logging is done through Winston. To enable only production level logs, set the NODE_ENV variable in the .env file to "production".
+
+For developers, import the logger utility with:
+- "import logger from './utils/logger';"
+
+Then use it for different log levels including error, warn, info, and debug. 
+
+---
