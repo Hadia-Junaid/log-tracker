@@ -8,5 +8,8 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "prettier": "^3.6.0"
+  },
+  "dependencies": {
+    "@oracle/ojet-cli": "^18.1.0"
   }
 }
