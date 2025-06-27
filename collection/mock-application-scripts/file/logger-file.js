@@ -1,16 +1,17 @@
 const { createLogger, format, transports } = require('winston');
 const path = require('path');
 
-// Custom string format (e.g., [timestamp] level: key1=value1 key2="value2")
-const customFormat = format.printf(({ level, message, timestamp }) => {
-  // Handle object or string message
-  const msgStr = typeof message === 'object'
-    ? Object.entries(message)
-        .map(([key, val]) => `${key}=${JSON.stringify(val)}`)
-        .join(' ')
-    : message;
+const customFormat = format.printf(({ level, message, traceid, timestamp }) => {
+  const traceId = traceid || 'unknown';
+  const msg =
+    typeof message === 'object'
+      ? Object.entries(message)
+          .filter(([k]) => k !== 'traceid')
+          .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
+          .join(' ')
+      : message;
 
-  return `[${timestamp}] ${level}: ${msgStr}`;
+  return `[${timestamp}] [${level.toUpperCase()}] [${traceId}]${msg}`;
 });
 
 const logger = createLogger({

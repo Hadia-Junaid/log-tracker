@@ -10,7 +10,7 @@ const messages = [
   "Cache cleared",
   "Service restarted",
   "Configuration updated",
-  "Unexpected error occurred"
+  "Unexpected error occurred mocking request",
 ];
 
 function getRandomInt(max) {
@@ -20,16 +20,13 @@ function getRandomInt(max) {
 let logId = 0;
 
 function logBatch() {
-  const now = Date.now();
-  for (let i = 0; i < 1000; i++) {
-    logger.info({
-      id: logId++,
-      message: messages[getRandomInt(messages.length)]
-    });
-  }
-  const elapsed = Date.now() - now;
-  const delay = Math.max(0, 1000 - elapsed);
-  setTimeout(logBatch, delay);  // Schedule next batch after ~1s
+  logger.info({
+    id: logId++,
+    traceid: 'abcd1234',
+    message: messages[getRandomInt(messages.length)]
+  });
+
+  setTimeout(logBatch, 1000); // Log one message every second
 }
 
 logBatch(); // Start logging
