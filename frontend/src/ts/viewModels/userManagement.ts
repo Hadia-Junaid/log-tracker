@@ -21,6 +21,7 @@ import { ObservableKeySet } from 'ojs/ojknockout-keyset';
 import { InputSearchElement } from 'ojs/ojinputsearch';
 import { ItemContext } from 'ojs/ojcommontypes';
 import { ConfigService } from '../services/config-service';
+import logger from '../services/logger-service';
 
 interface GroupData {
     groupId: number;
@@ -124,20 +125,20 @@ class UserManagementViewModel {
 
     //Add a new group - placeholder functionality
     addNewGroup = () => {
-        console.log('Add New Group clicked');
+        logger.info('Add New Group button clicked');
         
     }
 
     //Test dialog placeholder
     testDialog = () => {
-        console.log('Test Dialog clicked');
+        logger.info('Test Dialog button clicked');
         alert('Test Dialog functionality - placeholder');
     }
 
     //Navigate to edit group - placeholder functionality
     gotoEditGroup = (event: any) => {
         const selectedItem = event.detail.context.data;
-        console.log('Edit group:', selectedItem.groupName);
+        logger.info('Navigate to edit group requested', { groupName: selectedItem.groupName });
     }
 
     //Edit group action - opens dialog
@@ -193,7 +194,7 @@ class UserManagementViewModel {
 
     // Search functionality - calls backend API
     private performSearch = async (searchString: string) => {
-        console.log('Search performed:', searchString);
+        logger.debug('User search initiated', { searchString });
         
         if (!searchString || searchString.trim().length === 0) {
             this.availableMembers([]);
@@ -223,10 +224,16 @@ class UserManagementViewModel {
                 }));
             
             this.availableMembers(availableUsers);
-            console.log(`Found ${availableUsers.length} available users`);
+            logger.info('User search completed successfully', { 
+                searchString, 
+                foundUsers: availableUsers.length 
+            });
             
         } catch (error) {
-            console.error('Error searching users:', error);
+            logger.error('Failed to search users from backend API', { 
+                searchString, 
+                error: error instanceof Error ? error.message : String(error) 
+            });
             this.availableMembers([]);
             // You could show a user-friendly error message here
         }
@@ -268,13 +275,19 @@ class UserManagementViewModel {
 
     // Update group with new member list and applications
     updateGroupMembers = () => {
-        console.log('Updating group members:', this.currentMembers());
-        console.log('Applications:', {
+        const applicationAccess = {
             userService: this.applications.userService(),
             paymentService: this.applications.paymentService(),
             authService: this.applications.authService(),
             notificationService: this.applications.notificationService(),
             databaseService: this.applications.databaseService()
+        };
+        
+        logger.info('Group members update initiated', {
+            groupName: this.selectedGroupName(),
+            memberCount: this.currentMembers().length,
+            members: this.currentMembers().map(m => m.email),
+            applicationAccess
         });
         
         // Update the group's member count
@@ -303,7 +316,9 @@ class UserManagementViewModel {
     constructor() {
         // Load configuration on initialization
         ConfigService.loadConfig().catch(error => {
-            console.error('Failed to load application configuration:', error);
+            logger.error('Failed to load application configuration during userManagement initialization', {
+                error: error instanceof Error ? error.message : String(error)
+            });
         });
     }
 

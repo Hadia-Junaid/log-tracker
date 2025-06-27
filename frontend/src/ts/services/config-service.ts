@@ -1,3 +1,5 @@
+import logger from './logger-service';
+
 interface AppConfig {
   apiUrl: string;
   environment: string;
@@ -27,7 +29,7 @@ export class ConfigService {
         }
       }
     } catch (error) {
-      console.warn('Could not load OracleJET config, using fallback configuration');
+      logger.warn('Could not load OracleJET config, using fallback configuration', error);
     }
 
     // Fallback configuration if oraclejetconfig.json is not accessible

@@ -12,6 +12,7 @@ import "ojs/ojselectsingle";
 import "ojs/ojlabel";
 
 import * as AccUtils from "../accUtils";
+import logger from '../services/logger-service';
 
 
 type ChartType = {
@@ -52,7 +53,11 @@ class DashboardViewModel {
   connected(): void {
     AccUtils.announce("Dashboard page loaded.");
     document.title = "Dashboard";
-    // implement further logic if needed
+    
+    logger.info('Dashboard page connected and loaded successfully', {
+      chartTypesCount: this.chartTypes.length,
+      selectedChartType: this.val()
+    });
   }
 
   /**
