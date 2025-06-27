@@ -4,8 +4,18 @@
  as shown at https://oss.oracle.com/licenses/upl/
  -->
 <div class="oj-hybrid-padding">
-  <h1>Dashboard Content Area</h1>
-  <div>
-      To change the content of this section, you will make edits to the dashboard.html file located in the /ts/views folder.
-  </div>
+     
+<h1>Product Information</h1>
+<div id="itemDetailsContainer">
+  <oj-label for="basicSelect">Select Chart:</oj-label>
+  <oj-select-single
+    id="basicSelect"
+    class="selectSingleStyle"
+    data="[[chartTypesDP]]"
+    value="{{val}}"
+  >
+  </oj-select-single>
+</div>
+   
+
 </div>
