@@ -3,7 +3,8 @@ import Redis from 'ioredis';
 
 const redis = new Redis({
   host: process.env.REDIS_HOST,
-  port: Number(process.env.REDIS_PORT)
+  port: Number(process.env.REDIS_PORT),
+  password: process.env.REDIS_PASSWORD // Ensure this is set in your environment
 });
 
 const queue = new Queue('log_bull', { connection: redis });
