@@ -1,0 +1,6 @@
+{
+  "redisServer": {
+    "password": "REDIS_PASSWORD"
+  },
+  "mongoUri": "MONGO_URI"
+}
