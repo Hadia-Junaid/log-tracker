@@ -22,7 +22,7 @@ const app = express();
 const corsOptions = {
   origin: frontendUrl,
   optionsSuccessStatus: 200 
-}
+};
 
 app.use(cors(corsOptions));
 app.use(express.json());
