@@ -13,5 +13,14 @@
         node generateLogs.js
     -> I/O stream
         ./console.sh
-4) Run the following command for fluentbit:
+4) Store the following variables in a .env file:
+    REDIS_HOST
+    REDIS_PORT
+    REDIS_PASSWORD
+    APPLICATION_ID
+
+4) Run the following command to create fluent-bit.conf file:
+    ./generate-conf.sh
+    
+5) Run the following command to run fluentbit:
     docker run -it --rm   -v "$(pwd)/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf"   -v "$(pwd)/logs:/fluent-bit/logs"   majst01/fluent-bit-go-redis-output
