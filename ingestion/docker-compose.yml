@@ -1,0 +1,15 @@
+version: '3.9'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ingestion
+    environment:
+      # - NODE_ENV=production  # Uncomment if you want to set the environment to production
+      - MONGO_URI=${MONGO_URI}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    ports:
+      - "3000:3000"  # Adjust if your app listens elsewhere
+    restart: unless-stopped
