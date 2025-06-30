@@ -7,5 +7,6 @@
       "adminScopes": "GOOGLE_ADMIN_SCOPES",
       "domain": "GOOGLE_WORKSPACE_DOMAIN"
     }
-  }
+  },
+  "frontendUrl": "FRONTEND_URL"
 }

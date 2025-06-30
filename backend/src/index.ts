@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
+import cors from "cors";
 import mongoose from "mongoose";
 import logger, {morganStream} from "./utils/logger";
 import errorHandler from "./middleware/error";
@@ -11,11 +12,19 @@ import adminRoutes from "./routes/adminRoutes";
 
 processErrors(); // Initialize process level error handlers
 
-const PORT = config.get<number>("server.port") || 3000;
-const mongoUri = config.get<string>("mongoUri") || "";
+const PORT = config.get<number>("server.port");
+const mongoUri = config.get<string>("mongoUri");
+const frontendUrl = config.get<string>("frontendUrl");
 
 const app = express();
 
+
+const corsOptions = {
+  origin: frontendUrl,
+  optionsSuccessStatus: 200 
+}
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(morgan('tiny', { stream: morganStream }));
 
