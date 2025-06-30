@@ -2,5 +2,16 @@
   "server": {
     "port": 3000
   },
-  "mongoUri": ""
+  "mongoUri": "",
+  "auth": {
+    "google": {
+      "clientId": "",
+      "clientSecret": "",
+      "redirectUri": "http://localhost:3000/auth/google/callback"
+    },
+    "jwt": {
+      "secret": "",
+      "expiresIn": "24h"
+    }
+  }
 }

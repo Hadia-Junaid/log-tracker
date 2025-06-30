@@ -65,10 +65,31 @@ cd logtracker-backend
 ### 3. Create .env file
 In the root folder, create a .env file:
 
+```
 MONGO_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<dbname>?retryWrites=true&w=majority
 PORT=3000
 
-'''Replace <username>, <password>, <cluster>, and <dbname> with actual values from your MongoDB Atlas cluster.
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=your-google-client-id-here
+GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+
+# JWT Configuration  
+JWT_SECRET=your-super-secret-jwt-key-here
+```
+
+Replace the following with actual values:
+- `<username>`, `<password>`, `<cluster>`, and `<dbname>` with your MongoDB Atlas cluster details
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from Google Cloud Console
+- `JWT_SECRET` with a strong secret key for JWT token signing
+
+### 3a. Google OAuth Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the Google+ API and Google OAuth2 API
+4. Go to "Credentials" and create an OAuth 2.0 Client ID
+5. Set the authorized redirect URI to: `http://localhost:3000/auth/google/callback`
+6. Copy the Client ID and Client Secret to your .env file
 
 ---
 
@@ -94,5 +115,49 @@ For developers, import the logger utility with:
 - "import logger from './utils/logger';"
 
 Then use it for different log levels including error, warn, info, and debug. 
+
+---
+
+## API Endpoints
+
+### Authentication
+
+#### Google OAuth Login
+- **GET** `/auth/google`
+- **Description:** Initiate Google OAuth login flow
+- **Response:** Returns Google OAuth authorization URL
+
+#### Google OAuth Callback  
+- **GET** `/auth/google/callback?code={authorization_code}`
+- **Description:** Handle Google OAuth callback and authenticate user
+- **Parameters:** 
+  - `code`: Authorization code from Google OAuth
+- **Response:** JWT token and user information (if user exists in database)
+- **Error:** 403 if user not found in database with message "Access denied. Please contact your administrator."
+
+#### Verify Token
+- **GET** `/auth/verify`
+- **Description:** Verify JWT token and return user information
+- **Headers:** `Authorization: Bearer {jwt_token}`
+- **Response:** User information if token is valid
+
+#### Logout
+- **POST** `/auth/logout`
+- **Description:** Logout user (invalidate session)
+- **Response:** Success message
+
+### Protected Routes
+
+To protect any route, use the authentication middleware:
+
+```typescript
+import { authenticate } from './middleware/auth';
+
+// Protected route example
+app.get('/protected-route', authenticate, (req, res) => {
+  // req.user contains authenticated user information
+  res.json({ user: req.user });
+});
+```
 
 ---

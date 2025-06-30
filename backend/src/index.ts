@@ -7,6 +7,7 @@ import errorHandler from "./middleware/error";
 import { processErrors } from "./startup/processErrors";
 import config from "config";
 import morgan from "morgan";
+import authRoutes from "./routes/authRoutes";
 
 processErrors(); // Initialize process level error handlers
 
@@ -18,6 +19,8 @@ const app = express();
 app.use(express.json());
 app.use(morgan('tiny', { stream: morganStream }));
 
+// Authentication routes
+app.use('/auth', authRoutes);
 
 mongoose.connect(mongoUri)
   .then(() => {
