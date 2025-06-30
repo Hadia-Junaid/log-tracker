@@ -17,4 +17,7 @@ const LogSchema: Schema = new Schema({
   message: { type: String, required: true },
 }, { timestamps: true });
 
+// Indexes for efficient querying
+LogSchema.index({ application_id: 1, timestamp: -1 });
+
 export default mongoose.model<ILog>('Log', LogSchema);

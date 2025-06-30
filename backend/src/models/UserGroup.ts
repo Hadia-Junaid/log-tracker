@@ -14,5 +14,7 @@ const UserGroupSchema: Schema = new Schema({
   members: [{ type: Schema.Types.ObjectId, ref: 'User' }],
 }, { timestamps: true });
 
+//Indexes for efficient querying
+UserGroupSchema.index({ members: 1 });
 
 export default mongoose.model<IUserGroup>('UserGroup', UserGroupSchema);
