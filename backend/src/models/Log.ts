@@ -8,7 +8,6 @@ export interface ILog extends Document {
   trace_id: string;
 }
 
-
 const LogSchema: Schema = new Schema({
   application_id: { type: Schema.Types.ObjectId, ref: 'Application', required: true },
   timestamp: { type: Date, required: true },
@@ -17,7 +16,10 @@ const LogSchema: Schema = new Schema({
   message: { type: String, required: true },
 }, { timestamps: true });
 
-// Indexes for efficient querying
+// Index for efficient querying
 LogSchema.index({ application_id: 1, timestamp: -1 });
+
+// TTL Index for automatic deletion after 30 days
+LogSchema.index({ timestamp: 1 }, { expireAfterSeconds: 60 * 60 * 24 * 30 });
 
 export default mongoose.model<ILog>('Log', LogSchema);
