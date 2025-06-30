@@ -3,7 +3,7 @@ import time
 import json
 import os
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import timezone
 
 load_dotenv()
 
@@ -35,10 +35,10 @@ def fetch_new_logs(conn, since_timestamp):
 
 def format_log(row):
     log_id, level, message, timestamp = row
-    ts_str = timestamp.isoformat() + "Z"  # match Winston's UTC format
-    # Ensure message is properly quoted and escaped
-    msg_escaped = json.dumps(message)  # adds quotes and escapes internally
-    return f"[{ts_str}] {level}: id={log_id} message={msg_escaped}"
+    ts_str = timestamp.astimezone(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+    traceid = "abcd1234"  # hardcoded as requested
+    msg_escaped = json.dumps(message)
+    return f"[{ts_str}] [{level.upper()}] [{traceid}]id={log_id} message={msg_escaped}"
 
 def main():
     conn = psycopg2.connect(

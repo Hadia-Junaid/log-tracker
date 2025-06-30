@@ -1,3 +1,4 @@
+Install postresql on your system and follow these steps to create a logs table:
 
 a. Create a user:
 
@@ -22,3 +23,10 @@ CREATE TABLE log (
     timestamp TIMESTAMPTZ DEFAULT NOW()
 );
 \q
+
+Store the following variables in a .env file: 
+PG_HOST
+PG_PORT
+PG_DB
+PG_USER
+PG_PASSWORD
