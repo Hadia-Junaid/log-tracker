@@ -36,6 +36,8 @@ import {
     editAppDialogObservables,
     editAppDialogMethods
 } from './applicationManagement/editAppDialog';
+import { envOptions as environmentOptions } from './applicationManagement/applicationUtils';
+
 
 class ApplicationViewModel {
 
@@ -45,13 +47,14 @@ class ApplicationViewModel {
     readonly currentPage = applicationListObservables.currentPage;
     readonly pageSize = applicationListObservables.pageSize;
     newApplication = addAppDialogObservables.newApplication;
-    envOptions = addAppDialogObservables.envOptions;
+envOptions = environmentOptions;
     selectedApplicationId = editAppDialogObservables.selectedApplicationId;
     selectedApplicationName = editAppDialogObservables.selectedApplicationName;
     selectedApplicationHostName = editAppDialogObservables.selectedApplicationHostName;
     selectedApplicationEnv = editAppDialogObservables.selectedApplicationEnv;
     selectedApplicationDescription = editAppDialogObservables.selectedApplicationDescription;
-
+    availableGroups = addAppDialogObservables.availableGroups; // Shared
+    selectedGroups = editAppDialogObservables.selectedGroups; // For Edit Dialog
 
     // Computed
     readonly totalPages = applicationListComputed.totalPages;
@@ -69,17 +72,9 @@ class ApplicationViewModel {
     gotoEditApplication = editAppDialogMethods.gotoEditApplication;
     openEditDialog = editAppDialogMethods.openEditDialog;
     closeEditDialog = editAppDialogMethods.closeEditDialog
+    updateApplication = editAppDialogMethods.updateApplication;
 
-    readonly availableGroups = [
-        "Admin Group",
-        "Development Team",
-        "QA Team",
-        "Operations Team",
-        "Security Team"
-    ];
-
-    readonly selectedGroups = ko.observableArray<string>(["Admin Group"]); // Always selected
-
+    
     // Update groups assigned to the application
     updateGroupMembers = async () => {
         const selectedAppnName = this.selectedApplicationName();
@@ -173,5 +168,5 @@ class ApplicationViewModel {
         // implement if needed
     }
 }
-
+ 
 export = ApplicationViewModel; 

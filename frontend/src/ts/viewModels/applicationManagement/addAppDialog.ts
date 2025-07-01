@@ -3,6 +3,10 @@ import ArrayDataProvider = require('ojs/ojarraydataprovider');
 import { ApplicationData } from './types';
 import { ConfigService } from '../../services/config-service';
 import { applicationListObservables } from './appList';
+import { envOptions } from './applicationUtils';
+import { availableGroups, selectedGroupsForAdd } from './applicationGroups';
+
+
 
 const newApplication = {
     name: ko.observable(""),
@@ -10,16 +14,6 @@ const newApplication = {
     environment: ko.observable<string | null>(null),
     description: ko.observable("")
 };
-
-const envOptions = new ArrayDataProvider(
-    [
-        { value: 'Development', label: 'Development' },
-        { value: 'Testing', label: 'Testing' },
-        { value: 'Production', label: 'Production' },
-        { value: 'Staging', label: 'Staging' }
-    ],
-    { keyAttributes: 'value' }
-);
 
 const resetNewAppForm = () => {
     newApplication.name("");
@@ -93,7 +87,9 @@ const addNewApplication = async () => {
 
 export const addAppDialogObservables = {
     newApplication,
-    envOptions
+    envOptions,
+    availableGroups,
+    selectedGroups: selectedGroupsForAdd
 };
 
 export const addAppDialogMethods = {
