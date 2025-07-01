@@ -4,9 +4,9 @@
             <h1 class="oj-typography-heading-lg oj-text-color-primary">Applications</h1>
         </div>
 
-        <oj-c-input-text label-hint="Search by name, hostname, or environment" value="{{searchQuery}}"
-            value-option="input" class="oj-sm-margin-4x-bottom">
-        </oj-c-input-text>
+        <oj-c-input-text label-hint="Search by name, hostname, or environment" raw-value="{{searchQuery}}"
+            placeholder="Type to filter…" class="oj-sm-margin-4x-bottom" />
+
 
         <div class="oj-flex oj-sm-flex-direction-column">
             <div class="oj-flex oj-sm-align-items-center oj-sm-margin-4x-bottom">
@@ -87,7 +87,7 @@
             </div>
 
             <oj-button chroming="outlined" disabled="[[ currentPage() >= totalPages() ]]""
-                on-oj-action="[[() => currentPage(currentPage() + 1)]]">
+                on-oj-action=" [[()=> currentPage(currentPage() + 1)]]">
                 Next
             </oj-button>
         </div>
