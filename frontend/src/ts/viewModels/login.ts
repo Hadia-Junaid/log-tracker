@@ -58,13 +58,10 @@ class LoginViewModel {
     }
   }
 
-  /**
-   * Handle login button click
-   */
+
   handleLogin = async (): Promise<void> => {
     try {
-      // Call the backend API to get the Google OAuth URL
-      const response = await fetch("http://localhost:3000/auth/google", {
+      const response = await fetch(`http://localhost:3000/auth/google`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
