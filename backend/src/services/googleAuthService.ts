@@ -83,14 +83,49 @@ class GoogleAuthService {
 
   /**
    * Revoke tokens (for logout)
+   * Note: This method has limitations in the current architecture since we don't store
+   * Google refresh tokens server-side. It will only work if tokens are currently set
+   * on the oauth2Client instance, which is unlikely in a stateless server environment.
    */
   async revokeTokens(): Promise<void> {
     try {
+      // Check if there are any credentials to revoke
+      const credentials = this.oauth2Client.credentials;
+      
+      if (!credentials || (!credentials.access_token && !credentials.refresh_token)) {
+        logger.warn('No Google credentials available to revoke - this is expected in stateless architecture');
+        return; // Don't throw an error, just log a warning
+      }
+
       await this.oauth2Client.revokeCredentials();
-      logger.info('Tokens revoked successfully');
+      logger.info('Google tokens revoked successfully');
     } catch (error) {
-      logger.error('Error revoking tokens:', error);
-      throw new Error('Failed to revoke tokens');
+      logger.error('Error revoking Google tokens:', error);
+      // Don't throw error - log it but allow logout to continue
+      throw new Error('Failed to revoke Google tokens');
+    }
+  }
+
+  /**
+   * Revoke specific tokens (for more robust logout implementation)
+   * This method can be used when refresh tokens are stored server-side
+   */
+  async revokeSpecificTokens(refreshToken: string): Promise<void> {
+    try {
+      // Create a temporary OAuth2Client instance with the specific refresh token
+      const tempClient = new OAuth2Client(
+        config.get<string>('auth.google.clientId'),
+        config.get<string>('auth.google.clientSecret'),
+        config.get<string>('auth.google.redirectUri')
+      );
+      
+      tempClient.setCredentials({ refresh_token: refreshToken });
+      await tempClient.revokeCredentials();
+      
+      logger.info('Specific Google tokens revoked successfully');
+    } catch (error) {
+      logger.error('Error revoking specific Google tokens:', error);
+      throw new Error('Failed to revoke specific Google tokens');
     }
   }
 }

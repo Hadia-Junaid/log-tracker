@@ -12,9 +12,6 @@ declare global {
   }
 }
 
-/**
- * Authentication middleware to verify JWT token
- */
 export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
   try {
     const authHeader = req.headers.authorization;

@@ -25,35 +25,29 @@ class LoginViewModel {
     const urlParams = new URLSearchParams(window.location.search);
     const hash = window.location.hash;
     
-    // Check for token in hash (from OAuth redirect)
     if (hash.includes('token=')) {
       const tokenMatch = hash.match(/token=([^&]+)/);
       if (tokenMatch) {
         const token = tokenMatch[1];
         
-        // Store token (you might want to use localStorage or sessionStorage)
         localStorage.setItem('authToken', token);
         
-        // Trigger a custom event to notify the app controller of successful login
         const authEvent = new CustomEvent('authStateChanged', { 
           detail: { authenticated: true }
         });
         window.dispatchEvent(authEvent);
         
-        // Clean up the URL and redirect to dashboard
         window.history.replaceState({}, document.title, window.location.pathname);
         window.location.href = '#dashboard';
         return;
       }
     }
     
-    // Check for error messages
     if (hash.includes('error=')) {
       const messageMatch = hash.match(/message=([^&]+)/);
       if (messageMatch) {
         const errorMessage = decodeURIComponent(messageMatch[1]);
         this.errorMessage(errorMessage);
-        //console.error('Authentication error:', errorMessage);
       }
     }
   }

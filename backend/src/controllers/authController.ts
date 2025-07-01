@@ -131,15 +131,42 @@ class AuthController {
    */
   async logout(req: Request, res: Response): Promise<void> {
     try {
-      // In a more sophisticated setup, you might want to:
-      // 1. Revoke Google tokens
-      // 2. Add JWT to a blacklist
-      // For now, we'll just return a success message
-      // as JWTs are stateless and will expire naturally
+      // Get user info from the authenticated request (set by auth middleware)
+      const user = req.user;
+      const userEmail = user?.email || 'Unknown';
+      const userId = user?.id;
 
+      logger.info(`Logout initiated for user: ${userEmail} (ID: ${userId})`);
+
+      // Attempt to revoke Google tokens
+      // Note: This may not work in all cases since we don't store refresh tokens server-side
+      // But it's a best-effort attempt to revoke any cached credentials
+      try {
+        await googleAuthService.revokeTokens();
+        logger.info(`Google tokens revoked successfully for user: ${userEmail}`);
+      } catch (revokeError) {
+        // Log the error but don't fail the logout process
+        logger.warn(`Failed to revoke Google tokens for user ${userEmail}:`, revokeError);
+      }
+
+      // TODO: In a production environment, you might want to:
+      // 1. Implement JWT token blacklisting by storing revoked tokens in Redis/database
+      //    - Store the JWT token ID (jti) or token hash in a blacklist with expiration
+      //    - Check blacklist in auth middleware before validating tokens
+      // 2. Store Google refresh tokens server-side during login for proper revocation
+      //    - Save refresh tokens in database during authentication
+      //    - Use stored refresh tokens for proper Google token revocation
+      // 3. Set shorter JWT expiration times to reduce the impact of unrevoked tokens
+      // 4. Implement session management with server-side session store (Redis)
+
+      logger.info(`User logged out successfully: ${userEmail}`);
+      
       res.json({
         success: true,
-        message: 'Logged out successfully'
+        message: 'Logged out successfully',
+        user: {
+          email: userEmail
+        }
       });
 
     } catch (error) {
