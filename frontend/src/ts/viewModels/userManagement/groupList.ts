@@ -56,7 +56,8 @@ export const groupListMethods = {
                     description: group.is_admin ? 'Admin group with full privileges' : 'Regular user group',
                     memberCount: group.members?.length || 0,
                     createdDate: createdDate.toLocaleDateString(),
-                    createdAgo: createdAgoText
+                    createdAgo: createdAgoText,
+                    is_admin: group.is_admin || false
                 };
             });
             groupListObservables.groupDataArray(processedGroups);
