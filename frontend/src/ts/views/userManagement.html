@@ -1,6 +1,12 @@
 <div class="oj-flex oj-sm-flex-direction-column">
   <div class="oj-flex oj-sm-align-items-center oj-sm-margin-4x-bottom">
     <h2 class="oj-typography-heading-md oj-text-color-primary oj-flex-item">Groups</h2>
+
+    <!-- ✅ Global Success Banner -->
+    <div id="globalSuccessBanner"
+        style="display:none; padding: 10px; background-color: #dff0d8; color: #3c763d; border-radius: 4px; margin: 12px 0;">
+    </div>
+
     <div class="oj-flex oj-sm-margin-4x-start">
       <oj-button id="addGroupButton" on-oj-action="[[openAddGroupDialog]]">
         <span slot="startIcon" class="oj-ux-ico-plus"></span>
@@ -95,7 +101,7 @@
                     class="oj-form-control-full-width">
       </oj-input-text>
     </div>
-    
+
     <!-- Member Selection Layout -->
     <div class="oj-flex oj-sm-flex-wrap-nowrap oj-sm-justify-content-space-between oj-sm-margin-4x-bottom">
       <!-- Available Members -->

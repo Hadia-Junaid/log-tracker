@@ -153,21 +153,35 @@ async loadGroups() {
     };
 
     closeAddGroupDialog = () => {
-        (document.getElementById("addGroupDialog") as any).close();
-        if (this.searchTimeoutId) {
-            clearTimeout(this.searchTimeoutId);
-            this.searchTimeoutId = null;
+    // Cancel confirmation logic
+    const hasUnsavedData =
+        this.newGroupName().trim() ||
+        this.createDialogSelectedMembers().length > 0 ||
+        this.createDialogApplications().some(app => app.checked());
+
+    if (hasUnsavedData) {
+        const confirmClose = confirm("You have unsaved changes. Are you sure you want to cancel?");
+        if (!confirmClose) {
+            return;
         }
-        this.newGroupName("");
-        this.searchValue("");
-        this.searchRawValue("");
-        this.createDialogAvailableMembers([]);
-        this.createDialogSelectedMembers([]);
-        this.createDialogApplications([]);
-        this.createError("");
-        this.selectedAvailableMemberKeys(new ObservableKeySet<string | number>());
-        this.selectedAssignedMemberKeys(new ObservableKeySet<string | number>()); 
-    };
+    }
+
+    // Reset fields
+    (document.getElementById("addGroupDialog") as any).close();
+    if (this.searchTimeoutId) {
+        clearTimeout(this.searchTimeoutId);
+        this.searchTimeoutId = null;
+    }
+    this.newGroupName("");
+    this.searchValue("");
+    this.searchRawValue("");
+    this.createDialogAvailableMembers([]);
+    this.createDialogSelectedMembers([]);
+    this.createDialogApplications([]);
+    this.createError("");
+    this.selectedAvailableMemberKeys(new ObservableKeySet<string | number>());
+    this.selectedAssignedMemberKeys(new ObservableKeySet<string | number>());
+};
 
 
     handleMemberSearchInput = (event: CustomEvent<any>) => {
@@ -380,41 +394,55 @@ async loadGroups() {
 
 
     async createGroup() {
-        this.isCreating(true);
-        this.createError("");
+    this.isCreating(true);
+    this.createError("");
 
-        if (!this.newGroupName().trim()) {
-            this.createError('Group name is required.');
-            this.isCreating(false);
-            return;
-        }
-        if (this.createDialogSelectedMembers().length === 0) {
-            this.createError('Please select at least one member for the group.');
-            this.isCreating(false);
-            return;
-        }
-
-        const groupPayload = {
-            name: this.newGroupName(),
-            members: this.createDialogSelectedMembers().map((m: MemberData) => m.email),
-            assigned_applications: this.createDialogApplications()
-                .filter(app => app.checked())
-                .map(app => app.name),
-            is_admin: false
-        };
-
-        try {
-            await createUserGroup(groupPayload);
-            this.closeAddGroupDialog();
-            await this.loadGroups();
-            alert('Group created successfully!');
-        } catch (error) {
-            logger.error("Error creating group", error);
-            this.createError("Failed to create group. Please try again.");
-        } finally {
-            this.isCreating(false);
-        }
+    if (!this.newGroupName().trim()) {
+        this.createError("Group name is required.");
+        this.isCreating(false);
+        return;
     }
+
+    if (this.createDialogSelectedMembers().length === 0) {
+        this.createError("Please select at least one member for the group.");
+        this.isCreating(false);
+        return;
+    }
+
+    const selectedApps = this.createDialogApplications()
+        .filter(app => app.checked())
+        .map(app => app.name);
+
+    if (selectedApps.length === 0) {
+        this.createError("Please select at least one application.");
+        this.isCreating(false);
+        return;
+    }
+
+    const groupPayload = {
+        name: this.newGroupName(),
+        members: this.createDialogSelectedMembers().map((m: MemberData) => m.email),
+        assigned_applications: selectedApps,
+        is_admin: false
+    };
+
+    try {
+        await createUserGroup(groupPayload);
+        this.closeAddGroupDialog();
+        await this.loadGroups();
+
+        // ✅ Use this for clean message instead of alert:
+        this.showBannerMessage("Group created successfully!");
+
+        alert("Group created successfully!");
+    } catch (error) {
+        logger.error("Error creating group", error);
+        this.createError("Failed to create group. Please try again.");
+    } finally {
+        this.isCreating(false);
+    }
+}
+
 
     getInitials(name: string): string {
         if (!name) return '';
@@ -478,6 +506,16 @@ async loadGroups() {
 //             this.createDialogApplications([]);
 //         }
 //         }
+    showBannerMessage(message: string) {
+    const bannerEl = document.getElementById("globalSuccessBanner");
+    if (bannerEl) {
+        bannerEl.innerText = message;
+        bannerEl.style.display = "block";
+        setTimeout(() => {
+            bannerEl.style.display = "none";
+        }, 3000);
+    }
+ }
  }
 
 export = UserManagementViewModel;
