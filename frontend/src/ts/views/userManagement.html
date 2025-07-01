@@ -15,6 +15,11 @@
     </div>
   </div>
 
+  <!-- Search box -->
+  <div class="oj-flex oj-sm-margin-4x-bottom">
+    <oj-input-search raw-value="{{searchTerm}}" placeholder="Search groups..."></oj-input-search>
+  </div>
+
   <div class="oj-flex oj-sm-flex-direction-column oj-sm-margin-4x-bottom">
     <p class="oj-typography-body-md oj-text-color-secondary">
       Manage user groups and their members. Groups are used to control access to application logs.
@@ -76,7 +81,13 @@
     </div>
   </template>
 </oj-list-view>
-  </oj-bind-if>
+
+<!-- Pagination controls -->
+<div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center oj-sm-margin-4x-top">
+  <oj-button on-oj-action="[[goToPrevPage]]" disabled="[[currentPage() === 1]]">Previous</oj-button>
+  <span class="oj-sm-margin-2x">Page <oj-bind-text value="[[currentPage]]"></oj-bind-text> of <oj-bind-text value="[[totalPages]]"></oj-bind-text></span>
+  <oj-button on-oj-action="[[goToNextPage]]" disabled="[[currentPage() === totalPages()]]">Next</oj-button>
+</div>
 
   <oj-bind-if test="[[isDataEmpty()]]">
     <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center demo-nodata-content">

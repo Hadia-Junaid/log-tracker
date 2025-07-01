@@ -7,11 +7,38 @@ import { ConfigService } from '../../services/config-service';
 
 export const groupListObservables = {
     groupDataArray: ko.observableArray<GroupData>([]),
+    searchTerm: ko.observable(""),
+    currentPage: ko.observable(1),
+    pageSize: 5,
     dataProvider: null as any,
-    isDataEmpty: ko.pureComputed(() => true)
+    isDataEmpty: ko.pureComputed(() => true),
+    totalPages: ko.pureComputed(() => 1),
+    filteredGroups: ko.pureComputed<GroupData[]>(() => []),
+    pagedGroups: ko.pureComputed<GroupData[]>(() => [])
 };
 
-groupListObservables.dataProvider = new ArrayDataProvider(groupListObservables.groupDataArray, { keyAttributes: "groupId" });
+groupListObservables.filteredGroups = ko.pureComputed(() => {
+    const term = groupListObservables.searchTerm().toLowerCase();
+    if (!term) return groupListObservables.groupDataArray();
+    return groupListObservables.groupDataArray().filter(group =>
+        group.groupName.toLowerCase().includes(term) ||
+        (group.description && group.description.toLowerCase().includes(term))
+    );
+});
+
+groupListObservables.totalPages = ko.pureComputed(() => {
+    return Math.max(1, Math.ceil(groupListObservables.filteredGroups().length / groupListObservables.pageSize));
+});
+
+groupListObservables.pagedGroups = ko.pureComputed(() => {
+    const start = (groupListObservables.currentPage() - 1) * groupListObservables.pageSize;
+    return groupListObservables.filteredGroups().slice(start, start + groupListObservables.pageSize);
+});
+
+groupListObservables.dataProvider = ko.pureComputed(() =>
+    new ArrayDataProvider(groupListObservables.pagedGroups(), { keyAttributes: "groupId" })
+);
+
 groupListObservables.isDataEmpty = ko.pureComputed(() => groupListObservables.groupDataArray().length === 0);
 
 export const groupListMethods = {
@@ -59,5 +86,15 @@ export const groupListMethods = {
             if (count > 0) return `${count} ${unit}${count > 1 ? 's' : ''} ago`;
         }
         return 'just now';
+    },
+    goToNextPage() {
+        if (groupListObservables.currentPage() < groupListObservables.totalPages()) {
+            groupListObservables.currentPage(groupListObservables.currentPage() + 1);
+        }
+    },
+    goToPrevPage() {
+        if (groupListObservables.currentPage() > 1) {
+            groupListObservables.currentPage(groupListObservables.currentPage() - 1);
+        }
     }
 }; 
