@@ -53,7 +53,7 @@ class LoginViewModel {
       if (messageMatch) {
         const errorMessage = decodeURIComponent(messageMatch[1]);
         this.errorMessage(errorMessage);
-        console.error('Authentication error:', errorMessage);
+        //console.error('Authentication error:', errorMessage);
       }
     }
   }

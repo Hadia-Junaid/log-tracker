@@ -110,9 +110,33 @@
               <!-- Responsive Toolbar -->
               <oj-toolbar>
                 <oj-menu-button id="userMenu" display="[[smScreen() ? 'icons' : 'all']]" chroming="borderless">
-                  <span><oj-bind-text value="[[userLogin]]"></oj-bind-text></span>
-                  <span slot="endIcon" :class="[[{'oj-icon demo-appheader-avatar': smScreen(), 'oj-component-icon oj-button-menu-dropdown-icon': !smScreen()}]]"></span>
+                  <!-- ko if: smScreen() -->
+                  <!-- Mobile view - show only initials -->
+                  <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background-color: #0572ce; color: white; font-weight: bold; font-size: 14px;">
+                    <oj-bind-text value="[[userInitials]]"></oj-bind-text>
+                  </div>
+                  <!-- /ko -->
+                  <!-- ko ifnot: smScreen() -->
+                  <!-- Desktop view - show name with avatar -->
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #0572ce; color: white; font-weight: bold; font-size: 12px;">
+                      <oj-bind-text value="[[userInitials]]"></oj-bind-text>
+                    </div>
+                    <span><oj-bind-text value="[[userLogin]]"></oj-bind-text></span>
+                  </div>
+                  <!-- /ko -->
+                  <span slot="endIcon" class="oj-component-icon oj-button-menu-dropdown-icon"></span>
                   <oj-menu id="menu1" slot="menu" on-oj-menu-action="[[menuItemAction]]">
+                    <oj-option id="profile" value="profile" disabled="true">
+                      <div style="padding: 8px 0; border-bottom: 1px solid #eee; margin-bottom: 8px;">
+                        <div style="font-weight: bold; color: #333; margin-bottom: 4px;">
+                          <oj-bind-text value="[[userLogin]]"></oj-bind-text>
+                        </div>
+                        <div style="font-size: 12px; color: #666;">
+                          <oj-bind-text value="[[userEmail]]"></oj-bind-text>
+                        </div>
+                      </div>
+                    </oj-option>
                     <oj-option id="out" value="out">Sign Out</oj-option>
                   </oj-menu>
                 </oj-menu-button>
