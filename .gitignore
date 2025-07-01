@@ -1,3 +1,5 @@
 node_modules
 dist
 .env
+
+backend/credentials/service-account-key.json
