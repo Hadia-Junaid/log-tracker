@@ -10,9 +10,9 @@ import {
 const router = Router();
 
 router.post('/', createUserGroup);
+router.get('/', getUserGroups);
 router.patch('/:id', updateUserGroup);
 router.delete('/:id', deleteUserGroup);
-router.get('/', getUserGroups);
 router.get('/:id', getUserGroupById);
 
 export default router;
