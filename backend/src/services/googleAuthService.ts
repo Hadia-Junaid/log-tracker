@@ -81,12 +81,6 @@ class GoogleAuthService {
     }
   }
 
-  /**
-   * Revoke tokens (for logout)
-   * Note: This method has limitations in the current architecture since we don't store
-   * Google refresh tokens server-side. It will only work if tokens are currently set
-   * on the oauth2Client instance, which is unlikely in a stateless server environment.
-   */
   async revokeTokens(): Promise<void> {
     try {
       // Check if there are any credentials to revoke
@@ -106,10 +100,7 @@ class GoogleAuthService {
     }
   }
 
-  /**
-   * Revoke specific tokens (for more robust logout implementation)
-   * This method can be used when refresh tokens are stored server-side
-   */
+  
   async revokeSpecificTokens(refreshToken: string): Promise<void> {
     try {
       // Create a temporary OAuth2Client instance with the specific refresh token

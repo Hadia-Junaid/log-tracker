@@ -8,5 +8,8 @@
     "jwt": {
       "secret": "JWT_SECRET"
     }
+  },
+  "frontend": {
+    "baseUrl": "FRONTEND_URL"
   }
 }

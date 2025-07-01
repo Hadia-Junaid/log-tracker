@@ -3,6 +3,8 @@ import googleAuthService from '../services/googleAuthService';
 import jwtService from '../services/jwtService';
 import User from '../models/User';
 import logger from '../utils/logger';
+import config from 'config';
+
 
 class AuthController {
  
@@ -30,7 +32,7 @@ class AuthController {
 
       if (!code || typeof code !== 'string') {
         // Redirect to frontend login page with error message
-        res.redirect(`http://localhost:8000/#login?error=missing_code&message=Authorization code is required. Please try again.`);
+        res.redirect(`${config.get<string>('frontend.baseUrl')}/#login?error=missing_code&message=Authorization code is required. Please try again.`);
         return;
       }
 
@@ -42,17 +44,11 @@ class AuthController {
       // Check if user exists in MongoDB
       const existingUser = await User.findOne({ email: googleUserInfo.email });
       
-      // 🐛 DEBUG: Try multiple searches
-      const allUsers = await User.find({});
-      
-      const caseInsensitiveUser = await User.findOne({ 
-        email: { $regex: new RegExp(`^${googleUserInfo.email}$`, 'i') } 
-      });
 
       if (!existingUser) {
         logger.warn(`Access denied for user: ${googleUserInfo.email} - User not found in database`);
         // Redirect to frontend login page with error message
-        res.redirect(`http://localhost:8000/#login?error=access_denied&message=Access denied. Please contact your administrator.`);
+        res.redirect(`${config.get<string>('frontend.baseUrl')}/#login?error=access_denied&message=Access denied. Please contact your administrator.`);
         return;
       }
 
@@ -68,12 +64,12 @@ class AuthController {
       logger.info(`User successfully authenticated: ${existingUser.email}`);
 
       // Redirect to frontend dashboard with token
-      res.redirect(`http://localhost:8000/#dashboard?token=${token}`);
+      res.redirect(`${config.get<string>('frontend.baseUrl')}/#dashboard?token=${token}`);
 
     } catch (error) {
       logger.error('Google OAuth callback error:', error);
       // Redirect to frontend login page with error message
-      res.redirect(`http://localhost:8000/#login?error=auth_failed&message=Authentication failed. Please try again.`);
+      res.redirect(`${config.get<string>('frontend.baseUrl')}/#login?error=auth_failed&message=Authentication failed. Please try again.`);
     }
   }
 
@@ -148,16 +144,6 @@ class AuthController {
         // Log the error but don't fail the logout process
         logger.warn(`Failed to revoke Google tokens for user ${userEmail}:`, revokeError);
       }
-
-      // TODO: In a production environment, you might want to:
-      // 1. Implement JWT token blacklisting by storing revoked tokens in Redis/database
-      //    - Store the JWT token ID (jti) or token hash in a blacklist with expiration
-      //    - Check blacklist in auth middleware before validating tokens
-      // 2. Store Google refresh tokens server-side during login for proper revocation
-      //    - Save refresh tokens in database during authentication
-      //    - Use stored refresh tokens for proper Google token revocation
-      // 3. Set shorter JWT expiration times to reduce the impact of unrevoked tokens
-      // 4. Implement session management with server-side session store (Redis)
 
       logger.info(`User logged out successfully: ${userEmail}`);
       
