@@ -4,33 +4,28 @@ import { UserInfo } from "../app.types";
 import { ConfigService } from "./config-service";
 
 export class AuthService {
-  /**
-   * Checks if a valid authentication token exists in local storage.
-   */
+ 
   public checkAuthToken(): boolean {
     const token = localStorage.getItem("authToken");
     if (!token) {
       return false;
     }
-    // For example, decode the token and check the expiration time
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
-      const exp = payload.exp ? payload.exp * 1000 : 0; // Convert to milliseconds
+      const exp = payload.exp ? payload.exp * 1000 : 0;
       if (Date.now() > exp) {
         localStorage.removeItem("authToken"); // Token expired, remove it
         return false;
       }
     } catch (error) {
       console.error("Error decoding token:", error);
-      localStorage.removeItem("authToken"); // Invalid token, remove it
+      localStorage.removeItem("authToken"); 
       return false;
     }
     return token.length > 0;
   }
 
-  /**
-   * Retrieves full user information from the JWT token.
-   */
+
   public getUserInfoFromToken(): UserInfo | null {
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -49,9 +44,7 @@ export class AuthService {
     }
   }
 
-  /**
-   * Generates user initials from their name for display purposes.
-   */
+
   public getUserInitials(): string {
     const userInfo = this.getUserInfoFromToken();
     if (!userInfo || !userInfo.name) {
@@ -66,9 +59,7 @@ export class AuthService {
     return nameParts[0][0].toUpperCase();
   }
 
-  /**
-   * Handles the complete user logout process.
-   */
+
   public async logout(): Promise<void> {
     const token = localStorage.getItem("authToken");
 

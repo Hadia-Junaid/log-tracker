@@ -15,13 +15,10 @@ class LoginViewModel {
   constructor() {
     this.errorMessage = ko.observable("");
     
-    // Check for token or error in URL parameters when page loads
     this.checkUrlParameters();
   }
 
-  /**
-   * Check URL parameters for token (successful auth) or error messages
-   */
+
   private checkUrlParameters(): void {
     const urlParams = new URLSearchParams(window.location.search);
     const hash = window.location.hash;
@@ -70,7 +67,6 @@ class LoginViewModel {
 
       const data = await response.json();
 
-      // Check if the response is successful and contains authUrl
       if (data.success && data.authUrl) {
         // Redirect to the Google OAuth URL
         window.location.href = data.authUrl;

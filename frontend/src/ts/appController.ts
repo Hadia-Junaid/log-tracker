@@ -60,11 +60,9 @@ class RootViewModel {
     this.authService = new AuthService();
     this.isAuthenticated = ko.observable(this.authService.checkAuthToken());
 
-    // Setup router
     this.router = createRouter();
     this.router.sync();
 
-    // Setup adapters
     this.moduleAdapter = new ModuleRouterAdapter(this.router);
     this.selection = new KnockoutRouterAdapter(this.router);
 
@@ -79,12 +77,10 @@ class RootViewModel {
       this.mdScreen.subscribe(() => this.sideDrawerOn(false));
     }
 
-    // Navigation data provider (excludes login and redirect routes)
     this.navDataProvider = new ArrayDataProvider(navData.slice(2), {
       keyAttributes: "path",
     });
 
-    // Drawer state
     this.sideDrawerOn = ko.observable(false);
 
     // Header and user info
@@ -93,9 +89,8 @@ class RootViewModel {
     this.userLogin = ko.observable("Not logged in");
     this.userEmail = ko.observable("");
     this.userInitials = ko.observable("U");
-    this.updateUserInfo(); // Initial population
+    this.updateUserInfo(); 
 
-    // Event listeners
     this.setupEventListeners();
 
     // Release bootstrap busy state
@@ -118,14 +113,6 @@ class RootViewModel {
       }
     });
 
-    // Optional: Periodically check auth state
-    setInterval(() => {
-      const currentAuth = this.authService.checkAuthToken();
-      if (currentAuth !== this.isAuthenticated()) {
-        this.isAuthenticated(currentAuth);
-        this.updateUserInfo();
-      }
-    }, 5000);
   }
 
   private updateUserInfo(): void {
