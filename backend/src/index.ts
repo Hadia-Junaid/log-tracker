@@ -12,8 +12,9 @@ import cors from "cors";
 
 processErrors(); // Initialize process level error handlers
 
-const PORT = config.get<number>("server.port") || 3000;
-const mongoUri = config.get<string>("mongoUri") || "";
+const PORT = config.get<number>("server.port");
+const mongoUri = config.get<string>("mongoUri");
+const baseUrl = config.get<string>("frontend.baseUrl");;
 
 const app = express();
 
@@ -22,7 +23,7 @@ app.use(morgan('tiny', { stream: morganStream }));
 
 // Enable CORS for frontend
 app.use(cors({
-  origin: 'http://localhost:8000', // Frontend URL
+  origin: baseUrl, // Frontend URL
   credentials: true
 }));
 

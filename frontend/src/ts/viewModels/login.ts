@@ -7,6 +7,7 @@
  */
 import * as AccUtils from "../accUtils";
 import * as ko from "knockout";
+import { ConfigService } from "../services/config-service";
 
 class LoginViewModel {
   errorMessage: ko.Observable<string>;
@@ -55,7 +56,8 @@ class LoginViewModel {
 
   handleLogin = async (): Promise<void> => {
     try {
-      const response = await fetch(`http://localhost:3000/auth/google`, {
+      await ConfigService.loadConfig();
+      const response = await fetch(`${ConfigService.getApiUrl()}/auth/google`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",

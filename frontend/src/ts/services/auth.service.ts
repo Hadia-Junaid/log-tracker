@@ -1,12 +1,12 @@
 // auth.service.ts
 
 import { UserInfo } from "../app.types";
+import { ConfigService } from "./config-service";
 
 export class AuthService {
   /**
    * Checks if a valid authentication token exists in local storage.
    */
-  backendApiUrl = "@@BACKEND_URL";
   public checkAuthToken(): boolean {
     const token = localStorage.getItem("authToken");
     if (!token) {
@@ -74,7 +74,8 @@ export class AuthService {
 
     if (token) {
       try {
-        await fetch(`${this.backendApiUrl}/auth/logout`, {
+        await ConfigService.loadConfig();
+        await fetch(`${ConfigService.getApiUrl()}/auth/logout`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
