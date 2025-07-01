@@ -4,6 +4,11 @@
             <h1 class="oj-typography-heading-lg oj-text-color-primary">Applications</h1>
         </div>
 
+        <!-- ✅ Global Success Banner -->
+        <div id="globalSuccessBanner"
+            style="display:none; padding: 10px; background-color: #dff0d8; color: #3c763d; border-radius: 4px; margin: 12px 0;">
+        </div>
+
         <div class="oj-flex oj-sm-margin-4x-bottom">
             <oj-c-input-text label-hint="Search by name, hostname, or environment" raw-value="{{searchQuery}}"
                 placeholder="Type to filter…" class="oj-flex-item" <!-- makes it fill available width -->
@@ -60,7 +65,7 @@
                                 <span slot="startIcon" class="oj-ux-ico-edit"></span>
                                 Edit
                             </oj-button>
-                            <oj-button class="oj-button-sm" chroming="outlined" on-oj-action="[[deleteApplication]]"
+                            <oj-button class="oj-button-sm" chroming="outlined" on-oj-action="[[handleDeleteApp]]"
                                 :data-app-id="[[item.item.data._id]]">
                                 <span slot="startIcon" class="oj-ux-ico-trash"></span>
                                 Delete
@@ -201,3 +206,24 @@
             </oj-button>
         </div>
     </oj-dialog>
+
+    <!-- Delete Confirmation Dialog -->
+    <oj-dialog id="deleteApplicationDialog" cancel-behavior="icon" aria-labelledby="delete-app-dialog-title"
+        aria-describedby="delete-app-dialog-body">
+        <div slot="header">
+            <span id="delete-app-dialog-title" class="oj-dialog-title">
+                Delete Application
+            </span>
+        </div>
+        <div slot="body">
+            <p id="delete-app-dialog-body">
+                Are you sure you want to delete this application? This action cannot be undone.
+            </p>
+        </div>
+        <div slot="footer">
+            <oj-button on-oj-action="[[cancelDelete]]">Cancel</oj-button>
+            <oj-button class="oj-button-danger" on-oj-action="[[confirmDelete]]">Delete</oj-button>
+        </div>
+    </oj-dialog>
+
+</div>

@@ -59,7 +59,7 @@ export const updateApplication = async (req: Request, res: Response): Promise<vo
 // Expects req.params.id to be the application ID
 // Returns a success message or an error if not found
 export const deleteApplication = async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params;
+  const id  = req.params.id.trim();
 
   if (!mongoose.isValidObjectId(id)) {
     logger.warn(`Invalid delete request with malformed ID: ${id}`);
@@ -67,7 +67,7 @@ export const deleteApplication = async (req: Request, res: Response): Promise<vo
     return;
   } 
 
-  const deleted = await Application.findByIdAndUpdate(id, {is_active: false});
+  const deleted = await Application.findByIdAndDelete(id);
 
   if (!deleted) {
     logger.warn(`Delete failed: Application not found (ID: ${id})`);

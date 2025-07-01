@@ -37,6 +37,8 @@ import {
     editAppDialogMethods
 } from './applicationManagement/editAppDialog';
 import { envOptions as environmentOptions } from './applicationManagement/applicationUtils';
+// import deleteApplicationDialog from './applicationManagement/deleteAppDialog';
+import { deleteDialogMethods } from './applicationManagement/deleteDialog';
 
 
 class ApplicationViewModel {
@@ -47,7 +49,7 @@ class ApplicationViewModel {
     readonly currentPage = applicationListObservables.currentPage;
     readonly pageSize = applicationListObservables.pageSize;
     newApplication = addAppDialogObservables.newApplication;
-envOptions = environmentOptions;
+    envOptions = environmentOptions;
     selectedApplicationId = editAppDialogObservables.selectedApplicationId;
     selectedApplicationName = editAppDialogObservables.selectedApplicationName;
     selectedApplicationHostName = editAppDialogObservables.selectedApplicationHostName;
@@ -74,7 +76,13 @@ envOptions = environmentOptions;
     closeEditDialog = editAppDialogMethods.closeEditDialog
     updateApplication = editAppDialogMethods.updateApplication;
 
-    
+    handleDeleteApp = deleteDialogMethods.handleDeleteApp(this.applicationDataArray);
+    cancelDelete = deleteDialogMethods.cancelDelete;
+    confirmDelete = deleteDialogMethods.confirmDelete;
+    isDeleting = deleteDialogMethods.isDeleting;
+    applicationName = deleteDialogMethods.applicationName;
+
+
     // Update groups assigned to the application
     updateGroupMembers = async () => {
         const selectedAppnName = this.selectedApplicationName();
@@ -116,16 +124,7 @@ envOptions = environmentOptions;
 
     }
 
-    //Delete application action
-    deleteApplication = (event: any) => {
-        const appId = event.target.getAttribute('data-app-id');
-        const selectedItem = this.applicationDataArray().find(app => app._id.toString() === appId);
 
-        if (selectedItem && confirm(`Are you sure you want to delete the application "${selectedItem.name}"?`)) {
-            this.applicationDataArray.remove(app => app._id.toString() === appId);
-            alert('Application deleted successfully!');
-        }
-    }
 
     constructor() {
         // Load configuration on initialization
@@ -168,5 +167,5 @@ envOptions = environmentOptions;
         // implement if needed
     }
 }
- 
+
 export = ApplicationViewModel; 
