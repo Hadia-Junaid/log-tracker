@@ -34,6 +34,7 @@ class GoogleAuthService {
       access_type: 'offline',
       scope: scopes,
       include_granted_scopes: true,
+      prompt: 'select_account', // Force account selection every time
     });
 
     return authUrl;

@@ -97,9 +97,8 @@ class RootViewModel {
       
       // If not authenticated and trying to access non-login route, redirect to login
       if (!isAuthenticated && !isLoginRoute) {
-        console.log("User not authenticated, redirecting to login");
-        // Prevent the navigation and redirect to login
-        args.accept(Promise.reject());
+        // Accept the navigation first, then redirect
+        args.accept(Promise.resolve());
         setTimeout(() => {
           router.go({ path: "login" });
         }, 0);
@@ -108,9 +107,8 @@ class RootViewModel {
       
       // If authenticated and trying to access login route, redirect to dashboard
       if (isAuthenticated && isLoginRoute) {
-        console.log("User already authenticated, redirecting to dashboard");
-        // Prevent the navigation and redirect to dashboard
-        args.accept(Promise.reject());
+        // Accept the navigation first, then redirect
+        args.accept(Promise.resolve());
         setTimeout(() => {
           router.go({ path: "dashboard" });
         }, 0);
@@ -220,11 +218,18 @@ class RootViewModel {
    * Logout user
    */
   logout = (): void => {
+    // Clear all authentication-related storage
     localStorage.removeItem('authToken');
+    sessionStorage.clear(); // Clear any session storage that might contain auth data
+    
     this.isAuthenticated(false);
     this.userLogin("Not logged in");
+    
+    // Use setTimeout to avoid router sync conflicts
     if (this.router) {
-      this.router.go({ path: "login" });
+      setTimeout(() => {
+        this.router?.go({ path: "login" });
+      }, 0);
     }
   }
 

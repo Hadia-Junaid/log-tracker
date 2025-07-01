@@ -30,7 +30,6 @@ class LoginViewModel {
       const tokenMatch = hash.match(/token=([^&]+)/);
       if (tokenMatch) {
         const token = tokenMatch[1];
-        console.log('Authentication successful, received token:', token);
         
         // Store token (you might want to use localStorage or sessionStorage)
         localStorage.setItem('authToken', token);
@@ -63,8 +62,6 @@ class LoginViewModel {
    * Handle login button click
    */
   handleLogin = async (): Promise<void> => {
-    console.log("Login button clicked");
-    
     try {
       // Call the backend API to get the Google OAuth URL
       const response = await fetch("http://localhost:3000/auth/google", {
@@ -79,7 +76,6 @@ class LoginViewModel {
       }
 
       const data = await response.json();
-      console.log("Auth response:", data);
 
       // Check if the response is successful and contains authUrl
       if (data.success && data.authUrl) {
