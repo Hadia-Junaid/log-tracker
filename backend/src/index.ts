@@ -8,6 +8,7 @@ import { processErrors } from "./startup/processErrors";
 import config from "config";
 import morgan from "morgan";
 import authRoutes from "./routes/authRoutes";
+import cors from "cors";
 
 processErrors(); // Initialize process level error handlers
 
@@ -18,6 +19,12 @@ const app = express();
 
 app.use(express.json());
 app.use(morgan('tiny', { stream: morganStream }));
+
+// Enable CORS for frontend
+app.use(cors({
+  origin: 'http://localhost:8000', // Frontend URL
+  credentials: true
+}));
 
 // Authentication routes
 app.use('/auth', authRoutes);

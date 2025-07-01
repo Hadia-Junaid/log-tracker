@@ -29,10 +29,8 @@ class AuthController {
       const { code } = req.query;
 
       if (!code || typeof code !== 'string') {
-        res.status(400).json({
-          success: false,
-          message: 'Authorization code is required'
-        });
+        // Redirect to frontend login page with error message
+        res.redirect(`http://localhost:8000/#login?error=missing_code&message=Authorization code is required. Please try again.`);
         return;
       }
 
@@ -53,10 +51,8 @@ class AuthController {
 
       if (!existingUser) {
         logger.warn(`Access denied for user: ${googleUserInfo.email} - User not found in database`);
-        res.status(403).json({
-          success: false,
-          message: 'Access denied. Please contact your administrator.'
-        });
+        // Redirect to frontend login page with error message
+        res.redirect(`http://localhost:8000/#login?error=access_denied&message=Access denied. Please contact your administrator.`);
         return;
       }
 
@@ -71,25 +67,13 @@ class AuthController {
 
       logger.info(`User successfully authenticated: ${existingUser.email}`);
 
-      res.json({
-        success: true,
-        message: 'Authentication successful',
-        user: {
-          id: existingUser._id,
-          email: existingUser.email,
-          name: existingUser.name,
-          settings: existingUser.settings,
-          pinned_applications: existingUser.pinned_applications
-        },
-        token
-      });
+      // Redirect to frontend dashboard with token
+      res.redirect(`http://localhost:8000/#dashboard?token=${token}`);
 
     } catch (error) {
       logger.error('Google OAuth callback error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Authentication failed'
-      });
+      // Redirect to frontend login page with error message
+      res.redirect(`http://localhost:8000/#login?error=auth_failed&message=Authentication failed. Please try again.`);
     }
   }
 
