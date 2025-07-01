@@ -4,6 +4,10 @@
             <h1 class="oj-typography-heading-lg oj-text-color-primary">Applications</h1>
         </div>
 
+        <oj-c-input-text label-hint="Search by name, hostname, or environment" value="{{searchQuery}}"
+            value-option="input" class="oj-sm-margin-4x-bottom">
+        </oj-c-input-text>
+
         <div class="oj-flex oj-sm-flex-direction-column">
             <div class="oj-flex oj-sm-align-items-center oj-sm-margin-4x-bottom">
                 <h2 class="oj-typography-heading-md oj-text-color-primary oj-flex-item">Registered Applications</h2>
@@ -27,7 +31,7 @@
     </div>
 
     <oj-bind-if test="[[!isDataEmpty()]]">
-        <oj-list-view id="applicationsListView" aria-label="Applications" data="[[dataProvider]]"
+        <oj-list-view id="applicationsListView" aria-label="Applications" data="[[paginatedDataProvider]]"
             on-oj-item-action="[[gotoEditApplication]]" class="demo-applications-list">
             <template slot="itemTemplate" data-oj-as="item">
                 <li>
@@ -71,6 +75,23 @@
                 </div>
             </template>
         </oj-list-view>
+
+        <div class="oj-flex oj-sm-justify-content-center oj-sm-margin-4x-bottom">
+            <oj-button chroming="outlined" disabled="[[currentPage() === 1]]"
+                on-oj-action="[[() => currentPage(currentPage() - 1)]]">
+                Previous
+            </oj-button>
+
+            <div class="oj-sm-margin-2x-start oj-sm-margin-2x-end">
+                Page <oj-bind-text value="[[currentPage]]"></oj-bind-text>
+            </div>
+
+            <oj-button chroming="outlined" disabled="[[ currentPage() >= totalPages() ]]""
+                on-oj-action="[[() => currentPage(currentPage() + 1)]]">
+                Next
+            </oj-button>
+        </div>
+
     </oj-bind-if>
 
     <oj-bind-if test="[[isDataEmpty()]]">
@@ -95,8 +116,8 @@
                 <oj-c-input-text label-hint="Hostname" value="{{newApplication.hostname}}" required>
                 </oj-c-input-text>
 
-                <oj-c-select-single label-hint="Environment" value="{{newApplication.environment}}" data="[[envOptions]]"
-                    item-text="label" placeholder="Choose environment" required>
+                <oj-c-select-single label-hint="Environment" value="{{newApplication.environment}}"
+                    data="[[envOptions]]" item-text="label" placeholder="Choose environment" required>
                 </oj-c-select-single>
 
                 <oj-c-text-area label-hint="Description" value="{{newApplication.description}}">

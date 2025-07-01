@@ -21,28 +21,12 @@ export const createApplication = async (req: Request, res: Response): Promise<vo
 // Returns a paginated list of applications matching the search criteria
 // If no search is provided, returns all applications
 export const getApplications = async (req: Request, res: Response): Promise<void> => {
-  const { search = '', page = 1, limit = 10 } = req.query;
+   const apps = await Application.find().lean();  
+    const total = apps.length;
 
-  const regex = new RegExp(search.toString(), 'i');
+    logger.info(`Fetched ${total} applications (no filtering)`);
 
-  const filter = {
-    $or: [
-      { name: regex },
-      { hostname: regex },
-      { environment: regex },
-      { description: regex }
-    ]
-  };
-
-  const apps = await Application.find(filter)
-    .skip((+page - 1) * +limit)
-    .limit(+limit);
-
-  const total = await Application.countDocuments(filter);
-
-  logger.info(`Fetched ${apps.length} applications (search="${search}", page=${page}, limit=${limit})`);
-
-  res.send({ data: apps, total });
+    res.send({ data: apps, total });
 };
 
 // Updates an existing application by ID
