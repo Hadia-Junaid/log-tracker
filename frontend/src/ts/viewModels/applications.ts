@@ -38,6 +38,7 @@ import {
 } from './applicationManagement/editAppDialog';
 import { deleteDialogMethods } from "./applicationManagement/deleteDialog";
 import { envOptions as environmentOptions } from './applicationManagement/applicationUtils';
+import deleteApplicationDialog from './applicationManagement/deleteAppDialog';
 
 
 class ApplicationViewModel {
