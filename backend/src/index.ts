@@ -9,6 +9,7 @@ import config from "config";
 import morgan from "morgan";
 import adminRoutes from "./routes/adminRoutes";
 import applications from "./routes/application.routes";
+import cors from "cors";
 
 processErrors(); // Initialize process level error handlers
 
@@ -17,6 +18,7 @@ const mongoUri = config.get<string>("mongoUri") || "";
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 app.use(morgan('tiny', { stream: morganStream }));
 

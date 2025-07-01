@@ -92,11 +92,14 @@ class ApplicationViewModel {
     ];
 
 
-    readonly applicationDataArray = ko.observableArray(this.sampleApplicationsData);
-    readonly dataProvider = new ArrayDataProvider<
-        ApplicationData["_id"],
-        ApplicationData
-    >(this.applicationDataArray, { keyAttributes: "_id" });
+    readonly applicationDataArray = ko.observableArray<ApplicationData>([]);
+    readonly dataProvider = ko.computed(() =>
+        new ArrayDataProvider(this.applicationDataArray, { keyAttributes: "_id" })
+    );
+
+    readonly page = ko.observable(1);
+    readonly limit = 10;
+    readonly searchTerm = ko.observable("");
 
     // Dialog-related observables
     readonly selectedApplicationId = ko.observable<string>('');
@@ -143,6 +146,25 @@ class ApplicationViewModel {
         this.newApplication.environment("");
         this.newApplication.description("");
     };
+
+    //Load initial application data
+    loadApplicationData = async () => {
+         try {
+            const baseUrl = ConfigService.getApiUrl(); // your helper for env-based URL
+            const response = await fetch(
+                `${baseUrl}/applications?search=${this.searchTerm()}&page=${this.page()}&limit=${this.limit}`
+            );
+            const json = await response.json();
+            if (response.ok) {
+                this.applicationDataArray(json.data);
+                console.log(`Loaded ${json.data.length} applications`);
+            } else {
+                console.error("API Error", json);
+            }
+        } catch (err) {
+            console.error("Fetch error", err);
+        }
+    }
 
     //Add a new application
     addNewApplication = async () => {
@@ -312,11 +334,11 @@ class ApplicationViewModel {
 
     constructor() {
         // Load configuration on initialization
-        ConfigService.loadConfig().catch(error => {
-            console.error('Failed to load application configuration:', error);
-        });
+       AccUtils.announce("Application page loaded", "assertive");
+        document.title = "Applications";
+     
     }
-
+    
     /**
      * Optional ViewModel method invoked after the View is inserted into the
      * document DOM.  The application can put logic that requires the DOM being
@@ -324,11 +346,17 @@ class ApplicationViewModel {
      * This method might be called multiple times - after the View is created
      * and inserted into the DOM and after the View is reconnected
      * after being disconnected.
-     */
-    connected(): void {
-        AccUtils.announce("Applications page loaded.");
-        document.title = "Applications";
-        // implement further logic if needed
+    */
+   async connected(): Promise<void> {
+
+       try {
+            // Load configuration
+            await ConfigService.loadConfig();
+              // Load initial application data
+              await this.loadApplicationData();
+       } catch (error) {
+            console.error("Error during ViewModel connected lifecycle:", error);
+       }
     }
 
     /**
