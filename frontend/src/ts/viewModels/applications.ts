@@ -37,6 +37,7 @@ import {
     editAppDialogMethods
 } from './applicationManagement/editAppDialog';
 import { envOptions as environmentOptions } from './applicationManagement/applicationUtils';
+import deleteApplicationDialog from './applicationManagement/deleteAppDialog';
 
 
 class ApplicationViewModel {
@@ -118,14 +119,26 @@ envOptions = environmentOptions;
 
     //Delete application action
     deleteApplication = (event: any) => {
-        const appId = event.target.getAttribute('data-app-id');
+        event.stopPropagation();
+        event.preventDefault();
+
+        const button = event.target as HTMLElement;
+        const appId = button.getAttribute('data-app-id');
         const selectedItem = this.applicationDataArray().find(app => app._id.toString() === appId);
 
-        if (selectedItem && confirm(`Are you sure you want to delete the application "${selectedItem.name}"?`)) {
-            this.applicationDataArray.remove(app => app._id.toString() === appId);
-            alert('Application deleted successfully!');
+        if (selectedItem && appId) {
+            deleteApplicationDialog.openDialog(appId, selectedItem.name);
         }
     }
+
+    // Delete Dialog Handlers for <oj-dialog> button bindings
+    cancelDelete = () => {
+        deleteApplicationDialog.closeDialog();
+    };
+
+    confirmDelete = () => {
+        deleteApplicationDialog.confirmDelete();
+    };
 
     constructor() {
         // Load configuration on initialization
