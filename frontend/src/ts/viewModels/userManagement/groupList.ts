@@ -5,6 +5,7 @@ import { fetchUserGroups } from '../../services/group-service';
 import logger from '../../services/logger-service';
 import { ConfigService } from '../../services/config-service';
 
+
 export const groupListObservables = {
     groupDataArray: ko.observableArray<GroupData>([]),
     searchTerm: ko.observable(""),
@@ -42,6 +43,7 @@ groupListObservables.dataProvider = ko.pureComputed(() =>
 groupListObservables.isDataEmpty = ko.pureComputed(() => groupListObservables.groupDataArray().length === 0);
 
 export const groupListMethods = {
+
     async loadGroups() {
         try {
             const rawGroups = await fetchUserGroups();
@@ -70,6 +72,7 @@ export const groupListMethods = {
             logger.error("Initialization failed", e);
         }
     },
+
     getRelativeTime(date: Date): string {
         const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
         const intervals: { [key: string]: number } = {
@@ -97,4 +100,6 @@ export const groupListMethods = {
             groupListObservables.currentPage(groupListObservables.currentPage() - 1);
         }
     }
+
+    
 }; 
