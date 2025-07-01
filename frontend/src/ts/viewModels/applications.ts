@@ -36,6 +36,7 @@ import {
     editAppDialogObservables,
     editAppDialogMethods
 } from './applicationManagement/editAppDialog';
+import { deleteDialogMethods } from "./applicationManagement/deleteDialog";
 import { envOptions as environmentOptions } from './applicationManagement/applicationUtils';
 // import deleteApplicationDialog from './applicationManagement/deleteAppDialog';
 import { deleteDialogMethods } from './applicationManagement/deleteDialog';
@@ -49,6 +50,7 @@ class ApplicationViewModel {
     readonly currentPage = applicationListObservables.currentPage;
     readonly pageSize = applicationListObservables.pageSize;
     newApplication = addAppDialogObservables.newApplication;
+    envOptions = environmentOptions;
     envOptions = environmentOptions;
     selectedApplicationId = editAppDialogObservables.selectedApplicationId;
     selectedApplicationName = editAppDialogObservables.selectedApplicationName;
@@ -167,5 +169,6 @@ class ApplicationViewModel {
         // implement if needed
     }
 }
+
 
 export = ApplicationViewModel; 
