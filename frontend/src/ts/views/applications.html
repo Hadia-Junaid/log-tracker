@@ -1,0 +1,163 @@
+<div class="oj-hybrid-padding">
+    <div class="oj-flex oj-sm-flex-direction-column">
+        <div class="oj-flex oj-sm-margin-4x-bottom">
+            <h1 class="oj-typography-heading-lg oj-text-color-primary">Applications</h1>
+        </div>
+
+        <div class="oj-flex oj-sm-flex-direction-column">
+            <div class="oj-flex oj-sm-align-items-center oj-sm-margin-4x-bottom">
+                <h2 class="oj-typography-heading-md oj-text-color-primary oj-flex-item">Registered Applications</h2>
+                <div class="oj-flex oj-sm-margin-4x-start">
+                    <oj-button id="addApplicationButton" class="oj-button-outlined-chrome oj-sm-margin-2x-end"
+                        on-oj-action="[[openAddDialog]]" chroming="outlined">
+                        <span slot="startIcon" class="oj-ux-ico-plus"></span>
+                        Add Application
+                    </oj-button>
+
+                </div>
+            </div>
+
+            <div class="oj-flex oj-sm-flex-direction-column oj-sm-margin-4x-bottom">
+                <p class="oj-typography-body-md oj-text-color-secondary">
+                    Manage access permissions for registered applications. Control which groups can access each
+                    application's logs.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <oj-bind-if test="[[!isDataEmpty()]]">
+        <oj-list-view id="applicationsListView" aria-label="Applications" data="[[dataProvider]]"
+            on-oj-item-action="[[gotoEditApplication]]" class="demo-applications-list">
+            <template slot="itemTemplate" data-oj-as="item">
+                <li>
+                    <oj-list-item-layout>
+                        <div class="oj-flex oj-sm-flex-direction-column">
+                            <span class="oj-typography-heading-sm oj-text-color-primary">
+                                <oj-bind-text value="[[item.item.data.name]]"></oj-bind-text>
+                            </span>
+                            <span class="oj-typography-body-sm oj-text-color-primary">
+                                <oj-bind-text value="[[item.item.data._id]]"></oj-bind-text>
+                            </span>
+                            <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
+                                Hostname <oj-bind-text value="[[item.item.data.hostname]]"></oj-bind-text>
+                            </span>
+                        </div>
+
+                        <div slot="metadata" class="oj-flex oj-sm-align-items-center">
+                            <span class="oj-typography-body-md oj-text-color-secondary oj-sm-margin-4x-end">
+                                <oj-bind-text value="[[item.item.data.environment]]"></oj-bind-text>
+                            </span>
+                            <oj-button class="oj-button-sm" chroming="outlined" on-oj-action="[[editApplication]]"
+                                :data-app-id="[[item.item.data._id]]">
+                                <span slot="startIcon" class="oj-ux-ico-edit"></span>
+                                Edit
+                            </oj-button>
+                            <oj-button class="oj-button-sm" chroming="outlined" on-oj-action="[[deleteApplication]]"
+                                :data-app-id="[[item.item.data._id]]">
+                                <span slot="startIcon" class="oj-ux-ico-trash"></span>
+                                Delete
+                            </oj-button>
+                        </div>
+                    </oj-list-item-layout>
+                </li>
+            </template>
+            <template slot="noData">
+                <div class="oj-flex oj-sm-align-items-center demo-nodata-content">
+                    <div class="oj-flex oj-sm-align-items-center oj-sm-flex-direction-column demo-nodata-inner">
+                        <h5>No Applications found!</h5>
+                        <p class="oj-text-color-secondary">Add your first application to get started.</p>
+                    </div>
+                </div>
+            </template>
+        </oj-list-view>
+    </oj-bind-if>
+
+    <oj-bind-if test="[[isDataEmpty()]]">
+        <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center demo-nodata-content">
+            <div class="oj-flex oj-sm-align-items-center oj-sm-flex-direction-column demo-nodata-inner">
+                <h5>No Applications found!</h5>
+                <p class="oj-text-color-secondary">Create your first application to get started.</p>
+            </div>
+        </div>
+    </oj-bind-if>
+
+    <!-- Add Application Dialog -->
+    <oj-dialog id="addApplicationDialog" cancel-behavior="icon" aria-labelledby="add-dialog-title">
+        <div slot="header">
+            <span id="add-dialog-title" class="oj-dialog-title">Register New Application</span>
+        </div>
+        <div slot="body">
+            <oj-form-layout max-columns="1" label-edge="top">
+                <h1>Hello</h1>
+                <oj-input-text label-hint="Application Name" value="[[newApplication.name]]" required>
+                </oj-input-text>
+
+                <oj-input-text label-hint="Hostname" value="[[newApplication.hostname]]" required>
+                </oj-input-text>
+
+                <oj-select-single label-hint="Environment" value="[[newApplication.environment]]" data="[[envOptions]]"
+                    item-text="label" placeholder="Choose environment" required>
+                </oj-select-single>
+
+                <oj-text-area label-hint="Description" value="[[newApplication.description]]">
+                </oj-text-area>
+            </oj-form-layout>
+        </div>
+
+        <div slot="footer">
+            <oj-button on-oj-action="[[closeAddDialog]]">Cancel</oj-button>
+            <oj-button chroming="callToAction" on-oj-action="[[addNewApplication]]">
+                Register Application
+            </oj-button>
+        </div>
+    </oj-dialog>
+
+
+
+    <!-- Edit Application Dialog -->
+    <oj-dialog id="editApplicationDialog" cancel-behavior="icon" aria-labelledby="dialog-title-id">
+        <div slot="header">
+            <span id="dialog-title-id" class="oj-dialog-title">Edit Application: <oj-bind-text
+                    value="[[selectedApplicationName]]"></oj-bind-text></span>
+        </div>
+        <div slot="body">
+            <div class="oj-flex oj-sm-flex-direction-column">
+                <p class="oj-typography-body-md oj-text-color-secondary oj-sm-margin-4x-bottom">
+                    Manage application settings using the form below.
+                </p>
+
+                <div class="oj-flex oj-sm-flex-direction-row edit-application-content">
+                    <!-- Application Details Section -->
+                    <div class="oj-flex oj-sm-flex-direction-column oj-sm-margin-4x-top">
+                        <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">Application
+                            Details</h4>
+                        <oj-text-field id="applicationNameField" label="Application Name"
+                            value="[[selectedApplicationName]]" readonly>
+                        </oj-text-field>
+                        <oj-text-field id="applicationHostName" label="Application Host Name"
+                            value="[[selectedApplicationHostName]]" readonly>
+                        </oj-text-field>
+                        <oj-text-field id="applicationDescriptionField" label="Description"
+                            value="[[selectedApplicationDescription]]" readonly>
+                        </oj-text-field>
+                    </div>
+                    <!-- Accessible Applications Section -->
+                    <div class="oj-flex oj-sm-flex-direction-column oj-sm-margin-4x-top">
+                        <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">Group
+                            Assignment</h4>
+                        <template for-each="[[availableGroups]]" as="group">
+                            <oj-c-checkbox :id="[[group + '_checkbox']]" :label="[[group]]" :value="[[group]]"
+                                :disabled="[[group === 'Admin Group']]" checked="{{selectedGroups}}">
+                            </oj-c-checkbox>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div slot="footer">
+            <oj-button id="cancelDialogBtn" on-oj-action="[[closeEditDialog]]">Cancel</oj-button>
+            <oj-button id="updateGroupBtn" chroming="callToAction" on-oj-action="[[updateGroupMembers]]">Update
+                Application</oj-button>
+        </div>
+    </oj-dialog>

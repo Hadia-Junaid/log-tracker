@@ -63,6 +63,7 @@ class RootViewModel {
       { path: "", redirect: "dashboard" },
       { path: "dashboard", detail: { label: "Dashboard", iconClass: "oj-ux-ico-bar-chart" } },
       { path: "incidents", detail: { label: "Incidents", iconClass: "oj-ux-ico-fire" } },
+      { path: "applications", detail: { label: "Applications", iconClass: "oj-ux-ico-contact-group" } },
       { path: "userManagement", detail: { label: "User Management", iconClass: "oj-ux-ico-contact-group" } },
       { path: "about", detail: { label: "About", iconClass: "oj-ux-ico-information-s" } }
     ];
@@ -94,7 +95,7 @@ class RootViewModel {
     this.appName = ko.observable("LogTracker");
     // user Info used in Global Navigation area
 
-    this.userLogin = ko.observable("bilal.salman@gosaas.io");
+    this.userLogin = ko.observable("farhan.kashif@gosaas.io");
     // footer
     this.footerLinks = [
       {name: 'About Oracle', linkId: 'aboutOracle', linkTarget:'http://www.oracle.com/us/corporate/index.html#menu-about'},
