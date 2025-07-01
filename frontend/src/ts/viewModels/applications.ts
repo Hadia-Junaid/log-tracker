@@ -49,6 +49,7 @@ class ApplicationViewModel {
     readonly pageSize = applicationListObservables.pageSize;
     newApplication = addAppDialogObservables.newApplication;
     envOptions = environmentOptions;
+    envOptions = environmentOptions;
     selectedApplicationId = editAppDialogObservables.selectedApplicationId;
     selectedApplicationName = editAppDialogObservables.selectedApplicationName;
     selectedApplicationHostName = editAppDialogObservables.selectedApplicationHostName;
@@ -166,5 +167,6 @@ class ApplicationViewModel {
         // implement if needed
     }
 }
+
 
 export = ApplicationViewModel; 
