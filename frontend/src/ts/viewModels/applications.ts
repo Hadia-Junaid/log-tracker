@@ -31,14 +31,27 @@ import {
     applicationListComputed,
     applicationListMethods
 } from './applicationManagement/appList';
-
+import { addAppDialogObservables, addAppDialogMethods } from './applicationManagement/addAppDialog';
+import {
+    editAppDialogObservables,
+    editAppDialogMethods
+} from './applicationManagement/editAppDialog';
 
 class ApplicationViewModel {
 
+    // Observables
     readonly applicationDataArray = applicationListObservables.applicationDataArray;
     readonly searchQuery = applicationListObservables.searchQuery;
     readonly currentPage = applicationListObservables.currentPage;
     readonly pageSize = applicationListObservables.pageSize;
+    newApplication = addAppDialogObservables.newApplication;
+    envOptions = addAppDialogObservables.envOptions;
+    selectedApplicationId = editAppDialogObservables.selectedApplicationId;
+    selectedApplicationName = editAppDialogObservables.selectedApplicationName;
+    selectedApplicationHostName = editAppDialogObservables.selectedApplicationHostName;
+    selectedApplicationEnv = editAppDialogObservables.selectedApplicationEnv;
+    selectedApplicationDescription = editAppDialogObservables.selectedApplicationDescription;
+
 
     // Computed
     readonly totalPages = applicationListComputed.totalPages;
@@ -48,16 +61,14 @@ class ApplicationViewModel {
 
     // Methods
     readonly loadApplicationData = applicationListMethods.loadApplicationData;
-
-
-
-
-    // Dialog-related observables
-    readonly selectedApplicationId = ko.observable<string>('');
-    readonly selectedApplicationName = ko.observable<string>('');
-    readonly selectedApplicationHostName = ko.observable<string>('');
-    readonly selectedApplicationEnv = ko.observable<string>('');
-    readonly selectedApplicationDescription = ko.observable<string>('');
+    openAddDialog = addAppDialogMethods.openAddDialog;
+    closeAddDialog = addAppDialogMethods.closeAddDialog;
+    addNewApplication = addAppDialogMethods.addNewApplication;
+    resetNewAppForm = addAppDialogMethods.resetNewAppForm;
+    editApplication = editAppDialogMethods.editApplication;
+    gotoEditApplication = editAppDialogMethods.gotoEditApplication;
+    openEditDialog = editAppDialogMethods.openEditDialog;
+    closeEditDialog = editAppDialogMethods.closeEditDialog
 
     readonly availableGroups = [
         "Admin Group",
@@ -68,150 +79,6 @@ class ApplicationViewModel {
     ];
 
     readonly selectedGroups = ko.observableArray<string>(["Admin Group"]); // Always selected
-
-    //Checks if applicationDataArray is empty
-    // readonly isDataEmpty = () => {
-    // return this.applicationDataArray().length === 0;
-    // }
-
-    readonly newApplication = {
-        name: ko.observable(""),
-        hostname: ko.observable(""),
-        environment: ko.observable(null),
-        description: ko.observable("")
-    };
-
-    readonly envOptions = new ArrayDataProvider(
-        [
-            { value: 'Development', label: 'Development' },
-            { value: 'Testing', label: 'Testing' },
-            { value: 'Production', label: 'Production' },
-            { value: 'Staging', label: 'Staging' }
-        ],
-        { keyAttributes: 'value' }
-    );
-
-    resetNewAppForm = () => {
-        this.newApplication.name("");
-        this.newApplication.hostname("");
-        this.newApplication.environment("");
-        this.newApplication.description("");
-    };
-
-
-    //Add a new application
-    addNewApplication = async () => {
-        const dialog = document.getElementById("addApplicationDialog");
-        if (!dialog) {
-            console.error("Dialog not found");
-            return;
-        }
-
-        const elements = Array.from(
-            dialog.querySelectorAll("oj-c-input-text, oj-c-text-area, oj-c-select-single")
-        ) as any[];
-
-        let allValid = true;
-
-        for (const element of elements) {
-            // Wait for the component to be ready if validation is pending
-            if (element.getProperty("valid") === "pending") {
-                await element.whenReady();
-            }
-
-            // Trigger validation
-            const validationResult = await element.validate();
-
-            if (validationResult !== "valid") {
-                allValid = false;
-            }
-        }
-
-        if (!allValid) {
-            return;
-        }
-
-        const app = {
-            name: this.newApplication.name(),
-            hostname: this.newApplication.hostname(),
-            environment: this.newApplication.environment(),
-            description: this.newApplication.description()
-        };
-
-        try {
-
-            const apiUrl = ConfigService.getApiUrl();
-            const response = await fetch(`${apiUrl}/applications`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify(app)
-            });
-
-
-
-            if (!response.ok) throw new Error("Failed to add application");
-
-            const createdApp = await response.json();
-
-            this.applicationDataArray.push(createdApp);
-            this.closeAddDialog();
-            alert("Application added!");
-
-        } catch (error) {
-            console.error("Error adding application:", error);
-            alert("Could not add application");
-        }
-    };
-
-    openAddDialog = () => {
-        const dialog = document.getElementById("addApplicationDialog") as any;
-        if (dialog) dialog.open();
-    };
-
-    closeAddDialog = () => {
-        const dialog = document.getElementById("addApplicationDialog") as any;
-        if (dialog) dialog.close();
-        this.resetNewAppForm();
-    };
-
-    //Navigate to edit application - placeholder functionality
-    gotoEditApplication = (event: any) => {
-        const selectedItem = event.detail.context.data;
-        console.log('Edit application:', selectedItem.name);
-    }
-
-    //Edit application action - opens dialog
-    editApplication = (event: any) => {
-        const applicationId = event.target.getAttribute('data-app-id');
-        const selectedItem = this.applicationDataArray().find(app => app._id.toString() === applicationId);
-
-        if (selectedItem) {
-            this.selectedApplicationName(selectedItem.name);
-            this.selectedApplicationHostName(selectedItem.hostname);
-            this.selectedApplicationEnv(selectedItem.environment);
-            this.selectedApplicationDescription(selectedItem.description);
-            this.openEditDialog();
-        }
-        console.log('Edit application:', selectedItem ? selectedItem.name : 'Not found');
-    }
-
-    // Dialog management methods
-    openEditDialog = () => {
-        const dialog = document.getElementById('editApplicationDialog') as any;
-        if (dialog) {
-            dialog.open();
-        }
-    }
-
-    closeEditDialog = () => {
-        const dialog = document.getElementById('editApplicationDialog') as any;
-        if (dialog) {
-            dialog.close();
-        }
-    }
-
 
     // Update groups assigned to the application
     updateGroupMembers = async () => {
@@ -269,7 +136,6 @@ class ApplicationViewModel {
         // Load configuration on initialization
         AccUtils.announce("Application page loaded", "assertive");
         document.title = "Applications";
-
     }
 
     /**
