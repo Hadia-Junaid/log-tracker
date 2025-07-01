@@ -24,6 +24,12 @@ class UserManagementViewModel {
     groupDataArray = groupListObservables.groupDataArray;
     dataProvider = groupListObservables.dataProvider;
     isDataEmpty = groupListObservables.isDataEmpty;
+    // Search and pagination
+    searchTerm = groupListObservables.searchTerm;
+    currentPage = groupListObservables.currentPage;
+    totalPages = groupListObservables.totalPages;
+    goToNextPage = groupListMethods.goToNextPage;
+    goToPrevPage = groupListMethods.goToPrevPage;
 
     // Add Group Dialog
     newGroupName = addGroupDialogObservables.newGroupName;
@@ -102,6 +108,11 @@ class UserManagementViewModel {
     transitionCompleted(): void {
         // implement if needed
     }
+
+    onSearchInputChange = (event: CustomEvent) => {
+        this.searchTerm(event.detail.value);
+        this.currentPage(1); // Optionally reset to first page on new search
+    };
 }
 
 export = UserManagementViewModel;
