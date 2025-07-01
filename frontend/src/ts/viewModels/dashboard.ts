@@ -5,12 +5,42 @@
  * as shown at https://oss.oracle.com/licenses/upl/
  * @ignore
  */
+   
+import * as ko from "knockout";
+import MutableArrayDataProvider = require("ojs/ojmutablearraydataprovider");
+import "ojs/ojselectsingle";
+import "ojs/ojlabel";
+
 import * as AccUtils from "../accUtils";
+import logger from '../services/logger-service';
+
+
+type ChartType = {
+  value: string;
+  label: string;
+};
+
 class DashboardViewModel {
 
-  constructor() {
+  chartTypes: Array<Object>;
+  chartTypesDP: MutableArrayDataProvider<ChartType["value"], ChartType>;
+  val: ko.Observable<string>;
+   
+   constructor() {
+   this.chartTypes = [
+      { value: "pie", label: "Pie" },
+      { value: "bar", label: "Bar" },
+      ];
+   
+   this.chartTypesDP = new MutableArrayDataProvider<
+      ChartType["value"],
+      ChartType
+      >(this.chartTypes, {
+      keyAttributes: "value",
+      });
+    this.val = ko.observable("pie");
 
-  }
+  } // End constructor
 
   /**
    * Optional ViewModel method invoked after the View is inserted into the
@@ -23,7 +53,11 @@ class DashboardViewModel {
   connected(): void {
     AccUtils.announce("Dashboard page loaded.");
     document.title = "Dashboard";
-    // implement further logic if needed
+    
+    logger.info('Dashboard page connected and loaded successfully', {
+      chartTypesCount: this.chartTypes.length,
+      selectedChartType: this.val()
+    });
   }
 
   /**

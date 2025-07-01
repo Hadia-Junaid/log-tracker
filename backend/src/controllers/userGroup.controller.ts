@@ -46,7 +46,7 @@ export const createUserGroup = async (req: Request, res: Response): Promise<void
       });
 
       await user.save();
-      logger.info(`✅ Created new user from directory API: ${email}`);
+      logger.info(` Created new user from directory API: ${email}`);
     }
 
     verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
@@ -100,7 +100,7 @@ export const updateUserGroup = async (req: Request, res: Response): Promise<void
       });
 
       await user.save();
-      logger.info(`✅ Created user ${email} during group update.`);
+      logger.info(` Created user ${email} during group update.`);
     }
 
     verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);

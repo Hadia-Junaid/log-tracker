@@ -20,6 +20,7 @@ import { ojNavigationList } from "ojs/ojnavigationlist";
 import { ojModule } from "ojs/ojmodule-element";
 import Context = require("ojs/ojcontext");
 import "ojs/ojdrawerpopup";
+import logger from './services/logger-service';
 
 interface CoreRouterDetail {
   label: string;
@@ -63,14 +64,24 @@ class RootViewModel {
       { path: "", redirect: "dashboard" },
       { path: "dashboard", detail: { label: "Dashboard", iconClass: "oj-ux-ico-bar-chart" } },
       { path: "incidents", detail: { label: "Incidents", iconClass: "oj-ux-ico-fire" } },
-      { path: "customers", detail: { label: "Customers", iconClass: "oj-ux-ico-contact-group" } },
+      { path: "userManagement", detail: { label: "User Management", iconClass: "oj-ux-ico-contact-group" } },
       { path: "about", detail: { label: "About", iconClass: "oj-ux-ico-information-s" } }
     ];
     // router setup
     const router = new CoreRouter(navData, {
       urlAdapter: new UrlParamAdapter()
     });
-    router.sync();
+    
+    try {
+      router.sync();
+      logger.info('Router initialized and synchronized successfully', {
+        routeCount: navData.length
+      });
+    } catch (error) {
+      logger.error('Failed to initialize or sync router', {
+        error: error instanceof Error ? error.message : String(error)
+      });
+    }
 
     this.moduleAdapter = new ModuleRouterAdapter(router);
 
@@ -91,10 +102,10 @@ class RootViewModel {
     // header
 
     // application Name used in Branding Area
-    this.appName = ko.observable("App Name");
+    this.appName = ko.observable("LogTracker");
     // user Info used in Global Navigation area
 
-    this.userLogin = ko.observable("john.hancock@oracle.com");
+    this.userLogin = ko.observable("bilal.salman@gosaas.io");
     // footer
     this.footerLinks = [
       {name: 'About Oracle', linkId: 'aboutOracle', linkTarget:'http://www.oracle.com/us/corporate/index.html#menu-about'},
@@ -104,17 +115,33 @@ class RootViewModel {
       { name: "Your Privacy Rights", id: "yourPrivacyRights", linkTarget: "http://www.oracle.com/us/legal/privacy/index.html" },
     ];
     // release the application bootstrap busy state
-    Context.getPageContext().getBusyContext().applicationBootstrapComplete();        
+    Context.getPageContext().getBusyContext().applicationBootstrapComplete();
+    
+    logger.info('Application bootstrap completed successfully', {
+      appName: this.appName(),
+      userLogin: this.userLogin(),
+      routesCount: navData.length
+    });
   }
 
   announcementHandler = (event: any): void => {
       this.message(event.detail.message);
       this.manner(event.detail.manner);
+      
+      logger.debug('Accessibility announcement made', {
+        message: event.detail.message,
+        manner: event.detail.manner
+      });
   }
 
   // called by navigation drawer toggle button and after selection of nav drawer item
   toggleDrawer = (): void => {
-    this.sideDrawerOn(!this.sideDrawerOn());
+    const newState = !this.sideDrawerOn();
+    this.sideDrawerOn(newState);
+    
+    logger.debug('Navigation drawer toggled', { 
+      drawerOpen: newState 
+    });
   }
 
     // a close listener so we can move focus back to the toggle button when the drawer closes

@@ -48,3 +48,229 @@ html[dir="rtl"] .demo-oracle-icon {
       transform:translate(-25%, -25%) scale(0.5)
   }
 }
+
+.selectSingleStyle {
+  max-width: 20em;
+}
+   
+.chartStyle {
+  max-width: 500px;
+  width: 100%;
+  height: 350px;
+}
+
+/* User Management specific styles */
+.demo-groups-list {
+  min-height: 25rem;
+}
+
+.demo-groups-list oj-list-item-layout {
+  padding: 1rem;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.demo-groups-list oj-list-item-layout:hover {
+  background-color: #f8f9fa;
+}
+
+.demo-nodata-content {
+  height: 20rem;
+  min-height: 20rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.demo-nodata-inner {
+  text-align: center;
+  padding: 2rem;
+}
+
+.demo-nodata-inner h5 {
+  margin-bottom: 0.5rem;
+  color: #666;
+}
+
+.demo-nodata-inner p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+/* Custom styling for group items */
+.group-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.group-item-info {
+  flex: 1;
+}
+
+.group-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.group-member-count {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+/* Button styling */
+.oj-button-outlined-chrome {
+  border: 1px solid #ccc;
+  background-color: white;
+}
+
+.oj-button-outlined-chrome:hover {
+  background-color: #f0f0f0;
+}
+
+/* Edit Group Dialog Styles */
+#editGroupDialog {
+  width: 70vw;
+  max-width: 800px;
+  min-height: 600px;
+}
+
+.edit-group-content {
+  gap: 2rem;
+}
+
+.available-members-section,
+.current-members-section {
+  flex: 1;
+  min-width: 300px;
+}
+
+.members-list {
+  height: 300px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.member-list-item {
+  padding: 0.5rem;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.member-list-item:hover {
+  background-color: #f8f9fa;
+}
+
+.current-member-item {
+  position: relative;
+}
+
+.current-member-item .member-remove-container {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  z-index: 2;
+}
+
+.current-member-item:hover .member-remove-container {
+  opacity: 1;
+}
+
+.member-remove-btn {
+  background-color: transparent;
+  border: none;
+  padding: 0px;
+  width: 10px;
+  height: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.member-remove-btn:hover {
+  background-color: #ff4444;
+  color: white;
+  transform: scale(0.5.0.5);
+  box-shadow: 0 2px 4px rgba(255, 68, 68, 0.3);
+}
+
+.member-remove-btn .oj-ux-ico-close {
+  font-size: 10px;
+}
+
+.no-members-content {
+  height: 100px;
+  justify-content: center;
+  align-items: center;
+}
+
+.applications-checkboxes {
+  gap: 0.1rem;
+}
+
+.applications-checkboxes oj-c-checkbox {
+  margin-bottom: 0.1rem;
+}
+
+/* Dialog footer button styling */
+#editGroupDialog oj-button {
+  border: 1px solid #ccc !important;
+  border-radius: 4px !important;
+  outline: none !important;
+  box-shadow: none !important;
+  position: relative !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+}
+
+#editGroupDialog oj-button::before,
+#editGroupDialog oj-button::after {
+  display: none !important;
+}
+
+#editGroupDialog oj-button *,
+#editGroupDialog oj-button *::before,
+#editGroupDialog oj-button *::after {
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  outline: none !important;
+}
+
+#editGroupDialog oj-button .oj-button-button {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+#editGroupDialog oj-button:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25) !important;
+}
+
+#editGroupDialog oj-button.oj-button-primary {
+  border: 1px solid #000000 !important;
+  background-color: #000000 !important;
+  color: white !important;
+}
+
+#editGroupDialog oj-button.oj-button-primary:hover {
+  border: 1px solid #333333 !important;
+  background-color: #333333 !important;
+  color: white !important;
+}
+
+#editGroupDialog oj-button.oj-button-primary span,
+#editGroupDialog oj-button.oj-button-primary .oj-button-text {
+  color: white !important;
+}
+
+#editGroupDialog oj-button.oj-button-primary:hover span,
+#editGroupDialog oj-button.oj-button-primary:hover .oj-button-text {
+  color: white !important;
+}

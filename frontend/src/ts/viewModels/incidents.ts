@@ -6,6 +6,8 @@
  * @ignore
  */
 import * as AccUtils from "../accUtils";
+import logger from '../services/logger-service';
+
 class IncidentsViewModel {
 
   constructor() {
@@ -23,7 +25,8 @@ class IncidentsViewModel {
   connected(): void {
     AccUtils.announce("Incidents page loaded.");
     document.title = "Incidents";
-    // implement further logic if needed
+    
+    logger.info('Incidents page connected and loaded successfully');
   }
 
   /**
