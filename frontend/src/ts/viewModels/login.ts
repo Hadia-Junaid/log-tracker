@@ -35,7 +35,14 @@ class LoginViewModel {
         // Store token (you might want to use localStorage or sessionStorage)
         localStorage.setItem('authToken', token);
         
-        // Redirect to dashboard (clear the URL parameters)
+        // Trigger a custom event to notify the app controller of successful login
+        const authEvent = new CustomEvent('authStateChanged', { 
+          detail: { authenticated: true }
+        });
+        window.dispatchEvent(authEvent);
+        
+        // Clean up the URL and redirect to dashboard
+        window.history.replaceState({}, document.title, window.location.pathname);
         window.location.href = '#dashboard';
         return;
       }
