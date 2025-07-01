@@ -13,26 +13,6 @@ export class ConfigService {
       return this._config;
     }
 
-    try {
-      // Try to fetch the OracleJET configuration
-      const response = await fetch('/oraclejetconfig.json');
-      if (response.ok) {
-        const ojetConfig = await response.json();
-        const environment = this.detectEnvironment();
-        
-        if (ojetConfig.environments && ojetConfig.environments[environment]) {
-          this._config = {
-            apiUrl: ojetConfig.environments[environment].apiUrl,
-            environment: environment
-          };
-          return this._config;
-        }
-      }
-    } catch (error) {
-      logger.warn('Could not load OracleJET config, using fallback configuration', error);
-    }
-
-    // Fallback configuration if oraclejetconfig.json is not accessible
     const environment = this.detectEnvironment();
     this._config = {
       apiUrl: environment === 'development' 
