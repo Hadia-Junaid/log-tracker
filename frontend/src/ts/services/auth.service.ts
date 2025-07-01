@@ -6,12 +6,25 @@ export class AuthService {
   /**
    * Checks if a valid authentication token exists in local storage.
    */
+  backendApiUrl = "@@BACKEND_URL";
   public checkAuthToken(): boolean {
     const token = localStorage.getItem("authToken");
     if (!token) {
       return false;
     }
-    // Basic check, can be expanded for expiration validation
+    // For example, decode the token and check the expiration time
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      const exp = payload.exp ? payload.exp * 1000 : 0; // Convert to milliseconds
+      if (Date.now() > exp) {
+        localStorage.removeItem("authToken"); // Token expired, remove it
+        return false;
+      }
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      localStorage.removeItem("authToken"); // Invalid token, remove it
+      return false;
+    }
     return token.length > 0;
   }
 
@@ -61,7 +74,7 @@ export class AuthService {
 
     if (token) {
       try {
-        await fetch("http://localhost:3000/auth/logout", {
+        await fetch(`${this.backendApiUrl}/auth/logout`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
