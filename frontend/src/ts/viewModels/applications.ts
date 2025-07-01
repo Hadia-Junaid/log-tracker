@@ -15,11 +15,11 @@ import "ojs/ojbutton";
 import "ojs/ojlabel";
 import "ojs/ojdialog";
 import "ojs/ojinputsearch";
-import "ojs/ojinputtext";
-import "ojs/ojselectsingle";
 import "ojs/ojformlayout";
-// import "ojs/ojtext";
 import "ojs/ojavatar";
+import "oj-c/input-text";
+import "oj-c/text-area";
+import "oj-c/select-single";   
 import 'oj-c/checkbox';
 import { ObservableKeySet } from 'ojs/ojknockout-keyset';
 import { InputSearchElement } from 'ojs/ojinputsearch';
@@ -123,15 +123,16 @@ class ApplicationViewModel {
     readonly newApplication = {
         name: ko.observable(""),
         hostname: ko.observable(""),
-        environment: ko.observable(""),
+        environment: ko.observable(null),
         description: ko.observable("")
     };
 
     readonly envOptions = new ArrayDataProvider(
         [
-            { value: 'dev', label: 'Development' },
-            { value: 'test', label: 'Testing' },
-            { value: 'prod', label: 'Production' }
+            { value: 'Development', label: 'Development' },
+            { value: 'Testing', label: 'Testing' },
+            { value: 'Production', label: 'Production' },
+            { value: 'Staging', label: 'Staging' }
         ],
         { keyAttributes: 'value' }
     );
@@ -145,6 +146,35 @@ class ApplicationViewModel {
 
     //Add a new application
     addNewApplication = async () => {
+        const dialog = document.getElementById("addApplicationDialog");
+        if (!dialog) {
+            console.error("Dialog not found");
+            return;
+        }
+
+        const elements = Array.from(
+            dialog.querySelectorAll("oj-c-input-text, oj-c-text-area, oj-c-select-single")
+        ) as any[];
+
+        let allValid = true;
+
+        for (const element of elements) {
+            // Wait for the component to be ready if validation is pending
+            if (element.getProperty("valid") === "pending") {
+                await element.whenReady();
+            }
+
+            // Trigger validation
+            const validationResult = await element.validate();
+
+            if (validationResult !== "valid") {
+                allValid = false;
+            }
+        }
+
+        if (!allValid) {
+            return;
+        }
 
         const app = {
             name: this.newApplication.name(),
@@ -155,31 +185,21 @@ class ApplicationViewModel {
 
         try {
 
-            // 
-
-            // const apiUrl = ConfigService.getApiUrl();
-            // const response = await fetch(`${apiUrl}/applications`, {
-            //     method: "POST",
-            //     headers: {
-            //         "Content-Type": "application/json"
-            //     },
-            //     body: JSON.stringify(app)
-            // });
+            const apiUrl = ConfigService.getApiUrl();
+            const response = await fetch(`${apiUrl}/applications`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(app)
+            });
 
 
 
-            // if (!response.ok) throw new Error("Failed to add application");
+            if (!response.ok) throw new Error("Failed to add application");
 
-            // const createdApp = await response.json();
+            const createdApp = await response.json();
 
-
-            const createdApp = {
-                _id: Math.random().toString(36).substring(2, 15),
-                ...app,
-                createdAt: new Date().toISOString(),
-                updatedAt: new Date().toISOString(),
-                createdAgo: "just now"
-            };
             this.applicationDataArray.push(createdApp);
             this.closeAddDialog();
             alert("Application added!");

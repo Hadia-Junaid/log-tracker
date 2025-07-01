@@ -89,19 +89,18 @@
         </div>
         <div slot="body">
             <oj-form-layout max-columns="1" label-edge="top">
-                <h1>Hello</h1>
-                <oj-input-text label-hint="Application Name" value="[[newApplication.name]]" required>
-                </oj-input-text>
+                <oj-c-input-text label-hint="Application Name" value="{{newApplication.name}}" required>
+                </oj-c-input-text>
 
-                <oj-input-text label-hint="Hostname" value="[[newApplication.hostname]]" required>
-                </oj-input-text>
+                <oj-c-input-text label-hint="Hostname" value="{{newApplication.hostname}}" required>
+                </oj-c-input-text>
 
-                <oj-select-single label-hint="Environment" value="[[newApplication.environment]]" data="[[envOptions]]"
+                <oj-c-select-single label-hint="Environment" value="{{newApplication.environment}}" data="[[envOptions]]"
                     item-text="label" placeholder="Choose environment" required>
-                </oj-select-single>
+                </oj-c-select-single>
 
-                <oj-text-area label-hint="Description" value="[[newApplication.description]]">
-                </oj-text-area>
+                <oj-c-text-area label-hint="Description" value="{{newApplication.description}}">
+                </oj-c-text-area>
             </oj-form-layout>
         </div>
 

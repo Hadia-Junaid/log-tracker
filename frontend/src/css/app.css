@@ -274,3 +274,31 @@ html[dir="rtl"] .demo-oracle-icon {
 #editGroupDialog oj-button.oj-button-primary:hover .oj-button-text {
   color: white !important;
 }
+
+/* Application Management CSS Styles */
+
+#addApplicationDialog .oj-dialog-body {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+
+#addApplicationDialog oj-form-layout {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+/* Optional: Adjust spacing between fields */
+#addApplicationDialog oj-form-layout > * {
+  margin-bottom: 16px;
+}
+
+/* Optional: Improve spacing inside dialog footer */
+#addApplicationDialog .oj-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 24px;
+}
