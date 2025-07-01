@@ -9,6 +9,7 @@ import { processErrors } from './startup/processErrors';
 import config from 'config';
 import morgan from 'morgan';
 import cors from 'cors'; // 
+import adminRoutes from "./routes/adminRoutes";
 
 import userGroupRoutes from './routes/userGroup.route';
 
@@ -31,6 +32,9 @@ app.use(morgan('tiny', { stream: morganStream }));
 
 // ✅ Mount the routes
 app.use('/api/user-groups', userGroupRoutes);
+
+// Register routes
+app.use('/api/admin', adminRoutes);
 
 mongoose.connect(mongoUri)
   .then(() => {
