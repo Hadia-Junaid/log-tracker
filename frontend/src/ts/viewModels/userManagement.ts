@@ -100,35 +100,35 @@ class UserManagementViewModel {
         }
     }
 
-async loadGroups() {
-  try {
-    const rawGroups = await fetchUserGroups();
-    console.log("🎯 Raw groups from API:", rawGroups);
+    async loadGroups() {
+    try {
+        const rawGroups = await fetchUserGroups();
+        console.log("🎯 Raw groups from API:", rawGroups);
 
-    const processedGroups: GroupData[] = rawGroups.map((group: any, index: number) => {
-      const createdDate = new Date(group.createdAt);
-      const createdAgoText = this.getRelativeTime(createdDate);
+        const processedGroups: GroupData[] = rawGroups.map((group: any, index: number) => {
+        const createdDate = new Date(group.createdAt);
+        const createdAgoText = this.getRelativeTime(createdDate);
 
-      const mapped = {
-        groupId: group._id || `fallback-id-${index}`,
-        groupName: group.name || `Unnamed Group ${index}`,
-        description: group.is_admin ? 'Admin group with full privileges' : 'Regular user group',
-        memberCount: group.members?.length || 0,
-        createdDate: createdDate.toLocaleDateString(),
-        createdAgo: createdAgoText
-      };
+        const mapped = {
+            groupId: group._id || `fallback-id-${index}`,
+            groupName: group.name || `Unnamed Group ${index}`,
+            description: group.is_admin ? 'Admin group with full privileges' : 'Regular user group',
+            memberCount: group.members?.length || 0,
+            createdDate: createdDate.toLocaleDateString(),
+            createdAgo: createdAgoText
+        };
 
-      console.log("✅ Mapped group:", mapped);
-      return mapped;
-    });
+        console.log("✅ Mapped group:", mapped);
+        return mapped;
+        });
 
-    this.groupDataArray(processedGroups);
-    console.log("📦 Final observable array:", this.groupDataArray());
-  } catch (e) {
-    logger.error("Failed to load user groups", e);
-    this.createError("Failed to load user groups. Check console for details.");
-  }
-}
+        this.groupDataArray(processedGroups);
+        console.log("📦 Final observable array:", this.groupDataArray());
+    } catch (e) {
+        logger.error("Failed to load user groups", e);
+        this.createError("Failed to load user groups. Check console for details.");
+    }
+    }
 
     openAddGroupDialog = async () => {
         this.newGroupName("");
@@ -181,7 +181,7 @@ async loadGroups() {
     this.createError("");
     this.selectedAvailableMemberKeys(new ObservableKeySet<string | number>());
     this.selectedAssignedMemberKeys(new ObservableKeySet<string | number>());
-};
+    };
 
 
     handleMemberSearchInput = (event: CustomEvent<any>) => {
@@ -516,6 +516,6 @@ async loadGroups() {
         }, 3000);
     }
  }
- }
+}
 
 export = UserManagementViewModel;
