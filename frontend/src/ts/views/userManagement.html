@@ -112,6 +112,7 @@
         <oj-input-search id="searchMemberInput"
                          value="{{searchValue}}"
                          raw-value="{{searchRawValue}}"
+                         on-raw-value-changed="[[handleMemberSearchInput]]"
                          suggestions="[[createDialogAvailableMembersDP]]"
                          suggestion-item-text="email"
                          class="oj-form-control-full-width oj-sm-margin-2x-bottom"
@@ -194,9 +195,9 @@
                                 id="memberSearch"
                                 class="oj-form-control-full-width"
                                 suggestions="[[editDialogAvailableMembersDP]]" suggestion-item-text="email"
-                                value="{{searchValue}}"
-                                raw-value="{{searchRawValue}}"
-                                on-raw-value-changed="[[handleMemberSearchInput]]"
+                                value="{{editSearchValue}}"
+                                raw-value="{{editSearchRawValue}}"
+                                on-raw-value-changed="[[handleEditMemberSearchInput]]"
                                 placeholder="Search directory..."
                                 aria-label="Search directory">
                             </oj-input-search>
