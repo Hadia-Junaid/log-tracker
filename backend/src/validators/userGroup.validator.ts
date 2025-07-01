@@ -8,10 +8,7 @@ export const createUserGroupSchema = Joi.object({
     if (!mongoose.Types.ObjectId.isValid(value)) return helpers.error('any.invalid');
     return value;
   })),
-  members: Joi.array().items(Joi.string().custom((value, helpers) => {
-    if (!mongoose.Types.ObjectId.isValid(value)) return helpers.error('any.invalid');
-    return value;
-  }))
+  members: Joi.array().items(Joi.string().email())
 });
 
 export const updateUserGroupSchema = Joi.object({

@@ -96,6 +96,13 @@
     <p class="oj-typography-body-sm oj-text-color-secondary">Create a new group and manage members using the directory below.</p>
   </div>
   <div slot="body">
+    <!-- Error Message -->
+    <oj-bind-if test="[[createError()]]">
+      <div class="oj-sm-margin-2x-bottom" style="padding: 10px; background-color: #f2dede; color: #a94442; border-radius: 4px;">
+        <oj-bind-text value="[[createError]]"></oj-bind-text>
+      </div>
+    </oj-bind-if>
+
   <!-- Group Name Input -->
     <div class="oj-sm-margin-2x-bottom">
       <oj-label for="groupNameInput">Group Name</oj-label>
@@ -201,8 +208,15 @@
   </div>
 
   <div slot="footer">
-    <oj-button on-oj-action="[[closeAddGroupDialog]]">Cancel</oj-button>
-    <oj-button class="oj-button-primary" on-oj-action="[[createGroup]]">Create Group</oj-button>
+    <oj-button on-oj-action="[[closeAddGroupDialog]]" disabled="[[isCreating]]">Cancel</oj-button>
+    <oj-button class="oj-button-primary" on-oj-action="[[createGroup]]" disabled="[[isCreating]]">
+      <oj-bind-if test="[[isCreating]]">
+        Creating...
+      </oj-bind-if>
+      <oj-bind-if test="[[!isCreating()]]">
+        Create Group
+      </oj-bind-if>
+    </oj-button>
   </div>
 </oj-dialog>
 

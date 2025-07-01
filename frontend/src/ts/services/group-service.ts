@@ -11,6 +11,25 @@ export async function fetchUserGroups() {
     return await res.json();
 }
 
+// Create user group
+export async function createUserGroup(payload: any): Promise<any> {
+    await ConfigService.loadConfig();
+    const res = await fetch(`${ConfigService.getApiUrl()}/user-groups`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload)
+    });
+    
+    if (!res.ok) {
+        const errorBody = await res.text();
+        console.error(`Create group failed with status: ${res.status}, body: ${errorBody}`);
+        throw new Error(`Failed to create group. Status: ${res.status}`);
+    }
+    return await res.json();
+}
+
 // Delete group using $.ajax
 export const deleteGroupById = (groupId: string): Promise<void> => {
     console.log("Attempting to delete group with ID:", groupId); //
@@ -24,9 +43,6 @@ export const deleteGroupById = (groupId: string): Promise<void> => {
             return response.json();
         });
 };
-
-// Existing createUserGroup ...
-export async function createUserGroup(payload: any) { /* ... */ }
 
 // Existing fetchApplications ...
 export async function fetchApplications() { /* ... */ }

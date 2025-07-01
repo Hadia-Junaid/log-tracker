@@ -89,5 +89,67 @@ export const addGroupDialogMethods = {
     addSelectedMembersToGroup: () => {},
     removeSelectedMembersFromGroup: () => {},
     removeAllSelectedMembers: () => {},
-    createGroup: async () => {}
+    createGroup: async () => {
+        try {
+            // Clear any previous errors
+            addGroupDialogObservables.createError("");
+            
+            // Validate group name
+            const groupName = addGroupDialogObservables.newGroupName().trim();
+            if (!groupName) {
+                addGroupDialogObservables.createError("Group name is required.");
+                return;
+            }
+            
+            // Set loading state
+            addGroupDialogObservables.isCreating(true);
+            
+            // Prepare the payload according to the user's requirements
+            const payload = {
+                name: groupName,
+                is_admin: false,
+                assigned_applications: [],
+                members: []
+            };
+            
+            logger.info('Creating user group with payload:', payload);
+            
+            // Call the backend API
+            const createdGroup = await createUserGroup(payload);
+            
+            logger.info('User group created successfully:', createdGroup);
+            
+            // Show success message
+            const banner = document.getElementById('globalSuccessBanner');
+            if (banner) {
+                banner.textContent = `Group "${groupName}" created successfully!`;
+                banner.style.display = 'block';
+                
+                // Hide the banner after 5 seconds
+                setTimeout(() => {
+                    banner.style.display = 'none';
+                }, 5000);
+            }
+            
+            // Close the dialog
+            addGroupDialogMethods.closeAddGroupDialog();
+            
+            // Refresh the group list by dispatching a custom event
+            document.dispatchEvent(new CustomEvent('group-created', { 
+                detail: { groupId: createdGroup._id, groupName: createdGroup.name } 
+            }));
+            
+        } catch (error) {
+            logger.error('Failed to create user group:', error);
+            
+            // Handle specific error cases
+            if (error instanceof Error) {
+                addGroupDialogObservables.createError(`Failed to create group: ${error.message}`);
+            } else {
+                addGroupDialogObservables.createError('Failed to create group. Please try again.');
+            }
+        } finally {
+            addGroupDialogObservables.isCreating(false);
+        }
+    }
 };

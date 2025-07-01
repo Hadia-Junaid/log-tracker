@@ -95,6 +95,10 @@ class UserManagementViewModel {
             const idToDelete = e.detail.groupId;
             this.groupDataArray.remove(group => group.groupId === idToDelete);
         });
+
+        document.addEventListener('group-created', (e: any) => {
+            groupListMethods.loadGroups();
+        });
     }
 
     editGroup = (event: CustomEvent) => {
