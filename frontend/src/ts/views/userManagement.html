@@ -105,64 +105,97 @@
     </div>
 
     <!-- Member Selection Layout -->
-    <div class="oj-flex oj-sm-flex-wrap-nowrap oj-sm-justify-content-space-between oj-sm-margin-4x-bottom">
+    <div class="oj-flex oj-sm-flex-direction-row edit-group-content">
       <!-- Available Members -->
-      <div class="oj-flex-item oj-sm-padding-2x">
-        <h5 class="oj-typography-heading-sm">Available Members</h5>
-        <oj-input-search id="searchMemberInput"
-                         value="{{searchValue}}"
-                         raw-value="{{searchRawValue}}"
-                         on-raw-value-changed="[[handleMemberSearchInput]]"
-                         suggestions="[[createDialogAvailableMembersDP]]"
-                         suggestion-item-text="email"
-                         class="oj-form-control-full-width oj-sm-margin-2x-bottom"
-                         placeholder="Search directory...">
-        </oj-input-search>
+      <div class="oj-flex-item oj-flex oj-sm-flex-direction-column available-members-section">
+        <h4 class="oj-typography-heading-sm oj-text-color-primary">Available Members</h4>
+        
+        <!-- Search Input -->
+        <div class="oj-sm-margin-4x-bottom">
+          <oj-input-search id="searchMemberInput"
+                           value="{{searchValue}}"
+                           raw-value="{{searchRawValue}}"
+                           on-raw-value-changed="[[handleMemberSearchInput]]"
+                           suggestions="[[createDialogAvailableMembersDP]]"
+                           suggestion-item-text="email"
+                           class="oj-form-control-full-width"
+                           placeholder="Search directory..."
+                           aria-label="Search directory">
+          </oj-input-search>
+        </div>
+        
+        <!-- Available Members List -->
         <oj-list-view data="[[createDialogAvailableMembersDP]]"
-                      class="members-list" aria-label="Available members list">
+                      class="members-list available-members-list" 
+                      aria-label="Available members list">
           <template slot="itemTemplate" data-oj-as="item">
-            <oj-list-item-layout>
+            <oj-list-item-layout class="member-list-item">
+              <span class="oj-typography-body-md oj-text-color-primary">
+                <oj-bind-text value="[[item.item.data.email]]"></oj-bind-text>
+              </span>
               <oj-avatar slot="leading" size="xs" initials="[[item.item.data.initials]]"></oj-avatar>
-              <span><oj-bind-text value="[[item.item.data.email]]"></oj-bind-text></span>
+              <span slot="secondary" class="oj-typography-body-sm oj-text-color-secondary">
+                <oj-bind-text value="[[item.item.data.name]]"></oj-bind-text>
+              </span>
             </oj-list-item-layout>
+          </template>
+          <template slot="noData">
+            <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center no-members-content">
+              <p class="oj-text-color-secondary">Type a name/email to begin search</p>
+            </div>
           </template>
         </oj-list-view>
       </div>
 
       <!-- Selected Members -->
-      <div class="oj-flex-item oj-sm-padding-2x">
-        <div class="oj-flex oj-sm-justify-content-space-between oj-sm-align-items-center oj-sm-margin-2x-bottom">
-          <h5 class="oj-typography-heading-sm">Selected Members</h5>
-          <div>
-            <span class="oj-typography-body-sm">
+      <div class="oj-flex-item oj-flex oj-sm-flex-direction-column current-members-section">
+        <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-space-between oj-sm-margin-4x-bottom">
+          <h4 class="oj-typography-heading-sm oj-text-color-primary">Selected Members</h4>
+          <div class="oj-flex oj-sm-align-items-center">
+            <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-end">
               <oj-bind-text value="[[createDialogSelectedMembers().length]]"></oj-bind-text> members
             </span>
-            <oj-button class="oj-button-sm oj-sm-margin-1x-start" on-oj-action="[[removeAllSelectedMembers]]">Remove All</oj-button>
+            <oj-button class="oj-button-sm" chroming="outlined" on-oj-action="[[removeAllSelectedMembers]]">Remove All</oj-button>
           </div>
         </div>
+        
+        <!-- Selected Members List -->
         <oj-list-view data="[[createDialogSelectedMembersDP]]"
-                      class="members-list"
-                      selection-mode="none">
+                      class="members-list current-members-list"
+                      selection-mode="none"
+                      aria-label="Selected members list">
           <template slot="itemTemplate" data-oj-as="item">
-            <oj-list-item-layout>
+            <oj-list-item-layout class="member-list-item current-member-item">
+              <span class="oj-typography-body-md oj-text-color-primary">
+                <oj-bind-text value="[[item.item.data.email]]"></oj-bind-text>
+              </span>
               <oj-avatar slot="leading" size="xs" initials="[[item.item.data.initials]]"></oj-avatar>
-              <span><oj-bind-text value="[[item.item.data.email]]"></oj-bind-text></span>
+              <span slot="secondary" class="oj-typography-body-sm oj-text-color-secondary">
+                <oj-bind-text value="[[item.item.data.name]]"></oj-bind-text>
+              </span>
             </oj-list-item-layout>
+          </template>
+          <template slot="noData">
+            <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center no-members-content">
+              <p class="oj-text-color-secondary">No members selected</p>
+            </div>
           </template>
         </oj-list-view>
       </div>
     </div>
 
     <!-- Accessible Applications -->
-    <div class="oj-sm-margin-4x-top">
-      <h5 class="oj-typography-heading-sm">Accessible Applications</h5>
-      <oj-bind-for-each data="[[createDialogApplications]]">
-        <template data-oj-as="app">
-          <oj-c-checkbox value="{{app.data.checked}}">
-            <oj-bind-text value="[[app.data.name]]"></oj-bind-text>
-          </oj-c-checkbox>
-        </template>
-      </oj-bind-for-each>
+    <div class="oj-flex oj-sm-flex-direction-column oj-sm-margin-4x-top">
+      <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">Accessible Applications</h4>
+      <div class="oj-flex oj-sm-flex-direction-column applications-checkboxes">
+        <oj-bind-for-each data="[[createDialogApplications]]">
+          <template data-oj-as="app">
+            <oj-c-checkbox value="{{app.data.checked}}">
+              <oj-bind-text value="[[app.data.name]]"></oj-bind-text>
+            </oj-c-checkbox>
+          </template>
+        </oj-bind-for-each>
+      </div>
     </div>
   </div>
 
