@@ -4,8 +4,11 @@
             <h1 class="oj-typography-heading-lg oj-text-color-primary">Applications</h1>
         </div>
 
-        <oj-c-input-text label-hint="Search by name, hostname, or environment" raw-value="{{searchQuery}}"
-            placeholder="Type to filter…" class="oj-sm-margin-4x-bottom" />
+        <div class="oj-flex oj-sm-margin-4x-bottom">
+            <oj-c-input-text label-hint="Search by name, hostname, or environment" raw-value="{{searchQuery}}"
+                placeholder="Type to filter…" class="oj-flex-item" <!-- makes it fill available width -->
+                ></oj-c-input-text>
+        </div>
 
 
         <div class="oj-flex oj-sm-flex-direction-column">
