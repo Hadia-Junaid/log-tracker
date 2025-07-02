@@ -110,6 +110,7 @@ export const editGroupDialogMethods = {
 
             // Show the current members by adding them to the currentMembers observable
             const currentMembers: MemberData[] = groupDetails.members.map((member: any) => ({
+                id: member._id || `fallback-id-${member.email}`, 
                 name: member.name,
                 email: member.email
             }));
