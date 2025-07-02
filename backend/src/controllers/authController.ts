@@ -4,25 +4,7 @@ import jwtService from '../services/jwtService';
 import User from '../models/User';
 import logger from '../utils/logger';
 import config from 'config';
-import crypto from 'crypto';
-
-interface TempCodeData {
-  userId: string;
-  email: string;
-  name: string;
-  expiresAt: number;
-}
-
-const tempCodes = new Map<string, TempCodeData>();
-
-setInterval(() => {
-  const now = Date.now();
-  for (const [code, data] of tempCodes.entries()) {
-    if (data.expiresAt < now) {
-      tempCodes.delete(code);
-    }
-  }
-}, 5 * 60 * 1000);
+import tempCodeManager from '../utils/tempCodeManager';
 
 class AuthController {
  
@@ -69,14 +51,10 @@ class AuthController {
         await existingUser.save();
       }
 
-      const tempCode = crypto.randomBytes(32).toString('hex');
-      const expiresAt = Date.now() + (5 * 60 * 1000); // 5 minutes expiry
-
-      tempCodes.set(tempCode, {
+      const tempCode = tempCodeManager.generateTempCode({
         userId: (existingUser._id as any).toString(),
         email: existingUser.email,
-        name: existingUser.name,
-        expiresAt
+        name: existingUser.name
       });
 
       logger.info(`User successfully authenticated: ${existingUser.email}, temporary code generated`);
@@ -94,7 +72,7 @@ class AuthController {
     try {
       const { auth_code } = req.body;
 
-      const tempCodeData = tempCodes.get(auth_code);
+      const tempCodeData = tempCodeManager.getTempCodeData(auth_code);
       
       if (!tempCodeData) {
         res.status(400).json({
@@ -104,8 +82,8 @@ class AuthController {
         return;
       }
 
-      if (tempCodeData.expiresAt < Date.now()) {
-        tempCodes.delete(auth_code);
+      if (tempCodeManager.isExpired(tempCodeData)) {
+        tempCodeManager.deleteTempCode(auth_code);
         res.status(400).json({
           success: false,
           message: 'Authorization code has expired'
@@ -117,7 +95,7 @@ class AuthController {
       const user = await User.findById(tempCodeData.userId);
       
       if (!user) {
-        tempCodes.delete(auth_code);
+        tempCodeManager.deleteTempCode(auth_code);
         res.status(400).json({
           success: false,
           message: 'User not found'
@@ -126,7 +104,7 @@ class AuthController {
       }
 
       const token = jwtService.generateToken(user);
-      tempCodes.delete(auth_code);
+      tempCodeManager.deleteTempCode(auth_code);
       logger.info(`JWT token generated for user: ${user.email}`);
 
       res.json({
