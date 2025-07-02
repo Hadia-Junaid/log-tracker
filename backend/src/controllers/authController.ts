@@ -142,7 +142,8 @@ class AuthController {
       logger.info(`JWT token generated for user: ${user.email}`);
 
       res.json({
-        success: true,
+        success: true,        
+
         token,
         user: {
           id: user._id,
