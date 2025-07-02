@@ -182,3 +182,71 @@ export const getUserGroupById = async (req: Request, res: Response): Promise<voi
   logger.info(`ℹ️ Retrieved user group: ${group.name}`);
   res.status(200).json(group);
 };
+
+//API endpoint for assigning application to user group (PATCH)
+
+export const assignApplicationToUserGroup = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { applicationId } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400).json({ error: 'Invalid group ID' });
+    return;
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(applicationId)) {
+    res.status(400).json({ error: 'Invalid application ID' });
+    return;
+  }
+
+  const userGroup = await UserGroup.findById(id);
+  if (!userGroup) {
+    res.status(404).json({ error: 'User group not found' });
+    return;
+  }
+
+  if (userGroup.assigned_applications.includes(applicationId)) {
+    res.status(400).json({ error: 'Application already assigned to this group' });
+    return;
+  }
+
+  userGroup.assigned_applications.push(applicationId);
+  await userGroup.save();
+
+  logger.info(`✅ Application '${applicationId}' assigned to user group '${id}'.`);
+  res.status(200).json(userGroup);
+};
+
+export const removeApplicationFromUserGroup = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { applicationId } = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400).json({ error: 'Invalid group ID' });
+    return;
+  }
+
+  if (!mongoose.Types.ObjectId.isValid(applicationId)) {
+    res.status(400).json({ error: 'Invalid application ID' });
+    return;
+  }
+
+  const userGroup = await UserGroup.findById(id);
+  if (!userGroup) {
+    res.status(404).json({ error: 'User group not found' });
+    return;
+  }
+
+  const index = userGroup.assigned_applications.indexOf(applicationId);
+  if (index === -1) {
+    res.status(400).json({ error: 'Application not assigned to this group' });
+    return;
+  }
+
+  userGroup.assigned_applications.splice(index, 1);
+  await userGroup.save();
+
+  logger.info(`✅ Application '${applicationId}' removed from user group '${id}'.`);
+  res.status(200).json(userGroup);
+};
+
