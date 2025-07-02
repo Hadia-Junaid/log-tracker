@@ -10,7 +10,8 @@ export const applicationListObservables = {
     currentPage: ko.observable(1),
     pageSize: 5,
     sortOption: ko.observable<'nameAsc' | 'nameDesc' | 'createdAtAsc' | 'createdAtDesc' | 'updatedAtAsc' | 'updatedAtDesc'>('createdAtDesc'),
-    statusFilter: ko.observable<'all' | 'active' | 'inactive'>('all')
+    statusFilter: ko.observable<'all' | 'active' | 'inactive'>('all'),
+    environmentFilter: ko.observable<'all' | 'Development' | 'Testing' | 'Production' | 'Staging'>('all')
 };
 
 // Reset to page 1 on search change
@@ -28,11 +29,17 @@ applicationListObservables.statusFilter.subscribe(() => {
     applicationListObservables.currentPage(1); // Reset to first page if status filter changes
 });
 
+// Subscribe to environment filter changes
+applicationListObservables.environmentFilter.subscribe(() => {
+    applicationListObservables.currentPage(1); // Reset to first page if environment filter changes
+});
+
 // --- Computed ---
 const paginatedApplications = ko.pureComputed<ApplicationData[]>(() => {
   const query = applicationListObservables.searchQuery().toLowerCase().trim();
   const sort = applicationListObservables.sortOption();
   const statusFilter = applicationListObservables.statusFilter();
+  const environmentFilter = applicationListObservables.environmentFilter();
 
   const filtered = applicationListObservables.applicationDataArray().filter(app => {
     // Text search filter
@@ -45,7 +52,11 @@ const paginatedApplications = ko.pureComputed<ApplicationData[]>(() => {
                          (statusFilter === 'active' && app.isActive === true) ||
                          (statusFilter === 'inactive' && app.isActive !== true);
     
-    return matchesSearch && matchesStatus;
+    // Environment filter
+    const matchesEnvironment = environmentFilter === 'all' ||
+                               app.environment === environmentFilter;
+    
+    return matchesSearch && matchesStatus && matchesEnvironment;
   });
 
   const sorted = [...filtered].sort((a, b) => {
@@ -75,6 +86,7 @@ export const applicationListComputed = {
     totalPages: ko.pureComputed<number>(() => {
         const query = applicationListObservables.searchQuery().toLowerCase().trim();
         const statusFilter = applicationListObservables.statusFilter();
+        const environmentFilter = applicationListObservables.environmentFilter();
         
         const totalItems = applicationListObservables.applicationDataArray().filter(app => {
             // Text search filter
@@ -87,7 +99,11 @@ export const applicationListComputed = {
                                  (statusFilter === 'active' && app.isActive === true) ||
                                  (statusFilter === 'inactive' && app.isActive !== true);
             
-            return matchesSearch && matchesStatus;
+            // Environment filter
+            const matchesEnvironment = environmentFilter === 'all' ||
+                                       app.environment === environmentFilter;
+            
+            return matchesSearch && matchesStatus && matchesEnvironment;
         }).length;
         return Math.ceil(totalItems / applicationListObservables.pageSize);
     }),
