@@ -63,6 +63,7 @@ class UserManagementViewModel {
     editSearchValue = editGroupDialogObservables.searchValue;
     editSearchRawValue = editGroupDialogObservables.searchRawValue;
     editError = editGroupDialogObservables.editError;
+    editDialogApplications = editGroupDialogObservables.editDialogApplications;
     handleAvailableMemberSelection = editGroupDialogMethods.handleAvailableMemberSelection;
     handleEditMemberSearchInput = editGroupDialogMethods.handleMemberSearchInput;
     openEditGroupDialog = editGroupDialogMethods.openEditGroupDialog;
@@ -80,14 +81,6 @@ class UserManagementViewModel {
     createDialogSelectedMembersDP = new ArrayDataProvider(this.createDialogSelectedMembers, { keyAttributes: "id" });
     currentMembersDP = new ArrayDataProvider(this.currentMembers, { keyAttributes: "id" });
     editDialogAvailableMembersDP = new ArrayDataProvider(this.editDialogAvailableMembers, { keyAttributes: "id" });
-
-    applications = ko.observable({
-        userService: false,
-        paymentService: false,
-        authService: false,
-        notificationService: false,
-        databaseService: false
-    });
 
     deleteGroupDialog = deleteGroupDialog;
 

@@ -335,11 +335,13 @@
                 <div class="oj-flex oj-sm-flex-direction-column oj-sm-margin-4x-top">
                     <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">Accessible Applications</h4>
                     <div class="oj-flex oj-sm-flex-direction-column applications-checkboxes">
-                        <oj-c-checkbox id="userServiceCheck" value="{{applications.userService}}">user-service</oj-c-checkbox>
-                        <oj-c-checkbox id="paymentServiceCheck" value="{{applications.paymentService}}">payment-service</oj-c-checkbox>
-                        <oj-c-checkbox id="authServiceCheck" value="{{applications.authService}}">auth-service</oj-c-checkbox>
-                        <oj-c-checkbox id="notificationServiceCheck" value="{{applications.notificationService}}">notification-service</oj-c-checkbox>
-                        <oj-c-checkbox id="databaseServiceCheck" value="{{applications.databaseService}}">database-service</oj-c-checkbox>
+                        <oj-bind-for-each data="[[editDialogApplications]]">
+                            <template data-oj-as="app">
+                                <oj-c-checkbox value="{{app.data.checked}}">
+                                    <oj-bind-text value="[[app.data.name]]"></oj-bind-text>
+                                </oj-c-checkbox>
+                            </template>
+                        </oj-bind-for-each>
                     </div>
                 </div>
             </div>
