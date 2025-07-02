@@ -55,6 +55,8 @@ class UserManagementViewModel {
     removeAllSelectedMembers = addGroupDialogMethods.removeAllSelectedMembers;
     createGroup = addGroupDialogMethods.createGroup;
     addMemberToSelected = addGroupDialogMethods.addMemberToSelected;
+    removeMemberFromSelected = addGroupDialogMethods.removeMemberFromSelected;
+    removeAllMembersAdd = addGroupDialogMethods.removeAllMembers;
 
     // Edit Group Dialog
     selectedGroupName = editGroupDialogObservables.selectedGroupName;
@@ -66,13 +68,13 @@ class UserManagementViewModel {
     editSearchRawValue = editGroupDialogObservables.searchRawValue;
     editError = editGroupDialogObservables.editError;
     editDialogApplications = editGroupDialogObservables.editDialogApplications;
-    // handleAvailableMemberSelection = editGroupDialogMethods.handleAvailableMemberSelection;
+    handleAvailableMemberSelection = editGroupDialogMethods.handleAvailableMemberSelection;
+    handleUnselectMember = editGroupDialogMethods.handleUnselectMember;
     handleEditMemberSearchInput = editGroupDialogMethods.handleMemberSearchInput;
     openEditGroupDialog = editGroupDialogMethods.openEditGroupDialog;
     closeEditDialog = editGroupDialogMethods.closeEditDialog;
     updateGroupMembers = editGroupDialogMethods.updateGroupMembers;
-    removeAllMembers = editGroupDialogMethods.removeAllMembers;
-    removeMember = editGroupDialogMethods.removeMember;
+    removeAllMembersEdit = editGroupDialogMethods.removeAllMembers;
 
     // Utility
     getInitials = getInitials;
