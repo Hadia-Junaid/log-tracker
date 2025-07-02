@@ -38,19 +38,23 @@ export async function createUserGroup(payload: any): Promise<any> {
     return await res.json();
 }
 
-// Delete group using $.ajax
+// Delete group
 export const deleteGroupById = (groupId: string): Promise<void> => {
     const token = localStorage.getItem('authToken');
-    console.log("Attempting to delete group with ID:", groupId); //
-    return fetch(`${ConfigService.getApiUrl()}/user-groups/${groupId}`, { method: 'DELETE', headers: { 'Authorization': `Bearer ${token}` } })
-        .then(async response => {
-            if (!response.ok) {
-                const errorBody = await response.text();
-                console.error(`Delete failed with status: ${response.status}, body: ${errorBody}`);
-                throw new Error(`Failed to delete group. Status: ${response.status}`);
-            }
-            return response.json();
-        });
+    return fetch(`${ConfigService.getApiUrl()}/user-groups/${groupId}`, { 
+        method: 'DELETE', 
+        headers: { 
+            'Authorization': `Bearer ${token}` 
+        } 
+    })
+    .then(async response => {
+        if (!response.ok) {
+            const errorBody = await response.text();
+            console.error(`Delete failed with status: ${response.status}, body: ${errorBody}`);
+            throw new Error(`Failed to delete group. Status: ${response.status}`);
+        }
+        return response.json();
+    });
 };
 
 // Update user group
@@ -92,10 +96,15 @@ export async function fetchApplications(): Promise<string[]> {
 // Fetch full application objects with IDs
 export async function fetchApplicationsWithIds(): Promise<{id: string, name: string}[]> {
     await ConfigService.loadConfig();
-    const res = await fetch(`${ConfigService.getApiUrl()}/applications`);
+    const token = localStorage.getItem('authToken');
+    const res = await fetch(`${ConfigService.getApiUrl()}/applications`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
     
     if (!res.ok) {
-        throw new Error("Failed to fetch applications");
+        throw new Error(`Failed to fetch applications. Status: ${res.status}`);
     }
     
     const response = await res.json();
@@ -109,7 +118,12 @@ export async function fetchApplicationsWithIds(): Promise<{id: string, name: str
 // Fetch group details by ID
 export async function fetchGroupById(groupId: string): Promise<any> {
     await ConfigService.loadConfig();
-    const res = await fetch(`${ConfigService.getApiUrl()}/user-groups/${groupId}`);
+    const token = localStorage.getItem('authToken');
+    const res = await fetch(`${ConfigService.getApiUrl()}/user-groups/${groupId}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`
+        }
+    });
     
     if (!res.ok) {
         throw new Error(`Failed to fetch group details. Status: ${res.status}`);
@@ -121,10 +135,12 @@ export async function fetchGroupById(groupId: string): Promise<any> {
 // Assign application to group
 export async function assignApplicationToGroup(groupId: string, applicationId: string): Promise<void> {
     await ConfigService.loadConfig();
+    const token = localStorage.getItem('authToken');
     const res = await fetch(`${ConfigService.getApiUrl()}/user-groups/${groupId}/assign-application`, {
         method: 'PATCH',
         headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ applicationId })
     });

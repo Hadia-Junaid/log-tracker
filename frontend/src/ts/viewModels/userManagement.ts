@@ -14,6 +14,7 @@ import 'oj-c/checkbox';
 import "ojs/ojavatar";
 import logger from '../services/logger-service';
 import { ConfigService } from '../services/config-service';
+import { AuthService } from '../services/auth.service';
 import { fetchUserGroups, createUserGroup, fetchApplications } from '../services/group-service';
 import { KeySet } from 'ojs/ojkeyset';
 import { ObservableKeySet } from 'ojs/ojknockout-keyset';
@@ -90,23 +91,18 @@ class UserManagementViewModel {
     deleteGroupDialog = deleteGroupDialog;
 
     is_admin = ko.observable(false);
+    private authService: AuthService;
 
     constructor() {
-        // Decode JWT and set is_admin
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            try {
-                const decoded: any = jwt_decode(token);
-                this.is_admin(typeof decoded.is_admin === 'boolean' ? decoded.is_admin : false);
-            } catch (e) {
-                this.is_admin(false);
-            }
-        } else {
-            this.is_admin(false);
-        }
+        this.authService = new AuthService();
+        
+        // Set admin status from auth service
+        this.is_admin(this.authService.getIsAdminFromToken());
+
         this.isDataEmpty = ko.pureComputed(() => {
             return this.groupDataArray().length === 0;
         });
+        
         groupListMethods.init();
 
         document.addEventListener('group-deleted', (e: any) => {
@@ -119,8 +115,13 @@ class UserManagementViewModel {
         });
 
         document.addEventListener('group-updated', () => {
-            fetchUserGroups(); // or your method to refresh groups
-     });
+            fetchUserGroups();
+        });
+
+        // Listen for auth state changes
+        window.addEventListener('authStateChanged', () => {
+            this.is_admin(this.authService.getIsAdminFromToken());
+        });
     }
 
     editGroup = (group: { groupId: string; groupName: string }) => {
@@ -136,6 +137,7 @@ class UserManagementViewModel {
             }
         });
     };
+
     deleteGroup = (event: CustomEvent) => {
         event.stopPropagation(); 
         event.preventDefault();   
@@ -146,11 +148,12 @@ class UserManagementViewModel {
         }
     };
 
-    
-
     connected(): void {
         AccUtils.announce("User Management page loaded.");
         document.title = "User Management";
+        
+        // Verify admin status on page load
+        this.is_admin(this.authService.getIsAdminFromToken());
     }
 
     disconnected(): void {

@@ -45,48 +45,24 @@
           </div>
 
           <!-- Member Count and Date -->
-          <!-- Member Count and Date -->
           <div class="oj-typography-body-xs oj-text-color-secondary oj-sm-margin-1x-top">
             <oj-bind-text value="[[item.item.data.memberCount]]"></oj-bind-text> Members •
             Created: <oj-bind-text value="[[item.item.data.createdDate]]"></oj-bind-text>
           </div>
 
-
           <!-- Buttons -->
           <div class="oj-flex oj-sm-margin-2x-top">
-            <oj-button on-oj-action="[[() => editGroup(item.item.data)]]">Edit</oj-button>
-
-            <oj-bind-if test="[[!item.item.data.is_admin]]">
-              <oj-button :data-group-id="[[item.item.data.groupId]]" on-oj-action="[[deleteGroup]]">Delete</oj-button>
+            <oj-bind-if test="[[is_admin]]">
+              <oj-button on-oj-action="[[() => editGroup(item.item.data)]]">Edit</oj-button>
+              <oj-bind-if test="[[!item.item.data.is_admin]]">
+                <oj-button :data-group-id="[[item.item.data.groupId]]" on-oj-action="[[deleteGroup]]">Delete</oj-button>
+              </oj-bind-if>
             </oj-bind-if>
           </div>
         </div>
-        
-        <!-- Description -->
-        <div class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-1x-top">
-          <oj-bind-text value="[[item.item.data.description]]"></oj-bind-text>
-        </div>
-
-        <!-- Member Count and Date -->
-        <!-- Member Count and Date -->
-            <div class="oj-typography-body-xs oj-text-color-secondary oj-sm-margin-1x-top">
-              <oj-bind-text value="[[item.item.data.memberCount]]"></oj-bind-text> Members •
-              Created: <oj-bind-text value="[[item.item.data.createdDate]]"></oj-bind-text>
-            </div>
-
-
-        <!-- Buttons -->
-        <div class="oj-flex oj-sm-margin-2x-top">
-          <oj-bind-if test="[[is_admin]]">
-            <oj-button on-oj-action="[[() => editGroup(item.item.data)]]">Edit</oj-button>
-            <oj-bind-if test="[[!item.item.data.is_admin]]">
-            <oj-button :data-group-id="[[item.item.data.groupId]]" on-oj-action="[[deleteGroup]]">Delete</oj-button>
-          </oj-bind-if>
-        </div>
-      </div>
-    </oj-list-item-layout>
-  </li>
-</template>
+      </oj-list-item-layout>
+    </li>
+  </template>
   <template slot="noData">
     <div class="oj-flex oj-sm-align-items-center demo-nodata-content">
       <div class="oj-flex oj-sm-align-items-center oj-sm-flex-direction-column demo-nodata-inner">
@@ -255,231 +231,144 @@
 </oj-dialog>
 
 
- <!-- Edit Group Dialog -->
-    <oj-dialog id="editGroupDialog" cancel-behavior="icon" aria-labelledby="dialog-title-id">
-        <div slot="header">
-            <span id="dialog-title-id" class="oj-dialog-title">Edit Group: <oj-bind-text value="[[selectedGroupName]]"></oj-bind-text></span>
-        </div>
-        <div slot="body">
-            <div class="oj-flex oj-sm-flex-direction-column">
-                <p class="oj-typography-body-md oj-text-color-secondary oj-sm-margin-4x-bottom">
-                    Manage group members using the directory below.
-                </p>
-                
-                <div class="oj-flex oj-sm-flex-direction-row edit-group-content">
-                    <!-- Available Members Section -->
-                    <div class="oj-flex-item oj-flex oj-sm-flex-direction-column available-members-section">
-                        <h4 class="oj-typography-heading-sm oj-text-color-primary">Available Members</h4>
-                        
-                        <!-- Search Input -->
-                        <div class="oj-sm-margin-4x-bottom">
-                            <oj-input-search
-                                id="memberSearch"
-                                class="oj-form-control-full-width"
-                                suggestions="[[editDialogAvailableMembersDP]]" suggestion-item-text="email"
-                                value="{{editSearchValue}}"
-                                raw-value="{{editSearchRawValue}}"
-                                on-raw-value-changed="[[handleEditMemberSearchInput]]"
-                                placeholder="Search directory..."
-                                aria-label="Search directory">
-                            </oj-input-search>
-                        </div>
-                        
-                        <!-- Available Members List -->
-                        <oj-list-view
-                            id="availableMembersList"
-                            aria-label="Available members list"
-                            class="members-list available-members-list"
-                            data="[[editDialogAvailableMembersDP]]"
-                            on-selected-changed="[[handleAvailableMemberSelection]]">
-                            <template slot="itemTemplate" data-oj-as="item">
-                                <oj-list-item-layout class="member-list-item">
-                                    <span class="oj-typography-body-md oj-text-color-primary">
-                                        <oj-bind-text value="[[item.item.data.email]]"></oj-bind-text>
-                                    </span>
-                                    <oj-avatar slot="leading" size="xs" initials="[[item.item.data.initials]]"></oj-avatar>
-                                    <span slot="secondary" class="oj-typography-body-sm oj-text-color-secondary">
-                                        <oj-bind-text value="[[item.item.data.name]]"></oj-bind-text>
-                                    </span>
-                                </oj-list-item-layout>
-                            </template>
-                            <template slot="noData">
-                                <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center no-members-content">
-                                    <p class="oj-text-color-secondary">Type a name/email to begin search</p>
-                                </div>
-                            </template>
-                        </oj-list-view>
+<!-- Edit Group Dialog -->
+<oj-dialog id="editGroupDialog" cancel-behavior="icon" aria-labelledby="dialog-title-id">
+    <div slot="header">
+        <span id="dialog-title-id" class="oj-dialog-title">Edit Group: <oj-bind-text value="[[selectedGroupName]]"></oj-bind-text></span>
+    </div>
+    <div slot="body">
+        <div class="oj-flex oj-sm-flex-direction-column">
+            <!-- Error Message -->
+            <oj-bind-if test="[[editError()]]">
+                <div class="oj-sm-margin-2x-bottom" style="padding: 10px; background-color: #f2dede; color: #a94442; border-radius: 4px;">
+                    <oj-bind-text value="[[editError]]"></oj-bind-text>
+                </div>
+            </oj-bind-if>
+
+            <p class="oj-typography-body-md oj-text-color-secondary oj-sm-margin-4x-bottom">
+                Manage group members using the directory below.
+            </p>
+            
+            <div class="oj-flex oj-sm-flex-direction-row edit-group-content">
+                <!-- Available Members Section -->
+                <div class="oj-flex-item oj-flex oj-sm-flex-direction-column available-members-section">
+                    <h4 class="oj-typography-heading-sm oj-text-color-primary">Available Members</h4>
+                    
+                    <!-- Search Input -->
+                    <div class="oj-sm-margin-4x-bottom">
+                        <oj-input-search
+                            id="memberSearch"
+                            class="oj-form-control-full-width"
+                            suggestions="[[editDialogAvailableMembersDP]]" 
+                            suggestion-item-text="email"
+                            value="{{editSearchValue}}"
+                            raw-value="{{editSearchRawValue}}"
+                            on-raw-value-changed="[[handleEditMemberSearchInput]]"
+                            placeholder="Search directory..."
+                            aria-label="Search directory">
+                        </oj-input-search>
                     </div>
                     
-                    <!-- Current Members Section -->
-                    <div class="oj-flex-item oj-flex oj-sm-flex-direction-column current-members-section">
-                        <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-space-between oj-sm-margin-4x-bottom">
-                            <h4 class="oj-typography-heading-sm oj-text-color-primary">Current Members</h4>
-                            <div class="oj-flex oj-sm-align-items-center">
-                                <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-end">
-                                    <oj-bind-text value="[[currentMembers().length]]"></oj-bind-text> members
+                    <!-- Available Members List -->
+                    <oj-list-view
+                        id="availableMembersList"
+                        aria-label="Available members list"
+                        class="members-list available-members-list"
+                        data="[[editDialogAvailableMembersDP]]"
+                        on-selected-changed="[[handleAvailableMemberSelection]]">
+                        <template slot="itemTemplate" data-oj-as="item">
+                            <oj-list-item-layout class="member-list-item">
+                                <span class="oj-typography-body-md oj-text-color-primary">
+                                    <oj-bind-text value="[[item.item.data.email]]"></oj-bind-text>
                                 </span>
-                                <oj-button id="removeAllBtn" class="oj-button-sm" chroming="outlined" 
-                                           on-oj-action="[[removeAllMembers]]">
-                                    Remove All
-                                </oj-button>
+                                <oj-avatar slot="leading" size="xs" initials="[[item.item.data.initials]]"></oj-avatar>
+                                <span slot="secondary" class="oj-typography-body-sm oj-text-color-secondary">
+                                    <oj-bind-text value="[[item.item.data.name]]"></oj-bind-text>
+                                </span>
+                            </oj-list-item-layout>
+                        </template>
+                        <template slot="noData">
+                            <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center no-members-content">
+                                <p class="oj-text-color-secondary">Type a name/email to begin search</p>
                             </div>
-                        </div>
-                        
-                        <!-- Current Members List -->
-                            <oj-list-view
-                            id="currentMembersList"
-                            aria-label="Current members list"
-                            class="members-list current-members-list"
-                            data="[[currentMembersDP]]">
-                            <template slot="itemTemplate" data-oj-as="item">
-                                <oj-list-item-layout class="member-list-item current-member-item">
-                                    <span class="oj-typography-body-md oj-text-color-primary">
-                                        <oj-bind-text value="[[item.item.data.email]]"></oj-bind-text>
-                                    </span>
-                                    <oj-avatar slot="leading" size="xs" initials="[[item.item.data.initials]]"></oj-avatar>
-                                    <div class="member-remove-container">
-                                        <oj-button class="member-remove-btn oj-button-sm" 
-                                            chroming="borderless"
-                                            display="icons"
-                                            on-oj-action="[[removeMember]]"
-                                            data-member-email="[[item.item.data.email]]"
-                                            title="Remove member">
-                                            <span slot="startIcon" class="oj-ux-ico-close"></span>
-                                        </oj-button>
-                                    </div>
-                                </oj-list-item-layout>
-                            </template>
-                            <template slot="noData">
-                                <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center no-members-content">
-                                    <p class="oj-text-color-secondary">No members in this group</p>
-                                </div>
-                            </template>
-                        </oj-list-view>
-                    </div>
+                        </template>
+                    </oj-list-view>
                 </div>
                 
-                <!-- Accessible Applications Section -->
-                <div class="oj-flex oj-sm-flex-direction-column oj-sm-margin-4x-top">
-                    <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">Accessible Applications</h4>
-                    <div class="oj-flex oj-sm-flex-direction-column applications-checkboxes">
-                        <oj-bind-for-each data="[[editDialogApplications]]">
-                            <template data-oj-as="app">
-                                <oj-c-checkbox value="{{app.data.checked}}">
-                                    <oj-bind-text value="[[app.data.name]]"></oj-bind-text>
-                                </oj-c-checkbox>
-                            </template>
-                        </oj-bind-for-each>
+                <!-- Current Members Section -->
+                <div class="oj-flex-item oj-flex oj-sm-flex-direction-column current-members-section">
+                    <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-space-between oj-sm-margin-4x-bottom">
+                        <h4 class="oj-typography-heading-sm oj-text-color-primary">Current Members</h4>
+                        <div class="oj-flex oj-sm-align-items-center">
+                            <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-end">
+                                <oj-bind-text value="[[currentMembers().length]]"></oj-bind-text> members
+                            </span>
+                            <oj-bind-if test="[[is_admin]]">
+                                <oj-button id="removeAllBtn" class="oj-button-sm" chroming="outlined" 
+                                       on-oj-action="[[removeAllMembersEdit]]">
+                                    Remove All
+                                </oj-button>
+                            </oj-bind-if>
+                        </div>
                     </div>
+                    
+                    <!-- Current Members List -->
+                    <oj-list-view
+                        id="currentMembersList"
+                        aria-label="Current members list"
+                        class="members-list current-members-list"
+                        data="[[currentMembersDP]]">
+                        <template slot="itemTemplate" data-oj-as="item">
+                            <oj-list-item-layout class="member-list-item current-member-item">
+                                <span class="oj-typography-body-md oj-text-color-primary">
+                                    <oj-bind-text value="[[item.item.data.email]]"></oj-bind-text>
+                                </span>
+                                <oj-avatar slot="leading" size="xs" initials="[[item.item.data.initials]]"></oj-avatar>
+                                <span slot="secondary" class="oj-typography-body-sm oj-text-color-secondary">
+                                    <oj-bind-text value="[[item.item.data.name]]"></oj-bind-text>
+                                </span>
+                                <div class="member-remove-container">
+                                    <oj-button class="member-remove-btn oj-button-sm" 
+                                        chroming="borderless"
+                                        display="icons"
+                                        on-oj-action="[[handleUnselectMember]]"
+                                        data-member-email="[[item.item.data.email]]"
+                                        title="Remove member">
+                                        <span slot="startIcon" class="oj-ux-ico-close"></span>
+                                    </oj-button>
+                                </div>
+                            </oj-list-item-layout>
+                        </template>
+                        <template slot="noData">
+                            <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center no-members-content">
+                                <p class="oj-text-color-secondary">No members in this group</p>
+                            </div>
+                        </template>
+                    </oj-list-view>
+                </div>
+            </div>
+            
+            <!-- Accessible Applications Section -->
+            <div class="oj-flex oj-sm-flex-direction-column oj-sm-margin-4x-top">
+                <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">Accessible Applications</h4>
+                <div class="oj-flex oj-sm-flex-direction-column applications-checkboxes">
+                    <oj-bind-for-each data="[[editDialogApplications]]">
+                        <template data-oj-as="app">
+                            <oj-c-checkbox value="{{app.data.checked}}">
+                                <oj-bind-text value="[[app.data.name]]"></oj-bind-text>
+                            </oj-c-checkbox>
+                        </template>
+                    </oj-bind-for-each>
                 </div>
             </div>
         </div>
-        <div slot="footer">
-            <oj-button id="cancelDialogBtn" on-oj-action="[[closeEditDialog]]">Cancel</oj-button>
-            <oj-bind-if test="[[is_admin]]">
-              <oj-button id="updateGroupBtn" class="oj-button-primary" on-oj-action="[[updateGroupMembers]]">Update Group</oj-button>
-            </oj-bind-if>
-        </div>
-    </oj-dialog>
-
-      <div class="oj-flex oj-sm-flex-direction-row edit-group-content">
-        <!-- Available Members Section -->
-        <div class="oj-flex-item oj-flex oj-sm-flex-direction-column available-members-section">
-          <h4 class="oj-typography-heading-sm oj-text-color-primary">Available Members</h4>
-
-          <!-- Search Input -->
-          <div class="oj-sm-margin-4x-bottom">
-            <oj-input-search id="memberSearch" class="oj-form-control-full-width"
-              suggestions="[[editDialogAvailableMembersDP]]" suggestion-item-text="email" value="{{editSearchValue}}"
-              raw-value="{{editSearchRawValue}}" on-raw-value-changed="[[handleEditMemberSearchInput]]"
-              placeholder="Search directory..." aria-label="Search directory">
-            </oj-input-search>
-          </div>
-
-          <!-- Available Members List -->
-          <oj-list-view id="availableMembersList" aria-label="Available members list"
-            class="members-list available-members-list" data="[[editDialogAvailableMembersDP]]">
-            <template slot="itemTemplate" data-oj-as="item">
-              <div class="clickable-member" data-bind="click: function() { handleAvailableMemberSelection(item.data) }">
-                <oj-list-item-layout class="member-list-item">
-                  <span class="oj-typography-body-md oj-text-color-primary">
-                    <oj-bind-text value="[[item.data.email]]"></oj-bind-text>
-                  </span>
-                  <oj-avatar slot="leading" size="xs" initials="[[item.data.initials]]"></oj-avatar>
-                  <span slot="secondary" class="oj-typography-body-sm oj-text-color-secondary">
-                    <oj-bind-text value="[[item.data.name]]"></oj-bind-text>
-                  </span>
-                </oj-list-item-layout>
-              </div>
-            </template>
-
-        </div>
-
-        <!-- Current Members Section -->
-        <div class="oj-flex-item oj-flex oj-sm-flex-direction-column current-members-section">
-          <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-space-between oj-sm-margin-4x-bottom">
-            <h4 class="oj-typography-heading-sm oj-text-color-primary">Current Members</h4>
-            <div class="oj-flex oj-sm-align-items-center">
-              <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-end">
-                <oj-bind-text value="[[currentMembers().length]]"></oj-bind-text> members
-              </span>
-              <oj-button id="removeAllBtn" class="oj-button-sm" chroming="outlined"
-                on-oj-action="[[removeAllMembersEdit]]">
-                Remove All
-              </oj-button>
-            </div>
-          </div>
-
-          <!-- Current Members List -->
-          <oj-list-view id="currentMembersList" aria-label="Current members list"
-            class="members-list current-members-list" data="[[currentMembersDP]]">
-            <template slot="itemTemplate" data-oj-as="item">
-              <oj-list-item-layout class="member-list-item current-member-item">
-                <span class="oj-typography-body-md oj-text-color-primary">
-                  <oj-bind-text value="[[item.item.data.email]]"></oj-bind-text>
-                </span>
-                <span slot="secondary" class="oj-typography-body-sm oj-text-color-secondary">
-                  <oj-bind-text value="[[item.item.data.name]]"></oj-bind-text>
-                </span>
-                <!-- <oj-avatar slot="leading" size="xs" initials="[[item.item.data.initials]]"></oj-avatar> -->
-                <div class="member-remove-container">
-                  <oj-button class="member-remove-btn oj-button-sm" chroming="borderless" display="icons"
-                    data-bind="click: function() { handleUnselectMember(item.item.data) }" title="Remove member">
-                    <span slot="startIcon" class="oj-ux-ico-close"></span>
-                  </oj-button>
-
-                </div>
-              </oj-list-item-layout>
-            </template>
-            <template slot="noData">
-              <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center no-members-content">
-                <p class="oj-text-color-secondary">No members in this group</p>
-              </div>
-            </template>
-          </oj-list-view>
-        </div>
-      </div>
-
-      <!-- Accessible Applications Section -->
-      <div class="oj-flex oj-sm-flex-direction-column oj-sm-margin-4x-top">
-        <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">Accessible Applications</h4>
-        <div class="oj-flex oj-sm-flex-direction-column applications-checkboxes">
-          <oj-bind-for-each data="[[editDialogApplications]]">
-            <template data-oj-as="app">
-              <oj-c-checkbox value="{{app.data.checked}}">
-                <oj-bind-text value="[[app.data.name]]"></oj-bind-text>
-              </oj-c-checkbox>
-            </template>
-          </oj-bind-for-each>
-        </div>
-      </div>
     </div>
-  </div>
-  <div slot="footer">
-    <oj-button id="cancelDialogBtn" on-oj-action="[[closeEditDialog]]">Cancel</oj-button>
-    <oj-button id="updateGroupBtn" class="oj-button-primary" on-oj-action="[[updateGroupMembers]]">Update
-      Group</oj-button>
-  </div>
+    <div slot="footer">
+        <oj-button id="cancelDialogBtn" on-oj-action="[[closeEditDialog]]">Cancel</oj-button>
+        <oj-bind-if test="[[is_admin]]">
+            <oj-button id="updateGroupBtn" class="oj-button-primary" on-oj-action="[[updateGroupMembers]]">Update Group</oj-button>
+        </oj-bind-if>
+    </div>
 </oj-dialog>
 
 <oj-dialog id="deleteGroupDialog" cancel-behavior="icon" aria-labelledby="delete-dialog-title-id">

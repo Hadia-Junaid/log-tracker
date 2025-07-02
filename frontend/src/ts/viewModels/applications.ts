@@ -40,6 +40,7 @@ import {
 import { deleteDialogMethods } from "./applicationManagement/deleteDialog";
 import { envOptions as environmentOptions, statusFilterOptions, environmentFilterOptions } from './applicationManagement/applicationUtils';
 import { sortOptions as sortOpts} from './applicationManagement/applicationUtils';
+import { AuthService } from '../services/auth.service';
 declare const jwt_decode: (token: string) => any;
 
 
@@ -67,6 +68,7 @@ class ApplicationViewModel {
     isAdmin = ko.observable(false);
     statusFilterOptions = statusFilterOptions;
     environmentFilterOptions = environmentFilterOptions;
+    //private authService: AuthService;
 
     // Computed
     readonly totalPages = applicationListComputed.totalPages;
@@ -142,18 +144,15 @@ class ApplicationViewModel {
         // Load configuration on initialization
         AccUtils.announce("Application page loaded", "assertive");
         document.title = "Applications";
-        // Decode JWT and set isAdmin
-        const token = localStorage.getItem('authToken');
-        if (token) {
-            try {
-                const decoded: any = jwt_decode(token);
-                this.isAdmin(typeof decoded.is_admin === 'boolean' ? decoded.is_admin : false);
-            } catch (e) {
-                this.isAdmin(false);
-            }
-        } else {
-            this.isAdmin(false);
-        }
+        
+        // this.authService = new AuthService();
+        // // Set admin status from auth service
+        // this.isAdmin(this.authService.getIsAdminFromToken());
+
+        // // Listen for auth state changes
+        // window.addEventListener('authStateChanged', () => {
+        //     this.isAdmin(this.authService.getIsAdminFromToken());
+        // });
     }
 
     /**
@@ -165,10 +164,13 @@ class ApplicationViewModel {
      * after being disconnected.
     */
     async connected(): Promise<void> {
-
         try {
+            // Verify admin status on page load
+            this.isAdmin(this.authService.getIsAdminFromToken());
+            
             // Load configuration
             await ConfigService.loadConfig();
+            
             // Load initial application data
             await this.loadApplicationData();
         } catch (error) {

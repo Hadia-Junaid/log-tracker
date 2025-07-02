@@ -37,6 +37,7 @@ export class AuthService {
         name: payload.name || "Unknown User",
         email: payload.email || "Unknown Email",
         userId: payload.userId || "",
+        is_admin: payload.is_admin || false
       };
     } catch (error) {
       console.error("Error decoding token:", error);
@@ -65,8 +66,9 @@ export class AuthService {
     if (!token) return false;
     try {
       const payload = JSON.parse(atob(token.split(".")[1]));
-      return typeof payload.is_admin === 'boolean' ? payload.is_admin : false;
+      return payload.is_admin === true; // Explicitly check for true
     } catch (error) {
+      console.error("Error getting admin status from token:", error);
       return false;
     }
   }
@@ -101,5 +103,37 @@ export class AuthService {
       }
     }
     keysToRemove.forEach((key) => localStorage.removeItem(key));
+  }
+
+  public async verifyToken(): Promise<boolean> {
+    const token = localStorage.getItem("authToken");
+    if (!token) return false;
+
+    try {
+      const response = await fetch(`${ConfigService.getApiUrl()}/auth/verify`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        localStorage.removeItem("authToken");
+        return false;
+      }
+
+      const data = await response.json();
+      if (data.success && data.user) {
+        // Update local storage with new token if provided
+        if (data.token) {
+          localStorage.setItem("authToken", data.token);
+        }
+        return true;
+      }
+
+      return false;
+    } catch (error) {
+      console.error("Error verifying token:", error);
+      return false;
+    }
   }
 }
