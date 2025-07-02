@@ -60,8 +60,12 @@ export const applicationListMethods = {
             const response = await fetch(`${baseUrl}/applications`);
             const json = await response.json();
             if (response.ok) {
-                applicationListObservables.applicationDataArray(json.data);
-                console.log(`Loaded ${json.data.length} applications`);
+                 const sorted = json.data.sort((a: ApplicationData, b: ApplicationData) => {
+                    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+                });
+                console.log('Loaded applications:', sorted);
+                applicationListObservables.applicationDataArray(sorted);
+                console.log(`Loaded ${sorted.length} applications`);
             } else {
                 console.error('API Error', json);
             }
