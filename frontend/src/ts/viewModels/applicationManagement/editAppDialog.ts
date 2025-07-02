@@ -109,7 +109,15 @@ const updateApplication = async () => {
             body: JSON.stringify(updatedApp)
         });
 
-        if (!response.ok) throw new Error('Failed to update application');
+        if (!response.ok) {
+            closeEditDialog();
+            if (response.status === 409) {
+                globalBanner.showError("An application with this name already exists.");
+            } else {
+                globalBanner.showError("Failed to update application.");
+            }
+            return;
+        }
 
         const updated = await response.json();
 
@@ -122,6 +130,7 @@ const updateApplication = async () => {
         closeEditDialog();
         globalBanner.showSuccess(`Application "${name}" updated successfully!`);
     } catch (error) {
+        closeEditDialog();
         globalBanner.showError(`Failed to update application ${name}. Please try again!`);
     }
 };
