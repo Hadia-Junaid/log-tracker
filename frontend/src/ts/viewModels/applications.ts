@@ -38,7 +38,7 @@ import {
     editAppDialogMethods
 } from './applicationManagement/editAppDialog';
 import { deleteDialogMethods } from "./applicationManagement/deleteDialog";
-import { envOptions as environmentOptions, statusFilterOptions, environmentFilterOptions } from './applicationManagement/applicationUtils';
+import { envOptions as environmentOptions, statusFilterOptions, environmentFilterOptions, getRelativeTime } from './applicationManagement/applicationUtils';
 import { sortOptions as sortOpts} from './applicationManagement/applicationUtils';
 import { AuthService } from '../services/auth.service';
 declare const jwt_decode: (token: string) => any;
@@ -87,6 +87,7 @@ class ApplicationViewModel {
     openEditDialog = editAppDialogMethods.openEditDialog;
     closeEditDialog = editAppDialogMethods.closeEditDialog
     updateApplication = editAppDialogMethods.updateApplication;
+    getRelativeTime = getRelativeTime;
 
     handleDeleteApp = deleteDialogMethods.handleDeleteApp(this.applicationDataArray);
     cancelDelete = deleteDialogMethods.cancelDelete;
