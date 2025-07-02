@@ -2,7 +2,7 @@ import * as ko from "knockout";
 import { MemberData, ApplicationOption } from "./types";
 import logger from '../../services/logger-service';
 import { ObservableKeySet } from 'ojs/ojknockout-keyset';
-import { updateUserGroup, fetchApplicationsWithIds } from '../../services/group-service';
+import { updateUserGroup, fetchApplicationsWithIds, assignApplicationToGroup } from '../../services/group-service';
 import {
     createSearchInputHandler,
     clearSearchTimeout,
@@ -106,12 +106,18 @@ updateGroupMembers: async () => {
     const groupId = editGroupDialogObservables.groupId();
     const groupName = editGroupDialogObservables.selectedGroupName();
     const members = editGroupDialogObservables.currentMembers();
+    const selectedApplications = editGroupDialogObservables.editDialogApplications().filter(app => app.checked());
 
     try {
+        // Update group members
         await updateUserGroup(groupId, {
             members: members.map(m => m.email), // assuming backend accepts email list
-            // applications: {} // optionally pass updated applications
         });
+
+        // Assign each selected application to the group
+        for (const application of selectedApplications) {
+            await assignApplicationToGroup(groupId, application.id);
+        }
 
         logger.info(`Group ${groupId} updated successfully`);
         
