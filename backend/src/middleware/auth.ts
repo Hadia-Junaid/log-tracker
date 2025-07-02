@@ -3,7 +3,6 @@ import jwtService from '../services/jwtService';
 import User from '../models/User';
 import logger from '../utils/logger';
 
-// Extend Express Request interface to include user
 declare global {
   namespace Express {
     interface Request {
@@ -26,10 +25,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
     
-    // Verify token
     const decoded = jwtService.verifyToken(token);
 
-    // Get user from database
     const user = await User.findById(decoded.userId);
     
     if (!user) {
@@ -40,7 +37,6 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       return;
     }
 
-    // Add user to request object
     req.user = {
       id: user._id,
       email: user.email,

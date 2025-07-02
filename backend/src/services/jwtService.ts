@@ -17,9 +17,7 @@ class JWTService {
     this.expiresIn = config.get<string>('auth.jwt.expiresIn');
   }
 
-  /**
-   * Generate JWT token for authenticated user
-   */
+
   generateToken(user: IUser): string {
     const payload: JWTPayload = {
       userId: (user._id as any).toString(),
@@ -34,9 +32,7 @@ class JWTService {
     } as any);
   }
 
-  /**
-   * Verify JWT token and return payload
-   */
+
   verifyToken(token: string): JWTPayload {
     try {
       const decoded = jwt.verify(token, this.secret, {
@@ -50,9 +46,6 @@ class JWTService {
     }
   }
 
-  /**
-   * Decode token without verification (for debugging)
-   */
   decodeToken(token: string): JWTPayload | null {
     try {
       return jwt.decode(token) as JWTPayload;
