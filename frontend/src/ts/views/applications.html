@@ -185,8 +185,15 @@
             <oj-c-text-area label-hint="Description" value="{{newApplication.description}}">
             </oj-c-text-area>
 
-            <oj-switch label-hint="Status" value="{{newApplication.isActive}}">
-            </oj-switch>
+            <oj-form-layout-item>
+                <div class="oj-flex oj-sm-align-items-center">
+                    <span class="oj-typography-body-md oj-text-color-primary" style="margin-right: 12px; min-width: 150px;">
+                        Status (Active/Inactive):
+                    </span>
+                    <oj-switch value="{{newApplication.isActive}}">
+                    </oj-switch>
+                </div>
+            </oj-form-layout-item>
         </oj-form-layout>
     </div>
 
@@ -234,8 +241,15 @@
                         data="[[envOptions]]" item-text="label" placeholder="Choose environment" required>
                     </oj-c-select-single>
 
-                    <oj-switch label-hint="Status" value="{{selectedApplicationIsActive}}">
-                    </oj-switch>
+                    <oj-form-layout-item>
+                        <div class="oj-flex oj-sm-align-items-center">
+                            <span class="oj-typography-body-md oj-text-color-primary" style="margin-right: 12px; min-width: 150px;">
+                                Status (Active/Inactive):
+                            </span>
+                            <oj-switch value="{{selectedApplicationIsActive}}">
+                            </oj-switch>
+                        </div>
+                    </oj-form-layout-item>
 
                 </oj-form-layout>
             </div>
