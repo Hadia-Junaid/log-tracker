@@ -20,6 +20,10 @@ import { groupListObservables, groupListMethods } from "./userManagement/groupLi
 import { getInitials } from "./userManagement/sharedDialogUtils";
 import { getRelativeTime } from "./userManagement/userManagementUtils";
 import deleteGroupDialog from "./userManagement/deleteGroupDialog";
+import "oj-c/input-text";
+import "oj-c/text-area";
+import "oj-c/select-single";
+
 
 class UserManagementViewModel {
     // Group List
@@ -27,7 +31,7 @@ class UserManagementViewModel {
     dataProvider = groupListObservables.dataProvider;
     isDataEmpty = groupListObservables.isDataEmpty;
     // Search and pagination
-    searchTerm = groupListObservables.searchTerm;
+    searchTerm = groupListObservables.searchTerm; 
     currentPage = groupListObservables.currentPage;
     totalPages = groupListObservables.totalPages;
     goToNextPage = groupListMethods.goToNextPage;
