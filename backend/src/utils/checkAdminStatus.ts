@@ -18,20 +18,17 @@ export const checkUserAdminStatus = async (userEmail: string): Promise<boolean> 
     }
 
     // Find all admin groups where is_admin is true
-    const adminGroups = await UserGroup.find({ is_admin: true });
+    const adminGroup = await UserGroup.findOne({ is_admin: true });
     
-    if (!adminGroups.length) {
+    if (!adminGroup) {
       logger.info('No admin groups found in the system');
       return false;
     }
 
-    // Check if user is a member of any admin group
-    for (const group of adminGroups) {
-      if (group.members.includes(user._id as any)) {
-        logger.info(`User ${userEmail} found in admin group: ${group.name}`);
+      if (adminGroup.members.includes(user._id as any)) {
+        logger.info(`User ${userEmail} found in admin group: ${adminGroup.name}`);
         return true;
       }
-    }
 
     logger.info(`User ${userEmail} is not a member of any admin group`);
     return false;

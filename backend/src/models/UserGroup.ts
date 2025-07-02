@@ -8,7 +8,8 @@ export interface IUserGroup extends Document {
 }
 
 const UserGroupSchema: Schema = new Schema({
-  name: { type: String, required: true },
+  //name must be unique
+  name: { type: String, required: true, unique: true },
   is_admin: { type: Boolean, default: false },
   assigned_applications: [{ type: Schema.Types.ObjectId, ref: 'Application' }],
   members: [{ type: Schema.Types.ObjectId, ref: 'User' }],
