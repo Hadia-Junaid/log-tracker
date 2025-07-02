@@ -95,3 +95,21 @@ export async function fetchApplicationsWithIds(): Promise<{id: string, name: str
         name: app.name
     }));
 }
+
+// Assign application to group
+export async function assignApplicationToGroup(groupId: string, applicationId: string): Promise<void> {
+    await ConfigService.loadConfig();
+    const res = await fetch(`${ConfigService.getApiUrl()}/user-groups/${groupId}/assign-application`, {
+        method: 'PATCH',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ applicationId })
+    });
+    
+    if (!res.ok) {
+        const errorBody = await res.text();
+        console.error(`Assign application failed with status: ${res.status}, body: ${errorBody}`);
+        throw new Error(`Failed to assign application to group. Status: ${res.status}`);
+    }
+}
