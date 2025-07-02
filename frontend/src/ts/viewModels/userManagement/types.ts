@@ -12,6 +12,7 @@ export interface GroupData {
     memberCount: number;
     createdDate?: string;
     createdAgo?: string;
+    is_admin?: boolean;
 }
 
 import * as ko from "knockout";

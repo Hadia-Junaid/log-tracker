@@ -17,7 +17,9 @@ import { MemberData, GroupData, ApplicationOption } from "./userManagement/types
 import { addGroupDialogObservables, addGroupDialogMethods } from "./userManagement/addGroupDialog";
 import { editGroupDialogObservables, editGroupDialogMethods } from "./userManagement/editGroupDialog";
 import { groupListObservables, groupListMethods } from "./userManagement/groupList";
-import { getInitials, getRelativeTime } from "./userManagement/userManagementUtils";
+import { getInitials } from "./userManagement/sharedDialogUtils";
+import { getRelativeTime } from "./userManagement/userManagementUtils";
+import deleteGroupDialog from "./userManagement/deleteGroupDialog";
 
 class UserManagementViewModel {
     // Group List
@@ -54,7 +56,11 @@ class UserManagementViewModel {
     editDialogAvailableMembers = editGroupDialogObservables.editDialogAvailableMembers;
     selectedAvailableMemberKeys = editGroupDialogObservables.selectedAvailableMemberKeys;
     selectedAssignedMemberKeys = editGroupDialogObservables.selectedAssignedMemberKeys;
+    editSearchValue = editGroupDialogObservables.searchValue;
+    editSearchRawValue = editGroupDialogObservables.searchRawValue;
+    editError = editGroupDialogObservables.editError;
     handleAvailableMemberSelection = editGroupDialogMethods.handleAvailableMemberSelection;
+    handleEditMemberSearchInput = editGroupDialogMethods.handleMemberSearchInput;
     openEditGroupDialog = editGroupDialogMethods.openEditGroupDialog;
     closeEditDialog = editGroupDialogMethods.closeEditDialog;
     updateGroupMembers = editGroupDialogMethods.updateGroupMembers;
@@ -84,6 +90,15 @@ class UserManagementViewModel {
             return this.groupDataArray().length === 0;
         });
         groupListMethods.init();
+
+        document.addEventListener('group-deleted', (e: any) => {
+            const idToDelete = e.detail.groupId;
+            this.groupDataArray.remove(group => group.groupId === idToDelete);
+        });
+
+        document.addEventListener('group-created', (e: any) => {
+            groupListMethods.loadGroups();
+        });
     }
 
     editGroup = (event: CustomEvent) => {

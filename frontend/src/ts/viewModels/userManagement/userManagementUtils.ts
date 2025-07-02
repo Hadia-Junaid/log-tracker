@@ -1,11 +1,3 @@
-export function getInitials(name: string): string {
-    if (!name) return '';
-    return name.split(' ')
-        .map(w => w[0]?.toUpperCase())
-        .join('')
-        .substring(0, 2);
-}
-
 export function getRelativeTime(date: Date): string {
     const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
     const intervals: { [key: string]: number } = {

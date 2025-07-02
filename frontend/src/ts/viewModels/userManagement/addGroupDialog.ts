@@ -1,10 +1,18 @@
 import * as ko from "knockout";
 import { MemberData, ApplicationOption } from "./types";
-import { ConfigService } from '../../services/config-service';
-import logger from '../../services/logger-service';
 import { fetchUserGroups, createUserGroup, fetchApplications } from '../../services/group-service';
 import { ObservableKeySet } from 'ojs/ojknockout-keyset';
 import ArrayDataProvider = require("ojs/ojarraydataprovider");
+import logger from '../../services/logger-service';
+import {
+    createSearchInputHandler,
+    clearSearchTimeout,
+    resetSearchState,
+    SearchConfig
+} from './sharedDialogUtils';
+
+// Timeout tracking for search debouncing
+const searchTimeoutRef = { current: undefined as ReturnType<typeof setTimeout> | undefined };
 
 export const addGroupDialogObservables = {
     newGroupName: ko.observable(""),
@@ -17,41 +25,131 @@ export const addGroupDialogObservables = {
     createError: ko.observable("")
 };
 
+// Search configuration for add group dialog
+const searchConfig: SearchConfig = {
+    availableMembersObservable: addGroupDialogObservables.createDialogAvailableMembers,
+    excludedMembersObservable: addGroupDialogObservables.createDialogSelectedMembers,
+    errorObservable: addGroupDialogObservables.createError,
+    logContext: "in add group dialog"
+};
+
 export const addGroupDialogMethods = {
     openAddGroupDialog: async () => {
+        // Reset all observables
         addGroupDialogObservables.newGroupName("");
-        addGroupDialogObservables.searchValue("");
-        addGroupDialogObservables.searchRawValue("");
-        addGroupDialogObservables.createDialogAvailableMembers([]);
         addGroupDialogObservables.createDialogSelectedMembers([]);
         addGroupDialogObservables.createDialogApplications([]);
-        addGroupDialogObservables.createError("");
-        // Reset selection keys if you use them
-        // (document.getElementById("addGroupDialog") as any).selectedAvailableMemberKeys(new ObservableKeySet<string | number>());
-        // (document.getElementById("addGroupDialog") as any).selectedAssignedMemberKeys(new ObservableKeySet<string | number>());
+        addGroupDialogObservables.isCreating(false);
+        
+        // Reset search state using shared utility
+        resetSearchState(
+            addGroupDialogObservables.searchValue,
+            addGroupDialogObservables.searchRawValue,
+            addGroupDialogObservables.createDialogAvailableMembers,
+            addGroupDialogObservables.createError
+        );
+        
+        // Clear search timeout
+        clearSearchTimeout(searchTimeoutRef);
+        
         try {
-            // If you have a performMemberSearch, call it here
-            // await performMemberSearch("");
+            // Any pre-loading logic can go here
         } catch (e) {
-            logger.error('Failed to pre-load members for add group dialog', e);
-            addGroupDialogObservables.createError('Failed to load available members for dialog.');
+            logger.error('Failed to pre-load data for add group dialog', e);
+            addGroupDialogObservables.createError('Failed to load data for dialog.');
         }
+        
         (document.getElementById("addGroupDialog") as any).open();
     },
+    
     closeAddGroupDialog: () => {
         (document.getElementById("addGroupDialog") as any).close();
+        
+        // Reset all observables
         addGroupDialogObservables.newGroupName("");
-        addGroupDialogObservables.searchValue("");
-        addGroupDialogObservables.searchRawValue("");
-        addGroupDialogObservables.createDialogAvailableMembers([]);
         addGroupDialogObservables.createDialogSelectedMembers([]);
         addGroupDialogObservables.createDialogApplications([]);
-        addGroupDialogObservables.createError("");
-        // Reset selection keys if you use them
+        addGroupDialogObservables.isCreating(false);
+        
+        // Reset search state using shared utility
+        resetSearchState(
+            addGroupDialogObservables.searchValue,
+            addGroupDialogObservables.searchRawValue,
+            addGroupDialogObservables.createDialogAvailableMembers,
+            addGroupDialogObservables.createError
+        );
+        
+        // Clear search timeout
+        clearSearchTimeout(searchTimeoutRef);
     },
-    handleMemberSearchInput: (event: CustomEvent<any>) => {},
+    
+    // Use shared search handler
+    handleMemberSearchInput: createSearchInputHandler(searchConfig, searchTimeoutRef),
+    
     addSelectedMembersToGroup: () => {},
     removeSelectedMembersFromGroup: () => {},
     removeAllSelectedMembers: () => {},
-    createGroup: async () => {}
-}; 
+    createGroup: async () => {
+        try {
+            // Clear any previous errors
+            addGroupDialogObservables.createError("");
+            
+            // Validate group name
+            const groupName = addGroupDialogObservables.newGroupName().trim();
+            if (!groupName) {
+                addGroupDialogObservables.createError("Group name is required.");
+                return;
+            }
+            
+            // Set loading state
+            addGroupDialogObservables.isCreating(true);
+            
+            // Prepare the payload according to the user's requirements
+            const payload = {
+                name: groupName,
+                is_admin: false,
+                assigned_applications: [],
+                members: []
+            };
+            
+            logger.info('Creating user group with payload:', payload);
+            
+            // Call the backend API
+            const createdGroup = await createUserGroup(payload);
+            
+            logger.info('User group created successfully:', createdGroup);
+            
+            // Show success message
+            const banner = document.getElementById('globalSuccessBanner');
+            if (banner) {
+                banner.textContent = `Group "${groupName}" created successfully!`;
+                banner.style.display = 'block';
+                
+                // Hide the banner after 5 seconds
+                setTimeout(() => {
+                    banner.style.display = 'none';
+                }, 5000);
+            }
+            
+            // Close the dialog
+            addGroupDialogMethods.closeAddGroupDialog();
+            
+            // Refresh the group list by dispatching a custom event
+            document.dispatchEvent(new CustomEvent('group-created', { 
+                detail: { groupId: createdGroup._id, groupName: createdGroup.name } 
+            }));
+            
+        } catch (error) {
+            logger.error('Failed to create user group:', error);
+            
+            // Handle specific error cases
+            if (error instanceof Error) {
+                addGroupDialogObservables.createError(`Failed to create group: ${error.message}`);
+            } else {
+                addGroupDialogObservables.createError('Failed to create group. Please try again.');
+            }
+        } finally {
+            addGroupDialogObservables.isCreating(false);
+        }
+    }
+};

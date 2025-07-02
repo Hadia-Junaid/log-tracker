@@ -274,3 +274,74 @@ html[dir="rtl"] .demo-oracle-icon {
 #editGroupDialog oj-button.oj-button-primary:hover .oj-button-text {
   color: white !important;
 }
+
+/* Add Group Dialog Styles - EXACT SAME as Edit Group Dialog */
+#addGroupDialog {
+  width: 70vw;
+  max-width: 800px;
+  min-height: 600px;
+}
+
+.add-group-content {
+  gap: 2rem;
+}
+
+/* Dialog footer button styling for Add Group Dialog */
+#addGroupDialog oj-button {
+  border: 1px solid #ccc !important;
+  border-radius: 4px !important;
+  outline: none !important;
+  box-shadow: none !important;
+  position: relative !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+}
+
+#addGroupDialog oj-button::before,
+#addGroupDialog oj-button::after {
+  display: none !important;
+}
+
+#addGroupDialog oj-button *,
+#addGroupDialog oj-button *::before,
+#addGroupDialog oj-button *::after {
+  box-shadow: none !important;
+  -webkit-box-shadow: none !important;
+  -moz-box-shadow: none !important;
+  border-left: none !important;
+  border-right: none !important;
+  outline: none !important;
+}
+
+#addGroupDialog oj-button .oj-button-button {
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+#addGroupDialog oj-button:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.25) !important;
+}
+
+#addGroupDialog oj-button.oj-button-primary {
+  border: 1px solid #000000 !important;
+  background-color: #000000 !important;
+  color: white !important;
+}
+
+#addGroupDialog oj-button.oj-button-primary:hover {
+  border: 1px solid #333333 !important;
+  background-color: #333333 !important;
+  color: white !important;
+}
+
+#addGroupDialog oj-button.oj-button-primary span,
+#addGroupDialog oj-button.oj-button-primary .oj-button-text {
+  color: white !important;
+}
+
+#addGroupDialog oj-button.oj-button-primary:hover span,
+#addGroupDialog oj-button.oj-button-primary:hover .oj-button-text {
+  color: white !important;
+}
