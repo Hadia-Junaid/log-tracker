@@ -2,7 +2,7 @@
 import express from 'express';
 import { createApplication, getApplications, updateApplication, deleteApplication } from '../controllers/application.controller';
 import validate from './../middleware/validate';
-import { addApplicationSchema, updateApplicationSchema } from '../validators/application';
+import { applicationSchema } from '../validators/application';
 
 const router = express.Router();
 
@@ -10,10 +10,10 @@ const router = express.Router();
 router.get('/', getApplications);
 
 // POST /api/applications - Create a new application
-router.post('/', validate(addApplicationSchema), createApplication);
+router.post('/', validate(applicationSchema), createApplication);
 
 // PATCH /api/applications/:id - Update an existing application by ID
-router.patch('/:id', validate(updateApplicationSchema), updateApplication);
+router.patch('/:id', validate(applicationSchema), updateApplication);
 
 // DELETE /api/applications/:id - Delete an application by ID
 router.delete('/:id', deleteApplication);
