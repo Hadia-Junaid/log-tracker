@@ -25,11 +25,17 @@ export function createRouter(): CoreRouter<CoreRouterDetail> {
     const { state } = args;
     const isLoginRoute = state?.path === "login";
     const isAuthenticated = authService.checkAuthToken();
+    const isUserManagementRoute = state?.path === "userManagement";
+    const isAdmin = authService.getIsAdminFromToken();
 
     if (!isAuthenticated && !isLoginRoute) {
       // Redirect unauthenticated users to the login page
       args.accept(Promise.resolve());
       setTimeout(() => router.go({ path: "login" }), 0);
+    } else if (isUserManagementRoute && !isAdmin) {
+      // Redirect non-admin users away from userManagement
+      args.accept(Promise.resolve());
+      setTimeout(() => router.go({ path: "dashboard" }), 0);
     } else if (isAuthenticated && isLoginRoute) {
       // Redirect authenticated users away from the login page
       args.accept(Promise.resolve());
