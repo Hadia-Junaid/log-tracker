@@ -8,6 +8,12 @@ import logger from '../utils/logger';
 // Expects req.body to contain application data
 // Returns the created application with a 201 status code
 export const createApplication = async (req: Request, res: Response): Promise<void> => {
+  const existingApp = await Application.findOne({ name: req.body.name }).lean();
+  if( existingApp ) {
+    logger.warn(`Create request failed: Application already exists with name ${req.body.name}`);
+    res.status(409).send({ error: 'Application with this name already exists.' });
+    return;
+  }
   const app = await Application.create(req.body);
 
   logger.info(`Application created: ${app.name} (${app._id})`);

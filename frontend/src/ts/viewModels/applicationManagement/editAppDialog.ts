@@ -82,6 +82,17 @@ const updateApplication = async () => {
     if (!allValid) {
         return;
     }
+
+    const existing = applicationListObservables.applicationDataArray().find(
+        app => app.name.trim() === name.trim()
+    );
+
+    if (existing) {
+        closeEditDialog();
+        globalBanner.showError("An application with this name already exists.");
+        return;
+    }
+
     const updatedApp: Partial<ApplicationData> = {
         name,
         hostname,

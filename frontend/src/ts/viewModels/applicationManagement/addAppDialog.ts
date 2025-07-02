@@ -70,7 +70,14 @@ const addNewApplication = async () => {
             body: JSON.stringify(app)
         });
 
-        if (!response.ok) throw new Error("Failed to add application");
+        if (!response.ok) {
+            if (response.status === 409) {
+                globalBanner.showError("An application with this name already exists.");
+            } else {
+                globalBanner.showError("Failed to add application.");
+            }
+            return;
+        }
 
         const createdApp = await response.json();
         applicationListObservables.applicationDataArray.push(createdApp);
