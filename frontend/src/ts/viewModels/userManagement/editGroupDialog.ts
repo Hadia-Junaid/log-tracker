@@ -107,6 +107,13 @@ export const editGroupDialogMethods = {
             }));
             
             editGroupDialogObservables.editDialogApplications(applicationOptions);
+
+            // Show the current members by adding them to the currentMembers observable
+            const currentMembers: MemberData[] = groupDetails.members.map((member: any) => ({
+                name: member.name,
+                email: member.email
+            }));
+            editGroupDialogObservables.currentMembers(currentMembers);
         } catch (error) {
             logger.error('Failed to fetch applications or group details for edit dialog:', error);
             editGroupDialogObservables.editError('Failed to load applications.');
