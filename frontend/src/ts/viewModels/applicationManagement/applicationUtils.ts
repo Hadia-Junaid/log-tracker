@@ -11,3 +11,15 @@ export const envOptions = new ArrayDataProvider(
   ],
   { keyAttributes: 'value' }
 );
+
+export const sortOptions = new ArrayDataProvider(
+  [
+    { value: 'nameAsc', label: 'Name (A-Z)' },
+    { value: 'nameDesc', label: 'Name (Z-A)' },
+    { value: 'createdAtAsc', label: 'Created At (Oldest First)' },
+    { value: 'createdAtDesc', label: 'Created At (Newest First)' },
+    { value: 'updatedAtAsc', label: 'Updated At (Oldest First)' },
+    { value: 'updatedAtDesc', label: 'Updated At (Newest First)' }  
+  ],
+  { keyAttributes: 'value' }
+);

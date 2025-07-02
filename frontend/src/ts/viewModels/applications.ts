@@ -38,6 +38,7 @@ import {
 } from './applicationManagement/editAppDialog';
 import { deleteDialogMethods } from "./applicationManagement/deleteDialog";
 import { envOptions as environmentOptions } from './applicationManagement/applicationUtils';
+import { sortOptions as sortOpts} from './applicationManagement/applicationUtils';
 
 
 class ApplicationViewModel {
@@ -47,6 +48,7 @@ class ApplicationViewModel {
     readonly searchQuery = applicationListObservables.searchQuery;
     readonly currentPage = applicationListObservables.currentPage;
     readonly pageSize = applicationListObservables.pageSize;
+    sortOption = applicationListObservables.sortOption;
     newApplication = addAppDialogObservables.newApplication;
     envOptions = environmentOptions;
     selectedApplicationId = editAppDialogObservables.selectedApplicationId;
@@ -56,6 +58,7 @@ class ApplicationViewModel {
     selectedApplicationDescription = editAppDialogObservables.selectedApplicationDescription;
     availableGroups = addAppDialogObservables.availableGroups; // Shared
     selectedGroups = editAppDialogObservables.selectedGroups; // For Edit Dialog
+    sortOptions = sortOpts;
 
     // Computed
     readonly totalPages = applicationListComputed.totalPages;
@@ -80,6 +83,10 @@ class ApplicationViewModel {
     confirmDelete = deleteDialogMethods.confirmDelete;
     isDeleting = deleteDialogMethods.isDeleting;
     applicationName = deleteDialogMethods.applicationName;
+    
+
+
+
 
 
     // Update groups assigned to the application
@@ -129,6 +136,9 @@ class ApplicationViewModel {
         // Load configuration on initialization
         AccUtils.announce("Application page loaded", "assertive");
         document.title = "Applications";
+
+
+
     }
 
     /**
