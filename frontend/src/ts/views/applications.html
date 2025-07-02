@@ -20,7 +20,7 @@
     </oj-c-input-text>
   </div>
 
-  <!-- Status filter dropdown (middle) -->
+  <!-- Status filter dropdown -->
   <div class="oj-sm-margin-2x-start" style="min-width: 180px;">
     <oj-c-select-single
       label-hint="Filter by Status"
@@ -28,6 +28,17 @@
       data="[[statusFilterOptions]]"
       item-text="label"
       placeholder="Filter by status...">
+    </oj-c-select-single>
+  </div>
+
+  <!-- Environment filter dropdown -->
+  <div class="oj-sm-margin-2x-start" style="min-width: 180px;">
+    <oj-c-select-single
+      label-hint="Filter by Environment"
+      value="{{environmentFilter}}"
+      data="[[environmentFilterOptions]]"
+      item-text="label"
+      placeholder="Filter by environment...">
     </oj-c-select-single>
   </div>
 

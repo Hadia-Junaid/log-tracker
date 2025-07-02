@@ -32,3 +32,14 @@ export const statusFilterOptions = new ArrayDataProvider(
   ],
   { keyAttributes: 'value' }
 );
+
+export const environmentFilterOptions = new ArrayDataProvider(
+  [
+    { value: 'all', label: 'All Environments' },
+    { value: 'Development', label: 'Development' },
+    { value: 'Testing', label: 'Testing' },
+    { value: 'Production', label: 'Production' },
+    { value: 'Staging', label: 'Staging' }
+  ],
+  { keyAttributes: 'value' }
+);
