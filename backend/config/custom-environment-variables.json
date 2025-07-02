@@ -1,3 +1,15 @@
 {
-  "mongoUri": "MONGO_URI"
+  "mongoUri": "MONGO_URI",
+  "auth": {
+    "google": {
+      "clientId": "GOOGLE_CLIENT_ID",
+      "clientSecret": "GOOGLE_CLIENT_SECRET"
+    },
+    "jwt": {
+      "secret": "JWT_SECRET"
+    }
+  },
+  "frontend": {
+    "baseUrl": "FRONTEND_URL"
+  }
 }
