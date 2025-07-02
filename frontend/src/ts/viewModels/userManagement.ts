@@ -101,23 +101,36 @@ class UserManagementViewModel {
         document.addEventListener('group-created', (e: any) => {
             groupListMethods.loadGroups();
         });
+
+        document.addEventListener('group-updated', () => {
+            fetchUserGroups(); // or your method to refresh groups
+     });
     }
 
-    editGroup = (event: CustomEvent) => {
-        const groupId = (event.target as HTMLElement).dataset.groupId;
-        if (groupId) {
-            this.openEditGroupDialog(event);
-        } else {
-            logger.warn('No group ID found for edit action.');
+    editGroup = (group: { groupId: string; groupName: string }) => {
+        if (!group || !group.groupId || !group.groupName) {
+            logger.warn("Missing groupId or groupName from data for edit action.");
+            return;
         }
+
+        this.openEditGroupDialog({
+            detail: {
+                groupId: group.groupId,
+                groupName: group.groupName
+            }
+        });
     };
     deleteGroup = (event: CustomEvent) => {
+        event.stopPropagation(); 
+        event.preventDefault();   
         const groupId = (event.target as HTMLElement).dataset.groupId || '';
         const group = this.groupDataArray().find(g => g.groupId === groupId);
         if (group) {
             deleteGroupDialog.openDialog(groupId, group.groupName || '');
         }
     };
+
+    
 
     connected(): void {
         AccUtils.announce("User Management page loaded.");

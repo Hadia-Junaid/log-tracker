@@ -4,6 +4,7 @@ import ArrayDataProvider = require("ojs/ojarraydataprovider");
 import { fetchUserGroups } from '../../services/group-service';
 import logger from '../../services/logger-service';
 import { ConfigService } from '../../services/config-service';
+import { editGroupDialogMethods } from './editGroupDialog';
 
 export const groupListObservables = {
     groupDataArray: ko.observableArray<GroupData>([]),

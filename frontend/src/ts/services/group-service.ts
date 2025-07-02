@@ -45,5 +45,25 @@ export const deleteGroupById = (groupId: string): Promise<void> => {
         });
 };
 
+// Update user group
+export async function updateUserGroup(groupId: string, payload: any): Promise<any> {
+  await ConfigService.loadConfig();
+  const res = await fetch(`${ConfigService.getApiUrl()}/user-groups/${groupId}`, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!res.ok) {
+    const errorBody = await res.text();
+    console.error(`Update group failed with status: ${res.status}, body: ${errorBody}`);
+    throw new Error(`Failed to update group. Status: ${res.status}`);
+  }
+
+  return await res.json();
+}
+
 // Existing fetchApplications ...
 export async function fetchApplications() { /* ... */ }
