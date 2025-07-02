@@ -7,6 +7,7 @@ import "ojs/ojlistitemlayout";
 import "ojs/ojbutton";
 import "ojs/ojdialog";
 import "ojs/ojinputsearch";
+import "ojs/ojinputtext";
 import 'oj-c/checkbox';
 import logger from '../services/logger-service';
 import { ConfigService } from '../services/config-service';

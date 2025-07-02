@@ -78,3 +78,20 @@ export async function fetchApplications(): Promise<string[]> {
     // Extract application names from the data array
     return response.data.map((app: any) => app.name);
 }
+
+// Fetch full application objects with IDs
+export async function fetchApplicationsWithIds(): Promise<{id: string, name: string}[]> {
+    await ConfigService.loadConfig();
+    const res = await fetch(`${ConfigService.getApiUrl()}/applications`);
+    
+    if (!res.ok) {
+        throw new Error("Failed to fetch applications");
+    }
+    
+    const response = await res.json();
+    // Return full application objects with id and name
+    return response.data.map((app: any) => ({
+        id: app._id,
+        name: app.name
+    }));
+}
