@@ -6,6 +6,7 @@ import { ConfigService } from '../../services/config-service';
 import { envOptions } from './applicationUtils';
 import { availableGroups, selectedGroupsForEdit } from './applicationGroups';
 import globalBanner from '../../utils/globalBanner';
+import globalDialog from '../../utils/globalDialog';
 
 const selectedApplicationId = ko.observable<string>('');
 const selectedApplicationName = ko.observable<string>('');
@@ -47,15 +48,8 @@ const gotoEditApplication = (event: any) => {
 };
 
 // Open/close dialog
-const openEditDialog = () => {
-    const dialog = document.getElementById('editApplicationDialog') as any;
-    if (dialog) dialog.open();
-};
-
-const closeEditDialog = () => {
-    const dialog = document.getElementById('editApplicationDialog') as any;
-    if (dialog) dialog.close();
-};
+const openEditDialog = () => globalDialog.open("editApplicationDialog");
+const closeEditDialog = () => globalDialog.close("editApplicationDialog");
 
 const updateApplication = async () => {
     const id = selectedApplicationId();

@@ -2,6 +2,7 @@ import * as ko from "knockout";
 import { ConfigService } from "../../services/config-service";
 import { applicationListObservables } from "./appList";
 import globalBanner  from "../../utils/globalBanner";
+import globalDialog from '../../utils/globalDialog';
 
 class DeleteApplicationDialogViewModel {
     applicationId = ko.observable<string>('');
@@ -11,11 +12,11 @@ class DeleteApplicationDialogViewModel {
     openDialog(applicationId: string, applicationName: string) {
         this.applicationId(applicationId);
         this.applicationName(applicationName);
-        (document.getElementById('deleteApplicationDialog') as any).open();
+        globalDialog.open("deleteApplicationDialog");
     }
 
     closeDialog() {
-        (document.getElementById('deleteApplicationDialog') as any).close();
+        globalDialog.close("deleteApplicationDialog");
     }
 
     async confirmDelete() {

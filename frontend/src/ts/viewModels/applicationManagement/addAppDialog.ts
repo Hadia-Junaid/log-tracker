@@ -6,6 +6,7 @@ import { applicationListObservables } from './appList';
 import { envOptions } from './applicationUtils';
 import { availableGroups, selectedGroupsForAdd } from './applicationGroups';
 import globalBanner from '../../utils/globalBanner';
+import globalDialog from '../../utils/globalDialog';
 
 
 
@@ -23,14 +24,9 @@ const resetNewAppForm = () => {
     newApplication.description("");
 };
 
-const openAddDialog = () => {
-    const dialog = document.getElementById("addApplicationDialog") as any;
-    if (dialog) dialog.open();
-};
-
+const openAddDialog = () => globalDialog.open("addApplicationDialog");
 const closeAddDialog = () => {
-    const dialog = document.getElementById("addApplicationDialog") as any;
-    if (dialog) dialog.close();
+    globalDialog.close("addApplicationDialog");
     resetNewAppForm();
 };
 
