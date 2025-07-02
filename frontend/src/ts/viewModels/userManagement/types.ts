@@ -17,6 +17,7 @@ export interface GroupData {
 
 import * as ko from "knockout";
 export interface ApplicationOption {
+    id: string;
     name: string;
     checked: ko.Observable<boolean>;
 } 

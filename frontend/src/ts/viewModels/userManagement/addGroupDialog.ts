@@ -1,6 +1,6 @@
 import * as ko from "knockout";
 import { MemberData, ApplicationOption } from "./types";
-import { fetchUserGroups, createUserGroup, fetchApplications } from '../../services/group-service';
+import { fetchUserGroups, createUserGroup, fetchApplicationsWithIds } from '../../services/group-service';
 import { ObservableKeySet } from 'ojs/ojknockout-keyset';
 import ArrayDataProvider = require("ojs/ojarraydataprovider");
 import logger from '../../services/logger-service';
@@ -54,9 +54,10 @@ export const addGroupDialogMethods = {
         
         try {
             // Fetch applications from the API
-            const applications = await fetchApplications();
+            const applications = await fetchApplicationsWithIds();
             const applicationOptions: ApplicationOption[] = applications.map(app => ({
-                name: app,
+                id: app.id,
+                name: app.name,
                 checked: ko.observable(false) // All checkboxes unchecked initially
             }));
             addGroupDialogObservables.createDialogApplications(applicationOptions);
@@ -107,14 +108,21 @@ export const addGroupDialogMethods = {
                 return;
             }
             
+            // Validate that at least one application is selected
+            const selectedApplications = addGroupDialogObservables.createDialogApplications().filter(app => app.checked());
+            if (selectedApplications.length === 0) {
+                addGroupDialogObservables.createError("Please select at least one accessible application.");
+                return;
+            }
+            
             // Set loading state
             addGroupDialogObservables.isCreating(true);
             
-            // Prepare the payload according to the user's requirements
+            // Prepare the payload with selected applications
             const payload = {
                 name: groupName,
                 is_admin: false,
-                assigned_applications: [],
+                assigned_applications: selectedApplications.map(app => app.id),
                 members: []
             };
             

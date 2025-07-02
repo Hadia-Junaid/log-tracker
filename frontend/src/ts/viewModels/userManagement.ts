@@ -8,6 +8,7 @@ import "ojs/ojbutton";
 import "ojs/ojlabel";
 import "ojs/ojdialog";
 import "ojs/ojinputsearch";
+import "ojs/ojinputtext";
 import 'oj-c/checkbox';
 import "ojs/ojavatar";
 import logger from '../services/logger-service';

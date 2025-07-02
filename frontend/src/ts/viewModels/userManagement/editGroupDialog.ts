@@ -2,7 +2,7 @@ import * as ko from "knockout";
 import { MemberData, ApplicationOption } from "./types";
 import logger from '../../services/logger-service';
 import { ObservableKeySet } from 'ojs/ojknockout-keyset';
-import { updateUserGroup, fetchApplications } from '../../services/group-service';
+import { updateUserGroup, fetchApplicationsWithIds } from '../../services/group-service';
 import {
     createSearchInputHandler,
     clearSearchTimeout,
@@ -62,9 +62,10 @@ export const editGroupDialogMethods = {
         
         try {
             // Fetch applications from the API
-            const applications = await fetchApplications();
+            const applications = await fetchApplicationsWithIds();
             const applicationOptions: ApplicationOption[] = applications.map(app => ({
-                name: app,
+                id: app.id,
+                name: app.name,
                 checked: ko.observable(false) // All checkboxes unchecked initially
             }));
             editGroupDialogObservables.editDialogApplications(applicationOptions);
@@ -103,6 +104,7 @@ export const editGroupDialogMethods = {
 
 updateGroupMembers: async () => {
     const groupId = editGroupDialogObservables.groupId();
+    const groupName = editGroupDialogObservables.selectedGroupName();
     const members = editGroupDialogObservables.currentMembers();
 
     try {
@@ -112,9 +114,22 @@ updateGroupMembers: async () => {
         });
 
         logger.info(`Group ${groupId} updated successfully`);
+        
+        // Show success message
+        const banner = document.getElementById('globalSuccessBanner');
+        if (banner) {
+            banner.textContent = `Group "${groupName}" updated successfully!`;
+            banner.style.display = 'block';
+            
+            // Hide the banner after 5 seconds
+            setTimeout(() => {
+                banner.style.display = 'none';
+            }, 5000);
+        }
+        
+        // Close the dialog
         const dialog = document.getElementById("editGroupDialog") as unknown as { close: () => void };
         dialog?.close();
-
 
         // Dispatch event to refresh group list
         document.dispatchEvent(new CustomEvent("group-updated"));
