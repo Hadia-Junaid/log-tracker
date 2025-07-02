@@ -21,6 +21,7 @@ import "oj-c/input-text";
 import "oj-c/text-area";
 import "oj-c/select-single";
 import 'oj-c/checkbox';
+import 'ojs/ojswitch';
 import { ObservableKeySet } from 'ojs/ojknockout-keyset';
 import { InputSearchElement } from 'ojs/ojinputsearch';
 import { ItemContext } from 'ojs/ojcommontypes';
@@ -57,6 +58,7 @@ class ApplicationViewModel {
     selectedApplicationHostName = editAppDialogObservables.selectedApplicationHostName;
     selectedApplicationEnv = editAppDialogObservables.selectedApplicationEnv;
     selectedApplicationDescription = editAppDialogObservables.selectedApplicationDescription;
+    selectedApplicationIsActive = editAppDialogObservables.selectedApplicationIsActive;
     availableGroups = addAppDialogObservables.availableGroups; // Shared
     selectedGroups = editAppDialogObservables.selectedGroups; // For Edit Dialog
     sortOptions = sortOpts;

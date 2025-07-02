@@ -4,6 +4,7 @@ export interface ApplicationData {
     hostname: string;
     environment: string;
     description: string;
+    isActive: boolean;
     createdAt: string;
     updatedAt: string;
     createdAgo: string;

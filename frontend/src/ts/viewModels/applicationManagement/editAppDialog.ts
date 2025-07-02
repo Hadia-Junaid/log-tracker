@@ -13,6 +13,7 @@ const selectedApplicationName = ko.observable<string>('');
 const selectedApplicationHostName = ko.observable<string>('');
 const selectedApplicationEnv = ko.observable<string>('');
 const selectedApplicationDescription = ko.observable<string>('');
+const selectedApplicationIsActive = ko.observable<boolean>(true);
 
 // Opens the edit dialog with pre-filled values
 const editApplication = (event: any) => {
@@ -25,6 +26,7 @@ const editApplication = (event: any) => {
         selectedApplicationName(selectedItem.name);
         selectedApplicationHostName(selectedItem.hostname);
         selectedApplicationDescription(selectedItem.description);
+        selectedApplicationIsActive(selectedItem.isActive || true);
 
         if (["Development", "Testing", "Production", "Staging"].includes(selectedItem.environment)) {
             console.log("Environment matches options:", selectedItem.environment);
@@ -98,7 +100,8 @@ const updateApplication = async () => {
         name,
         hostname,
         environment,
-        description
+        description,
+        isActive: selectedApplicationIsActive()
     };
 
     try {
@@ -142,6 +145,7 @@ export const editAppDialogObservables = {
     selectedApplicationHostName,
     selectedApplicationEnv,
     selectedApplicationDescription,
+    selectedApplicationIsActive,
     availableGroups,
     selectedGroups: selectedGroupsForEdit
 };
