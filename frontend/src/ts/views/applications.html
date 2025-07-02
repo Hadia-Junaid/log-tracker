@@ -86,6 +86,16 @@
                                 <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
                                     Hostname <oj-bind-text value="[[item.item.data.hostname]]"></oj-bind-text>
                                 </span>
+                                <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
+                                                                        Status 
+
+                                    <oj-bind-if test="[[item.item.data.isActive]]">
+                                        <span class="oj-text-color-success">Active</span>
+                                    </oj-bind-if>
+                                    <oj-bind-if test="[[!item.item.data.isActive]]">
+                                        <span class="oj-text-color-danger">Inactive</span>
+                                    </oj-bind-if>
+                                </span>
                             </div>
 
                             <div slot="metadata" class="oj-flex oj-sm-align-items-center">
