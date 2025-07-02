@@ -5,6 +5,7 @@ import ArrayDataProvider = require('ojs/ojarraydataprovider');
 import { ConfigService } from '../../services/config-service';
 import { envOptions } from './applicationUtils';
 import { availableGroups, selectedGroupsForEdit } from './applicationGroups';
+import globalBanner from '../../utils/globalBanner';
 
 const selectedApplicationId = ko.observable<string>('');
 const selectedApplicationName = ko.observable<string>('');
@@ -113,27 +114,9 @@ const updateApplication = async () => {
         }
 
         closeEditDialog();
-        showEditSuccessBanner(`Application "${name}" updated successfully!`);
+        globalBanner.showSuccess(`Application "${name}" updated successfully!`);
     } catch (error) {
-        showEditErrorBanner("Could not update application. Please try again.");
-    }
-};
-
-const showEditSuccessBanner = (message: string) => {
-    const banner = document.getElementById('globalBanner');
-    if (banner) {
-        banner.textContent = message;
-        banner.style.display = 'block';
-        setTimeout(() => banner.style.display = 'none', 5000);
-    }
-};
-
-const showEditErrorBanner = (message: string) => {
-    const banner = document.getElementById('globalBanner');
-    if (banner) {
-        banner.textContent = message;
-        banner.style.display = 'block';
-        setTimeout(() => { banner.style.display = 'none', banner.style.color = 'red' }, 5000);
+        globalBanner.showError(`Failed to update application ${name}. Please try again!`);
     }
 };
 

@@ -5,6 +5,7 @@ import { ConfigService } from '../../services/config-service';
 import { applicationListObservables } from './appList';
 import { envOptions } from './applicationUtils';
 import { availableGroups, selectedGroupsForAdd } from './applicationGroups';
+import globalBanner from '../../utils/globalBanner';
 
 
 
@@ -78,10 +79,10 @@ const addNewApplication = async () => {
         const createdApp = await response.json();
         applicationListObservables.applicationDataArray.push(createdApp);
         closeAddDialog();
-        alert("Application added!");
+        globalBanner.showSuccess("Application added successfully!");
     } catch (error) {
         console.error("Error adding application:", error);
-        alert("Could not add application");
+        globalBanner.showError("Could not add application");
     }
 };
 

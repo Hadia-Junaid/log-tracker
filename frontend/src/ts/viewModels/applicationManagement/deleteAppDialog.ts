@@ -1,6 +1,7 @@
 import * as ko from "knockout";
 import { ConfigService } from "../../services/config-service";
 import { applicationListObservables } from "./appList";
+import globalBanner  from "../../utils/globalBanner";
 
 class DeleteApplicationDialogViewModel {
     applicationId = ko.observable<string>('');
@@ -27,25 +28,15 @@ class DeleteApplicationDialogViewModel {
             
             this.closeDialog();
             
-            // Show success banner instead of alert
-            const banner = document.getElementById('globalBanner');
-            if (banner) {
-                banner.textContent = `Application "${this.applicationName()}" deleted successfully!`;
-                banner.style.display = 'block';
-                
-                // Hide the banner after 5 seconds
-                setTimeout(() => {
-                    banner.style.display = 'none';
-                }, 5000);
-            }
+            globalBanner.showSuccess(`Application "${this.applicationName()}" deleted successfully!`);
             
             console.info(`Application ${this.applicationName()} deleted successfully.`);
         } catch (e) {
             console.error("Failed to delete application", e);
             if (e instanceof Error) {
-                alert("Failed to delete application: " + e.message);
+                globalBanner.showError("Failed to delete application: " + e.message);
             } else {
-                alert("Failed to delete application: " + String(e));
+                globalBanner.showError("Failed to delete application: " + String(e));
             }
         } finally {
             this.isDeleting(false);
