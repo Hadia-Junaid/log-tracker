@@ -6,14 +6,32 @@
 
         <!-- ✅ Global Banner -->
         <div id="globalBanner"
-            style="display:none; padding: 10px; background-color: #dff0d8; color: #3c763d; border-radius: 4px; margin: 12px 0;">
+            style="display:none; padding: 10px; border-radius: 4px; margin: 12px 0;">
         </div>
 
-        <div class="oj-flex oj-sm-margin-4x-bottom">
-            <oj-c-input-text label-hint="Search by name, hostname, or environment" raw-value="{{searchQuery}}"
-                placeholder="Type to filter…" class="oj-flex-item" <!-- makes it fill available width -->
-                ></oj-c-input-text>
-        </div>
+       <!-- Search and Sort Row -->
+<div class="oj-flex oj-sm-align-items-center oj-sm-flex-wrap oj-sm-margin-4x-bottom">
+  <!-- Search bar (left, fills width) -->
+  <div class="oj-flex-item">
+    <oj-c-input-text
+      label-hint="Search by name, hostname, or environment"
+      raw-value="{{searchQuery}}"
+      placeholder="Type to filter…">
+    </oj-c-input-text>
+  </div>
+
+  <!-- Sort dropdown (right) -->
+  <div class="oj-sm-margin-2x-start" style="min-width: 220px;">
+    <oj-c-select-single
+      label-hint="Sort By"
+      value="{{sortOption}}"
+      data="[[sortOptions]]"
+      item-text="label"
+      placeholder="Sort...">
+    </oj-c-select-single>
+  </div>
+</div>
+
 
 
         <div class="oj-flex oj-sm-align-items-start oj-sm-margin-4x-bottom">
@@ -244,7 +262,7 @@
     </div>
     <div slot="footer">
         <oj-button on-oj-action="[[cancelDelete]]">Cancel</oj-button>
-        <oj-button class="oj-button-danger" on-oj-action="[[confirmDelete]]">Delete</oj-button>
+        <oj-button chroming="danger" on-oj-action="[[confirmDelete]]">Delete</oj-button>
     </div>
 </oj-dialog>
 

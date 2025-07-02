@@ -56,6 +56,7 @@ const updateApplication = async () => {
     const name = selectedApplicationName()?.trim();
     const hostname = selectedApplicationHostName()?.trim();
     const environment = selectedApplicationEnv()?.trim();
+    const description = selectedApplicationDescription()?.trim();
 
 
     const dialog = document.getElementById("editApplicationDialog");
@@ -84,7 +85,7 @@ const updateApplication = async () => {
     }
 
     const existing = applicationListObservables.applicationDataArray().find(
-        app => app.name.trim() === name.trim()
+        app => app.name.trim() === name.trim() && app._id !== id
     );
 
     if (existing) {
@@ -97,7 +98,7 @@ const updateApplication = async () => {
         name,
         hostname,
         environment,
-        description: selectedApplicationDescription()
+        description
     };
 
     try {
@@ -108,7 +109,15 @@ const updateApplication = async () => {
             body: JSON.stringify(updatedApp)
         });
 
-        if (!response.ok) throw new Error('Failed to update application');
+        if (!response.ok) {
+            closeEditDialog();
+            if (response.status === 409) {
+                globalBanner.showError("An application with this name already exists.");
+            } else {
+                globalBanner.showError("Failed to update application.");
+            }
+            return;
+        }
 
         const updated = await response.json();
 
@@ -121,6 +130,7 @@ const updateApplication = async () => {
         closeEditDialog();
         globalBanner.showSuccess(`Application "${name}" updated successfully!`);
     } catch (error) {
+        closeEditDialog();
         globalBanner.showError(`Failed to update application ${name}. Please try again!`);
     }
 };

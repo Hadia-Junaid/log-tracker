@@ -6,21 +6,23 @@ class GlobalBannerService {
     }
 
     showSuccess(message: string, duration: number = 5000) {
-        this.displayBanner(message, 'green', duration);
+        this.displayBanner(message, ['#dff0d8', 'green'], duration);
     }
 
     showError(message: string, duration: number = 5000) {
-        this.displayBanner(message, 'red', duration);
+        this.displayBanner(message, ['#efd7d7', 'red'], duration);
     }
 
-    private displayBanner(message: string, color: string, duration: number) {
+    private displayBanner(message: string, colors: [string, string], duration: number) {
         if (!this.bannerElement) {
             this.bannerElement = document.getElementById('globalBanner');
         }
         if (this.bannerElement) {
             this.bannerElement.textContent = message;
             this.bannerElement.style.display = 'block';
-            this.bannerElement.style.color = color;
+            this.bannerElement.style.backgroundColor = colors[0];
+            this.bannerElement.style.color = colors[1];
+
 
             setTimeout(() => {
                 if (this.bannerElement) this.bannerElement.style.display = 'none';

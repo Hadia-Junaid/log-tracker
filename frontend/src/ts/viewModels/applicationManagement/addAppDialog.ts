@@ -71,6 +71,7 @@ const addNewApplication = async () => {
         });
 
         if (!response.ok) {
+            closeAddDialog();
             if (response.status === 409) {
                 globalBanner.showError("An application with this name already exists.");
             } else {
@@ -85,6 +86,7 @@ const addNewApplication = async () => {
         globalBanner.showSuccess("Application added successfully!");
     } catch (error) {
         console.error("Error adding application:", error);
+        closeAddDialog();
         globalBanner.showError("Could not add application");
     }
 };
