@@ -39,66 +39,82 @@
     </div>
 
     <oj-bind-if test="[[!isDataEmpty()]]">
-        <oj-list-view id="applicationsListView" aria-label="Applications" data="[[paginatedDataProvider]]"
-            on-oj-item-action="[[gotoEditApplication]]" class="demo-applications-list">
-            <template slot="itemTemplate" data-oj-as="item">
-                <li>
-                    <oj-list-item-layout>
-                        <div class="oj-flex oj-sm-flex-direction-column">
-                            <span class="oj-typography-heading-sm oj-text-color-primary">
-                                <oj-bind-text value="[[item.item.data.name]]"></oj-bind-text>
-                            </span>
-                            <span class="oj-typography-body-sm oj-text-color-primary">
-                                <oj-bind-text value="[[item.item.data._id]]"></oj-bind-text>
-                            </span>
-                            <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
-                                Hostname <oj-bind-text value="[[item.item.data.hostname]]"></oj-bind-text>
-                            </span>
+
+
+        <!-- Flex container for full vertical layout -->
+        <div class="oj-flex oj-sm-flex-direction-column" style="min-height: 70vh;">
+
+            <!-- List Container with fixed min height -->
+            <div style="min-height: 50vh;" class="oj-flex-item-auto">
+                <oj-list-view id="applicationsListView" aria-label="Applications" data="[[paginatedDataProvider]]"
+                    on-oj-item-action="[[gotoEditApplication]]" class="demo-applications-list">
+
+                    <template slot="itemTemplate" data-oj-as="item">
+                        <li>
+                            <oj-list-item-layout>
+                                <div class="oj-flex oj-sm-flex-direction-column">
+                                    <span class="oj-typography-heading-sm oj-text-color-primary">
+                                        <oj-bind-text value="[[item.item.data.name]]"></oj-bind-text>
+                                    </span>
+                                    <span class="oj-typography-body-sm oj-text-color-primary">
+                                        <oj-bind-text value="[[item.item.data._id]]"></oj-bind-text>
+                                    </span>
+                                    <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
+                                        Hostname <oj-bind-text value="[[item.item.data.hostname]]"></oj-bind-text>
+                                    </span>
+                                </div>
+
+                                <div slot="metadata" class="oj-flex oj-sm-align-items-center">
+                                    <span class="oj-typography-body-md oj-text-color-secondary oj-sm-margin-4x-end">
+                                        <oj-bind-text value="[[item.item.data.environment]]"></oj-bind-text>
+                                    </span>
+                                    <oj-button class="oj-button-sm" chroming="outlined"
+                                        on-oj-action="[[editApplication]]" :data-app-id="[[item.item.data._id]]">
+                                        <span slot="startIcon" class="oj-ux-ico-edit"></span>
+                                        Edit
+                                    </oj-button>
+                                    <oj-button class="oj-button-sm" chroming="outlined"
+                                        on-oj-action="[[handleDeleteApp]]" :data-app-id="[[item.item.data._id]]">
+                                        <span slot="startIcon" class="oj-ux-ico-trash"></span>
+                                        Delete
+                                    </oj-button>
+                                </div>
+                            </oj-list-item-layout>
+                        </li>
+                    </template>
+
+                    <template slot="noData">
+                        <div class="oj-flex oj-sm-align-items-center demo-nodata-content">
+                            <div class="oj-flex oj-sm-align-items-center oj-sm-flex-direction-column demo-nodata-inner">
+                                <h5>No Applications found!</h5>
+                                <p class="oj-text-color-secondary">Add your first application to get started.</p>
+                            </div>
                         </div>
-
-                        <div slot="metadata" class="oj-flex oj-sm-align-items-center">
-                            <span class="oj-typography-body-md oj-text-color-secondary oj-sm-margin-4x-end">
-                                <oj-bind-text value="[[item.item.data.environment]]"></oj-bind-text>
-                            </span>
-                            <oj-button class="oj-button-sm" chroming="outlined" on-oj-action="[[editApplication]]"
-                                :data-app-id="[[item.item.data._id]]">
-                                <span slot="startIcon" class="oj-ux-ico-edit"></span>
-                                Edit
-                            </oj-button>
-                            <oj-button class="oj-button-sm" chroming="outlined" on-oj-action="[[handleDeleteApp]]"
-                                :data-app-id="[[item.item.data._id]]">
-                                <span slot="startIcon" class="oj-ux-ico-trash"></span>
-                                Delete
-                            </oj-button>
-                        </div>
-                    </oj-list-item-layout>
-                </li>
-            </template>
-            <template slot="noData">
-                <div class="oj-flex oj-sm-align-items-center demo-nodata-content">
-                    <div class="oj-flex oj-sm-align-items-center oj-sm-flex-direction-column demo-nodata-inner">
-                        <h5>No Applications found!</h5>
-                        <p class="oj-text-color-secondary">Add your first application to get started.</p>
-                    </div>
-                </div>
-            </template>
-        </oj-list-view>
-
-        <div class="oj-flex oj-sm-justify-content-center oj-sm-margin-4x-bottom">
-            <oj-button chroming="outlined" disabled="[[currentPage() === 1]]"
-                on-oj-action="[[() => currentPage(currentPage() - 1)]]">
-                Previous
-            </oj-button>
-
-            <div class="oj-sm-margin-2x-start oj-sm-margin-2x-end">
-                Page <oj-bind-text value="[[currentPage]]"></oj-bind-text>
+                    </template>
+                </oj-list-view>
             </div>
 
-            <oj-button chroming="outlined" disabled="[[ currentPage() >= totalPages() ]]""
-                on-oj-action=" [[()=> currentPage(currentPage() + 1)]]">
-                Next
-            </oj-button>
+            <!-- Pagination (always stays bottom visually) -->
+            <div class="oj-flex oj-sm-justify-content-center oj-sm-align-items-center oj-sm-margin-4x-bottom">
+                <oj-button chroming="outlined" disabled="[[currentPage() === 1]]"
+                    on-oj-action="[[() => currentPage(currentPage() - 1)]]">
+                    Previous
+                </oj-button>
+
+                <div class="oj-flex oj-sm-align-items-center oj-sm-margin-2x-start oj-sm-margin-2x-end">
+                    Page <oj-bind-text value="[[currentPage]]"></oj-bind-text>
+                    / <oj-bind-text value="[[totalPages]]"></oj-bind-text>
+                </div>
+
+                <oj-button chroming="outlined" disabled="[[currentPage() >= totalPages()]]"
+                    on-oj-action="[[() => currentPage(currentPage() + 1)]]">
+                    Next
+                </oj-button>
+            </div>
+
         </div>
+
+
 
     </oj-bind-if>
 
@@ -208,26 +224,22 @@
     </oj-dialog>
 
     <!-- Delete Confirmation Dialog -->
-    <oj-dialog
-      id="deleteApplicationDialog"
-      cancel-behavior="icon"
-      aria-labelledby="delete-app-dialog-title"
-      aria-describedby="delete-app-dialog-body"
-    >
-      <div slot="header">
-        <span id="delete-app-dialog-title" class="oj-dialog-title">
-          Delete Application
-        </span>
-      </div>
-      <div slot="body">
-        <p id="delete-app-dialog-body">
-          Are you sure you want to delete this application? This action cannot be undone.
-        </p>
-      </div>
-      <div slot="footer">
-        <oj-button on-oj-action="[[cancelDelete]]">Cancel</oj-button>
-        <oj-button class="oj-button-danger" on-oj-action="[[confirmDelete]]">Delete</oj-button>
-      </div>
+    <oj-dialog id="deleteApplicationDialog" cancel-behavior="icon" aria-labelledby="delete-app-dialog-title"
+        aria-describedby="delete-app-dialog-body">
+        <div slot="header">
+            <span id="delete-app-dialog-title" class="oj-dialog-title">
+                Delete Application
+            </span>
+        </div>
+        <div slot="body">
+            <p id="delete-app-dialog-body">
+                Are you sure you want to delete this application? This action cannot be undone.
+            </p>
+        </div>
+        <div slot="footer">
+            <oj-button on-oj-action="[[cancelDelete]]">Cancel</oj-button>
+            <oj-button class="oj-button-danger" on-oj-action="[[confirmDelete]]">Delete</oj-button>
+        </div>
     </oj-dialog>
 
 
