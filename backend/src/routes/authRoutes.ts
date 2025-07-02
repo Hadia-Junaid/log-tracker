@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import authController from '../controllers/authController';
 import { authenticate } from '../middleware/auth';
+import validate from '../middleware/validate';
+import { exchangeAuthCodeSchema } from '../validators/auth';
 
 const router = Router();
 
@@ -23,7 +25,7 @@ router.get('/google/callback', authController.googleCallback);
  * @desc    Exchange temporary authorization code for JWT token
  * @access  Public
  */
-router.post('/exchange', authController.exchangeAuthCode);
+router.post('/exchange', validate(exchangeAuthCodeSchema), authController.exchangeAuthCode);
 
 /**
  * @route   GET /auth/verify
@@ -42,6 +44,6 @@ router.post('/logout', authenticate, authController.logout);
 /**
  * @route   GET /auth/security/stats
  * @desc    Get OAuth security statistics
- * @access  Private (Admin only - should add admin middleware later)
+ * @access  Private
  */
 export default router; 

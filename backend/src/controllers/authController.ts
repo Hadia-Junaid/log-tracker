@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import googleAuthService from '../services/googleAuthService';
 import jwtService from '../services/jwtService';
 import User from '../models/User';
@@ -26,7 +26,7 @@ setInterval(() => {
 
 class AuthController {
  
-  async googleLogin(req: Request, res: Response): Promise<void> {
+  async googleLogin(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const authUrl = googleAuthService.generateAuthUrl();
       res.json({
@@ -35,11 +35,7 @@ class AuthController {
         message: 'Redirect to Google OAuth'
       });
     } catch (error) {
-      logger.error('Error initiating Google login:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to initiate Google login'
-      });
+      next(error);
     }
   }
 
@@ -94,17 +90,9 @@ class AuthController {
   }
 
 
-  async exchangeAuthCode(req: Request, res: Response): Promise<void> {
+  async exchangeAuthCode(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const { auth_code } = req.body;
-
-      if (!auth_code || typeof auth_code !== 'string') {
-        res.status(400).json({
-          success: false,
-          message: 'Authorization code is required'
-        });
-        return;
-      }
 
       const tempCodeData = tempCodes.get(auth_code);
       
@@ -155,16 +143,12 @@ class AuthController {
       });
 
     } catch (error) {
-      logger.error('Auth code exchange error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Failed to exchange authorization code'
-      });
+      next(error);
     }
   }
 
 
-  async verifyToken(req: Request, res: Response): Promise<void> {
+  async verifyToken(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const authHeader = req.headers.authorization;
       
@@ -209,7 +193,7 @@ class AuthController {
     }
   }
 
-  async logout(req: Request, res: Response): Promise<void> {
+  async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
       const user = req.user;
       const userEmail = user?.email || 'Unknown';
@@ -235,11 +219,7 @@ class AuthController {
       });
 
     } catch (error) {
-      logger.error('Logout error:', error);
-      res.status(500).json({
-        success: false,
-        message: 'Logout failed'
-      });
+      next(error);
     }
   }
 }
