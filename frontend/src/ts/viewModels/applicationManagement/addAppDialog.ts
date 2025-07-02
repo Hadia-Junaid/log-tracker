@@ -14,7 +14,8 @@ const newApplication = {
     name: ko.observable(""),
     hostname: ko.observable(""),
     environment: ko.observable<string | null>(null),
-    description: ko.observable("")
+    description: ko.observable(""),
+    isActive: ko.observable(true)
 };
 
 const resetNewAppForm = () => {
@@ -22,6 +23,7 @@ const resetNewAppForm = () => {
     newApplication.hostname("");
     newApplication.environment(null);
     newApplication.description("");
+    newApplication.isActive(true);
 };
 
 const openAddDialog = () => globalDialog.open("addApplicationDialog");
@@ -59,7 +61,8 @@ const addNewApplication = async () => {
         name: newApplication.name(),
         hostname: newApplication.hostname(),
         environment: newApplication.environment(),
-        description: newApplication.description() || ""
+        description: newApplication.description() || "",
+        isActive: newApplication.isActive()
     };
 
     try {

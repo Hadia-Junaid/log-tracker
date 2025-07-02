@@ -180,6 +180,9 @@
 
             <oj-c-text-area label-hint="Description" value="{{newApplication.description}}">
             </oj-c-text-area>
+
+            <oj-switch label-hint="Status" value="{{newApplication.isActive}}">
+            </oj-switch>
         </oj-form-layout>
     </div>
 
@@ -227,6 +230,8 @@
                         data="[[envOptions]]" item-text="label" placeholder="Choose environment" required>
                     </oj-c-select-single>
 
+                    <oj-switch label-hint="Status" value="{{selectedApplicationIsActive}}">
+                    </oj-switch>
 
                 </oj-form-layout>
             </div>
