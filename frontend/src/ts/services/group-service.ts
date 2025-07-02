@@ -106,6 +106,18 @@ export async function fetchApplicationsWithIds(): Promise<{id: string, name: str
     }));
 }
 
+// Fetch group details by ID
+export async function fetchGroupById(groupId: string): Promise<any> {
+    await ConfigService.loadConfig();
+    const res = await fetch(`${ConfigService.getApiUrl()}/user-groups/${groupId}`);
+    
+    if (!res.ok) {
+        throw new Error(`Failed to fetch group details. Status: ${res.status}`);
+    }
+    
+    return await res.json();
+}
+
 // Assign application to group
 export async function assignApplicationToGroup(groupId: string, applicationId: string): Promise<void> {
     await ConfigService.loadConfig();
