@@ -168,6 +168,10 @@ export const addGroupDialogMethods = {
         addGroupDialogObservables.createError("Group name is required.");
         return;
       }
+      if (groupName.length < 5 || groupName.length > 20) {
+        addGroupDialogObservables.createError("Group name must be between 5 and 20 characters.");
+        return;
+      }
 
       // Validate that at least one application is selected
       const selectedApplications = addGroupDialogObservables
