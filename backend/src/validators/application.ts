@@ -8,9 +8,9 @@ export const addApplicationSchema = Joi.object({
 });
 
 export const updateApplicationSchema = Joi.object({
-  name: Joi.string(),
-  hostname: Joi.string(),
-  environment: Joi.string(),
+  name: Joi.string().required(),
+  hostname: Joi.string().required(),
+  environment: Joi.string().required(),
   description: Joi.string().optional()
 });
   

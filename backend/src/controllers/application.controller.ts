@@ -33,7 +33,7 @@ export const getApplications = async (req: Request, res: Response): Promise<void
 // Expects req.params.id to be the application ID and req.body to contain updated data
 // Returns the updated application or an error if not found
 export const updateApplication = async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params;
+  const id  = req.params.id.trim();
 
   if (!mongoose.isValidObjectId(id)) {
     logger.warn(`Invalid update request with malformed ID: ${id}`);

@@ -28,7 +28,7 @@ class DeleteApplicationDialogViewModel {
             this.closeDialog();
             
             // Show success banner instead of alert
-            const banner = document.getElementById('globalSuccessBanner');
+            const banner = document.getElementById('globalBanner');
             if (banner) {
                 banner.textContent = `Application "${this.applicationName()}" deleted successfully!`;
                 banner.style.display = 'block';

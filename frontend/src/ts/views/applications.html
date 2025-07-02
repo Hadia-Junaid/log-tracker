@@ -4,13 +4,8 @@
             <h1 class="oj-typography-heading-lg oj-text-color-primary">Applications</h1>
         </div>
 
-        <!-- ✅ Global Success Banner -->
-        <div id="globalSuccessBanner"
-            style="display:none; padding: 10px; background-color: #dff0d8; color: #3c763d; border-radius: 4px; margin: 12px 0;">
-        </div>
-
-        <!-- ✅ Global Success Banner -->
-        <div id="globalSuccessBanner"
+        <!-- ✅ Global Banner -->
+        <div id="globalBanner"
             style="display:none; padding: 10px; background-color: #dff0d8; color: #3c763d; border-radius: 4px; margin: 12px 0;">
         </div>
 
@@ -169,10 +164,10 @@
                     </h4>
                     <oj-form-layout max-columns="1" direction="row" class="oj-sm-padding-2x">
                         <oj-c-input-text id="applicationNameField" label-hint="Application Name"
-                            value="{{selectedApplicationName}}"></oj-c-input-text>
+                            value="{{selectedApplicationName}}" required></oj-c-input-text>
 
                         <oj-c-input-text id="applicationHostName" label-hint="Application Host Name"
-                            value="{{selectedApplicationHostName}}"></oj-c-input-text>
+                            value="{{selectedApplicationHostName}}" required></oj-c-input-text>
 
                         <oj-c-text-area id="applicationDescriptionField" label-hint="Description"
                             value="{{selectedApplicationDescription}}"></oj-c-text-area>
@@ -234,5 +229,7 @@
         <oj-button class="oj-button-danger" on-oj-action="[[confirmDelete]]">Delete</oj-button>
       </div>
     </oj-dialog>
+
+
 
 </div>

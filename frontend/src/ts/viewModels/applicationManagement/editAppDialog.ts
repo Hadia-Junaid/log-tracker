@@ -58,10 +58,39 @@ const closeEditDialog = () => {
 
 const updateApplication = async () => {
     const id = selectedApplicationId();
+    const name = selectedApplicationName()?.trim();
+    const hostname = selectedApplicationHostName()?.trim();
+    const environment = selectedApplicationEnv()?.trim();
+
+
+    const dialog = document.getElementById("editApplicationDialog");
+    if (!dialog) {
+        console.error("Dialog not found");
+        return;
+    }
+
+    const elements = Array.from(
+        dialog.querySelectorAll("oj-c-input-text, oj-c-text-area, oj-c-select-single")
+    ) as any[];
+
+    let allValid = true;
+
+    for (const element of elements) {
+        if (element.getProperty("valid") === "pending") {
+            await element.whenReady();
+        }
+        const validationResult = await element.validate();
+        if (validationResult !== "valid") {
+            allValid = false;
+        }
+    }
+    if (!allValid) {
+        return;
+    }
     const updatedApp: Partial<ApplicationData> = {
-        name: selectedApplicationName(),
-        hostname: selectedApplicationHostName(),
-        environment: selectedApplicationEnv(),
+        name,
+        hostname,
+        environment,
         description: selectedApplicationDescription()
     };
 
@@ -84,10 +113,27 @@ const updateApplication = async () => {
         }
 
         closeEditDialog();
-        alert('Application updated!');
+        showEditSuccessBanner(`Application "${name}" updated successfully!`);
     } catch (error) {
-        console.error('Error updating application:', error);
-        alert('Could not update application');
+        showEditErrorBanner("Could not update application. Please try again.");
+    }
+};
+
+const showEditSuccessBanner = (message: string) => {
+    const banner = document.getElementById('globalBanner');
+    if (banner) {
+        banner.textContent = message;
+        banner.style.display = 'block';
+        setTimeout(() => banner.style.display = 'none', 5000);
+    }
+};
+
+const showEditErrorBanner = (message: string) => {
+    const banner = document.getElementById('globalBanner');
+    if (banner) {
+        banner.textContent = message;
+        banner.style.display = 'block';
+        setTimeout(() => { banner.style.display = 'none', banner.style.color = 'red' }, 5000);
     }
 };
 
