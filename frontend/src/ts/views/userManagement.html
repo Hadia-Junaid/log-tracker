@@ -55,25 +55,10 @@
 
         <!-- Buttons -->
         <div class="oj-flex oj-sm-margin-2x-top">
-<<<<<<< HEAD
-          <oj-button class="oj-button-sm" chroming="outlined"
-                     on-oj-action="[[editGroup]]"
-                     data-group-id="[[item.item.data.groupId]]">
-            <span slot="startIcon" class="oj-ux-ico-edit"></span>
-            Edit
-          </oj-button>
-          <oj-button class="oj-button-sm oj-sm-margin-1x-start" chroming="outlined"
-                     on-oj-action="[[deleteGroup]]"
-                     data-group-id="[[item.item.data.groupId]]">
-            <span slot="startIcon" class="oj-ux-ico-trash"></span>
-            Delete
-          </oj-button>
-=======
           <oj-button :data-group-id="[[item.item.data.groupId]]" on-oj-action="[[editGroup]]">Edit</oj-button>
           <oj-bind-if test="[[!item.item.data.is_admin]]">
             <oj-button :data-group-id="[[item.item.data.groupId]]" on-oj-action="[[deleteGroup]]">Delete</oj-button>
           </oj-bind-if>
->>>>>>> e8482ce192f4acff507fb186f98b0ccd4fbde7b5
         </div>
       </div>
     </oj-list-item-layout>
@@ -357,5 +342,21 @@
             <oj-button id="cancelDialogBtn" on-oj-action="[[closeEditDialog]]">Cancel</oj-button>
             <oj-button id="updateGroupBtn" class="oj-button-primary" on-oj-action="[[updateGroupMembers]]">Update Group</oj-button>
         </div>
+    </oj-dialog>
+
+    <oj-dialog id="deleteGroupDialog" cancel-behavior="icon" aria-labelledby="delete-dialog-title-id">
+      <div slot="header">
+        <span id="delete-dialog-title-id" class="oj-dialog-title">Delete Group</span>
+      </div>
+      <div slot="body">
+        <p>Are you sure you want to delete the group <oj-bind-text value="[[deleteGroupDialog.groupName]]"></oj-bind-text>?</p>
+      </div>
+      <div slot="footer">
+        <oj-button on-oj-action="[[deleteGroupDialog.closeDialog]]">Cancel</oj-button>
+        <oj-button class="oj-button-danger" on-oj-action="[[deleteGroupDialog.confirmDelete]]" disabled="[[deleteGroupDialog.isDeleting]]">
+          <oj-bind-if test="[[deleteGroupDialog.isDeleting]]">Deleting...</oj-bind-if>
+          <oj-bind-if test="[[!deleteGroupDialog.isDeleting()]]">Delete</oj-bind-if>
+        </oj-button>
+      </div>
     </oj-dialog>
  

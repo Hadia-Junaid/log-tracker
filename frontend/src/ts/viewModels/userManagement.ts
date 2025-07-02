@@ -85,6 +85,8 @@ class UserManagementViewModel {
         databaseService: false
     });
 
+    deleteGroupDialog = deleteGroupDialog;
+
     constructor() {
         this.isDataEmpty = ko.pureComputed(() => {
             return this.groupDataArray().length === 0;
@@ -109,7 +111,13 @@ class UserManagementViewModel {
             logger.warn('No group ID found for edit action.');
         }
     };
-    deleteGroup = () => { /* logic goes here */ };
+    deleteGroup = (event: CustomEvent) => {
+        const groupId = (event.target as HTMLElement).dataset.groupId || '';
+        const group = this.groupDataArray().find(g => g.groupId === groupId);
+        if (group) {
+            deleteGroupDialog.openDialog(groupId, group.groupName || '');
+        }
+    };
 
     connected(): void {
         AccUtils.announce("User Management page loaded.");

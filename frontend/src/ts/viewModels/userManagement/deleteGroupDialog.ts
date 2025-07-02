@@ -7,6 +7,11 @@ class DeleteGroupDialogViewModel {
     groupName = ko.observable<string>('');
     isDeleting = ko.observable<boolean>(false);
 
+    constructor() {
+        this.confirmDelete = this.confirmDelete.bind(this);
+        this.closeDialog = this.closeDialog.bind(this);
+    }
+
     openDialog(groupId: string, groupName: string) {
         this.groupId(groupId);
         this.groupName(groupName);
@@ -17,7 +22,7 @@ class DeleteGroupDialogViewModel {
         (document.getElementById('deleteGroupDialog') as any).close();
     }
 
-        async confirmDelete() {
+    async confirmDelete() {
         try {
             this.isDeleting(true);
             await deleteGroupById(this.groupId());
