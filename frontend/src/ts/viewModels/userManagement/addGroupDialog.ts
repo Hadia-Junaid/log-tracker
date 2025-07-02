@@ -53,10 +53,16 @@ export const addGroupDialogMethods = {
         clearSearchTimeout(searchTimeoutRef);
         
         try {
-            // Any pre-loading logic can go here
-        } catch (e) {
-            logger.error('Failed to pre-load data for add group dialog', e);
-            addGroupDialogObservables.createError('Failed to load data for dialog.');
+            // Fetch applications from the API
+            const applications = await fetchApplications();
+            const applicationOptions: ApplicationOption[] = applications.map(app => ({
+                name: app,
+                checked: ko.observable(false) // All checkboxes unchecked initially
+            }));
+            addGroupDialogObservables.createDialogApplications(applicationOptions);
+        } catch (error) {
+            logger.error('Failed to fetch applications for add group dialog:', error);
+            addGroupDialogObservables.createError('Failed to load applications.');
         }
         
         (document.getElementById("addGroupDialog") as any).open();
