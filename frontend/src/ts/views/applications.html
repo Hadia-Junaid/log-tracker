@@ -20,6 +20,17 @@
     </oj-c-input-text>
   </div>
 
+  <!-- Status filter dropdown (middle) -->
+  <div class="oj-sm-margin-2x-start" style="min-width: 180px;">
+    <oj-c-select-single
+      label-hint="Filter by Status"
+      value="{{statusFilter}}"
+      data="[[statusFilterOptions]]"
+      item-text="label"
+      placeholder="Filter by status...">
+    </oj-c-select-single>
+  </div>
+
   <!-- Sort dropdown (right) -->
   <div class="oj-sm-margin-2x-start" style="min-width: 220px;">
     <oj-c-select-single
@@ -87,7 +98,7 @@
                                     Hostname <oj-bind-text value="[[item.item.data.hostname]]"></oj-bind-text>
                                 </span>
                                 <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
-                                                                        Status 
+                                                                        Status:
 
                                     <oj-bind-if test="[[item.item.data.isActive]]">
                                         <span class="oj-text-color-success">Active</span>

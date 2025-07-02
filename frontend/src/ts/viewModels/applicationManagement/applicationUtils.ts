@@ -23,3 +23,12 @@ export const sortOptions = new ArrayDataProvider(
   ],
   { keyAttributes: 'value' }
 );
+
+export const statusFilterOptions = new ArrayDataProvider(
+  [
+    { value: 'all', label: 'All Applications' },
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' }
+  ],
+  { keyAttributes: 'value' }
+);

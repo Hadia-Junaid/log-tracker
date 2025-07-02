@@ -38,7 +38,7 @@ import {
     editAppDialogMethods
 } from './applicationManagement/editAppDialog';
 import { deleteDialogMethods } from "./applicationManagement/deleteDialog";
-import { envOptions as environmentOptions } from './applicationManagement/applicationUtils';
+import { envOptions as environmentOptions, statusFilterOptions } from './applicationManagement/applicationUtils';
 import { sortOptions as sortOpts} from './applicationManagement/applicationUtils';
 
 
@@ -50,6 +50,7 @@ class ApplicationViewModel {
     readonly currentPage = applicationListObservables.currentPage;
     readonly pageSize = applicationListObservables.pageSize;
     sortOption = applicationListObservables.sortOption;
+    statusFilter = applicationListObservables.statusFilter;
     newApplication = addAppDialogObservables.newApplication;
     envOptions = environmentOptions;
     selectedApplicationId = editAppDialogObservables.selectedApplicationId;
@@ -61,6 +62,7 @@ class ApplicationViewModel {
     availableGroups = addAppDialogObservables.availableGroups; // Shared
     selectedGroups = editAppDialogObservables.selectedGroups; // For Edit Dialog
     sortOptions = sortOpts;
+    statusFilterOptions = statusFilterOptions;
 
     // Computed
     readonly totalPages = applicationListComputed.totalPages;
