@@ -1,8 +1,8 @@
 import * as ko from "knockout";
-import { MemberData } from "./types";
+import { MemberData, ApplicationOption } from "./types";
 import logger from '../../services/logger-service';
 import { ObservableKeySet } from 'ojs/ojknockout-keyset';
-import { updateUserGroup } from '../../services/group-service';
+import { updateUserGroup, fetchApplications } from '../../services/group-service';
 import {
     createSearchInputHandler,
     clearSearchTimeout,
@@ -22,7 +22,8 @@ export const editGroupDialogObservables = {
     selectedAssignedMemberKeys: ko.observable<ObservableKeySet<string | number>>(new ObservableKeySet<string | number>()),
     searchValue: ko.observable(""),
     searchRawValue: ko.observable(""),
-    editError: ko.observable("")
+    editError: ko.observable(""),
+    editDialogApplications: ko.observableArray<ApplicationOption>([])
 };
 
 // Search configuration for edit group dialog
@@ -39,13 +40,14 @@ export const editGroupDialogMethods = {
     // Use shared search handler
     handleMemberSearchInput: createSearchInputHandler(searchConfig, editSearchTimeoutRef),
     
-    openEditGroupDialog: (event: { detail: { groupId: string; groupName: string } }) => {
+    openEditGroupDialog: async (event: { detail: { groupId: string; groupName: string } }) => {
         const { groupId, groupName } = event.detail;
         editGroupDialogObservables.groupId(groupId);
         editGroupDialogObservables.selectedGroupName(groupName);
         editGroupDialogObservables.currentMembers([]);
         editGroupDialogObservables.selectedAvailableMemberKeys(new ObservableKeySet<string | number>());
         editGroupDialogObservables.selectedAssignedMemberKeys(new ObservableKeySet<string | number>());
+        editGroupDialogObservables.editDialogApplications([]);
         
         // Reset search state using shared utility
         resetSearchState(
@@ -57,6 +59,19 @@ export const editGroupDialogMethods = {
         
         // Clear search timeout
         clearSearchTimeout(editSearchTimeoutRef);
+        
+        try {
+            // Fetch applications from the API
+            const applications = await fetchApplications();
+            const applicationOptions: ApplicationOption[] = applications.map(app => ({
+                name: app,
+                checked: ko.observable(false) // All checkboxes unchecked initially
+            }));
+            editGroupDialogObservables.editDialogApplications(applicationOptions);
+        } catch (error) {
+            logger.error('Failed to fetch applications for edit dialog:', error);
+            editGroupDialogObservables.editError('Failed to load applications.');
+        }
         
         (document.getElementById("editGroupDialog") as any).open();
     },
@@ -71,6 +86,7 @@ export const editGroupDialogMethods = {
         editGroupDialogObservables.currentMembers([]);
         editGroupDialogObservables.selectedAvailableMemberKeys(new ObservableKeySet<string | number>());
         editGroupDialogObservables.selectedAssignedMemberKeys(new ObservableKeySet<string | number>());
+        editGroupDialogObservables.editDialogApplications([]);
         
         // Reset search state using shared utility
         resetSearchState(

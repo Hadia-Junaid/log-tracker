@@ -65,5 +65,16 @@ export async function updateUserGroup(groupId: string, payload: any): Promise<an
   return await res.json();
 }
 
-// Existing fetchApplications ...
-export async function fetchApplications() { /* ... */ }
+// Fetch applications from the API
+export async function fetchApplications(): Promise<string[]> {
+    await ConfigService.loadConfig();
+    const res = await fetch(`${ConfigService.getApiUrl()}/applications`);
+    
+    if (!res.ok) {
+        throw new Error("Failed to fetch applications");
+    }
+    
+    const response = await res.json();
+    // Extract application names from the data array
+    return response.data.map((app: any) => app.name);
+}
