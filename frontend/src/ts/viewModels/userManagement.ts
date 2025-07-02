@@ -88,7 +88,7 @@ class UserManagementViewModel {
     // DataProviders for dialogs
     createDialogAvailableMembersDP = new ArrayDataProvider(this.createDialogAvailableMembers, { keyAttributes: "id" });
     createDialogSelectedMembersDP = new ArrayDataProvider(this.createDialogSelectedMembers, { keyAttributes: "id" });
-    currentMembersDP = new ArrayDataProvider(this.currentMembers, { keyAttributes: "id" });
+    currentMembersDP = ko.pureComputed(() => new ArrayDataProvider(this.currentMembers(), { keyAttributes: "id" }));
     editDialogAvailableMembersDP = new ArrayDataProvider(this.editDialogAvailableMembers, { keyAttributes: "id" });
 
     deleteGroupDialog = deleteGroupDialog;

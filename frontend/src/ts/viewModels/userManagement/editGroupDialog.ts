@@ -13,6 +13,7 @@ import {
   clearSearchTimeout,
   resetSearchState,
   SearchConfig,
+  getInitials,
 } from "./sharedDialogUtils";
 import { groupListObservables, groupListMethods } from "./groupList";
 
@@ -139,17 +140,19 @@ export const editGroupDialogMethods = {
       const currentMembers: MemberData[] = groupDetails.members.map(
         (member: any) => ({
           id: member._id || `fallback-id-${member.email}`,
-          name: member.name,
+          name: member.name || member.email,
           email: member.email,
+          initials: getInitials(member.name || member.email)
         })
       );
+      console.log('Current members:', currentMembers); // Debug log
       editGroupDialogObservables.currentMembers(currentMembers);
     } catch (error) {
       logger.error(
         "Failed to fetch applications or group details for edit dialog:",
         error
       );
-      editGroupDialogObservables.editError("Failed to load applications.");
+      editGroupDialogObservables.editError("Failed to load group details.");
     }
 
     (document.getElementById("editGroupDialog") as any).open();

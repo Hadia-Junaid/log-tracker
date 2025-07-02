@@ -283,18 +283,19 @@
                         id="availableMembersList"
                         aria-label="Available members list"
                         class="members-list available-members-list"
-                        data="[[editDialogAvailableMembersDP]]"
-                        on-selected-changed="[[handleAvailableMemberSelection]]">
+                        data="[[editDialogAvailableMembersDP]]">
                         <template slot="itemTemplate" data-oj-as="item">
-                            <oj-list-item-layout class="member-list-item">
-                                <span class="oj-typography-body-md oj-text-color-primary">
-                                    <oj-bind-text value="[[item.item.data.email]]"></oj-bind-text>
-                                </span>
-                                <oj-avatar slot="leading" size="xs" initials="[[item.item.data.initials]]"></oj-avatar>
-                                <span slot="secondary" class="oj-typography-body-sm oj-text-color-secondary">
-                                    <oj-bind-text value="[[item.item.data.name]]"></oj-bind-text>
-                                </span>
-                            </oj-list-item-layout>
+                            <div class="clickable-member" data-bind="click: function() { handleAvailableMemberSelection(item.item.data) }">
+                                <oj-list-item-layout class="member-list-item">
+                                    <span class="oj-typography-body-md oj-text-color-primary">
+                                        <oj-bind-text value="[[item.item.data.email]]"></oj-bind-text>
+                                    </span>
+                                    <oj-avatar slot="leading" size="xs" initials="[[item.item.data.initials]]"></oj-avatar>
+                                    <span slot="secondary" class="oj-typography-body-sm oj-text-color-secondary">
+                                        <oj-bind-text value="[[item.item.data.name]]"></oj-bind-text>
+                                    </span>
+                                </oj-list-item-layout>
+                            </div>
                         </template>
                         <template slot="noData">
                             <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center no-members-content">
@@ -340,8 +341,7 @@
                                     <oj-button class="member-remove-btn oj-button-sm" 
                                         chroming="borderless"
                                         display="icons"
-                                        on-oj-action="[[handleUnselectMember]]"
-                                        data-member-email="[[item.item.data.email]]"
+                                        on-oj-action="[[() => handleUnselectMember(item.item.data)]]"
                                         title="Remove member">
                                         <span slot="startIcon" class="oj-ux-ico-close"></span>
                                     </oj-button>

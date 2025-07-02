@@ -152,12 +152,11 @@ html[dir="rtl"] .demo-oracle-icon {
 }
 
 .member-list-item {
-  padding: 0.5rem;
-  border-bottom: 1px solid #f0f0f0;
+  padding: 8px;
 }
 
 .member-list-item:hover {
-  background-color: #f8f9fa;
+  background-color: #f5f5f5;
 }
 
 .current-member-item {
@@ -344,4 +343,27 @@ html[dir="rtl"] .demo-oracle-icon {
 #addGroupDialog oj-button.oj-button-primary:hover span,
 #addGroupDialog oj-button.oj-button-primary:hover .oj-button-text {
   color: white !important;
+}
+
+.clickable-member {
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.clickable-member:hover {
+    background-color: #f5f5f5;
+}
+
+.available-members-list, .current-members-list {
+    flex: 1;
+    min-height: 200px;
+}
+
+.member-remove-container {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.current-member-item:hover .member-remove-container {
+    opacity: 1;
 }
