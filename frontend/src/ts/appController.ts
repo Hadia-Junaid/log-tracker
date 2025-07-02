@@ -76,7 +76,14 @@ class RootViewModel {
       this.mdScreen.subscribe(() => this.sideDrawerOn(false));
     }
 
-    this.navDataProvider = new ArrayDataProvider(navData.slice(2), {
+    // Filter User Management for non-admins
+    let filteredNavData = navData.slice(2);
+    if (!this.authService.getIsAdminFromToken()) {
+      filteredNavData = filteredNavData.filter(
+        (item) => item.path !== "userManagement"
+      );
+    }
+    this.navDataProvider = new ArrayDataProvider(filteredNavData, {
       keyAttributes: "path",
     });
 

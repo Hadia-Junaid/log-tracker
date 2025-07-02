@@ -21,6 +21,8 @@ import { getInitials } from "./userManagement/sharedDialogUtils";
 import { getRelativeTime } from "./userManagement/userManagementUtils";
 import deleteGroupDialog from "./userManagement/deleteGroupDialog";
 
+declare const jwt_decode: (token: string) => any;
+
 class UserManagementViewModel {
     // Group List
     groupDataArray = groupListObservables.groupDataArray;
@@ -87,7 +89,21 @@ class UserManagementViewModel {
 
     deleteGroupDialog = deleteGroupDialog;
 
+    is_admin = ko.observable(false);
+
     constructor() {
+        // Decode JWT and set is_admin
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            try {
+                const decoded: any = jwt_decode(token);
+                this.is_admin(typeof decoded.is_admin === 'boolean' ? decoded.is_admin : false);
+            } catch (e) {
+                this.is_admin(false);
+            }
+        } else {
+            this.is_admin(false);
+        }
         this.isDataEmpty = ko.pureComputed(() => {
             return this.groupDataArray().length === 0;
         });

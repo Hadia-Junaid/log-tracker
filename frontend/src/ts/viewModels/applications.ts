@@ -39,6 +39,7 @@ import {
 import { deleteDialogMethods } from "./applicationManagement/deleteDialog";
 import { envOptions as environmentOptions } from './applicationManagement/applicationUtils';
 import { sortOptions as sortOpts} from './applicationManagement/applicationUtils';
+declare const jwt_decode: (token: string) => any;
 
 
 class ApplicationViewModel {
@@ -59,6 +60,7 @@ class ApplicationViewModel {
     availableGroups = addAppDialogObservables.availableGroups; // Shared
     selectedGroups = editAppDialogObservables.selectedGroups; // For Edit Dialog
     sortOptions = sortOpts;
+    isAdmin = ko.observable(false);
 
     // Computed
     readonly totalPages = applicationListComputed.totalPages;
@@ -130,15 +132,22 @@ class ApplicationViewModel {
 
     }
 
-
-
     constructor() {
         // Load configuration on initialization
         AccUtils.announce("Application page loaded", "assertive");
         document.title = "Applications";
-
-
-
+        // Decode JWT and set isAdmin
+        const token = localStorage.getItem('authToken');
+        if (token) {
+            try {
+                const decoded: any = jwt_decode(token);
+                this.isAdmin(typeof decoded.is_admin === 'boolean' ? decoded.is_admin : false);
+            } catch (e) {
+                this.isAdmin(false);
+            }
+        } else {
+            this.isAdmin(false);
+        }
     }
 
     /**
@@ -176,6 +185,5 @@ class ApplicationViewModel {
         // implement if needed
     }
 }
-
 
 export = ApplicationViewModel; 

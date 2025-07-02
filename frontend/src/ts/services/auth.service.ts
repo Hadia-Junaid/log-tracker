@@ -60,6 +60,18 @@ export class AuthService {
   }
 
 
+  public getIsAdminFromToken(): boolean {
+    const token = localStorage.getItem("authToken");
+    if (!token) return false;
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return typeof payload.is_admin === 'boolean' ? payload.is_admin : false;
+    } catch (error) {
+      return false;
+    }
+  }
+
+
   public async logout(): Promise<void> {
     const token = localStorage.getItem("authToken");
 

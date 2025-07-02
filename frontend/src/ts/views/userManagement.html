@@ -8,10 +8,12 @@
     </div>
 
     <div class="oj-flex oj-sm-margin-4x-start">
-      <oj-button id="addGroupButton" on-oj-action="[[openAddGroupDialog]]">
-        <span slot="startIcon" class="oj-ux-ico-plus"></span>
-        Add Group
-      </oj-button>
+      <oj-bind-if test="[[is_admin]]">
+        <oj-button id="addGroupButton" on-oj-action="[[openAddGroupDialog]]">
+          <span slot="startIcon" class="oj-ux-ico-plus"></span>
+          Add Group
+        </oj-button>
+      </oj-bind-if>
     </div>
   </div>
 
@@ -54,9 +56,8 @@
 
         <!-- Buttons -->
         <div class="oj-flex oj-sm-margin-2x-top">
-          <oj-button on-oj-action="[[() => editGroup(item.item.data)]]">Edit</oj-button>
-
-          <oj-bind-if test="[[!item.item.data.is_admin]]">
+          <oj-bind-if test="[[is_admin]]">
+            <oj-button on-oj-action="[[() => editGroup(item.item.data)]]">Edit</oj-button>
             <oj-button :data-group-id="[[item.item.data.groupId]]" on-oj-action="[[deleteGroup]]">Delete</oj-button>
           </oj-bind-if>
         </div>
@@ -163,7 +164,9 @@
             <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-end">
               <oj-bind-text value="[[createDialogSelectedMembers().length]]"></oj-bind-text> members
             </span>
-            <oj-button class="oj-button-sm" chroming="outlined" on-oj-action="[[removeAllSelectedMembers]]">Remove All</oj-button>
+            <oj-bind-if test="[[is_admin]]">
+              <oj-button class="oj-button-sm" chroming="outlined" on-oj-action="[[removeAllSelectedMembers]]">Remove All</oj-button>
+            </oj-bind-if>
           </div>
         </div>
         
@@ -209,14 +212,16 @@
 
   <div slot="footer">
     <oj-button on-oj-action="[[closeAddGroupDialog]]" disabled="[[isCreating]]">Cancel</oj-button>
-    <oj-button class="oj-button-primary" on-oj-action="[[createGroup]]" disabled="[[isCreating]]">
-      <oj-bind-if test="[[isCreating]]">
-        Creating...
-      </oj-bind-if>
-      <oj-bind-if test="[[!isCreating()]]">
-        Create Group
-      </oj-bind-if>
-    </oj-button>
+    <oj-bind-if test="[[is_admin]]">
+      <oj-button class="oj-button-primary" on-oj-action="[[createGroup]]" disabled="[[isCreating]]">
+        <oj-bind-if test="[[isCreating]]">
+          Creating...
+        </oj-bind-if>
+        <oj-bind-if test="[[!isCreating()]]">
+          Create Group
+        </oj-bind-if>
+      </oj-button>
+    </oj-bind-if>
   </div>
 </oj-dialog>
 
@@ -340,7 +345,9 @@
         </div>
         <div slot="footer">
             <oj-button id="cancelDialogBtn" on-oj-action="[[closeEditDialog]]">Cancel</oj-button>
-            <oj-button id="updateGroupBtn" class="oj-button-primary" on-oj-action="[[updateGroupMembers]]">Update Group</oj-button>
+            <oj-bind-if test="[[is_admin]]">
+              <oj-button id="updateGroupBtn" class="oj-button-primary" on-oj-action="[[updateGroupMembers]]">Update Group</oj-button>
+            </oj-bind-if>
         </div>
     </oj-dialog>
 

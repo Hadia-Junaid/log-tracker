@@ -103,9 +103,10 @@ const updateApplication = async () => {
 
     try {
         const apiUrl = ConfigService.getApiUrl();
+        const token = localStorage.getItem('authToken');
         const response = await fetch(`${apiUrl}/applications/${id}`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify(updatedApp)
         });
 
