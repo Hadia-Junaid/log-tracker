@@ -24,7 +24,7 @@ export const navData: Array<{
     detail: { label: "Logs", iconClass: "oj-ux-ico-fire" },
   },
   {
-    path: "customers",
+    path: "applications",
     detail: { label: "Applications", iconClass: "oj-ux-ico-contact-group" },
   },
   {

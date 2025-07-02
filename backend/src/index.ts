@@ -18,16 +18,13 @@ processErrors(); // Initialize process level error handlers
 
 const PORT = config.get<number>('server.port') || 3000;
 const mongoUri = config.get<string>('mongoUri') || '';
-console.log(`Mongo URI: ${mongoUri}`); // Log the Mongo URI for debugging
+logger.debug(`Mongo URI: ${mongoUri}`); // Log the Mongo URI for debugging
 const baseUrl = config.get<string>("frontend.baseUrl");;
 
 const app = express();
 
 // Enable CORS for frontend
-app.use(cors({
-  origin: baseUrl, // Frontend URL
-  credentials: true
-}));
+app.use(cors());
 app.use(express.json());
 app.use(morgan('tiny', { stream: morganStream }));
 
