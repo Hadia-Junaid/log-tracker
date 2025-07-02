@@ -58,6 +58,7 @@
         <div class="oj-flex oj-sm-margin-2x-top">
           <oj-bind-if test="[[is_admin]]">
             <oj-button on-oj-action="[[() => editGroup(item.item.data)]]">Edit</oj-button>
+            <oj-bind-if test="[[!item.item.data.is_admin]]">
             <oj-button :data-group-id="[[item.item.data.groupId]]" on-oj-action="[[deleteGroup]]">Delete</oj-button>
           </oj-bind-if>
         </div>

@@ -38,7 +38,7 @@ class RootViewModel {
   navDataProvider: ojNavigationList<
     string,
     CoreRouter.CoreRouterState<CoreRouterDetail>
-  >["data"];
+  >["data"] | undefined;
 
   sideDrawerOn: ko.Observable<boolean>;
   appName: ko.Observable<string>;
@@ -50,6 +50,18 @@ class RootViewModel {
   isLoggingOut: ko.Observable<boolean>;
 
   private authService: AuthService;
+
+  private updateNavDataProvider(): void {
+    let filteredNavData = navData.slice(2);
+    if (!this.authService.getIsAdminFromToken()) {
+      filteredNavData = filteredNavData.filter(
+        (item) => item.path !== "userManagement"
+      );
+    }
+    this.navDataProvider = new ArrayDataProvider(filteredNavData, {
+      keyAttributes: "path",
+    });
+  }
 
   constructor() {
     this.manner = ko.observable("polite");
@@ -76,16 +88,7 @@ class RootViewModel {
       this.mdScreen.subscribe(() => this.sideDrawerOn(false));
     }
 
-    // Filter User Management for non-admins
-    let filteredNavData = navData.slice(2);
-    if (!this.authService.getIsAdminFromToken()) {
-      filteredNavData = filteredNavData.filter(
-        (item) => item.path !== "userManagement"
-      );
-    }
-    this.navDataProvider = new ArrayDataProvider(filteredNavData, {
-      keyAttributes: "path",
-    });
+    this.updateNavDataProvider();
 
     this.sideDrawerOn = ko.observable(false);
 
@@ -114,6 +117,7 @@ class RootViewModel {
     window.addEventListener("authStateChanged", (event: any) => {
       this.isAuthenticated(event.detail.authenticated);
       this.updateUserInfo();
+      this.updateNavDataProvider();
       if (!event.detail.authenticated) {
         this.router.go({ path: "login" });
       }
