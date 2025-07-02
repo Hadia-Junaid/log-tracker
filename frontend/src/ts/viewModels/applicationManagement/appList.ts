@@ -9,7 +9,8 @@ export const applicationListObservables = {
     searchQuery: ko.observable(''),
     currentPage: ko.observable(1),
     pageSize: 5,
-    sortOption: ko.observable<'nameAsc' | 'nameDesc' | 'createdAtAsc' | 'createdAtDesc' | 'updatedAtAsc' | 'updatedAtDesc'>('createdAtDesc')
+    sortOption: ko.observable<'nameAsc' | 'nameDesc' | 'createdAtAsc' | 'createdAtDesc' | 'updatedAtAsc' | 'updatedAtDesc'>('createdAtDesc'),
+    statusFilter: ko.observable<'all' | 'active' | 'inactive'>('all')
 };
 
 // Reset to page 1 on search change
@@ -22,16 +23,30 @@ applicationListObservables.sortOption.subscribe(() => {
     applicationListObservables.currentPage(1); // Reset to first page if sorting changes
 });
 
+// Subscribe to status filter changes
+applicationListObservables.statusFilter.subscribe(() => {
+    applicationListObservables.currentPage(1); // Reset to first page if status filter changes
+});
+
 // --- Computed ---
 const paginatedApplications = ko.pureComputed<ApplicationData[]>(() => {
   const query = applicationListObservables.searchQuery().toLowerCase().trim();
   const sort = applicationListObservables.sortOption();
+  const statusFilter = applicationListObservables.statusFilter();
 
-  const filtered = applicationListObservables.applicationDataArray().filter(app =>
-    app.name.toLowerCase().includes(query) ||
-    app.hostname.toLowerCase().includes(query) ||
-    app.environment.toLowerCase().includes(query)
-  );
+  const filtered = applicationListObservables.applicationDataArray().filter(app => {
+    // Text search filter
+    const matchesSearch = app.name.toLowerCase().includes(query) ||
+                         app.hostname.toLowerCase().includes(query) ||
+                         app.environment.toLowerCase().includes(query);
+    
+    // Status filter
+    const matchesStatus = statusFilter === 'all' ||
+                         (statusFilter === 'active' && app.isActive === true) ||
+                         (statusFilter === 'inactive' && app.isActive !== true);
+    
+    return matchesSearch && matchesStatus;
+  });
 
   const sorted = [...filtered].sort((a, b) => {
     switch (sort) {
@@ -58,13 +73,21 @@ const paginatedApplications = ko.pureComputed<ApplicationData[]>(() => {
 
 export const applicationListComputed = {
     totalPages: ko.pureComputed<number>(() => {
+        const query = applicationListObservables.searchQuery().toLowerCase().trim();
+        const statusFilter = applicationListObservables.statusFilter();
+        
         const totalItems = applicationListObservables.applicationDataArray().filter(app => {
-            const query = applicationListObservables.searchQuery().toLowerCase().trim();
-            return (
-                app.name.toLowerCase().includes(query) ||
-                app.hostname.toLowerCase().includes(query) ||
-                app.environment.toLowerCase().includes(query)
-            );
+            // Text search filter
+            const matchesSearch = app.name.toLowerCase().includes(query) ||
+                                 app.hostname.toLowerCase().includes(query) ||
+                                 app.environment.toLowerCase().includes(query);
+            
+            // Status filter
+            const matchesStatus = statusFilter === 'all' ||
+                                 (statusFilter === 'active' && app.isActive === true) ||
+                                 (statusFilter === 'inactive' && app.isActive !== true);
+            
+            return matchesSearch && matchesStatus;
         }).length;
         return Math.ceil(totalItems / applicationListObservables.pageSize);
     }),
@@ -96,7 +119,7 @@ export const applicationListMethods = {
                  const sorted = json.data.sort((a: ApplicationData, b: ApplicationData) => {
                     return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
                 });
-                console.log('Loaded applications:', sorted);
+                console.log('Loaded applications with isActive values:', sorted.map((app: ApplicationData) => ({ name: app.name, isActive: app.isActive })));
                 applicationListObservables.applicationDataArray(sorted);
                 console.log(`Loaded ${sorted.length} applications`);
             } else {
