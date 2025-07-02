@@ -19,6 +19,13 @@ router.get('/google', authController.googleLogin);
 router.get('/google/callback', authController.googleCallback);
 
 /**
+ * @route   POST /auth/exchange
+ * @desc    Exchange temporary authorization code for JWT token
+ * @access  Public
+ */
+router.post('/exchange', authController.exchangeAuthCode);
+
+/**
  * @route   GET /auth/verify
  * @desc    Verify JWT token and return user info
  * @access  Private

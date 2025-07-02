@@ -17,10 +17,23 @@
     </div>
     <!-- /ko -->
     
+    <!-- Processing message -->
+    <!-- ko if: isProcessingAuth() -->
+    <div class="login-info">
+      <span>Processing authentication...</span>
+    </div>
+    <!-- /ko -->
+    
     <oj-button id="loginButton" 
               class="login-button"
+              disabled="[[isProcessingAuth()]]"
               on-oj-action="[[handleLogin]]">
+      <!-- ko if: isProcessingAuth() -->
+      Signing in...
+      <!-- /ko -->
+      <!-- ko ifnot: isProcessingAuth() -->
       Sign in with Google
+      <!-- /ko -->
     </oj-button>
   </div>
 </div> 

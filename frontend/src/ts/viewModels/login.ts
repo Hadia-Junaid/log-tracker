@@ -11,9 +11,11 @@ import { ConfigService } from "../services/config-service";
 
 class LoginViewModel {
   errorMessage: ko.Observable<string>;
+  isProcessingAuth: ko.Observable<boolean>;
 
   constructor() {
     this.errorMessage = ko.observable("");
+    this.isProcessingAuth = ko.observable(false);
     
     this.checkUrlParameters();
   }
@@ -23,10 +25,22 @@ class LoginViewModel {
     const urlParams = new URLSearchParams(window.location.search);
     const hash = window.location.hash;
     
+    // Check for temporary authorization code (secure flow)
+    if (hash.includes('auth_code=')) {
+      const authCodeMatch = hash.match(/auth_code=([^&]+)/);
+      if (authCodeMatch) {
+        const authCode = authCodeMatch[1];
+        this.exchangeAuthCode(authCode);
+        return;
+      }
+    }
+    
+    // Legacy token check (for backwards compatibility - should be removed in production)
     if (hash.includes('token=')) {
       const tokenMatch = hash.match(/token=([^&]+)/);
       if (tokenMatch) {
         const token = tokenMatch[1];
+        console.warn('JWT token received in URL - this is deprecated and insecure');
         
         localStorage.setItem('authToken', token);
         
@@ -41,6 +55,7 @@ class LoginViewModel {
       }
     }
     
+    // Check for error parameters
     if (hash.includes('error=')) {
       const messageMatch = hash.match(/message=([^&]+)/);
       if (messageMatch) {
@@ -50,9 +65,65 @@ class LoginViewModel {
     }
   }
 
+  /**
+   * Exchange temporary authorization code for JWT token
+   */
+  private async exchangeAuthCode(authCode: string): Promise<void> {
+    try {
+      this.isProcessingAuth(true);
+      this.errorMessage("");
+
+      // Clean URL immediately for security
+      window.history.replaceState({}, document.title, window.location.pathname + '#login');
+
+      await ConfigService.loadConfig();
+      
+      const response = await fetch(`${ConfigService.getApiUrl()}/auth/exchange`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          auth_code: authCode
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || `HTTP error! status: ${response.status}`);
+      }
+
+      if (data.success && data.token) {
+        // Store JWT token securely
+        localStorage.setItem('authToken', data.token);
+        
+        // Dispatch authentication event
+        const authEvent = new CustomEvent('authStateChanged', { 
+          detail: { authenticated: true }
+        });
+        window.dispatchEvent(authEvent);
+        
+        // Navigate to dashboard
+        window.location.href = '#dashboard';
+      } else {
+        throw new Error(data.message || 'Invalid response from authentication service');
+      }
+
+    } catch (error) {
+      console.error("Error exchanging auth code:", error);
+      this.errorMessage(`Authentication failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      this.isProcessingAuth(false);
+    }
+  }
+
 
   handleLogin = async (): Promise<void> => {
     try {
+      this.isProcessingAuth(true);
+      this.errorMessage("");
+
       await ConfigService.loadConfig();
       const response = await fetch(`${ConfigService.getApiUrl()}/auth/google`, {
         method: "GET",
@@ -72,11 +143,13 @@ class LoginViewModel {
         window.location.href = data.authUrl;
       } else {
         console.error("Invalid response from auth API:", data);
-        alert("Failed to initiate Google OAuth. Please try again.");
+        this.errorMessage("Failed to initiate Google OAuth. Please try again.");
       }
     } catch (error) {
       console.error("Error calling auth API:", error);
-      alert("Failed to connect to authentication service. Please try again.");
+      this.errorMessage("Failed to connect to authentication service. Please try again.");
+    } finally {
+      this.isProcessingAuth(false);
     }
   }
 
