@@ -39,7 +39,7 @@ import {
 } from './applicationManagement/editAppDialog';
 import { deleteDialogMethods } from "./applicationManagement/deleteDialog";
 import { envOptions as environmentOptions, statusFilterOptions, environmentFilterOptions } from './applicationManagement/applicationUtils';
-import { sortOptions as sortOpts} from './applicationManagement/applicationUtils';
+import { sortOptions as sortOpts } from './applicationManagement/applicationUtils';
 
 
 class ApplicationViewModel {

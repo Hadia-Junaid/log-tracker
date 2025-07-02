@@ -4,11 +4,12 @@ import { ApplicationData } from './types';
 import { ConfigService } from '../../services/config-service';
 import { applicationListObservables } from './appList';
 import { envOptions } from './applicationUtils';
-import { availableGroups, selectedGroupsForAdd } from './applicationGroups';
 import globalBanner from '../../utils/globalBanner';
 import globalDialog from '../../utils/globalDialog';
+import { toggle } from 'ojs/ojoffcanvas';
+import { selectedGroupsForAdd, selectedGroupsForEdit } from './applicationGroups';
 
-
+const availableGroups = ko.observableArray<any>([]);
 
 const newApplication = {
     name: ko.observable(""),
@@ -24,12 +25,46 @@ const resetNewAppForm = () => {
     newApplication.environment(null);
     newApplication.description("");
     newApplication.isActive(true);
+    availableGroups([]);
 };
 
-const openAddDialog = () => globalDialog.open("addApplicationDialog");
+const openAddDialog = async () => {
+    globalDialog.open("addApplicationDialog");
+    await fetchGroups();
+}
 const closeAddDialog = () => {
     globalDialog.close("addApplicationDialog");
     resetNewAppForm();
+};
+
+const fetchGroups = async () => {
+    const apiUrl = ConfigService.getApiUrl();
+    try {
+        const response = await fetch(`${apiUrl}/user-groups`);
+        if (!response.ok) {
+            console.error("Failed to fetch groups:", response.statusText);
+            globalBanner.showError("Failed to fetch groups.");
+            return;
+        }
+        const groups = await response.json();
+        availableGroups(groups);
+        selectedGroupsForAdd.push(...groups.filter((group: any) => group.is_admin).map((group: any) => group._id));
+    } catch (error) {
+        console.error("Error fetching groups:", error);
+        globalBanner.showError("Could not fetch groups");
+    }
+};
+
+const toggleGroupSelection = (group: any) => {
+    if (group.is_admin) return; // Admin is locked
+
+    const id = group._id;
+    const index = selectedGroupsForAdd.indexOf(id);
+    if (index === -1) {
+        selectedGroupsForAdd.push(id); // Add if not selected
+    } else {
+        selectedGroupsForAdd.splice(index, 1); // Remove if already selected
+    }
 };
 
 const addNewApplication = async () => {
@@ -85,6 +120,15 @@ const addNewApplication = async () => {
 
         const createdApp = await response.json();
         applicationListObservables.applicationDataArray.push(createdApp);
+
+
+        // Patch user groups to assign the new app
+        await fetch(`${apiUrl}/applications/${createdApp._id}/assigned-groups`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ groupIds: selectedGroupsForAdd() })
+        });
+
         closeAddDialog();
         globalBanner.showSuccess("Application added successfully!");
     } catch (error) {
@@ -98,12 +142,13 @@ export const addAppDialogObservables = {
     newApplication,
     envOptions,
     availableGroups,
-    selectedGroups: selectedGroupsForAdd
+    selectedGroups: selectedGroupsForAdd,
 };
 
 export const addAppDialogMethods = {
     openAddDialog,
     closeAddDialog,
     addNewApplication,
-    resetNewAppForm
+    resetNewAppForm,
+    toggleGroupSelection
 };

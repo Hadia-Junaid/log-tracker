@@ -5,54 +5,39 @@
         </div>
 
         <!-- ✅ Global Banner -->
-        <div id="globalBanner"
-            style="display:none; padding: 10px; border-radius: 4px; margin: 12px 0;">
+        <div id="globalBanner" style="display:none; padding: 10px; border-radius: 4px; margin: 12px 0;">
         </div>
 
-       <!-- Search and Sort Row -->
-<div class="oj-flex oj-sm-align-items-center oj-sm-flex-wrap oj-sm-margin-4x-bottom">
-  <!-- Search bar (left, fills width) -->
-  <div class="oj-flex-item">
-    <oj-c-input-text
-      label-hint="Search by name, hostname, or environment"
-      raw-value="{{searchQuery}}"
-      placeholder="Type to filter…">
-    </oj-c-input-text>
-  </div>
+        <!-- Search and Sort Row -->
+        <div class="oj-flex oj-sm-align-items-center oj-sm-flex-wrap oj-sm-margin-4x-bottom">
+            <!-- Search bar (left, fills width) -->
+            <div class="oj-flex-item">
+                <oj-c-input-text label-hint="Search by name, hostname, or environment" raw-value="{{searchQuery}}"
+                    placeholder="Type to filter…">
+                </oj-c-input-text>
+            </div>
 
-  <!-- Status filter dropdown -->
-  <div class="oj-sm-margin-2x-start" style="min-width: 180px;">
-    <oj-c-select-single
-      label-hint="Filter by Status"
-      value="{{statusFilter}}"
-      data="[[statusFilterOptions]]"
-      item-text="label"
-      placeholder="Filter by status...">
-    </oj-c-select-single>
-  </div>
+            <!-- Status filter dropdown -->
+            <div class="oj-sm-margin-2x-start" style="min-width: 180px;">
+                <oj-c-select-single label-hint="Filter by Status" value="{{statusFilter}}"
+                    data="[[statusFilterOptions]]" item-text="label" placeholder="Filter by status...">
+                </oj-c-select-single>
+            </div>
 
-  <!-- Environment filter dropdown -->
-  <div class="oj-sm-margin-2x-start" style="min-width: 180px;">
-    <oj-c-select-single
-      label-hint="Filter by Environment"
-      value="{{environmentFilter}}"
-      data="[[environmentFilterOptions]]"
-      item-text="label"
-      placeholder="Filter by environment...">
-    </oj-c-select-single>
-  </div>
+            <!-- Environment filter dropdown -->
+            <div class="oj-sm-margin-2x-start" style="min-width: 180px;">
+                <oj-c-select-single label-hint="Filter by Environment" value="{{environmentFilter}}"
+                    data="[[environmentFilterOptions]]" item-text="label" placeholder="Filter by environment...">
+                </oj-c-select-single>
+            </div>
 
-  <!-- Sort dropdown (right) -->
-  <div class="oj-sm-margin-2x-start" style="min-width: 220px;">
-    <oj-c-select-single
-      label-hint="Sort By"
-      value="{{sortOption}}"
-      data="[[sortOptions]]"
-      item-text="label"
-      placeholder="Sort...">
-    </oj-c-select-single>
-  </div>
-</div>
+            <!-- Sort dropdown (right) -->
+            <div class="oj-sm-margin-2x-start" style="min-width: 220px;">
+                <oj-c-select-single label-hint="Sort By" value="{{sortOption}}" data="[[sortOptions]]" item-text="label"
+                    placeholder="Sort...">
+                </oj-c-select-single>
+            </div>
+        </div>
 
 
 
@@ -109,7 +94,7 @@
                                     Hostname <oj-bind-text value="[[item.item.data.hostname]]"></oj-bind-text>
                                 </span>
                                 <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
-                                                                        Status:
+                                    Status:
 
                                     <oj-bind-if test="[[item.item.data.isActive]]">
                                         <span class="oj-text-color-success">Active</span>
@@ -205,11 +190,28 @@
 
             <oj-form-layout-item>
                 <div class="oj-flex oj-sm-align-items-center">
-                    <span class="oj-typography-body-md oj-text-color-primary" style="margin-right: 12px; min-width: 150px;">
+                    <span class="oj-typography-body-md oj-text-color-primary"
+                        style="margin-right: 12px; min-width: 150px;">
                         Status (Active/Inactive):
                     </span>
                     <oj-switch value="{{newApplication.isActive}}">
                     </oj-switch>
+                </div>
+            </oj-form-layout-item>
+            <oj-form-layout-item>
+                <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">
+                    Group Assignment
+                </h4>
+                <div class="oj-flex oj-sm-flex-direction-column applications-checkboxes">
+                    <oj-c-checkboxset value="{{selectedGroups}}" class="oj-flex oj-sm-flex-direction-column">
+                        <oj-bind-for-each data="[[availableGroups]]">
+                            <template data-oj-as="group">
+                                <oj-c-checkbox value="{{group.data._id}}" :disabled="[[group.data.is_admin]]" on-oj-value-action="[[() => toggleGroupSelection(group.data)]]">
+                                    <oj-bind-text value="[[group.data.name + (group.data.is_admin ? ' (Admin)' : '')]]"></oj-bind-text>
+                                </oj-c-checkbox>
+                            </template>
+                        </oj-bind-for-each>
+                    </oj-c-checkboxset>
                 </div>
             </oj-form-layout-item>
         </oj-form-layout>
@@ -261,7 +263,8 @@
 
                     <oj-form-layout-item>
                         <div class="oj-flex oj-sm-align-items-center">
-                            <span class="oj-typography-body-md oj-text-color-primary" style="margin-right: 12px; min-width: 150px;">
+                            <span class="oj-typography-body-md oj-text-color-primary"
+                                style="margin-right: 12px; min-width: 150px;">
                                 Status (Active/Inactive):
                             </span>
                             <oj-switch value="{{selectedApplicationIsActive}}">
