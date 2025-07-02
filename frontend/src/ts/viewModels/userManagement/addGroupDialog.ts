@@ -129,6 +129,31 @@ export const addGroupDialogMethods = {
     );
   },
 
+  //method to remove selected members from the selected members list
+  removeMemberFromSelected(member: MemberData) {
+    console.log("Removing member from selected:", member);
+    const selectedList =
+      addGroupDialogObservables.createDialogSelectedMembers();
+    const updatedSelectedList = selectedList.filter((m) => m.id !== member.id);
+    addGroupDialogObservables.createDialogSelectedMembers(
+        updatedSelectedList
+    );
+    // Add back to available members
+    const availableList =
+        addGroupDialogObservables.createDialogAvailableMembers();
+    const alreadyAvailable = availableList.some((m) => m.id === member.id);
+    if (!alreadyAvailable) {
+        addGroupDialogObservables.createDialogAvailableMembers.push(member);
+    }
+  },
+
+  removeAllMembers: () => {
+    const currentList = addGroupDialogObservables.createDialogSelectedMembers();
+    addGroupDialogObservables.createDialogSelectedMembers([]);
+    // Add all removed members back to available members
+    addGroupDialogObservables.createDialogAvailableMembers.push(...currentList);
+  },
+
   addSelectedMembersToGroup: () => {},
   removeSelectedMembersFromGroup: () => {},
   removeAllSelectedMembers: () => {},

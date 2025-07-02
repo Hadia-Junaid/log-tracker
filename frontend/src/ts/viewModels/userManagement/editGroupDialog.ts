@@ -18,6 +18,8 @@ export const editGroupDialogObservables = {
     selectedGroupName: ko.observable<string>(''),
     currentMembers: ko.observableArray<MemberData>([]),
     editDialogAvailableMembers: ko.observableArray<MemberData>([]),
+
+
     selectedAvailableMemberKeys: ko.observable<ObservableKeySet<string | number>>(new ObservableKeySet<string | number>()),
     selectedAssignedMemberKeys: ko.observable<ObservableKeySet<string | number>>(new ObservableKeySet<string | number>()),
     searchValue: ko.observable(""),
@@ -35,7 +37,32 @@ const searchConfig: SearchConfig = {
 };
 
 export const editGroupDialogMethods = {
-    handleAvailableMemberSelection: (event: CustomEvent) => {},
+    handleAvailableMemberSelection: (member: MemberData) =>{
+        console.log("Adding member to selected in edit group dialog:", member);
+        const selectedList = editGroupDialogObservables.currentMembers();
+        const alreadyAdded = selectedList.some((m) => m.id === member.id);
+        if (!alreadyAdded) {
+            editGroupDialogObservables.currentMembers.push(member);
+        }
+
+        // Remove from available members
+        const availableList = editGroupDialogObservables.editDialogAvailableMembers();
+        const updatedAvailableList = availableList.filter((m) => m.id !== member.id);
+        editGroupDialogObservables.editDialogAvailableMembers(updatedAvailableList);
+    },
+
+    handleUnselectMember: (member: MemberData) => {
+        console.log("Removing member from selected in edit group dialog:", member);
+        const selectedList = editGroupDialogObservables.currentMembers();
+        const updatedSelectedList = selectedList.filter((m) => m.id !== member.id);
+        editGroupDialogObservables.currentMembers(updatedSelectedList);
+        // Add back to available members
+        const availableList = editGroupDialogObservables.editDialogAvailableMembers();
+        const alreadyAvailable = availableList.some((m) => m.id === member.id);
+        if (!alreadyAvailable) {
+            editGroupDialogObservables.editDialogAvailableMembers.push(member);
+        }
+    },
     
     // Use shared search handler
     handleMemberSearchInput: createSearchInputHandler(searchConfig, editSearchTimeoutRef),
@@ -156,6 +183,10 @@ updateGroupMembers: async () => {
     }
 },
 
-    removeAllMembers: () => {},
-    removeMember: (event: CustomEvent) => {}
+    removeAllMembers: () => {
+        const currentList = editGroupDialogObservables.currentMembers();
+        editGroupDialogObservables.currentMembers([]);
+        // Add all removed members back to available members
+        editGroupDialogObservables.editDialogAvailableMembers.push(...currentList);
+    },
 }; 
