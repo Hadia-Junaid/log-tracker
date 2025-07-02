@@ -56,6 +56,7 @@ const updateApplication = async () => {
     const name = selectedApplicationName()?.trim();
     const hostname = selectedApplicationHostName()?.trim();
     const environment = selectedApplicationEnv()?.trim();
+    const description = selectedApplicationDescription()?.trim();
 
 
     const dialog = document.getElementById("editApplicationDialog");
@@ -84,7 +85,7 @@ const updateApplication = async () => {
     }
 
     const existing = applicationListObservables.applicationDataArray().find(
-        app => app.name.trim() === name.trim()
+        app => app.name.trim() === name.trim() && app._id !== id
     );
 
     if (existing) {
@@ -97,7 +98,7 @@ const updateApplication = async () => {
         name,
         hostname,
         environment,
-        description: selectedApplicationDescription()
+        description
     };
 
     try {
