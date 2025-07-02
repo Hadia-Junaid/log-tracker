@@ -5,7 +5,6 @@
  * as shown at https://oss.oracle.com/licenses/upl/
  * @ignore
  */
-
 import * as ko from "knockout";
 import * as ModuleUtils from "ojs/ojmodule-element-utils";
 import * as ResponsiveUtils from "ojs/ojresponsiveutils";

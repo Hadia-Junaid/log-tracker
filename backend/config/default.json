@@ -7,11 +7,14 @@
     "google": {
       "clientId": "",
       "clientSecret": "",
-      "redirectUri": "http://localhost:3000/auth/google/callback"
+      "redirectUri": "http://localhost:3000/api/auth/google/callback"
     },
     "jwt": {
       "secret": "",
       "expiresIn": "24h"
     }
+  },
+  "frontend": {
+    "baseUrl": ""
   }
 }

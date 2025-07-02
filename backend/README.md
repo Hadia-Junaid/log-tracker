@@ -57,6 +57,7 @@ cd logtracker-backend
 - Runtime dependencies
 " npm install express mongoose dotenv "
 
+
 - Development dependencies
 " npm install -D typescript ts-node-dev @types/express @types/node @types/mongoose "
 
@@ -115,49 +116,5 @@ For developers, import the logger utility with:
 - "import logger from './utils/logger';"
 
 Then use it for different log levels including error, warn, info, and debug. 
-
----
-
-## API Endpoints
-
-### Authentication
-
-#### Google OAuth Login
-- **GET** `/auth/google`
-- **Description:** Initiate Google OAuth login flow
-- **Response:** Returns Google OAuth authorization URL
-
-#### Google OAuth Callback  
-- **GET** `/auth/google/callback?code={authorization_code}`
-- **Description:** Handle Google OAuth callback and authenticate user
-- **Parameters:** 
-  - `code`: Authorization code from Google OAuth
-- **Response:** JWT token and user information (if user exists in database)
-- **Error:** 403 if user not found in database with message "Access denied. Please contact your administrator."
-
-#### Verify Token
-- **GET** `/auth/verify`
-- **Description:** Verify JWT token and return user information
-- **Headers:** `Authorization: Bearer {jwt_token}`
-- **Response:** User information if token is valid
-
-#### Logout
-- **POST** `/auth/logout`
-- **Description:** Logout user (invalidate session)
-- **Response:** Success message
-
-### Protected Routes
-
-To protect any route, use the authentication middleware:
-
-```typescript
-import { authenticate } from './middleware/auth';
-
-// Protected route example
-app.get('/protected-route', authenticate, (req, res) => {
-  // req.user contains authenticated user information
-  res.json({ user: req.user });
-});
-```
 
 ---

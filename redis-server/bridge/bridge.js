@@ -3,12 +3,17 @@ import Redis from 'ioredis';
 
 const redis = new Redis({
   host: process.env.REDIS_HOST,
+<<<<<<< HEAD
   port: Number(process.env.REDIS_PORT),
   password: process.env.REDIS_PASSWORD // Ensure this is set in your environment
+=======
+  port: Number(process.env.REDIS_PORT)
+>>>>>>> origin/feature/User-Management
 });
 
 const queue = new Queue('log_bull', { connection: redis });
 
+<<<<<<< HEAD
 const BATCH_SIZE = 100;
 const MAX_WAIT_MS = 2000;
 const POLL_INTERVAL_MS = 500;
@@ -68,3 +73,20 @@ async function gracefulShutdown() {
 
 process.on('SIGINT', gracefulShutdown);
 process.on('SIGTERM', gracefulShutdown);
+=======
+(async function start() {
+  console.log("Bridge started...");
+  while (true) {
+    const res = await redis.blpop('logs', 0);
+    const raw = res?.[1];
+    if (!raw) continue;
+
+    try {
+      const parsed = JSON.parse(raw);
+      await queue.add('log', parsed);
+    } catch (e) {
+      console.error("Invalid JSON:", raw);
+    }
+  }
+})();
+>>>>>>> origin/feature/User-Management

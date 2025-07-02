@@ -16,8 +16,8 @@ export class ConfigService {
     const environment = this.detectEnvironment();
     this._config = {
       apiUrl: environment === 'development' 
-        ? 'http://localhost:3000'
-        : 'https://your-production-api.com',
+        ? 'http://localhost:3000/api'
+        : 'https://your-production-api.com/api',
       environment: environment
     };
     

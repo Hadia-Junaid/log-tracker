@@ -140,6 +140,7 @@ class LoginViewModel {
 
       if (data.success && data.authUrl) {
         // Redirect to the Google OAuth URL
+        console.log("Redirecting to Google OAuth URL:", data.authUrl);
         window.location.href = data.authUrl;
       } else {
         console.error("Invalid response from auth API:", data);
