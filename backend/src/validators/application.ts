@@ -1,8 +1,9 @@
 import Joi from 'joi';
 
-export const addApplicationSchema = Joi.object({
-  name: Joi.string().required(),
-  hostname: Joi.string().required(),
-  environment: Joi.string().required(),
-  description: Joi.string().optional()
+export const applicationSchema = Joi.object({
+  name: Joi.string().max(100).required(),
+  hostname: Joi.string().max(255).required(),
+  environment: Joi.string().valid('Development', 'Testing', 'Staging', 'Production').required(),
+  description: Joi.string().max(500).allow("").optional()
 });
+  

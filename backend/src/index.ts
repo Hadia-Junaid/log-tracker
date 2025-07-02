@@ -8,10 +8,10 @@ import { processErrors } from "./startup/processErrors";
 import config from "config";
 import morgan from "morgan";
 import authRoutes from "./routes/authRoutes";
-import cors from "cors";
 import adminRoutes from "./routes/admin.route";
 import userGroupRoutes from './routes/userGroup.route';
-
+import applications from "./routes/application.routes";
+import cors from "cors";
 
 processErrors(); // Initialize process level error handlers
 
@@ -23,27 +23,13 @@ const baseUrl = config.get<string>("frontend.baseUrl");;
 
 const app = express();
 
-app.use(express.json());
-app.use(morgan('tiny', { stream: morganStream }));
-
 // Enable CORS for frontend
 app.use(cors({
   origin: baseUrl, // Frontend URL
   credentials: true
 }));
-
-// Authentication routes
-app.use('/api/auth', authRoutes);
-
-
+app.use(express.json());
 app.use(morgan('tiny', { stream: morganStream }));
-
-// ✅ Mount the routes
-app.use('/api/user-groups', userGroupRoutes);
-
-
-// Register routes
-app.use('/api/admin', adminRoutes);
 
 mongoose.connect(mongoUri)
   .then(() => {
@@ -56,7 +42,14 @@ mongoose.connect(mongoUri)
     logger.error('MongoDB connection error:', err);
   });
 
+
+// Authentication routes
+app.use('/api/auth', authRoutes);
+// ✅ Mount the routes
+app.use('/api/user-groups', userGroupRoutes);
+// Register routes
+app.use('/api/admin', adminRoutes);
+
+app.use('/api/applications', applications);
 // ✅ Error handler last
 app.use(errorHandler);
-
-

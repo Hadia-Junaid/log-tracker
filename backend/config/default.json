@@ -1,4 +1,4 @@
- {
+{
   "server": {
     "port": 3000
   },
@@ -16,5 +16,13 @@
   },
   "frontend": {
     "baseUrl": ""
+  },
+  "google": {
+    "admin": {
+      "serviceAccountKeyPath": "",
+      "adminImpersonationEmail": "",
+      "adminScopes": "",
+      "domain": ""
+    }
   }
 }

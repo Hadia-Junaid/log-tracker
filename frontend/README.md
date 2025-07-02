@@ -1,5 +1,3 @@
-npm i
-
-npm install @oracle/ojet-cli 
-
+### To Run the app:
+npm i 
 npx ojet serve
