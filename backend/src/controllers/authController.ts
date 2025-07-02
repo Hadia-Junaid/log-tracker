@@ -5,6 +5,7 @@ import User from '../models/User';
 import logger from '../utils/logger';
 import config from 'config';
 import tempCodeManager from '../utils/tempCodeManager';
+import { checkUserAdminStatus } from '../utils/checkAdminStatus';
 
 class AuthController {
  
@@ -103,20 +104,23 @@ class AuthController {
         return;
       }
 
-      const token = jwtService.generateToken(user);
+      // Check if user is admin by checking membership in admin groups
+      const isAdmin = await checkUserAdminStatus(user.email);
+      
+      const token = jwtService.generateToken(user, isAdmin);
       tempCodeManager.deleteTempCode(auth_code);
-      logger.info(`JWT token generated for user: ${user.email}`);
+      logger.info(`JWT token generated for user: ${user.email}, admin status: ${isAdmin}`);
 
       res.json({
         success: true,        
-
         token,
         user: {
           id: user._id,
           email: user.email,
           name: user.name,
           settings: user.settings,
-          pinned_applications: user.pinned_applications
+          pinned_applications: user.pinned_applications,
+          is_admin: isAdmin
         }
       });
 
@@ -151,6 +155,9 @@ class AuthController {
         return;
       }
 
+      // Check current admin status (in case it changed since token was issued)
+      const isAdmin = await checkUserAdminStatus(user.email);
+
       res.json({
         success: true,
         user: {
@@ -158,7 +165,8 @@ class AuthController {
           email: user.email,
           name: user.name,
           settings: user.settings,
-          pinned_applications: user.pinned_applications
+          pinned_applications: user.pinned_applications,
+          is_admin: isAdmin
         }
       });
 

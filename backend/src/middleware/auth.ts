@@ -42,7 +42,8 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       email: user.email,
       name: user.name,
       settings: user.settings,
-      pinned_applications: user.pinned_applications
+      pinned_applications: user.pinned_applications,
+      is_admin: decoded.is_admin
     };
 
     next();

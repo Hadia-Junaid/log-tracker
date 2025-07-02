@@ -6,6 +6,7 @@ interface JWTPayload {
   userId: string;
   email: string;
   name: string;
+  is_admin: boolean;
 }
 
 class JWTService {
@@ -17,12 +18,12 @@ class JWTService {
     this.expiresIn = config.get<string>('auth.jwt.expiresIn');
   }
 
-
-  generateToken(user: IUser): string {
+  generateToken(user: IUser, isAdmin: boolean = false): string {
     const payload: JWTPayload = {
       userId: (user._id as any).toString(),
       email: user.email,
       name: user.name,
+      is_admin: isAdmin,
     };
 
     return jwt.sign(payload, this.secret, {
@@ -31,7 +32,6 @@ class JWTService {
       audience: 'log-tracker-client',
     } as any);
   }
-
 
   verifyToken(token: string): JWTPayload {
     try {
