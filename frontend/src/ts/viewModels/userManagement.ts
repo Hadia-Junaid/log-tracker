@@ -22,6 +22,7 @@ import { getInitials } from "./userManagement/sharedDialogUtils";
 import { getRelativeTime } from "./userManagement/userManagementUtils";
 import deleteGroupDialog from "./userManagement/deleteGroupDialog";
 
+
 class UserManagementViewModel {
     // Group List
     groupDataArray = groupListObservables.groupDataArray;
@@ -50,6 +51,7 @@ class UserManagementViewModel {
     removeSelectedMembersFromGroup = addGroupDialogMethods.removeSelectedMembersFromGroup;
     removeAllSelectedMembers = addGroupDialogMethods.removeAllSelectedMembers;
     createGroup = addGroupDialogMethods.createGroup;
+    addMemberToSelected = addGroupDialogMethods.addMemberToSelected;
 
     // Edit Group Dialog
     selectedGroupName = editGroupDialogObservables.selectedGroupName;
@@ -61,7 +63,7 @@ class UserManagementViewModel {
     editSearchRawValue = editGroupDialogObservables.searchRawValue;
     editError = editGroupDialogObservables.editError;
     editDialogApplications = editGroupDialogObservables.editDialogApplications;
-    handleAvailableMemberSelection = editGroupDialogMethods.handleAvailableMemberSelection;
+    // handleAvailableMemberSelection = editGroupDialogMethods.handleAvailableMemberSelection;
     handleEditMemberSearchInput = editGroupDialogMethods.handleMemberSearchInput;
     openEditGroupDialog = editGroupDialogMethods.openEditGroupDialog;
     closeEditDialog = editGroupDialogMethods.closeEditDialog;
