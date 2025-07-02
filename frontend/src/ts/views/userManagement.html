@@ -192,39 +192,34 @@
         </div>
 
         <!-- Selected Members List -->
-      <oj-list-view data="[[createDialogSelectedMembersDP]]"
-              class="members-list current-members-list"
-              selection-mode="none"
-              aria-label="Selected members list">
-  <template slot="itemTemplate" data-oj-as="item">
-    <oj-list-item-layout class="member-list-item current-member-item">
-      <span class="oj-typography-body-md oj-text-color-primary">
-        <oj-bind-text value="[[item.item.data.email]]"></oj-bind-text>
-      </span>
-      <oj-avatar slot="leading" size="xs" initials="[[item.item.data.initials]]"></oj-avatar>
-      <span slot="secondary" class="oj-typography-body-sm oj-text-color-secondary">
-        <oj-bind-text value="[[item.item.data.name]]"></oj-bind-text>
-      </span>
+        <oj-list-view data="[[createDialogSelectedMembersDP]]" class="members-list current-members-list"
+          selection-mode="none" aria-label="Selected members list">
+          <template slot="itemTemplate" data-oj-as="item">
+            <oj-list-item-layout class="member-list-item current-member-item">
+              <span class="oj-typography-body-md oj-text-color-primary">
+                <oj-bind-text value="[[item.item.data.email]]"></oj-bind-text>
+              </span>
+              <oj-avatar slot="leading" size="xs" initials="[[item.item.data.initials]]"></oj-avatar>
+              <span slot="secondary" class="oj-typography-body-sm oj-text-color-secondary">
+                <oj-bind-text value="[[item.item.data.name]]"></oj-bind-text>
+              </span>
 
-      <!-- Remove Button -->
-      <div class="member-remove-container">
-        <oj-button class="member-remove-btn oj-button-sm"
-                   chroming="borderless"
-                   display="icons"
-                   data-bind="click: function() { removeMemberFromSelected(item.item.data) }"
-                   title="Remove member">
-          <span slot="startIcon" class="oj-ux-ico-close"></span>
-        </oj-button>
-      </div>
-    </oj-list-item-layout>
-  </template>
+              <!-- Remove Button -->
+              <div class="member-remove-container">
+                <oj-button class="member-remove-btn oj-button-sm" chroming="borderless" display="icons"
+                  data-bind="click: function() { removeMemberFromSelected(item.item.data) }" title="Remove member">
+                  <span slot="startIcon" class="oj-ux-ico-close"></span>
+                </oj-button>
+              </div>
+            </oj-list-item-layout>
+          </template>
 
-  <template slot="noData">
-    <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center no-members-content">
-      <p class="oj-text-color-secondary">No members selected</p>
-    </div>
-  </template>
-</oj-list-view>
+          <template slot="noData">
+            <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center no-members-content">
+              <p class="oj-text-color-secondary">No members selected</p>
+            </div>
+          </template>
+        </oj-list-view>
 
       </div>
     </div>
@@ -428,7 +423,8 @@
               <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-end">
                 <oj-bind-text value="[[currentMembers().length]]"></oj-bind-text> members
               </span>
-              <oj-button id="removeAllBtn" class="oj-button-sm" chroming="outlined" on-oj-action="[[removeAllMembersEdit]]">
+              <oj-button id="removeAllBtn" class="oj-button-sm" chroming="outlined"
+                on-oj-action="[[removeAllMembersEdit]]">
                 Remove All
               </oj-button>
             </div>
@@ -441,6 +437,9 @@
               <oj-list-item-layout class="member-list-item current-member-item">
                 <span class="oj-typography-body-md oj-text-color-primary">
                   <oj-bind-text value="[[item.item.data.email]]"></oj-bind-text>
+                </span>
+                <span slot="secondary" class="oj-typography-body-sm oj-text-color-secondary">
+                  <oj-bind-text value="[[item.item.data.name]]"></oj-bind-text>
                 </span>
                 <oj-avatar slot="leading" size="xs" initials="[[item.item.data.initials]]"></oj-avatar>
                 <div class="member-remove-container">
