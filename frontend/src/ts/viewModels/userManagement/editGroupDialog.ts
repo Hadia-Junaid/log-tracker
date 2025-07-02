@@ -2,7 +2,7 @@ import * as ko from "knockout";
 import { MemberData, ApplicationOption } from "./types";
 import logger from '../../services/logger-service';
 import { ObservableKeySet } from 'ojs/ojknockout-keyset';
-import { updateUserGroup, fetchApplicationsWithIds, assignApplicationToGroup } from '../../services/group-service';
+import { updateUserGroup, fetchApplicationsWithIds, assignApplicationToGroup, fetchGroupById } from '../../services/group-service';
 import {
     createSearchInputHandler,
     clearSearchTimeout,
@@ -61,16 +61,27 @@ export const editGroupDialogMethods = {
         clearSearchTimeout(editSearchTimeoutRef);
         
         try {
-            // Fetch applications from the API
-            const applications = await fetchApplicationsWithIds();
+            // Fetch all applications and group details in parallel
+            const [applications, groupDetails] = await Promise.all([
+                fetchApplicationsWithIds(),
+                fetchGroupById(groupId)
+            ]);
+            
+            // Get assigned application IDs from group details
+            const assignedApplicationIds = new Set(
+                groupDetails.assigned_applications.map((app: any) => app._id)
+            );
+            
+            // Create application options with proper checked state
             const applicationOptions: ApplicationOption[] = applications.map(app => ({
                 id: app.id,
                 name: app.name,
-                checked: ko.observable(false) // All checkboxes unchecked initially
+                checked: ko.observable(assignedApplicationIds.has(app.id)) // Check if already assigned
             }));
+            
             editGroupDialogObservables.editDialogApplications(applicationOptions);
         } catch (error) {
-            logger.error('Failed to fetch applications for edit dialog:', error);
+            logger.error('Failed to fetch applications or group details for edit dialog:', error);
             editGroupDialogObservables.editError('Failed to load applications.');
         }
         
