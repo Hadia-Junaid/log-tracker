@@ -63,7 +63,7 @@ const addNewApplication = async () => {
         name: newApplication.name(),
         hostname: newApplication.hostname(),
         environment: newApplication.environment(),
-        description: newApplication.description()
+        description: newApplication.description() || ""
     };
 
     try {
