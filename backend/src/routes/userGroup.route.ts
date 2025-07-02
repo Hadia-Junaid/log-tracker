@@ -4,7 +4,9 @@ import {
   updateUserGroup,
   deleteUserGroup,
   getUserGroups,
-  getUserGroupById
+  getUserGroupById,
+  assignApplicationToUserGroup,
+  removeApplicationFromUserGroup
 } from '../controllers/userGroup.controller';
 import { authenticate } from '../middleware/auth';
 import { requireAdmin } from '../middleware/adminAuth';
