@@ -143,7 +143,6 @@ class LoggerService {
   public getTraceId(): string {
     return this.traceId;
   }
-  
 }
 
 // Export singleton instance

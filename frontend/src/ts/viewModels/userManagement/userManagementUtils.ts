@@ -23,4 +23,3 @@ export function getRelativeTime(date: Date): string {
     }
     return 'just now';
 } 
-

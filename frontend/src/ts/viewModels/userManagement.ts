@@ -18,7 +18,6 @@ import { addGroupDialogObservables, addGroupDialogMethods } from "./userManageme
 import { editGroupDialogObservables, editGroupDialogMethods } from "./userManagement/editGroupDialog";
 import { groupListObservables, groupListMethods } from "./userManagement/groupList";
 import { getInitials, getRelativeTime } from "./userManagement/userManagementUtils";
-import deleteGroupDialog from "./userManagement/deleteGroupDialog";
 
 class UserManagementViewModel {
     // Group List
@@ -85,15 +84,9 @@ class UserManagementViewModel {
             return this.groupDataArray().length === 0;
         });
         groupListMethods.init();
-
-        document.addEventListener('group-deleted', (e: any) => {
-            const idToDelete = e.detail.groupId;
-            this.groupDataArray.remove(group => group.groupId === idToDelete);
-        });
     }
 
     editGroup = (event: CustomEvent) => {
-        event.stopPropagation(); // Prevent bubbling
         const groupId = (event.target as HTMLElement).dataset.groupId;
         if (groupId) {
             this.openEditGroupDialog(event);
@@ -101,32 +94,7 @@ class UserManagementViewModel {
             logger.warn('No group ID found for edit action.');
         }
     };
-
-    deleteGroup = (event: CustomEvent) => {
-        event.stopPropagation(); // ✅ prevents bubbling to ojAction/editGroup
-        event.preventDefault();  // ✅ prevents default selection/highlighting if occurring
-
-        const button = event.target as HTMLElement;
-        const groupId = button.getAttribute('data-group-id');
-        const groupName = button.closest('li')?.querySelector('.oj-typography-subheading-sm')?.textContent ?? 'Group';
-
-
-             console.log("Delete button clicked, groupId:", groupId); // 👈 Add this
-             
-        if (groupId) {
-            deleteGroupDialog.openDialog(groupId, groupName);
-        }
-    };
-
-    // ✅ ADDED: Delete Dialog Handlers for <oj-dialog> button bindings
-    cancelDelete = () => {
-        deleteGroupDialog.closeDialog();
-    };
-
-    confirmDelete = () => {
-        deleteGroupDialog.confirmDelete();
-    };
-    // ✅ END ADDED
+    deleteGroup = () => { /* logic goes here */ };
 
     connected(): void {
         AccUtils.announce("User Management page loaded.");

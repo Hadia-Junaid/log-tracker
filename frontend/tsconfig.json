@@ -1,7 +1,6 @@
 {
   "compileOnSave": true,
   "compilerOptions": {
-    "types": ["requirejs"],
     "baseUrl": ".",
     "target": "es6",
     "strict": true,
