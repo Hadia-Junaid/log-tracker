@@ -7,6 +7,13 @@ import mongoose from 'mongoose';
 import { fetchUserFromDirectory } from '../utils/fetchUserFromDirectory';
 
 export const createUserGroup = async (req: Request, res: Response): Promise<void> => {
+  //check if the group name is already in the database
+  const existingGroup = await UserGroup.findOne({ name: req.body.name });
+  if (existingGroup) {
+    res.status(409).json({ error: 'Group name already exists.' });
+    return;
+  }
+
   const { name, is_admin = false, members = [], assigned_applications = [] } = req.body;
 
   if (!name) {
