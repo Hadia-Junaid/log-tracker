@@ -21,12 +21,12 @@ const editApplication = (event: any) => {
     const selectedItem = applicationListObservables.applicationDataArray().find(app => app._id === appId);
 
     if (selectedItem) {
-        console.log("Selected application for edit:", selectedItem.environment);
+     
         selectedApplicationId(selectedItem._id);
         selectedApplicationName(selectedItem.name);
         selectedApplicationHostName(selectedItem.hostname);
         selectedApplicationDescription(selectedItem.description);
-        selectedApplicationIsActive(selectedItem.isActive || true);
+        selectedApplicationIsActive(selectedItem.isActive === true);
 
         if (["Development", "Testing", "Production", "Staging"].includes(selectedItem.environment)) {
             console.log("Environment matches options:", selectedItem.environment);
