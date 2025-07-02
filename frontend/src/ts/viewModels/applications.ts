@@ -68,7 +68,7 @@ class ApplicationViewModel {
     isAdmin = ko.observable(false);
     statusFilterOptions = statusFilterOptions;
     environmentFilterOptions = environmentFilterOptions;
-    //private authService: AuthService;
+    private authService: AuthService;
 
     // Computed
     readonly totalPages = applicationListComputed.totalPages;
@@ -141,18 +141,19 @@ class ApplicationViewModel {
     }
 
     constructor() {
+        this.authService = new AuthService();
+        
+        // Set admin status from auth service
+        this.isAdmin(this.authService.getIsAdminFromToken());
+
+        // Listen for auth state changes
+        window.addEventListener('authStateChanged', () => {
+            this.isAdmin(this.authService.getIsAdminFromToken());
+        });
+
         // Load configuration on initialization
         AccUtils.announce("Application page loaded", "assertive");
         document.title = "Applications";
-        
-        // this.authService = new AuthService();
-        // // Set admin status from auth service
-        // this.isAdmin(this.authService.getIsAdminFromToken());
-
-        // // Listen for auth state changes
-        // window.addEventListener('authStateChanged', () => {
-        //     this.isAdmin(this.authService.getIsAdminFromToken());
-        // });
     }
 
     /**

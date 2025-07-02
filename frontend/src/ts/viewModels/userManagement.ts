@@ -25,6 +25,9 @@ import { groupListObservables, groupListMethods } from "./userManagement/groupLi
 import { getInitials } from "./userManagement/sharedDialogUtils";
 import { getRelativeTime } from "./userManagement/userManagementUtils";
 import deleteGroupDialog from "./userManagement/deleteGroupDialog";
+import "ojs/ojmodule";
+import "ojs/ojmodule-element";
+import "ojs/ojmodule-element-utils";
 
 declare const jwt_decode: (token: string) => any;
 
@@ -75,7 +78,7 @@ class UserManagementViewModel {
     handleEditMemberSearchInput = editGroupDialogMethods.handleMemberSearchInput;
     openEditGroupDialog = editGroupDialogMethods.openEditGroupDialog;
     closeEditDialog = editGroupDialogMethods.closeEditDialog;
-    updateGroupMembers = editGroupDialogMethods.updateGroupMembers;
+    updateGroup = editGroupDialogMethods.updateGroup;
     removeAllMembersEdit = editGroupDialogMethods.removeAllMembers;
 
     // Utility
