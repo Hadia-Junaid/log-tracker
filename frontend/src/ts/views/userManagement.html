@@ -45,18 +45,19 @@
           </div>
 
           <!-- Member Count and Date -->
+          <!-- Member Count and Date -->
           <div class="oj-typography-body-xs oj-text-color-secondary oj-sm-margin-1x-top">
             <oj-bind-text value="[[item.item.data.memberCount]]"></oj-bind-text> Members •
             Created: <oj-bind-text value="[[item.item.data.createdDate]]"></oj-bind-text>
           </div>
 
+
           <!-- Buttons -->
           <div class="oj-flex oj-sm-margin-2x-top">
-            <oj-bind-if test="[[is_admin]]">
-              <oj-button on-oj-action="[[() => editGroup(item.item.data)]]">Edit</oj-button>
-              <oj-bind-if test="[[!item.item.data.is_admin]]">
-                <oj-button :data-group-id="[[item.item.data.groupId]]" on-oj-action="[[deleteGroup]]">Delete</oj-button>
-              </oj-bind-if>
+            <oj-button on-oj-action="[[() => editGroup(item.item.data)]]">Edit</oj-button>
+
+            <oj-bind-if test="[[!item.item.data.is_admin]]">
+              <oj-button :data-group-id="[[item.item.data.groupId]]" on-oj-action="[[deleteGroup]]">Delete</oj-button>
             </oj-bind-if>
           </div>
         </div>
@@ -179,6 +180,14 @@
               <span slot="secondary" class="oj-typography-body-sm oj-text-color-secondary">
                 <oj-bind-text value="[[item.item.data.name]]"></oj-bind-text>
               </span>
+
+              <!-- Remove Button -->
+              <div class="member-remove-container">
+                <oj-button class="member-remove-btn oj-button-sm" chroming="borderless" display="icons"
+                  data-bind="click: function() { removeMemberFromSelected(item.item.data) }" title="Remove member">
+                  <span slot="startIcon" class="oj-ux-ico-close"></span>
+                </oj-button>
+              </div>
 
               <!-- Remove Button -->
               <div class="member-remove-container">

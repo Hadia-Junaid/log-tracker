@@ -100,7 +100,7 @@ class ApplicationViewModel {
 
 
     // Update groups assigned to the application
-    updateGroupMembers = async () => {
+    updateGroup = async () => {
         const selectedAppnName = this.selectedApplicationName();
         const selectedApp = this.applicationDataArray().find(app => app.name === selectedAppnName);
         if (!selectedApp) {
