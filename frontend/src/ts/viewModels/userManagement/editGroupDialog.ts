@@ -148,22 +148,19 @@ export const editGroupDialogMethods = {
     },
     
 
-updateGroupMembers: async () => {
+updateGroup: async () => {
     const groupId = editGroupDialogObservables.groupId();
     const groupName = editGroupDialogObservables.selectedGroupName();
     const members = editGroupDialogObservables.currentMembers();
     const selectedApplications = editGroupDialogObservables.editDialogApplications().filter(app => app.checked());
 
     try {
-        // Update group members
+        // Update group members and applications in one payload
         await updateUserGroup(groupId, {
-            members: members.map(m => m.email), // assuming backend accepts email list
+            name: groupName,
+            members: members.map(m => m.email), 
+            applications: selectedApplications.map(app => app.id)
         });
-
-        // Assign each selected application to the group
-        for (const application of selectedApplications) {
-            await assignApplicationToGroup(groupId, application.id);
-        }
 
         logger.info(`Group ${groupId} updated successfully`);
         
@@ -176,7 +173,7 @@ updateGroupMembers: async () => {
             // Hide the banner after 5 seconds
             setTimeout(() => {
                 banner.style.display = 'none';
-            }, 5000);
+            }, 3000);
         }
         
         // Close the dialog

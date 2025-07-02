@@ -72,7 +72,7 @@ class UserManagementViewModel {
     handleEditMemberSearchInput = editGroupDialogMethods.handleMemberSearchInput;
     openEditGroupDialog = editGroupDialogMethods.openEditGroupDialog;
     closeEditDialog = editGroupDialogMethods.closeEditDialog;
-    updateGroupMembers = editGroupDialogMethods.updateGroupMembers;
+    updateGroup = editGroupDialogMethods.updateGroup;
     removeAllMembersEdit = editGroupDialogMethods.removeAllMembers;
 
     // Utility
