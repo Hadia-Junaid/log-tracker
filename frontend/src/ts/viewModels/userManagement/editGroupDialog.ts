@@ -41,6 +41,8 @@ export const editGroupDialogObservables = {
   editDialogApplications: ko.observableArray<ApplicationOption>([]),
 
   superAdminEmails: ko.observableArray<string>([]),
+
+  selectedGroupAdmin: ko.observable<boolean>(false),
 };
 
 // Search configuration for edit group dialog
@@ -112,6 +114,7 @@ export const editGroupDialogMethods = {
     );
     editGroupDialogObservables.editDialogApplications([]);
 
+
     // Reset search state using shared utility
     resetSearchState(
       editGroupDialogObservables.searchValue,
@@ -129,6 +132,9 @@ export const editGroupDialogMethods = {
         fetchApplicationsWithIds(),
         fetchGroupById(groupId),
       ]);
+
+      console.log("Group details fetched for edit dialog:", groupDetails);
+      
 
       // Get assigned application IDs from group details
       const assignedApplicationIds = new Set(
@@ -165,6 +171,14 @@ export const editGroupDialogMethods = {
           groupDetails.super_admin_emails
         );
       }
+
+      //if the group is an admin group, set the selectedGroupAdmin observable to true
+      editGroupDialogObservables.selectedGroupAdmin(
+        groupDetails.is_admin || false
+      );
+
+      console.log("selected admin status:", editGroupDialogObservables.selectedGroupAdmin());
+
     } catch (error) {
       logger.error(
         "Failed to fetch applications or group details for edit dialog:",

@@ -80,6 +80,7 @@ class UserManagementViewModel {
     closeEditDialog = editGroupDialogMethods.closeEditDialog;
     updateGroup = editGroupDialogMethods.updateGroup;
     removeAllMembersEdit = editGroupDialogMethods.removeAllMembers;
+    selectedGroupIsAdmin = editGroupDialogObservables.selectedGroupAdmin();
 
     // Utility
     getInitials = getInitials;
