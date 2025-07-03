@@ -9,7 +9,7 @@
       "secret": "JWT_SECRET"
     }
   },
-  
+
   "google": {
     "admin": {
       "serviceAccountKeyPath": "GOOGLE_SERVICE_ACCOUNT_KEY_PATH",
@@ -20,5 +20,7 @@
   },
   "frontend": {
     "baseUrl": "FRONTEND_URL"
-  }
+  },
+
+  "adminEmails": "PRIMARY_ADMIN_EMAILS"
 }

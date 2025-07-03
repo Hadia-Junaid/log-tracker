@@ -8,6 +8,7 @@ import {
 import { ObservableKeySet } from "ojs/ojknockout-keyset";
 import ArrayDataProvider = require("ojs/ojarraydataprovider");
 import logger from "../../services/logger-service";
+import globalBanner from "../../utils/globalBanner";
 import {
   createSearchInputHandler,
   clearSearchTimeout,
@@ -205,17 +206,8 @@ export const addGroupDialogMethods = {
 
       logger.info("User group created successfully:", createdGroup);
 
-      // Show success message
-      const banner = document.getElementById("globalSuccessBanner");
-      if (banner) {
-        banner.textContent = `Group "${groupName}" created successfully!`;
-        banner.style.display = "block";
-
-        // Hide the banner after 5 seconds
-        setTimeout(() => {
-          banner.style.display = "none";
-        }, 5000);
-      }
+      // Show success message using globalBanner
+      globalBanner.showSuccess(`Group "${groupName}" created successfully!`);
 
       // Close the dialog
       addGroupDialogMethods.closeAddGroupDialog();
@@ -234,10 +226,12 @@ export const addGroupDialogMethods = {
         addGroupDialogObservables.createError(
           `Failed to create group: ${error.message}`
         );
+        globalBanner.showError(`Failed to create group: ${error.message}`);
       } else {
         addGroupDialogObservables.createError(
           "Failed to create group. Please try again."
         );
+        globalBanner.showError("Failed to create group. Please try again.");
       }
     } finally {
       addGroupDialogObservables.isCreating(false);

@@ -2,6 +2,7 @@ import * as ko from "knockout";
 import { MemberData, ApplicationOption } from "./types";
 import logger from "../../services/logger-service";
 import { ObservableKeySet } from "ojs/ojknockout-keyset";
+import globalBanner from "../../utils/globalBanner";
 import {
   updateUserGroup,
   fetchApplicationsWithIds,
@@ -38,6 +39,8 @@ export const editGroupDialogObservables = {
   searchRawValue: ko.observable(""),
   editError: ko.observable(""),
   editDialogApplications: ko.observableArray<ApplicationOption>([]),
+
+  superAdminEmails: ko.observableArray<string>([]),
 };
 
 // Search configuration for edit group dialog
@@ -68,11 +71,18 @@ export const editGroupDialogMethods = {
   },
 
   handleUnselectMember: (member: MemberData) => {
-    console.log("Removing member from selected in edit group dialog:", member);
+    const superAdminEmails = editGroupDialogObservables.superAdminEmails();
+
+    // Don't allow removal if the member is a super admin
+    if (superAdminEmails.includes(member.email)) {
+      return;
+    }
+
     const selectedList = editGroupDialogObservables.currentMembers();
     const updatedSelectedList = selectedList.filter((m) => m.id !== member.id);
     editGroupDialogObservables.currentMembers(updatedSelectedList);
-    // Add back to available members
+
+    // Add back to available members if not already there
     const availableList =
       editGroupDialogObservables.editDialogAvailableMembers();
     const alreadyAvailable = availableList.some((m) => m.id === member.id);
@@ -142,11 +152,19 @@ export const editGroupDialogMethods = {
           id: member._id || `fallback-id-${member.email}`,
           name: member.name || member.email,
           email: member.email,
-          initials: getInitials(member.name || member.email)
+          initials: getInitials(member.name || member.email),
         })
       );
-      console.log('Current members:', currentMembers); // Debug log
+      console.log("Current members:", currentMembers); // Debug log
       editGroupDialogObservables.currentMembers(currentMembers);
+
+      // if the group contained super admin emails, add them to the observable
+      if (groupDetails.super_admin_emails) {
+        console.log("Super admin emails:", groupDetails.super_admin_emails); // Debug log
+        editGroupDialogObservables.superAdminEmails(
+          groupDetails.super_admin_emails
+        );
+      }
     } catch (error) {
       logger.error(
         "Failed to fetch applications or group details for edit dialog:",
@@ -174,6 +192,8 @@ export const editGroupDialogMethods = {
       new ObservableKeySet<string | number>()
     );
     editGroupDialogObservables.editDialogApplications([]);
+    console.log("Resetting edit dialog observables");
+    editGroupDialogObservables.superAdminEmails([]);
 
     // Reset search state using shared utility
     resetSearchState(
@@ -228,38 +248,46 @@ export const editGroupDialogMethods = {
         groupListObservables.groupDataArray.valueHasMutated();
       }
 
-      // Show success message
-      const banner = document.getElementById("globalSuccessBanner");
-      if (banner) {
-        banner.textContent = `Group "${groupName}" updated successfully!`;
-        banner.style.display = "block";
-
-        // Hide the banner after 5 seconds
-        setTimeout(() => {
-          banner.style.display = "none";
-        }, 3000);
-      }
+      // Show success message using globalBanner
+      globalBanner.showSuccess(`Group "${groupName}" updated successfully!`);
 
       // Close the dialog
-      const dialog = document.getElementById("editGroupDialog") as unknown as {
-        close: () => void;
-      };
-      dialog?.close();
-
-      // Dispatch event to refresh group list
-      document.dispatchEvent(new CustomEvent("group-updated"));
-    } catch (err) {
-      logger.error("Error updating group", err);
-      editGroupDialogObservables.editError(
-        "Failed to update group. Please try again."
-      );
+      editGroupDialogMethods.closeEditDialog();
+    } catch (error) {
+      logger.error("Failed to update group:", error);
+      editGroupDialogObservables.editError("Failed to update group details.");
+      globalBanner.showError("Failed to update group. Please try again.");
+      editGroupDialogMethods.closeEditDialog();
     }
   },
 
   removeAllMembers: () => {
-    const currentList = editGroupDialogObservables.currentMembers();
-    editGroupDialogObservables.currentMembers([]);
-    // Add all removed members back to available members
-    editGroupDialogObservables.editDialogAvailableMembers.push(...currentList);
+    const superAdminEmails = editGroupDialogObservables.superAdminEmails();
+    const currentMembers = editGroupDialogObservables.currentMembers();
+    const availableMembers =
+      editGroupDialogObservables.editDialogAvailableMembers();
+
+    // Split members: keep super admins, remove others
+    const remainingMembers = currentMembers.filter((member) =>
+      superAdminEmails.includes(member.email)
+    );
+
+    const removedMembers = currentMembers.filter(
+      (member) => !superAdminEmails.includes(member.email)
+    );
+
+    // Update current members to only include super admins
+    editGroupDialogObservables.currentMembers(remainingMembers);
+
+    // Add removed members to available members list if not already present
+    const updatedAvailable = [
+      ...availableMembers,
+      ...removedMembers.filter(
+        (removed) =>
+          !availableMembers.some((existing) => existing.id === removed.id)
+      ),
+    ];
+
+    editGroupDialogObservables.editDialogAvailableMembers(updatedAvailable);
   },
 };
