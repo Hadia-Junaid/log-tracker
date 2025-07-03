@@ -211,6 +211,7 @@ export const editGroupDialogMethods = {
       const groupIndex = updatedGroups.findIndex((g) => g.groupId === groupId);
 
       if (groupIndex !== -1) {
+        console.log("Updating group in observable array:", updatedGroup);
         const createdDate = new Date(updatedGroup.createdAt);
         updatedGroups[groupIndex] = {
           groupId: updatedGroup._id,
@@ -222,10 +223,15 @@ export const editGroupDialogMethods = {
           createdDate: createdDate.toLocaleDateString(),
           createdAgo: groupListMethods.getRelativeTime(createdDate),
           is_admin: updatedGroup.is_admin,
+          members: updatedGroup.members.map((member: any) => member.email),
+          assigned_applications: updatedGroup.assigned_applications.map(
+            (app: any) => app.name
+          ),
         };
 
         // Force the observableArray to update
         groupListObservables.groupDataArray.valueHasMutated();
+        
       }
 
       // Show success message

@@ -56,12 +56,6 @@ export const groupListMethods = {
                 const createdDate = new Date(group.createdAt);
                 const createdAgoText = groupListMethods.getRelativeTime(createdDate);
 
-                 const emails: string[] = group.members?.map((m: any) => m.email) || [];
-  const apps: string[] = group.assigned_applications?.map((a: any) => a.name) || [];
-
-  const memberOptions = emails.map(e => ({ value: e, label: e }));
-  const appOptions    = apps.map(a => ({ value: a, label: a }));
-
                 return {
                     groupId: group._id || `fallback-id-${index}`,
                     groupName: group.name || `Unnamed Group ${index}`,
