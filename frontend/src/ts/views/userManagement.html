@@ -239,7 +239,7 @@
 </oj-dialog>
 
 <!-- Edit Group Dialog -->
-<oj-dialog id="editGroupDialog" cancel-behavior="icon" aria-labelledby="dialog-title-id">
+<oj-dialog id="editGroupDialog" cancel-behavior="icon" aria-labelledby="dialog-title-id" on-oj-close="[[closeEditDialog]]">
     <div slot="header">
         <span id="dialog-title-id" class="oj-dialog-title">Edit Group: <oj-bind-text value="[[selectedGroupName]]"></oj-bind-text></span>
     </div>

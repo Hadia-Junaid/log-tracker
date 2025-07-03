@@ -191,6 +191,8 @@ export const editGroupDialogMethods = {
       new ObservableKeySet<string | number>()
     );
     editGroupDialogObservables.editDialogApplications([]);
+    console.log("Resetting edit dialog observables");
+    editGroupDialogObservables.superAdminEmails([]);
 
     // Reset search state using shared utility
     resetSearchState(
