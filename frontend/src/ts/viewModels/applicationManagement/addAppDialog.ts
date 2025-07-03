@@ -34,8 +34,8 @@ const resetNewAppForm = () => {
 };
 
 const openAddDialog = async () => {
-    globalDialog.open("addApplicationDialog");
     await fetchGroups();
+    globalDialog.open("addApplicationDialog");
 }
 const closeAddDialog = () => {
     globalDialog.close("addApplicationDialog");
