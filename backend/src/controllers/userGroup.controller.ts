@@ -149,9 +149,11 @@ export const deleteUserGroup = async (req: Request, res: Response): Promise<void
     return;
   }
 
-  const deletedGroup = await UserGroup.findByIdAndDelete(id);
+  //fetch group and check if is_admin
+  const deletedGroup = await UserGroup.findOneAndDelete({ _id: id, is_admin: false });
+
   if (!deletedGroup) {
-    res.status(404).json({ error: 'User group not found' });
+    res.status(404).json({ error: 'User group not found or is an admin group' });
     return;
   }
 
