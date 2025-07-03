@@ -1,6 +1,7 @@
 import * as ko from "knockout";
 import { deleteGroupById } from "../../services/group-service";
 import logger from "../../services/logger-service";
+import globalBanner from "../../utils/globalBanner";
 
 class DeleteGroupDialogViewModel {
     groupId = ko.observable<string>('');
@@ -29,12 +30,13 @@ class DeleteGroupDialogViewModel {
             document.dispatchEvent(new CustomEvent('group-deleted', { detail: { groupId: this.groupId() } }));
             this.closeDialog();
             logger.info(`${this.groupName()} deleted successfully.`);
+            globalBanner.showError(`Group "${this.groupName()}" deleted successfully!`);
         } catch (e) {
             logger.error("Failed to delete group", e);
             if (e instanceof Error) {
-                alert("Failed to delete group: " + e.message);
+                globalBanner.showError("Failed to delete group: " + e.message);
             } else {
-                alert("Failed to delete group: " + String(e));
+                globalBanner.showError("Failed to delete group. Please try again.");
             }
         } finally {
             this.isDeleting(false);

@@ -24,5 +24,6 @@
       "adminScopes": "",
       "domain": ""
     }
-  }
+  },
+  "adminEmails": []
 }

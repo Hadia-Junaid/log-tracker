@@ -16,6 +16,9 @@
     "underscore": "^1.10.2",
     "yargs-parser": "13.1.2"
   },
+  "scripts": {
+  "build": "ojet build"
+},
   "engines": {
     "node": ">=16.0.0"
   },
