@@ -100,11 +100,15 @@ export const getAssignedGroups = async (req: Request, res: Response): Promise<vo
 
   }
 
-  const groups = await UserGroup.find({ applications: id })
+  const appObjectId = new mongoose.Types.ObjectId(id);
+
+  const groups = await UserGroup.find({ assigned_applications: appObjectId })
     .select('name is_admin _id')
     .lean();
 
   res.send(groups);
+
+  console.log(`Assigned groups fetched for application ID ${id}:`, groups);
 
 
   if (!groups) {
