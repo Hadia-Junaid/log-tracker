@@ -35,10 +35,7 @@ class RootViewModel {
   moduleAdapter: ModuleRouterAdapter<CoreRouterDetail>;
   selection: KnockoutRouterAdapter<CoreRouterDetail>;
 
-  navDataProvider: ojNavigationList<
-    string,
-    CoreRouter.CoreRouterState<CoreRouterDetail>
-  >["data"] | undefined;
+  navDataProvider: ko.Observable<ArrayDataProvider<any, any>>;
 
   sideDrawerOn: ko.Observable<boolean>;
   appName: ko.Observable<string>;
@@ -58,9 +55,9 @@ class RootViewModel {
         (item) => item.path !== "userManagement"
       );
     }
-    this.navDataProvider = new ArrayDataProvider(filteredNavData, {
-      keyAttributes: "path",
-    });
+    this.navDataProvider(
+      new ArrayDataProvider(filteredNavData, { keyAttributes: "path" })
+    );
   }
 
   constructor() {
@@ -88,6 +85,9 @@ class RootViewModel {
       this.mdScreen.subscribe(() => this.sideDrawerOn(false));
     }
 
+    this.navDataProvider = ko.observable(
+      new ArrayDataProvider([], { keyAttributes: "path" })
+    );
     this.updateNavDataProvider();
 
     this.sideDrawerOn = ko.observable(false);
