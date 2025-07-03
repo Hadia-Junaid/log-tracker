@@ -59,7 +59,9 @@ class DeleteApplicationDialogViewModel {
             throw new Error(`Failed to fetch assigned groups. Status: ${groupsResponse.status}`);
         }
 
-        const assignedGroups = await groupsResponse.json(); // Assume this returns array of group IDs
+        const assignedGroups = await groupsResponse.json();
+        const assignedIds = assignedGroups.map((g: any) => g._id.toString());
+
 
         console.info(`Assigned groups for application ${applicationId}:`, assignedGroups);
 
@@ -76,9 +78,9 @@ class DeleteApplicationDialogViewModel {
         }
 
         // 3. Remove the app ID from assignedGroups in each group
-        for (const groupId of assignedGroups) {
-            const patchResponse = await fetch(`${apiUrl}/user-groups/${groupId}/remove-application`, {
-                method: 'PATCH',
+        for (const groupId of assignedIds) {
+            const patchResponse = await fetch(`${apiUrl}/user-groups/${groupId}/unassign-application`, {
+                method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
