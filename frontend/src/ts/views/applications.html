@@ -48,11 +48,11 @@
 
             <div style="display: inline-flex; flex-direction: column; align-items: flex-start; margin-left: 24px;">
                 <oj-bind-if test="[[isAdmin]]">
-                  <oj-button id="addApplicationButton" class="oj-button-outlined-chrome oj-sm-margin-2x-bottom"
-                      on-oj-action="[[openAddDialog]]" chroming="outlined">
-                      <span slot="startIcon" class="oj-ux-ico-plus"></span>
-                      Add Application
-                  </oj-button>
+                    <oj-button id="addApplicationButton" class="oj-button-outlined-chrome oj-sm-margin-2x-bottom"
+                        on-oj-action="[[openAddDialog]]" chroming="outlined">
+                        <span slot="startIcon" class="oj-ux-ico-plus"></span>
+                        Add Application
+                    </oj-button>
                 </oj-bind-if>
 
                 <span class="oj-typography-body-sm oj-text-color-secondary padding-2x-left">
@@ -94,7 +94,8 @@
                                 </span>
                                 <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
                                     Hostname <oj-bind-text value="[[item.item.data.hostname]]"></oj-bind-text>
-                                    • <oj-bind-text value="[[getRelativeTime(item.item.data.createdAt)]]"></oj-bind-text>
+                                    • <oj-bind-text
+                                        value="[[getRelativeTime(item.item.data.createdAt)]]"></oj-bind-text>
                                 </span>
                                 <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
                                     Status:
@@ -113,16 +114,16 @@
                                     <oj-bind-text value="[[item.item.data.environment]]"></oj-bind-text>
                                 </span>
                                 <oj-bind-if test="[[isAdmin]]">
-                                  <oj-button class="oj-button-sm" chroming="outlined" on-oj-action="[[editApplication]]"
-                                      :data-app-id="[[item.item.data._id]]">
-                                      <span slot="startIcon" class="oj-ux-ico-edit"></span>
-                                      Edit
-                                  </oj-button>
-                                  <oj-button class="oj-button-sm" chroming="outlined" on-oj-action="[[handleDeleteApp]]"
-                                      :data-app-id="[[item.item.data._id]]">
-                                      <span slot="startIcon" class="oj-ux-ico-trash"></span>
-                                      Delete
-                                  </oj-button>
+                                    <oj-button class="oj-button-sm" chroming="outlined"
+                                        on-oj-action="[[editApplication]]" :data-app-id="[[item.item.data._id]]">
+                                        <span slot="startIcon" class="oj-ux-ico-edit"></span>
+                                        Edit
+                                    </oj-button>
+                                    <oj-button class="oj-button-sm" chroming="outlined"
+                                        on-oj-action="[[handleDeleteApp]]" :data-app-id="[[item.item.data._id]]">
+                                        <span slot="startIcon" class="oj-ux-ico-trash"></span>
+                                        Delete
+                                    </oj-button>
                                 </oj-bind-if>
                             </div>
                         </oj-list-item-layout>
@@ -221,14 +222,13 @@
                     <oj-c-checkboxset class="oj-flex oj-sm-flex-direction-column">
                         <oj-bind-for-each data="[[availableGroups]]">
                             <template data-oj-as="group">
-                                <oj-c-checkbox 
-                                value="{{group.data.checked}}" 
-                                :disabled="[[group.data.isAdmin]]"
-                                checked="[[group.data.checked]]"
-                                ></oj-c-checkbox>
-                                    <oj-bind-text
-                                        value="[[group.data.name + (group.data.isAdmin ? ' (Admin)' : '')]]"></oj-bind-text>
-                                </oj-c-checkbox>
+                                <div class="checkboxes">
+                                    <oj-c-checkbox value="{{group.data.checked}}" :disabled="[[group.data.isAdmin]]"
+                                        checked="[[group.data.checked]]">
+                                        <oj-bind-text
+                                            value="[[group.data.name + (group.data.isAdmin ? ' (Admin)' : '')]]"></oj-bind-text>
+                                    </oj-c-checkbox>
+                                </div>
                             </template>
                         </oj-bind-for-each>
                     </oj-c-checkboxset>
@@ -255,8 +255,8 @@
         </span>
     </div>
 
-    <div slot="body">
-        <div class="oj-flex oj-sm-flex-direction-column oj-sm-padding-4x">
+    <div slot="body" class="app-body">
+        <div class="oj-flex oj-sm-flex-direction-column oj-justify-content-center oj-sm-padding-4x">
             <p class="oj-typography-body-md oj-text-color-secondary oj-sm-margin-4x-bottom">
                 Manage application settings using the form below.
             </p>
@@ -270,7 +270,7 @@
                 <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">
                     Application Details
                 </h4>
-                <oj-form-layout max-columns="1" direction="row" class="oj-sm-padding-2x">
+                <oj-form-layout max-columns="1" direction="row">
                     <oj-c-input-text id="applicationNameField" label-hint="Application Name"
                         value="{{selectedApplicationName}}" required></oj-c-input-text>
 
@@ -281,9 +281,14 @@
                         value="{{selectedApplicationDescription}}"></oj-c-text-area>
 
 
-                    <oj-c-select-single label-hint="Environment" value="{{selectedApplicationEnv}}"
-                        data="[[envOptions]]" item-text="label" placeholder="Choose environment" required>
-                    </oj-c-select-single>
+                    <oj-c-select-single 
+  label-hint="Environment" 
+  value="{{newApplication.environment}}" 
+  data="[[envOptions]]" 
+  item-text="label" 
+  placeholder="Choose environment"
+  required>
+</oj-c-select-single>
 
                     <oj-form-layout-item>
                         <div class="oj-flex oj-sm-align-items-center">
@@ -308,14 +313,13 @@
                     <oj-c-checkboxset class="oj-flex oj-sm-flex-direction-column">
                         <oj-bind-for-each data="[[availableGroupsEdit]]">
                             <template data-oj-as="group">
-                                <oj-c-checkbox 
-                                value="{{group.data.checked}}" 
-                                :disabled="[[group.data.isAdmin]]"
-                                checked="[[group.data.checked]]"
-                                ></oj-c-checkbox>
+                                <span>
+                                    <oj-c-checkbox value="{{group.data.checked}}" :disabled="[[group.data.isAdmin]]"
+                                        checked="[[group.data.checked]]"></oj-c-checkbox>
                                     <oj-bind-text
                                         value="[[group.data.name + (group.data.isAdmin ? ' (Admin)' : '')]]"></oj-bind-text>
-                                </oj-c-checkbox>
+                                    </oj-c-checkbox>
+                                </span>
                             </template>
                         </oj-bind-for-each>
                     </oj-c-checkboxset>

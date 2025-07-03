@@ -214,6 +214,10 @@ html[dir="rtl"] .demo-oracle-icon {
   margin-bottom: 0.1rem;
 }
 
+.checkboxes{
+  margin-bottom: -1.5rem;
+}
+
 /* Dialog footer button styling */
 #editGroupDialog oj-button {
   border: 1px solid #ccc !important;
@@ -367,3 +371,38 @@ html[dir="rtl"] .demo-oracle-icon {
 .current-member-item:hover .member-remove-container {
     opacity: 1;
 }
+
+.app-body {
+  padding: 0px 70px;
+}
+
+@media screen and (max-width: 768px) {
+  .add-app-body {
+    padding: 0px 20px;
+  }
+  
+}
+
+oj-form-layout {
+  width: 100%;
+}
+
+/* Checkbox row layout fix */
+.applications-checkboxes .checkboxes {
+  display: flex;
+  align-items: center;
+}
+
+/* Better header spacing */
+#add-dialog-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  margin-bottom: 12px;
+}
+
+/* Group Assignment heading */
+.oj-form-layout-item h4 {
+  margin-top: 12px;
+  margin-bottom: 8px;
+}
+
