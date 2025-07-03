@@ -290,12 +290,21 @@
                 <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">
                     Group Assignment
                 </h4>
-                <div class="oj-flex oj-flex-wrap oj-sm-gap-2x">
-                    <template for-each="[[availableGroups]]" as="group">
-                        <oj-c-checkbox :id="[[group + '_checkbox']]" :label="[[group]]" :value="[[group]]"
-                            :disabled="[[group === 'Admin Group']]" checked="{{selectedGroups}}">
-                        </oj-c-checkbox>
-                    </template>
+                <div class="oj-flex oj-sm-flex-direction-column applications-checkboxes">
+                    <oj-c-checkboxset class="oj-flex oj-sm-flex-direction-column">
+                        <oj-bind-for-each data="[[availableGroups]]">
+                            <template data-oj-as="group">
+                                <oj-c-checkbox 
+                                value="{{group.data.checked}}" 
+                                :disabled="[[group.data.isAdmin]]"
+                                checked="[[group.data.checked]]"
+                                ></oj-c-checkbox>
+                                    <oj-bind-text
+                                        value="[[group.data.name + (group.data.isAdmin ? ' (Admin)' : '')]]"></oj-bind-text>
+                                </oj-c-checkbox>
+                            </template>
+                        </oj-bind-for-each>
+                    </oj-c-checkboxset>
                 </div>
             </div>
         </div>
