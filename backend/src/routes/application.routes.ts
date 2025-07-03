@@ -3,20 +3,18 @@ import express from 'express';
 import { createApplication, getApplications, updateApplication, deleteApplication,getAssignedGroups, updateAssignedGroups } from '../controllers/application.controller';
 import validate from './../middleware/validate';
 import { applicationSchema } from '../validators/application';
+import { authenticate } from '../middleware/auth';
+import { requireAdmin } from '../middleware/adminAuth';
 
 const router = express.Router();
 
-// GET /api/applications - Get all applications with optional search and pagination
-router.get('/', getApplications);
+// GET routes - accessible to all authenticated users
+router.get('/', authenticate, getApplications);
 
-// POST /api/applications - Create a new application
-router.post('/', validate(applicationSchema), createApplication);
-
-// PATCH /api/applications/:id - Update an existing application by ID
-router.patch('/:id', validate(applicationSchema), updateApplication);
-
-// DELETE /api/applications/:id - Delete an application by ID
-router.delete('/:id', deleteApplication);
+// Admin-only routes - require both authentication and admin privileges
+router.post('/', authenticate, requireAdmin, validate(applicationSchema), createApplication);
+router.patch('/:id', authenticate, requireAdmin, validate(applicationSchema), updateApplication);
+router.delete('/:id', authenticate, requireAdmin, deleteApplication);
 
 // GET /api/applications/:id/assigned-groups - Get groups assigned to an application
 router.get('/:id/assigned-groups', getAssignedGroups);     

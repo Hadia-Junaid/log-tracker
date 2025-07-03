@@ -47,11 +47,13 @@
             </h2>
 
             <div style="display: inline-flex; flex-direction: column; align-items: flex-start; margin-left: 24px;">
-                <oj-button id="addApplicationButton" class="oj-button-outlined-chrome oj-sm-margin-2x-bottom"
-                    on-oj-action="[[openAddDialog]]" chroming="outlined">
-                    <span slot="startIcon" class="oj-ux-ico-plus"></span>
-                    Add Application
-                </oj-button>
+                <oj-bind-if test="[[isAdmin]]">
+                  <oj-button id="addApplicationButton" class="oj-button-outlined-chrome oj-sm-margin-2x-bottom"
+                      on-oj-action="[[openAddDialog]]" chroming="outlined">
+                      <span slot="startIcon" class="oj-ux-ico-plus"></span>
+                      Add Application
+                  </oj-button>
+                </oj-bind-if>
 
                 <span class="oj-typography-body-sm oj-text-color-secondary padding-2x-left">
                     Total: <oj-bind-text value="[[applicationDataArray().length]]"></oj-bind-text> applications
@@ -92,6 +94,7 @@
                                 </span>
                                 <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
                                     Hostname <oj-bind-text value="[[item.item.data.hostname]]"></oj-bind-text>
+                                    • <oj-bind-text value="[[getRelativeTime(item.item.data.createdAt)]]"></oj-bind-text>
                                 </span>
                                 <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
                                     Status:
@@ -109,16 +112,18 @@
                                 <span class="oj-typography-body-md oj-text-color-secondary oj-sm-margin-4x-end">
                                     <oj-bind-text value="[[item.item.data.environment]]"></oj-bind-text>
                                 </span>
-                                <oj-button class="oj-button-sm" chroming="outlined" on-oj-action="[[editApplication]]"
-                                    :data-app-id="[[item.item.data._id]]">
-                                    <span slot="startIcon" class="oj-ux-ico-edit"></span>
-                                    Edit
-                                </oj-button>
-                                <oj-button class="oj-button-sm" chroming="outlined" on-oj-action="[[handleDeleteApp]]"
-                                    :data-app-id="[[item.item.data._id]]">
-                                    <span slot="startIcon" class="oj-ux-ico-trash"></span>
-                                    Delete
-                                </oj-button>
+                                <oj-bind-if test="[[isAdmin]]">
+                                  <oj-button class="oj-button-sm" chroming="outlined" on-oj-action="[[editApplication]]"
+                                      :data-app-id="[[item.item.data._id]]">
+                                      <span slot="startIcon" class="oj-ux-ico-edit"></span>
+                                      Edit
+                                  </oj-button>
+                                  <oj-button class="oj-button-sm" chroming="outlined" on-oj-action="[[handleDeleteApp]]"
+                                      :data-app-id="[[item.item.data._id]]">
+                                      <span slot="startIcon" class="oj-ux-ico-trash"></span>
+                                      Delete
+                                  </oj-button>
+                                </oj-bind-if>
                             </div>
                         </oj-list-item-layout>
                     </li>

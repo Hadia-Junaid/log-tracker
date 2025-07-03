@@ -43,3 +43,25 @@ export const environmentFilterOptions = new ArrayDataProvider(
   ],
   { keyAttributes: 'value' }
 );
+
+export function getRelativeTime(dateString: string): string {
+  const date = new Date(dateString);
+  const now = new Date();
+  const diffInMilliseconds = now.getTime() - date.getTime();
+  const diffInDays = Math.floor(diffInMilliseconds / (1000 * 60 * 60 * 24));
+  
+  if (diffInDays < 1) {
+    return 'Created today';
+  } else if (diffInDays === 1) {
+    return 'Created yesterday';
+  } else if (diffInDays < 7) {
+    return `Created ${diffInDays} days ago`;
+  } else {
+    const diffInWeeks = Math.floor(diffInDays / 7);
+    if (diffInWeeks === 1) {
+      return 'Created 1 week ago';
+    } else {
+      return `Created ${diffInWeeks} weeks ago`;
+    }
+  }
+}

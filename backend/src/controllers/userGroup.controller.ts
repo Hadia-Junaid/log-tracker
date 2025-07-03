@@ -7,6 +7,13 @@ import mongoose from 'mongoose';
 import { fetchUserFromDirectory } from '../utils/fetchUserFromDirectory';
 
 export const createUserGroup = async (req: Request, res: Response): Promise<void> => {
+  //check if the group name is already in the database
+  const existingGroup = await UserGroup.findOne({ name: req.body.name });
+  if (existingGroup) {
+    res.status(409).json({ error: 'Group name already exists.' });
+    return;
+  }
+
   const { name, is_admin = false, members = [], assigned_applications = [] } = req.body;
 
   if (!name) {
@@ -69,20 +76,22 @@ export const createUserGroup = async (req: Request, res: Response): Promise<void
 
 export const updateUserGroup = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
-  const { name, is_admin, assigned_applications = [], members = [] } = req.body;
+  const { name, is_admin, applications = [], members = [] } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     res.status(400).json({ error: 'Invalid group ID.' });
     return;
   }
 
-  const validApps = await Application.find({ _id: { $in: assigned_applications } }).select('_id');
-  const validAppIds = validApps.map(app => app._id);
+  // Fetch valid application ObjectIds
+  const validAppIds = await Application.find({ _id: { $in: applications } }).distinct('_id');
 
+
+  // Resolve or create users by email
   const verifiedMemberIds: mongoose.Types.ObjectId[] = [];
 
   for (const email of members) {
-    let user = await User.findOne({ email });
+    let user = await User.findOne({ email }).select('_id');
 
     if (!user) {
       const userData = await fetchUserFromDirectory(email);
@@ -91,7 +100,7 @@ export const updateUserGroup = async (req: Request, res: Response): Promise<void
         return;
       }
 
-      user = new User({
+      user = await User.create({
         email: userData.email,
         name: userData.name,
         pinned_applications: [],
@@ -102,7 +111,6 @@ export const updateUserGroup = async (req: Request, res: Response): Promise<void
         }
       });
 
-      await user.save();
       logger.info(` Created user ${email} during group update.`);
     }
 
@@ -112,8 +120,8 @@ export const updateUserGroup = async (req: Request, res: Response): Promise<void
   const updatedGroup = await UserGroup.findByIdAndUpdate(
     id,
     {
-      name,
-      is_admin,
+      ...(name && { name }),
+      ...(typeof is_admin === 'boolean' && { is_admin }),
       assigned_applications: validAppIds,
       members: verifiedMemberIds
     },
@@ -128,6 +136,10 @@ export const updateUserGroup = async (req: Request, res: Response): Promise<void
   logger.info(`✅ User group '${id}' updated successfully.`);
   res.status(200).json(updatedGroup);
 };
+
+
+
+
 
 export const deleteUserGroup = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;

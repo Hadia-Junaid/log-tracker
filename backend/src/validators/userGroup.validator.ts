@@ -1,6 +1,7 @@
 import Joi from 'joi';
 import mongoose from 'mongoose';
 
+
 export const createUserGroupSchema = Joi.object({
   name: Joi.string().required(),
   is_admin: Joi.boolean(),

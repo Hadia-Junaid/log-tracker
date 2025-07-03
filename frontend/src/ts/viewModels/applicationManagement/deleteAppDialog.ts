@@ -46,8 +46,10 @@ class DeleteApplicationDialogViewModel {
 
     private async deleteApplicationById(applicationId: string): Promise<void> {
         const apiUrl = ConfigService.getApiUrl();
+        const token = localStorage.getItem('authToken');
         const response = await fetch(`${apiUrl}/applications/${applicationId}`, { 
-            method: 'DELETE' 
+            method: 'DELETE',
+            headers: { 'Authorization': `Bearer ${token}` }
         });
         
         if (!response.ok) {

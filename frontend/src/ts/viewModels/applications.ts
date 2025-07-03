@@ -38,8 +38,10 @@ import {
     editAppDialogMethods
 } from './applicationManagement/editAppDialog';
 import { deleteDialogMethods } from "./applicationManagement/deleteDialog";
-import { envOptions as environmentOptions, statusFilterOptions, environmentFilterOptions } from './applicationManagement/applicationUtils';
-import { sortOptions as sortOpts } from './applicationManagement/applicationUtils';
+import { envOptions as environmentOptions, statusFilterOptions, environmentFilterOptions, getRelativeTime } from './applicationManagement/applicationUtils';
+import { sortOptions as sortOpts} from './applicationManagement/applicationUtils';
+import { AuthService } from '../services/auth.service';
+declare const jwt_decode: (token: string) => any;
 
 
 class ApplicationViewModel {
@@ -63,8 +65,10 @@ class ApplicationViewModel {
     availableGroups = addAppDialogObservables.availableGroups; // Shared
     selectedGroups = editAppDialogObservables.selectedGroups; // For Edit Dialog
     sortOptions = sortOpts;
+    isAdmin = ko.observable(false);
     statusFilterOptions = statusFilterOptions;
     environmentFilterOptions = environmentFilterOptions;
+    private authService: AuthService;
 
     // Computed
     readonly totalPages = applicationListComputed.totalPages;
@@ -83,6 +87,7 @@ class ApplicationViewModel {
     openEditDialog = editAppDialogMethods.openEditDialog;
     closeEditDialog = editAppDialogMethods.closeEditDialog
     updateApplication = editAppDialogMethods.updateApplication;
+    getRelativeTime = getRelativeTime;
 
     handleDeleteApp = deleteDialogMethods.handleDeleteApp(this.applicationDataArray);
     cancelDelete = deleteDialogMethods.cancelDelete;
@@ -96,7 +101,7 @@ class ApplicationViewModel {
 
 
     // Update groups assigned to the application
-    updateGroupMembers = async () => {
+    updateGroup = async () => {
         const selectedAppnName = this.selectedApplicationName();
         const selectedApp = this.applicationDataArray().find(app => app.name === selectedAppnName);
         if (!selectedApp) {
@@ -136,15 +141,20 @@ class ApplicationViewModel {
 
     }
 
-
-
     constructor() {
+        this.authService = new AuthService();
+        
+        // Set admin status from auth service
+        this.isAdmin(this.authService.getIsAdminFromToken());
+
+        // Listen for auth state changes
+        window.addEventListener('authStateChanged', () => {
+            this.isAdmin(this.authService.getIsAdminFromToken());
+        });
+
         // Load configuration on initialization
         AccUtils.announce("Application page loaded", "assertive");
         document.title = "Applications";
-
-
-
     }
 
     /**
@@ -156,10 +166,13 @@ class ApplicationViewModel {
      * after being disconnected.
     */
     async connected(): Promise<void> {
-
         try {
+            // Verify admin status on page load
+            this.isAdmin(this.authService.getIsAdminFromToken());
+            
             // Load configuration
             await ConfigService.loadConfig();
+            
             // Load initial application data
             await this.loadApplicationData();
         } catch (error) {
@@ -182,6 +195,5 @@ class ApplicationViewModel {
         // implement if needed
     }
 }
-
 
 export = ApplicationViewModel; 

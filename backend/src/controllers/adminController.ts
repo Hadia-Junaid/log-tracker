@@ -1,11 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import { getAdminDirectoryService } from '../utils/googleAdminSDK';
 import config from 'config';
-<<<<<<< HEAD
 import { searchUsersSchema } from '../validators/admin';
-=======
-import { searchUsersSchema, patchUserAndGroupSchema } from '../validators/admin';
->>>>>>> feature/application-management-crud
 
 // Helper to get an instance of the Admin SDK Directory service
 const getDirectoryService = async () => {

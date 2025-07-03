@@ -11,8 +11,10 @@ import "ojs/ojinputsearch";
 import "ojs/ojinputtext";
 import "ojs/ojavatar";
 import 'oj-c/checkbox';
+import "ojs/ojavatar";
 import logger from '../services/logger-service';
 import { ConfigService } from '../services/config-service';
+import { AuthService } from '../services/auth.service';
 import { fetchUserGroups, createUserGroup, fetchApplications } from '../services/group-service';
 import { KeySet } from 'ojs/ojkeyset';
 import { ObservableKeySet } from 'ojs/ojknockout-keyset';
@@ -23,7 +25,11 @@ import { groupListObservables, groupListMethods } from "./userManagement/groupLi
 import { getInitials } from "./userManagement/sharedDialogUtils";
 import { getRelativeTime } from "./userManagement/userManagementUtils";
 import deleteGroupDialog from "./userManagement/deleteGroupDialog";
+import "ojs/ojmodule";
+import "ojs/ojmodule-element";
+import "ojs/ojmodule-element-utils";
 
+declare const jwt_decode: (token: string) => any;
 
 class UserManagementViewModel {
     // Group List
@@ -72,7 +78,7 @@ class UserManagementViewModel {
     handleEditMemberSearchInput = editGroupDialogMethods.handleMemberSearchInput;
     openEditGroupDialog = editGroupDialogMethods.openEditGroupDialog;
     closeEditDialog = editGroupDialogMethods.closeEditDialog;
-    updateGroupMembers = editGroupDialogMethods.updateGroupMembers;
+    updateGroup = editGroupDialogMethods.updateGroup;
     removeAllMembersEdit = editGroupDialogMethods.removeAllMembers;
 
     // Utility
@@ -82,15 +88,24 @@ class UserManagementViewModel {
     // DataProviders for dialogs
     createDialogAvailableMembersDP = new ArrayDataProvider(this.createDialogAvailableMembers, { keyAttributes: "id" });
     createDialogSelectedMembersDP = new ArrayDataProvider(this.createDialogSelectedMembers, { keyAttributes: "id" });
-    currentMembersDP = new ArrayDataProvider(this.currentMembers, { keyAttributes: "id" });
+    currentMembersDP = ko.pureComputed(() => new ArrayDataProvider(this.currentMembers(), { keyAttributes: "id" }));
     editDialogAvailableMembersDP = new ArrayDataProvider(this.editDialogAvailableMembers, { keyAttributes: "id" });
 
     deleteGroupDialog = deleteGroupDialog;
 
+    is_admin = ko.observable(false);
+    private authService: AuthService;
+
     constructor() {
+        this.authService = new AuthService();
+        
+        // Set admin status from auth service
+        this.is_admin(this.authService.getIsAdminFromToken());
+
         this.isDataEmpty = ko.pureComputed(() => {
             return this.groupDataArray().length === 0;
         });
+        
         groupListMethods.init();
 
         document.addEventListener('group-deleted', (e: any) => {
@@ -103,8 +118,13 @@ class UserManagementViewModel {
         });
 
         document.addEventListener('group-updated', () => {
-            fetchUserGroups(); // or your method to refresh groups
-     });
+            fetchUserGroups();
+        });
+
+        // Listen for auth state changes
+        window.addEventListener('authStateChanged', () => {
+            this.is_admin(this.authService.getIsAdminFromToken());
+        });
     }
 
     editGroup = (group: { groupId: string; groupName: string }) => {
@@ -120,6 +140,7 @@ class UserManagementViewModel {
             }
         });
     };
+
     deleteGroup = (event: CustomEvent) => {
         event.stopPropagation(); 
         event.preventDefault();   
@@ -130,11 +151,12 @@ class UserManagementViewModel {
         }
     };
 
-    
-
     connected(): void {
         AccUtils.announce("User Management page loaded.");
         document.title = "User Management";
+        
+        // Verify admin status on page load
+        this.is_admin(this.authService.getIsAdminFromToken());
     }
 
     disconnected(): void {

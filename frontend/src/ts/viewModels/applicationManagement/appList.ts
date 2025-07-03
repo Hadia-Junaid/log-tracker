@@ -124,7 +124,12 @@ export const applicationListMethods = {
     loadApplicationData: async () => {
         try {
             const baseUrl = ConfigService.getApiUrl();
-            const response = await fetch(`${baseUrl}/applications`);
+            const token = localStorage.getItem('authToken');
+            const response = await fetch(`${baseUrl}/applications`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
             const json = await response.json();
             if (response.ok) {
                  const sorted = json.data.sort((a: ApplicationData, b: ApplicationData) => {

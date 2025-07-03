@@ -19,12 +19,16 @@ export const groupListObservables = {
 };
 
 groupListObservables.filteredGroups = ko.pureComputed(() => {
-    const term = groupListObservables.searchTerm().toLowerCase();
+    let term = groupListObservables.searchTerm().toLowerCase();
     if (!term) return groupListObservables.groupDataArray();
-    return groupListObservables.groupDataArray().filter(group =>
-        group.groupName.toLowerCase().includes(term) ||
-        (group.description && group.description.toLowerCase().includes(term))
-    );
+    const trimmedTerm = term.trim();
+    if (!trimmedTerm) return groupListObservables.groupDataArray();
+    return groupListObservables.groupDataArray().filter(group => {
+        const name = group.groupName.toLowerCase();
+        const desc = (group.description || '').toLowerCase();
+        if (name.includes(trimmedTerm) || desc.includes(trimmedTerm)) return true;
+        return false;
+    });
 });
 
 groupListObservables.totalPages = ko.pureComputed(() => {

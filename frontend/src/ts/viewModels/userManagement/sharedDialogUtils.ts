@@ -33,9 +33,20 @@ export const performUserSearch = async (searchString: string, config: SearchConf
     }
 
     try {
-        // Get configuration and call the backend API
+        // Get configuration and auth token
         const apiUrl = ConfigService.getApiUrl();
-        const response = await fetch(`${apiUrl}/admin/users/search?searchString=${encodeURIComponent(searchString)}`);
+        const authToken = localStorage.getItem('authToken');
+        
+        if (!authToken) {
+            throw new Error('No authentication token found');
+        }
+
+        const response = await fetch(`${apiUrl}/admin/users/search?searchString=${encodeURIComponent(searchString)}`, {
+            headers: {
+                'Authorization': `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            }
+        });
         
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);

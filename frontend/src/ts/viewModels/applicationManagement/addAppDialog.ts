@@ -102,9 +102,10 @@ const addNewApplication = async () => {
 
     try {
         const apiUrl = ConfigService.getApiUrl();
+        const token = localStorage.getItem('authToken');
         const response = await fetch(`${apiUrl}/applications`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
             body: JSON.stringify(app)
         });
 
