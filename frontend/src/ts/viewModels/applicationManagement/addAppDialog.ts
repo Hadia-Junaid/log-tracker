@@ -24,6 +24,8 @@ const newApplication = {
     isActive: ko.observable(true)
 };
 
+const addAppDialogError = ko.observable("");
+
 const resetNewAppForm = () => {
     newApplication.name("");
     newApplication.hostname("");
@@ -34,12 +36,14 @@ const resetNewAppForm = () => {
 };
 
 const openAddDialog = async () => {
+    addAppDialogError("");
     await fetchGroups();
     globalDialog.open("addApplicationDialog");
 }
 const closeAddDialog = () => {
     globalDialog.close("addApplicationDialog");
     resetNewAppForm();
+    addAppDialogError("");
 };
 
 const fetchGroups = async () => {
@@ -78,6 +82,27 @@ const addNewApplication = async () => {
         console.error("Dialog not found");
         return;
     }
+
+    // Custom validation for name and description
+    const name = newApplication.name().trim();
+    const description = newApplication.description().trim();
+    if (!name) {
+        addAppDialogError("Application name is required.");
+        return;
+    }
+    if (name.length < 5 || name.length > 20) {
+        addAppDialogError("Application name must be between 5 and 20 characters.");
+        return;
+    }
+    if (!description) {
+        addAppDialogError("Description is required.");
+        return;
+    }
+    if (description.length < 10 || description.length > 100) {
+        addAppDialogError("Description must be between 10 and 100 characters.");
+        return;
+    }
+    addAppDialogError("");
 
     const elements = Array.from(
         dialog.querySelectorAll("oj-c-input-text, oj-c-text-area, oj-c-select-single")
@@ -151,6 +176,7 @@ export const addAppDialogObservables = {
     newApplication,
     envOptions,
     availableGroups,
+    addAppDialogError,
 };
 
 export const addAppDialogMethods = {
