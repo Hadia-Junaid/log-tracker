@@ -189,17 +189,6 @@ export const updateUserGroup = async (
 
   logger.info(`✅ User group '${id}' updated successfully.`);
 
-  //change the response to include members emails and application names in the members and assigned_applications fields
-  const populatedGroup = await UserGroup.findById(id)
-    .populate('assigned_applications', 'name')
-    .populate('members', 'email');
-  
-  if (!populatedGroup) {
-    res.status(404).json({ error: 'User group not found after update' });
-    return;
-  }
-
-  res.status(200).json(populatedGroup);
   res.status(200).json(populatedGroup);
 };
 
