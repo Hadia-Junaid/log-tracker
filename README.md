@@ -43,13 +43,23 @@ Containerized using Docker and Docker Compose
 
 ##  Setup Instructions
 
+
+```bash
+git clone https://github.com/hadia-junaid/log-tracker.git
+cd log-tracker
+git switch develop
+git pull
+```
+
+### Open repo in VS Code
+
 ### 1. Environment Variables
 
 Create a .env file inside the backend/ folder based on .env.example:
+Populate .env sent offline
 
 
-
-Make sure your credentials/service-account-key.json is also present.
+Make sure your credentials/service-account-key.json is also present. (also sent offline)
 
 
 ### 2. Docker Build & Run (Production Mode)
@@ -58,13 +68,11 @@ From the root of your project, run:
 
 bash
 # Stop any running containers
-docker-compose down
+docker compose down
 
-# Build all services
-docker-compose build
+# Build and run all services
+docker compose up --build
 
-# Run all services
-docker-compose up
 
 Then visit:
 Frontend: http://localhost:8000
@@ -76,7 +84,7 @@ Backend API: http://localhost:3000
 
 bash
 # Stop and remove containers
-docker-compose down
+docker compose down
 
 # Remove images
 docker rmi $(docker images -q)
