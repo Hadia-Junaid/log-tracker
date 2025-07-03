@@ -181,7 +181,9 @@
     </div>
     <div slot="body" class="add-app-body">
         <oj-form-layout max-columns="1" label-edge="top">
-            <oj-c-input-text label-hint="Application Name" value="{{newApplication.name}}" required>
+            <oj-c-input-text label-hint="Application Name" value="{{newApplication.name}}" required
+                minlength="5" maxlength="20"
+                help.instruction="Name must be 5-20 characters">
             </oj-c-input-text>
 
             <oj-c-input-text label-hint="Hostname" value="{{newApplication.hostname}}" required>
@@ -191,7 +193,9 @@
                 item-text="label" placeholder="Choose environment" required>
             </oj-c-select-single>
 
-            <oj-c-text-area label-hint="Description" value="{{newApplication.description}}">
+            <oj-c-text-area label-hint="Description" value="{{newApplication.description}}"
+                minlength="10" maxlength="100"
+                help.instruction="Description must be 10-100 characters">
             </oj-c-text-area>
 
             <oj-form-layout-item>
