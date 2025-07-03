@@ -69,6 +69,7 @@ class ApplicationViewModel {
     statusFilterOptions = statusFilterOptions;
     environmentFilterOptions = environmentFilterOptions;
     private authService: AuthService;
+    addAppDialogError = addAppDialogObservables.addAppDialogError;
 
     // Computed
     readonly totalPages = applicationListComputed.totalPages;

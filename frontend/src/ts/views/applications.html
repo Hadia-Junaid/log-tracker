@@ -179,7 +179,13 @@
         <span id="add-dialog-title" class="oj-dialog-title">Register New Application</span>
     </div>
     <div slot="body">
+
         <oj-form-layout max-columns="1" label-edge="top">
+                        <oj-bind-if test="[[addAppDialogError]]">
+                <div class="oj-sm-margin-2x-bottom" style="padding: 10px; background-color: #f2dede; color: #a94442; border-radius: 4px;">
+                    <oj-bind-text value="[[addAppDialogError]]"></oj-bind-text>
+                </div>
+            </oj-bind-if>
             <oj-c-input-text label-hint="Application Name" value="{{newApplication.name}}" required
                 minlength="5" maxlength="20"
                 help.instruction="Name must be 5-20 characters">
