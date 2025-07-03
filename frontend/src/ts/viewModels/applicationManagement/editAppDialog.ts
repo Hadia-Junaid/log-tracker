@@ -4,7 +4,6 @@ import { applicationListObservables } from './appList';
 import ArrayDataProvider = require('ojs/ojarraydataprovider');
 import { ConfigService } from '../../services/config-service';
 import { envOptions } from './applicationUtils';
-import {  selectedGroupsForEdit } from './applicationGroups';
 import globalBanner from '../../utils/globalBanner';
 import globalDialog from '../../utils/globalDialog';
 
@@ -15,13 +14,21 @@ const selectedApplicationEnv = ko.observable<string>('');
 const selectedApplicationDescription = ko.observable<string>('');
 const selectedApplicationIsActive = ko.observable<boolean>(true);
 
+export interface GroupOption {
+    id: string;
+    name: string;
+    isAdmin: boolean;
+    checked: ko.Observable<boolean>;
+}
+const availableGroupsEdit = ko.observableArray<GroupOption>([]);
+
 // Opens the edit dialog with pre-filled values
 const editApplication = (event: any) => {
     const appId = event.target.getAttribute('data-app-id');
     const selectedItem = applicationListObservables.applicationDataArray().find(app => app._id === appId);
 
     if (selectedItem) {
-     
+
         selectedApplicationId(selectedItem._id);
         selectedApplicationName(selectedItem.name);
         selectedApplicationHostName(selectedItem.hostname);
@@ -37,7 +44,7 @@ const editApplication = (event: any) => {
         }
 
 
-        openEditDialog();
+        openEditDialog(appId);
     } else {
         console.warn('Edit application: Not found');
     }
@@ -50,8 +57,74 @@ const gotoEditApplication = (event: any) => {
 };
 
 // Open/close dialog
-const openEditDialog = () => globalDialog.open("editApplicationDialog");
+const openEditDialog = async (appId: string) => {
+    await fetchGroupsForEdit(appId);
+    globalDialog.open("editApplicationDialog");
+};
+
 const closeEditDialog = () => globalDialog.close("editApplicationDialog");
+
+const fetchGroupsForEdit = async (applicationId: string) => {
+    try {
+
+        const apiUrl = ConfigService.getApiUrl();
+        const token = localStorage.getItem('authToken');
+
+        // Fetch all groups
+        const allGroupsResponse = await fetch(`${apiUrl}/user-groups`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (!allGroupsResponse.ok) {
+            console.error("Failed to fetch groups:", allGroupsResponse.statusText);
+            globalBanner.showError("Failed to fetch groups.");
+            availableGroupsEdit([]);
+            return;
+        }
+
+        const allGroups = await allGroupsResponse.json();
+        console.log("Available groups for edit:", allGroups);
+
+        // Fetch assigned groups for this app
+        const assignedGroupsResponse = await fetch(`${apiUrl}/applications/${applicationId}/assigned-groups`, {
+            headers: { 'Authorization': `Bearer ${token}` },
+            // cache: 'no-store'
+        });
+
+        if (!assignedGroupsResponse.ok) {
+            console.error("Failed to fetch assigned groups:", assignedGroupsResponse.statusText);
+            globalBanner.showError("Failed to fetch assigned groups.");
+            return;
+        }
+
+        const assignedGroups = await assignedGroupsResponse.json();
+        console.log("Assigned groups for edit:", assignedGroups);
+        const assignedIds = assignedGroups.map((g: any) => g._id.toString());
+        console.log("Assigned group IDs:", assignedIds);
+
+        // Ensure admin group is preselected
+        const adminGroup = allGroups.find((g: any) => g.is_admin);
+        if (adminGroup && !assignedIds.includes(adminGroup._id.toString())) {
+            assignedIds.push(adminGroup._id.toString());
+        }
+
+        // Map all groups with `checked` flag
+        const groupOptions: GroupOption[] = allGroups.map((group: any) => ({
+            id: group._id,
+            name: group.name,
+            isAdmin: group.is_admin,
+            checked: ko.observable<boolean>(assignedIds.includes(group._id.toString()))
+        }));
+
+        console.log("Available groups for edit:", groupOptions);
+
+        availableGroupsEdit(groupOptions);   
+        console.log("Available groups observable: ", availableGroupsEdit());              
+    } catch (err) {
+        console.error("Failed to fetch groups for editing:", err);
+        availableGroupsEdit([]);
+    }
+};
 
 const updateApplication = async () => {
     const id = selectedApplicationId();
@@ -131,6 +204,17 @@ const updateApplication = async () => {
             applicationListObservables.applicationDataArray.splice(index, 1, updated);
         }
 
+        const selectedGroupIds = availableGroupsEdit()
+            .filter(group => group.checked())
+            .map(group => group.id);
+
+        // Patch user groups to assign the new app
+        await fetch(`${apiUrl}/applications/${id}/assigned-groups`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json", 'Authorization': `Bearer ${token}` },
+            body: JSON.stringify({ groupIds: selectedGroupIds })
+        });
+
         closeEditDialog();
         globalBanner.showSuccess(`Application "${name}" updated successfully!`);
     } catch (error) {
@@ -146,8 +230,7 @@ export const editAppDialogObservables = {
     selectedApplicationEnv,
     selectedApplicationDescription,
     selectedApplicationIsActive,
-    // availableGroups,
-    selectedGroups: selectedGroupsForEdit
+    availableGroupsEdit
 };
 
 export const editAppDialogMethods = {
@@ -155,5 +238,5 @@ export const editAppDialogMethods = {
     editApplication,
     openEditDialog,
     closeEditDialog,
-    updateApplication
+    updateApplication,
 };

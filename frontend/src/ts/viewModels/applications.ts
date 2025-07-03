@@ -62,8 +62,8 @@ class ApplicationViewModel {
     selectedApplicationEnv = editAppDialogObservables.selectedApplicationEnv;
     selectedApplicationDescription = editAppDialogObservables.selectedApplicationDescription;
     selectedApplicationIsActive = editAppDialogObservables.selectedApplicationIsActive;
-    availableGroups = addAppDialogObservables.availableGroups; // Shared
-    selectedGroups = editAppDialogObservables.selectedGroups; // For Edit Dialog
+    availableGroups = addAppDialogObservables.availableGroups;
+    availableGroupsEdit = editAppDialogObservables.availableGroupsEdit;
     sortOptions = sortOpts;
     isAdmin = ko.observable(false);
     statusFilterOptions = statusFilterOptions;
@@ -95,51 +95,6 @@ class ApplicationViewModel {
     isDeleting = deleteDialogMethods.isDeleting;
     applicationName = deleteDialogMethods.applicationName;
     
-
-
-
-
-
-    // Update groups assigned to the application
-    updateGroup = async () => {
-        const selectedAppnName = this.selectedApplicationName();
-        const selectedApp = this.applicationDataArray().find(app => app.name === selectedAppnName);
-        if (!selectedApp) {
-            console.error('Selected application not found');
-            return;
-        }
-
-        try {
-            const apiUrl = ConfigService.getApiUrl();
-            const response = await fetch(`${apiUrl}/applications/${selectedApp._id}/groups`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    groups: this.selectedGroups()
-                })
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-
-            // Update locally
-            const updatedApp = await response.json();
-            const index = this.applicationDataArray().findIndex(app => app._id === selectedApp._id);
-            if (index > -1) {
-                this.applicationDataArray.splice(index, 1, updatedApp);
-            }
-
-            this.closeEditDialog();
-            alert('Application Group updated successfully!');
-
-        } catch (error) {
-            console.error('Error updating group members:', error);
-        }
-
-    }
 
     constructor() {
         this.authService = new AuthService();
