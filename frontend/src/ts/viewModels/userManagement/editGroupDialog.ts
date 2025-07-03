@@ -38,6 +38,8 @@ export const editGroupDialogObservables = {
   searchRawValue: ko.observable(""),
   editError: ko.observable(""),
   editDialogApplications: ko.observableArray<ApplicationOption>([]),
+
+  superAdminEmails: ko.observableArray<string>([]),
 };
 
 // Search configuration for edit group dialog
@@ -68,11 +70,18 @@ export const editGroupDialogMethods = {
   },
 
   handleUnselectMember: (member: MemberData) => {
-    console.log("Removing member from selected in edit group dialog:", member);
+    const superAdminEmails = editGroupDialogObservables.superAdminEmails();
+
+    // Don't allow removal if the member is a super admin
+    if (superAdminEmails.includes(member.email)) {
+      return;
+    }
+
     const selectedList = editGroupDialogObservables.currentMembers();
     const updatedSelectedList = selectedList.filter((m) => m.id !== member.id);
     editGroupDialogObservables.currentMembers(updatedSelectedList);
-    // Add back to available members
+
+    // Add back to available members if not already there
     const availableList =
       editGroupDialogObservables.editDialogAvailableMembers();
     const alreadyAvailable = availableList.some((m) => m.id === member.id);
@@ -142,11 +151,19 @@ export const editGroupDialogMethods = {
           id: member._id || `fallback-id-${member.email}`,
           name: member.name || member.email,
           email: member.email,
-          initials: getInitials(member.name || member.email)
+          initials: getInitials(member.name || member.email),
         })
       );
-      console.log('Current members:', currentMembers); // Debug log
+      console.log("Current members:", currentMembers); // Debug log
       editGroupDialogObservables.currentMembers(currentMembers);
+
+      // if the group contained super admin emails, add them to the observable
+      if (groupDetails.super_admin_emails) {
+        console.log("Super admin emails:", groupDetails.super_admin_emails); // Debug log
+        editGroupDialogObservables.superAdminEmails(
+          groupDetails.super_admin_emails
+        );
+      }
     } catch (error) {
       logger.error(
         "Failed to fetch applications or group details for edit dialog:",
@@ -257,9 +274,32 @@ export const editGroupDialogMethods = {
   },
 
   removeAllMembers: () => {
-    const currentList = editGroupDialogObservables.currentMembers();
-    editGroupDialogObservables.currentMembers([]);
-    // Add all removed members back to available members
-    editGroupDialogObservables.editDialogAvailableMembers.push(...currentList);
+    const superAdminEmails = editGroupDialogObservables.superAdminEmails();
+    const currentMembers = editGroupDialogObservables.currentMembers();
+    const availableMembers =
+      editGroupDialogObservables.editDialogAvailableMembers();
+
+    // Split members: keep super admins, remove others
+    const remainingMembers = currentMembers.filter((member) =>
+      superAdminEmails.includes(member.email)
+    );
+
+    const removedMembers = currentMembers.filter(
+      (member) => !superAdminEmails.includes(member.email)
+    );
+
+    // Update current members to only include super admins
+    editGroupDialogObservables.currentMembers(remainingMembers);
+
+    // Add removed members to available members list if not already present
+    const updatedAvailable = [
+      ...availableMembers,
+      ...removedMembers.filter(
+        (removed) =>
+          !availableMembers.some((existing) => existing.id === removed.id)
+      ),
+    ];
+
+    editGroupDialogObservables.editDialogAvailableMembers(updatedAvailable);
   },
 };

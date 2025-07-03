@@ -5,6 +5,7 @@ import Application from '../models/Application';
 import logger from '../utils/logger';
 import mongoose from 'mongoose';
 import { fetchUserFromDirectory } from '../utils/fetchUserFromDirectory';
+import { getSuperAdminEmails } from '../utils/getSuperAdminEmails';
 
 export const createUserGroup = async (req: Request, res: Response): Promise<void> => {
   //check if the group name is already in the database
@@ -138,9 +139,6 @@ export const updateUserGroup = async (req: Request, res: Response): Promise<void
 };
 
 
-
-
-
 export const deleteUserGroup = async (req: Request, res: Response): Promise<void> => {
   const { id } = req.params;
 
@@ -193,8 +191,16 @@ export const getUserGroupById = async (req: Request, res: Response): Promise<voi
     return;
   }
 
+  // Prepare response object and add super admin emails if it is an admin group
+  let responseGroup: any = group.toObject();
+  
+  if (group.is_admin) {
+    const superAdminEmails = getSuperAdminEmails();
+    responseGroup.super_admin_emails = superAdminEmails;
+  }
+
   logger.info(`ℹ️ Retrieved user group: ${group.name}`);
-  res.status(200).json(group);
+  res.status(200).json(responseGroup);
 };
 
 //API endpoint for assigning application to user group (PATCH)
