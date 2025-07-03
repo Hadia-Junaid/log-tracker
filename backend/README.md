@@ -7,12 +7,14 @@ This is the backend for **LogTracker**, a logging microservice project built wit
 - TypeScript
 - MongoDB Atlas
 - Docker
+- Google Admin SDK
 
 ## Features
 
 - RESTful API using Express
 - MongoDB Atlas integration via Mongoose
-- Environment-based configuration
+- Environment-based configuration using the `config` package
+- Google Admin SDK integration for user management
 - Dockerized for development
 
 ---
@@ -23,6 +25,8 @@ This is the backend for **LogTracker**, a logging microservice project built wit
 - **Language:** TypeScript
 - **Database:** MongoDB Atlas
 - **ORM:** Mongoose
+- **Configuration:** config package
+- **Google APIs:** googleapis, google-auth-library
 - **Dev Tools:** ts-node-dev, dotenv, Docker, docker-compose
 
 ---
@@ -31,8 +35,19 @@ This is the backend for **LogTracker**, a logging microservice project built wit
 
 Backend/
 ├── src/
-│ └── index.ts              # Entry point
-├── .env                    # Environment variables
+│   ├── controllers/
+│   │   └── adminController.ts    # Google Admin SDK controllers
+│   ├── routes/
+│   │   └── adminRoutes.ts        # Admin API routes
+│   ├── utils/
+│   │   └── googleAdminSDK.ts     # Google Admin SDK utilities
+│   └── index.ts                  # Entry point
+├── config/
+│   ├── default.json              # Default configuration
+│   ├── custom-environment-variables.json  # Environment variable mappings
+│   ├── development.json          # Development-specific config
+│   └── production.json           # Production-specific config
+├── .env                          # Environment variables
 ├── .gitignore
 ├── package.json
 ├── tsconfig.json
@@ -55,20 +70,45 @@ cd logtracker-backend
 ### 2. Install Required Dependencies
 
 - Runtime dependencies
-" npm install express mongoose dotenv "
+" npm install express mongoose dotenv config googleapis google-auth-library "
+
 
 - Development dependencies
 " npm install -D typescript ts-node-dev @types/express @types/node @types/mongoose "
 
 ---
 
-### 3. Create .env file
-In the root folder, create a .env file:
+### 3. Configuration Setup
 
+The project uses the `config` package for configuration management. Create environment variables for the following:
+
+#### Required Environment Variables:
+
+```bash
+# MongoDB Configuration
 MONGO_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<dbname>?retryWrites=true&w=majority
-PORT=3000
 
-'''Replace <username>, <password>, <cluster>, and <dbname> with actual values from your MongoDB Atlas cluster.
+# Google OAuth Configuration
+GOOGLE_CLIENT_ID=your-google-client-id-here
+GOOGLE_CLIENT_SECRET=your-google-client-secret-here
+
+# JWT Configuration  
+JWT_SECRET=your-super-secret-jwt-key-here
+```
+
+Replace the following with actual values:
+- `<username>`, `<password>`, `<cluster>`, and `<dbname>` with your MongoDB Atlas cluster details
+- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from Google Cloud Console
+- `JWT_SECRET` with a strong secret key for JWT token signing
+
+### 3a. Google OAuth Setup
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select an existing one
+3. Enable the Google+ API and Google OAuth2 API
+4. Go to "Credentials" and create an OAuth 2.0 Client ID
+5. Set the authorized redirect URI to: `http://localhost:3000/auth/google/callback`
+6. Copy the Client ID and Client Secret to your .env file
 
 ---
 
@@ -86,13 +126,20 @@ This will:
 
 Start the backend on http://localhost:3000
 
-### 5 . Logging
+### 5. API Endpoints
+
+#### Admin Routes (`/api/admin`):
+
+- `GET /api/admin/users/search?searchString=<query>` - Search users in Google Directory
+- `PATCH /api/admin/users/assign-group` - Add user to group and local database
+
+### 6. Logging
 
 All logging is done through Winston. To enable only production level logs, set the NODE_ENV variable in the .env file to "production".
 
 For developers, import the logger utility with:
 - "import logger from './utils/logger';"
 
-Then use it for different log levels including error, warn, info, and debug. 
+Then use it for different log levels including error, warn, info, and debug.
 
 ---

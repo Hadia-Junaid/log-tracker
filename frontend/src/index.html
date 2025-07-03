@@ -8,7 +8,7 @@
 <!-- ************************ IMPORTANT INFORMATION ************************************
   This web navigation drawer template is provided as an example of how to configure
   a JET web application with a navigation drawer as a single page application
-  using ojRouter and oj-module.  It contains the Oracle JET framework and a default
+  using ojRouter rand oj-module.  It contains the Oracle JET framework and a default
   requireJS configuration file to show how JET can be setup in a common application.
   This project template can be used in conjunction with demo code from the JET
   website to test JET component behavior and interactions.
@@ -27,7 +27,7 @@
   ***************************** IMPORTANT INFORMATION ************************************ -->
 <html lang="en-us">
   <head>
-    <title>Oracle JET Starter Template - Web Nav Drawer</title>
+    <title>LogTracker</title>
 
     <meta charset="UTF-8">
     <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1">
@@ -43,6 +43,8 @@
 
     <!-- This is where you would add any app specific styling -->
     <link rel="stylesheet" href="css/app.css" type="text/css"/>
+    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
+
 
   </head>
   <body class="oj-web-applayout-body">
@@ -69,6 +71,7 @@
          ** query size for a phone format and hidden until a user clicks on
          ** the header hamburger icon.
       -->
+      <!-- ko if: isAuthenticated() -->
       <oj-drawer-popup id="navDrawer" edge="start" opened="{{sideDrawerOn}}"
         modality="modeless" role="navigation"
         class="oj-bg-neutral-170 oj-color-invert"
@@ -81,6 +84,7 @@
                             selection="{{selection.path}}">
         </oj-navigation-list>
       </oj-drawer-popup>
+      <!-- /ko -->
       <div id="pageContent" class="oj-web-applayout-page">
         <!--
            ** Oracle JET V18.1.0 web application header pattern.
@@ -91,32 +95,58 @@
         <header role="banner" class="oj-web-applayout-header">
           <div class="oj-web-applayout-max-width oj-flex-bar oj-sm-align-items-center">
             <!-- Drawer toggle button -->
+            <!-- ko if: isAuthenticated() -->
             <div class="oj-flex-bar-start oj-md-hide">
               <oj-button id="drawerToggleButton" class="oj-button-lg" on-oj-action="[[toggleDrawer]]" chroming="borderless" display="icons">
                 <span slot="startIcon" class="oj-web-applayout-offcanvas-icon"></span>
                 <span>Application Navigation</span>
               </oj-button>
             </div>
+            <!-- /ko -->
             <div class="oj-flex-bar-middle oj-sm-align-items-baseline">
               <img class="oj-icon demo-oracle-icon" title="Oracle Logo" alt="Oracle Logo"></img>
               <h1 class="oj-sm-only-hide oj-web-applayout-header-title" title="Application Name"><oj-bind-text value="[[appName]]"></oj-bind-text></h1>
             </div>
+            <!-- ko if: isAuthenticated() -->
             <div class="oj-flex-bar-end">
               <!-- Responsive Toolbar -->
               <oj-toolbar>
                 <oj-menu-button id="userMenu" display="[[smScreen() ? 'icons' : 'all']]" chroming="borderless">
-                  <span><oj-bind-text value="[[userLogin]]"></oj-bind-text></span>
-                  <span slot="endIcon" :class="[[{'oj-icon demo-appheader-avatar': smScreen(), 'oj-component-icon oj-button-menu-dropdown-icon': !smScreen()}]]"></span>
-                  <oj-menu id="menu1" slot="menu">
-                    <oj-option id="pref" value="pref">Preferences</oj-option>
-                    <oj-option id="help" value="help">Help</oj-option>
-                    <oj-option id="about" value="about">About</oj-option>
+                  <!-- ko if: smScreen() -->
+                  <!-- Mobile view - show only initials -->
+                  <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background-color: #0572ce; color: white; font-weight: bold; font-size: 14px;">
+                    <oj-bind-text value="[[userInitials]]"></oj-bind-text>
+                  </div>
+                  <!-- /ko -->
+                  <!-- ko ifnot: smScreen() -->
+                  <!-- Desktop view - show name with avatar -->
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #0572ce; color: white; font-weight: bold; font-size: 12px;">
+                      <oj-bind-text value="[[userInitials]]"></oj-bind-text>
+                    </div>
+                    <span><oj-bind-text value="[[userLogin]]"></oj-bind-text></span>
+                  </div>
+                  <!-- /ko -->
+                  <span slot="endIcon" class="oj-component-icon oj-button-menu-dropdown-icon"></span>
+                  <oj-menu id="menu1" slot="menu" on-oj-menu-action="[[menuItemAction]]">
+                    <oj-option id="profile" value="profile" disabled="true">
+                      <div style="padding: 8px 0; border-bottom: 1px solid #eee; margin-bottom: 8px;">
+                        <div style="font-weight: bold; color: #333; margin-bottom: 4px;">
+                          <oj-bind-text value="[[userLogin]]"></oj-bind-text>
+                        </div>
+                        <div style="font-size: 12px; color: #666;">
+                          <oj-bind-text value="[[userEmail]]"></oj-bind-text>
+                        </div>
+                      </div>
+                    </oj-option>
                     <oj-option id="out" value="out">Sign Out</oj-option>
                   </oj-menu>
                 </oj-menu-button>
               </oj-toolbar>
             </div>
+            <!-- /ko -->
           </div>
+          <!-- ko if: isAuthenticated() -->
           <div role="navigation" class="oj-web-applayout-max-width oj-web-applayout-navbar">
             <oj-tab-bar id="navTabBar"
                                 class="oj-sm-only-hide oj-md-condense oj-md-justify-content-flex-end"
@@ -126,6 +156,7 @@
                                 selection="{{selection.path}}">
             </oj-tab-bar>
           </div>
+          <!-- /ko -->
         </header>
         <oj-module role="main" class="oj-web-applayout-max-width oj-web-applayout-content" config="[[moduleAdapter.koObservableConfig]]">
         </oj-module>

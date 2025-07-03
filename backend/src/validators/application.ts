@@ -1,8 +1,10 @@
 import Joi from 'joi';
 
-export const addApplicationSchema = Joi.object({
-  name: Joi.string().required(),
-  hostname: Joi.string().required(),
-  environment: Joi.string().required(),
-  description: Joi.string().optional()
+export const applicationSchema = Joi.object({
+  name: Joi.string().min(5).max(20).required(),
+  hostname: Joi.string().max(255).required(),
+  environment: Joi.string().valid('Development', 'Testing', 'Staging', 'Production').required(),
+  isActive: Joi.boolean().required(),
+  description: Joi.string().min(10).max(100).allow("").optional()
 });
+  

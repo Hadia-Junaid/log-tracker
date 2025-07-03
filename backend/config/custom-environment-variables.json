@@ -1,3 +1,24 @@
 {
-  "mongoUri": "MONGO_URI"
+  "mongoUri": "MONGO_URI",
+  "auth": {
+    "google": {
+      "clientId": "GOOGLE_CLIENT_ID",
+      "clientSecret": "GOOGLE_CLIENT_SECRET"
+    },
+    "jwt": {
+      "secret": "JWT_SECRET"
+    }
+  },
+  
+  "google": {
+    "admin": {
+      "serviceAccountKeyPath": "GOOGLE_SERVICE_ACCOUNT_KEY_PATH",
+      "adminImpersonationEmail": "GOOGLE_ADMIN_IMPERSONATION_EMAIL",
+      "adminScopes": "GOOGLE_ADMIN_SCOPES",
+      "domain": "GOOGLE_WORKSPACE_DOMAIN"
+    }
+  },
+  "frontend": {
+    "baseUrl": "FRONTEND_URL"
+  }
 }
