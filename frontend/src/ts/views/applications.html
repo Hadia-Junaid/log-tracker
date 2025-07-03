@@ -260,7 +260,11 @@
             <p class="oj-typography-body-md oj-text-color-secondary oj-sm-margin-4x-bottom">
                 Manage application settings using the form below.
             </p>
-
+            <oj-bind-if test="[[editAppDialogError()]]">
+                <div class="oj-sm-margin-2x-bottom" style="padding: 10px; background-color: #f2dede; color: #a94442; border-radius: 4px;">
+                    <oj-bind-text value="[[editAppDialogError]]"></oj-bind-text>
+                </div>
+            </oj-bind-if>
             <!-- Section: Application Details -->
             <div class="oj-sm-margin-4x-bottom">
                 <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">

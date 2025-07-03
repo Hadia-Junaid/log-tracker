@@ -13,6 +13,7 @@ const selectedApplicationHostName = ko.observable<string>('');
 const selectedApplicationEnv = ko.observable<string>('');
 const selectedApplicationDescription = ko.observable<string>('');
 const selectedApplicationIsActive = ko.observable<boolean>(true);
+const editAppDialogError = ko.observable("");
 
 export interface GroupOption {
     id: string;
@@ -58,11 +59,15 @@ const gotoEditApplication = (event: any) => {
 
 // Open/close dialog
 const openEditDialog = async (appId: string) => {
+    editAppDialogError("");
     await fetchGroupsForEdit(appId);
     globalDialog.open("editApplicationDialog");
 };
 
-const closeEditDialog = () => globalDialog.close("editApplicationDialog");
+const closeEditDialog = () => {
+    editAppDialogError("");
+    globalDialog.close("editApplicationDialog");
+};
 
 const fetchGroupsForEdit = async (applicationId: string) => {
     try {
@@ -133,6 +138,24 @@ const updateApplication = async () => {
     const environment = selectedApplicationEnv()?.trim();
     const description = selectedApplicationDescription()?.trim();
 
+    // Custom validation for name and description
+    if (!name) {
+        editAppDialogError("Application name is required.");
+        return;
+    }
+    if (name.length < 5 || name.length > 20) {
+        editAppDialogError("Application name must be between 5 and 20 characters.");
+        return;
+    }
+    if (!description) {
+        editAppDialogError("Description is required.");
+        return;
+    }
+    if (description.length < 10 || description.length > 100) {
+        editAppDialogError("Description must be between 10 and 100 characters.");
+        return;
+    }
+    editAppDialogError("");
 
     const dialog = document.getElementById("editApplicationDialog");
     if (!dialog) {
@@ -230,7 +253,8 @@ export const editAppDialogObservables = {
     selectedApplicationEnv,
     selectedApplicationDescription,
     selectedApplicationIsActive,
-    availableGroupsEdit
+    availableGroupsEdit,
+    editAppDialogError,
 };
 
 export const editAppDialogMethods = {
