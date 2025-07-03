@@ -2,6 +2,7 @@ import * as ko from "knockout";
 import { MemberData, ApplicationOption } from "./types";
 import logger from "../../services/logger-service";
 import { ObservableKeySet } from "ojs/ojknockout-keyset";
+import globalBanner from "../../utils/globalBanner";
 import {
   updateUserGroup,
   fetchApplicationsWithIds,
@@ -247,31 +248,16 @@ export const editGroupDialogMethods = {
         groupListObservables.groupDataArray.valueHasMutated();
       }
 
-      // Show success message
-      const banner = document.getElementById("globalSuccessBanner");
-      if (banner) {
-        banner.textContent = `Group "${groupName}" updated successfully!`;
-        banner.style.display = "block";
-
-        // Hide the banner after 5 seconds
-        setTimeout(() => {
-          banner.style.display = "none";
-        }, 3000);
-      }
+      // Show success message using globalBanner
+      globalBanner.showSuccess(`Group "${groupName}" updated successfully!`);
 
       // Close the dialog
-      const dialog = document.getElementById("editGroupDialog") as unknown as {
-        close: () => void;
-      };
-      dialog?.close();
-
-      // Dispatch event to refresh group list
-      document.dispatchEvent(new CustomEvent("group-updated"));
-    } catch (err) {
-      logger.error("Error updating group", err);
-      editGroupDialogObservables.editError(
-        "Failed to update group. Please try again."
-      );
+      editGroupDialogMethods.closeEditDialog();
+    } catch (error) {
+      logger.error("Failed to update group:", error);
+      editGroupDialogObservables.editError("Failed to update group details.");
+      globalBanner.showError("Failed to update group. Please try again.");
+      editGroupDialogMethods.closeEditDialog();
     }
   },
 
