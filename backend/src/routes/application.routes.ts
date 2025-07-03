@@ -17,9 +17,9 @@ router.patch('/:id', authenticate, requireAdmin, validate(applicationSchema), up
 router.delete('/:id', authenticate, requireAdmin, deleteApplication);
 
 // GET /api/applications/:id/assigned-groups - Get groups assigned to an application
-router.get('/:id/assigned-groups', getAssignedGroups);     
+router.get('/:id/assigned-groups', authenticate, requireAdmin, getAssignedGroups);     
 
 // PATCH /api/applications/:id/assigned-groups - Update groups assigned to an application
-router.patch('/:id/assigned-groups', updateAssignedGroups); // 
+router.patch('/:id/assigned-groups', authenticate, requireAdmin, updateAssignedGroups);
 
 export default router;

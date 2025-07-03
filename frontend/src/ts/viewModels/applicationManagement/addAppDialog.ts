@@ -7,9 +7,14 @@ import { envOptions } from './applicationUtils';
 import globalBanner from '../../utils/globalBanner';
 import globalDialog from '../../utils/globalDialog';
 import { toggle } from 'ojs/ojoffcanvas';
-import { selectedGroupsForAdd, selectedGroupsForEdit } from './applicationGroups';
 
-const availableGroups = ko.observableArray<any>([]);
+export interface GroupOption {
+    id: string;
+    name: string;
+    isAdmin: boolean;
+    checked: ko.Observable<boolean>;
+}
+const availableGroups = ko.observableArray<GroupOption>([]);
 
 const newApplication = {
     name: ko.observable(""),
@@ -50,25 +55,22 @@ const fetchGroups = async () => {
             return;
         }
         const groups = await response.json();
-        availableGroups(groups);
-        selectedGroupsForAdd.push(...groups.filter((group: any) => group.is_admin).map((group: any) => group._id));
+
+        const groupOptions: GroupOption[] = groups.map((g: any) => ({
+            id: g._id,
+            name: g.name,
+            isAdmin: g.is_admin,
+            checked: ko.observable(g.is_admin) // Admin = preselected, others = false
+        }));
+
+        availableGroups(groupOptions);
+
     } catch (error) {
         console.error("Error fetching groups:", error);
         globalBanner.showError("Could not fetch groups");
     }
 };
 
-const toggleGroupSelection = (group: any) => {
-    if (group.is_admin) return; // Admin is locked
-
-    const id = group._id;
-    const index = selectedGroupsForAdd.indexOf(id);
-    if (index === -1) {
-        selectedGroupsForAdd.push(id); // Add if not selected
-    } else {
-        selectedGroupsForAdd.splice(index, 1); // Remove if already selected
-    }
-};
 
 const addNewApplication = async () => {
     const dialog = document.getElementById("addApplicationDialog");
@@ -125,11 +127,15 @@ const addNewApplication = async () => {
         const createdApp = await response.json();
         applicationListObservables.applicationDataArray.push(createdApp);
 
+        const selectedGroupIds = availableGroups()
+            .filter(group => group.checked())
+            .map(group => group.id);
+
         // Patch user groups to assign the new app
         await fetch(`${apiUrl}/applications/${createdApp._id}/assigned-groups`, {
             method: "PATCH",
             headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
-            body: JSON.stringify({ groupIds: selectedGroupsForAdd() })
+            body: JSON.stringify({ groupIds: selectedGroupIds })
         });
 
         closeAddDialog();
@@ -145,7 +151,6 @@ export const addAppDialogObservables = {
     newApplication,
     envOptions,
     availableGroups,
-    selectedGroups: selectedGroupsForAdd,
 };
 
 export const addAppDialogMethods = {
@@ -153,5 +158,4 @@ export const addAppDialogMethods = {
     closeAddDialog,
     addNewApplication,
     resetNewAppForm,
-    toggleGroupSelection
 };

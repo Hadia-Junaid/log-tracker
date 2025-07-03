@@ -208,11 +208,16 @@
                     Group Assignment
                 </h4>
                 <div class="oj-flex oj-sm-flex-direction-column applications-checkboxes">
-                    <oj-c-checkboxset value="{{selectedGroups}}" class="oj-flex oj-sm-flex-direction-column">
+                    <oj-c-checkboxset class="oj-flex oj-sm-flex-direction-column">
                         <oj-bind-for-each data="[[availableGroups]]">
                             <template data-oj-as="group">
-                                <oj-c-checkbox value="{{group.data._id}}" :disabled="[[group.data.is_admin]]" on-oj-value-action="[[() => toggleGroupSelection(group.data)]]">
-                                    <oj-bind-text value="[[group.data.name + (group.data.is_admin ? ' (Admin)' : '')]]"></oj-bind-text>
+                                <oj-c-checkbox 
+                                value="{{group.data.checked}}" 
+                                :disabled="[[group.data.isAdmin]]"
+                                checked="[[group.data.checked]]"
+                                ></oj-c-checkbox>
+                                    <oj-bind-text
+                                        value="[[group.data.name + (group.data.isAdmin ? ' (Admin)' : '')]]"></oj-bind-text>
                                 </oj-c-checkbox>
                             </template>
                         </oj-bind-for-each>
