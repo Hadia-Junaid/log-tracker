@@ -277,9 +277,14 @@
                         value="{{selectedApplicationDescription}}"></oj-c-text-area>
 
 
-                    <oj-c-select-single label-hint="Environment" value="{{selectedApplicationEnv}}"
-                        data="[[envOptions]]" item-text="label" placeholder="Choose environment" required>
-                    </oj-c-select-single>
+                    <oj-c-select-single 
+  label-hint="Environment" 
+  value="{{newApplication.environment}}" 
+  data="[[envOptions]]" 
+  item-text="label" 
+  placeholder="Choose environment"
+  required>
+</oj-c-select-single>
 
                     <oj-form-layout-item>
                         <div class="oj-flex oj-sm-align-items-center">

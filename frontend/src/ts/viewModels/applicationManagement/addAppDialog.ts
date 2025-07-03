@@ -125,7 +125,7 @@ const addNewApplication = async () => {
     const app = {
         name: newApplication.name(),
         hostname: newApplication.hostname(),
-        environment: newApplication.environment(),
+        environment: newApplication.environment(null),
         description: newApplication.description() || "",
         isActive: newApplication.isActive()
     };
