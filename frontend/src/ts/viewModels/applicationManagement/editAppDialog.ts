@@ -4,7 +4,7 @@ import { applicationListObservables } from './appList';
 import ArrayDataProvider = require('ojs/ojarraydataprovider');
 import { ConfigService } from '../../services/config-service';
 import { envOptions } from './applicationUtils';
-import { availableGroups, selectedGroupsForEdit } from './applicationGroups';
+import {  selectedGroupsForEdit } from './applicationGroups';
 import globalBanner from '../../utils/globalBanner';
 import globalDialog from '../../utils/globalDialog';
 
@@ -106,9 +106,10 @@ const updateApplication = async () => {
 
     try {
         const apiUrl = ConfigService.getApiUrl();
+        const token = localStorage.getItem('authToken');
         const response = await fetch(`${apiUrl}/applications/${id}`, {
             method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
             body: JSON.stringify(updatedApp)
         });
 
@@ -145,7 +146,7 @@ export const editAppDialogObservables = {
     selectedApplicationEnv,
     selectedApplicationDescription,
     selectedApplicationIsActive,
-    availableGroups,
+    // availableGroups,
     selectedGroups: selectedGroupsForEdit
 };
 

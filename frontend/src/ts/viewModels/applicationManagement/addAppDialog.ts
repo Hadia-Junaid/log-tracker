@@ -39,8 +39,11 @@ const closeAddDialog = () => {
 
 const fetchGroups = async () => {
     const apiUrl = ConfigService.getApiUrl();
+    const token = localStorage.getItem('authToken');
     try {
-        const response = await fetch(`${apiUrl}/user-groups`);
+        const response = await fetch(`${apiUrl}/user-groups`, {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
         if (!response.ok) {
             console.error("Failed to fetch groups:", response.statusText);
             globalBanner.showError("Failed to fetch groups.");
@@ -122,11 +125,10 @@ const addNewApplication = async () => {
         const createdApp = await response.json();
         applicationListObservables.applicationDataArray.push(createdApp);
 
-
         // Patch user groups to assign the new app
         await fetch(`${apiUrl}/applications/${createdApp._id}/assigned-groups`, {
             method: "PATCH",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
             body: JSON.stringify({ groupIds: selectedGroupsForAdd() })
         });
 
