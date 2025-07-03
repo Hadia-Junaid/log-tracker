@@ -63,6 +63,12 @@ export const groupListMethods = {
                     is_admin: group.is_admin || false
                 };
             });
+            // Sort admin group to the top
+            processedGroups.sort((a, b) => {
+                if (a.is_admin) return -1;
+                if (b.is_admin) return 1;
+                return 0;
+            });
             groupListObservables.groupDataArray(processedGroups);
         } catch (e) {
             logger.error("Failed to load user groups", e);

@@ -76,10 +76,12 @@
                                         <span slot="startIcon" class="oj-ux-ico-edit"></span>
                                         Edit
                                     </oj-button>
-                                    <oj-button class="oj-button-sm" chroming="outlined" :data-group-id="[[item.item.data.groupId]]" on-oj-action="[[deleteGroup]]">
-                                        <span slot="startIcon" class="oj-ux-ico-trash"></span>
-                                        Delete
-                                    </oj-button>
+                                    <oj-bind-if test="[[!item.item.data.is_admin]]">
+                                        <oj-button class="oj-button-sm" chroming="outlined" :data-group-id="[[item.item.data.groupId]]" on-oj-action="[[deleteGroup]]">
+                                            <span slot="startIcon" class="oj-ux-ico-trash"></span>
+                                            Delete
+                                        </oj-button>
+                                    </oj-bind-if>
                                 </oj-bind-if>
                             </div>
                         </oj-list-item-layout>
