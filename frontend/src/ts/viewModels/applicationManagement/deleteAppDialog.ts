@@ -29,7 +29,7 @@ class DeleteApplicationDialogViewModel {
             
             this.closeDialog();
             
-            globalBanner.showSuccess(`Application "${this.applicationName()}" deleted successfully!`);
+            globalBanner.showError(`Application "${this.applicationName()}" deleted successfully!`);
             
             console.info(`Application ${this.applicationName()} deleted successfully.`);
         } catch (e) {
