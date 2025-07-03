@@ -1,23 +1,33 @@
-# Use an official Node.js image
-FROM node:20
+# Stage 1: Build
+FROM node:20-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
-# Copy package.json and package-lock.json
+# Copy package files and install all dependencies (including dev)
 COPY package*.json ./
-
-# Install dependencies
+COPY credentials/service-account-key.json ./credentials/service-account-key.json
 RUN npm install
 
-# Copy source code
+# Copy source code and build
 COPY . .
-
-# Build TypeScript
 RUN npm run build
 
-# Set environment variables
+# Stage 2: Production image
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Set environment variable
 ENV NODE_ENV=production
 
-# Start the app
-CMD ["npm", "start"]
+# Copy only production dependencies
+COPY package*.json ./
+RUN npm install --omit=dev
+
+# Copy compiled output and other necessary files from builder
+COPY --from=builder /app/credentials /app/credentials
+COPY --from=builder /app/dist ./dist
+COPY config ./config
+
+# Start the app using compiled JS
+CMD ["node", "dist/index.js"]
