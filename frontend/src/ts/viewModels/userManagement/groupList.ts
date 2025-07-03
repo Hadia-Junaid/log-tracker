@@ -55,6 +55,13 @@ export const groupListMethods = {
             const processedGroups: GroupData[] = rawGroups.map((group: any, index: number) => {
                 const createdDate = new Date(group.createdAt);
                 const createdAgoText = groupListMethods.getRelativeTime(createdDate);
+
+                 const emails: string[] = group.members?.map((m: any) => m.email) || [];
+  const apps: string[] = group.assigned_applications?.map((a: any) => a.name) || [];
+
+  const memberOptions = emails.map(e => ({ value: e, label: e }));
+  const appOptions    = apps.map(a => ({ value: a, label: a }));
+
                 return {
                     groupId: group._id || `fallback-id-${index}`,
                     groupName: group.name || `Unnamed Group ${index}`,
@@ -62,7 +69,9 @@ export const groupListMethods = {
                     memberCount: group.members?.length || 0,
                     createdDate: createdDate.toLocaleDateString(),
                     createdAgo: createdAgoText,
-                    is_admin: group.is_admin || false
+                    is_admin: group.is_admin || false,
+                    members: group.members?.map((member: any) => member.email) || [],
+                    assigned_applications: group.assigned_applications?.map((app: any) => app.name) || [],
                 };
             });
             processedGroups.sort((a, b) => {
@@ -70,6 +79,8 @@ export const groupListMethods = {
                 if (b.is_admin) return 1;
                 return 0;
             });
+
+            console.log("Processed Groups:", processedGroups);
             groupListObservables.groupDataArray(processedGroups);
         } catch (e) {
             logger.error("Failed to load user groups", e);
