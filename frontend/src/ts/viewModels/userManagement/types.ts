@@ -13,6 +13,8 @@ export interface GroupData {
     createdDate?: string;
     createdAgo?: string;
     is_admin?: boolean;
+    members?: string[];
+    assigned_applications?: string[];
 }
 
 import * as ko from "knockout";

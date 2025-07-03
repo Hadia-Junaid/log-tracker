@@ -1,10 +1,9 @@
 import * as ko from "knockout";
 import { GroupData } from "./types";
 import ArrayDataProvider = require("ojs/ojarraydataprovider");
-import { fetchUserGroups } from '../../services/group-service';
+import { fetchUserGroups, fetchGroupById } from "../../services/group-service";
 import logger from '../../services/logger-service';
 import { ConfigService } from '../../services/config-service';
-import { editGroupDialogMethods } from './editGroupDialog';
 
 export const groupListObservables = {
     groupDataArray: ko.observableArray<GroupData>([]),
@@ -15,7 +14,11 @@ export const groupListObservables = {
     isDataEmpty: ko.pureComputed(() => true),
     totalPages: ko.pureComputed(() => 1),
     filteredGroups: ko.pureComputed<GroupData[]>(() => []),
-    pagedGroups: ko.pureComputed<GroupData[]>(() => [])
+    pagedGroups: ko.pureComputed<GroupData[]>(() => []),
+
+    expandedGroups: ko.observableArray<string>([]), // updated from Set to array
+    groupMembersMap: ko.observable<any>({}),
+    groupAppsMap: ko.observable<any>({})
 };
 
 groupListObservables.filteredGroups = ko.pureComputed(() => {
@@ -26,8 +29,7 @@ groupListObservables.filteredGroups = ko.pureComputed(() => {
     return groupListObservables.groupDataArray().filter(group => {
         const name = group.groupName.toLowerCase();
         const desc = (group.description || '').toLowerCase();
-        if (name.includes(trimmedTerm) || desc.includes(trimmedTerm)) return true;
-        return false;
+        return name.includes(trimmedTerm) || desc.includes(trimmedTerm);
     });
 });
 
@@ -53,6 +55,7 @@ export const groupListMethods = {
             const processedGroups: GroupData[] = rawGroups.map((group: any, index: number) => {
                 const createdDate = new Date(group.createdAt);
                 const createdAgoText = groupListMethods.getRelativeTime(createdDate);
+
                 return {
                     groupId: group._id || `fallback-id-${index}`,
                     groupName: group.name || `Unnamed Group ${index}`,
@@ -60,15 +63,18 @@ export const groupListMethods = {
                     memberCount: group.members?.length || 0,
                     createdDate: createdDate.toLocaleDateString(),
                     createdAgo: createdAgoText,
-                    is_admin: group.is_admin || false
+                    is_admin: group.is_admin || false,
+                    members: group.members?.map((member: any) => member.email) || [],
+                    assigned_applications: group.assigned_applications?.map((app: any) => app.name) || [],
                 };
             });
-            // Sort admin group to the top
             processedGroups.sort((a, b) => {
                 if (a.is_admin) return -1;
                 if (b.is_admin) return 1;
                 return 0;
             });
+
+            console.log("Processed Groups:", processedGroups);
             groupListObservables.groupDataArray(processedGroups);
         } catch (e) {
             logger.error("Failed to load user groups", e);
@@ -108,5 +114,35 @@ export const groupListMethods = {
         if (groupListObservables.currentPage() > 1) {
             groupListObservables.currentPage(groupListObservables.currentPage() - 1);
         }
+    },
+    toggleGroupDetails: async (groupId: string) => {
+        const expandedList = groupListObservables.expandedGroups();
+
+        if (expandedList.includes(groupId)) {
+            groupListObservables.expandedGroups.remove(groupId);
+            return;
+        }
+
+        try {
+            const groupData = await fetchGroupById(groupId);
+            const members = groupData.members || [];
+            const apps = groupData.assigned_applications || [];
+
+            const membersMap = groupListObservables.groupMembersMap();
+            if (membersMap) {
+                membersMap[groupId] = members;
+                groupListObservables.groupMembersMap.valueHasMutated();
+            }
+
+            const appsMap = groupListObservables.groupAppsMap();
+            if (appsMap) {
+                appsMap[groupId] = apps;
+                groupListObservables.groupAppsMap.valueHasMutated();
+            }
+
+            groupListObservables.expandedGroups.push(groupId);
+        } catch (e) {
+            logger.error(`Failed to fetch details for group ${groupId}`, e);
+        }
     }
-}; 
+};
