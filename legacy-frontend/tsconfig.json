@@ -14,7 +14,6 @@
       "esnext.asynciterable"
     ],
     "typeRoots": [
-      "./types",
       "./node_modules/@oracle/oraclejet/dist/types",
       "./node_modules/@types"
     ],
@@ -30,25 +29,15 @@
       ],
       "preact": [
         "./node_modules/preact"
-      ],
-      "react": [
-        "./node_modules/preact/compat/src/index.d.ts"
-      ],
-      "react-dom": [
-        "./node_modules/preact/compat/src/index.d.ts"
       ]
     },
     "declaration": true,
     "noEmitOnError": true,
     "experimentalDecorators": true,
     "skipLibCheck": true,
-    "removeComments": true,
-    "rootDir": "./src",
-    "outDir": "./web",
-    "resolveJsonModule": true,
-    "esModuleInterop": true
+    "removeComments": true
   },
   "include": [
-    "./src/**/*"
+    "./src/ts/**/*"
   ]
 }
