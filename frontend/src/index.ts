@@ -7,4 +7,4 @@
  */
 // injector:preactDebugImport
 // endinjector
-import './components/app';
+import './app';
