@@ -5,10 +5,10 @@ import { useEffect, useState } from "preact/hooks";
 import "../styles/sidebar.css"; 
 
 const navItems = [
-  { label: "Dashboard", path: "/", icon: "oj-ux-ico-home" },
-  { label: "Logs", path: "/logs", icon: "oj-ux-ico-document-text" },
-  { label: "User Management", path: "/users", icon: "oj-ux-ico-people" },
-  { label: "Applications", path: "/applications", icon: "oj-ux-ico-apps" },
+  { label: "Dashboard", path: "/", icon: "oj-ux-ico-dashboard" },
+  { label: "Logs", path: "/logs", icon: "oj-ux-ico-documents" },
+  { label: "User Management", path: "/users", icon: "oj-ux-ico-user-data" },
+  { label: "Applications", path: "/applications", icon: "oj-ux-ico-applications" },
   { label: "Settings", path: "/settings", icon: "oj-ux-ico-settings" },
 ];
 
@@ -36,7 +36,7 @@ export default function Sidebar() {
       >
         {collapsed ? "»" : "«"}
       </button>
-
+    
       <ul class="sidebar-list">
         {navItems.map(({ label, path, icon }) => {
           const isActive = activePath === path;
@@ -46,7 +46,7 @@ export default function Sidebar() {
               class={`sidebar-item ${isActive ? "active" : ""}`}
               onClick={() => handleNav(path)}
             >
-              <span class={`sidebar-icon oj-icon ${icon}`}></span>
+              <span class={`oj-icon ${icon}`}></span>
               {!collapsed && <span class="sidebar-label">{label}</span>}
             </li>
           );
