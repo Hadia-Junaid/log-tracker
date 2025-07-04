@@ -11,6 +11,7 @@ import authRoutes from "./routes/authRoutes";
 import adminRoutes from "./routes/admin.route";
 import userGroupRoutes from './routes/userGroup.route';
 import applications from "./routes/application.routes";
+import settingsRoutes from './routes/settingsRoutes';
 import cors from "cors";
 
 processErrors(); // Initialize process level error handlers
@@ -40,6 +41,8 @@ mongoose.connect(mongoUri)
   });
 
 
+// Mount settings routes
+app.use('/api/settings', settingsRoutes); 
 // Authentication routes
 app.use('/api/auth', authRoutes);
 // ✅ Mount the routes
