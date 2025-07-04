@@ -11,6 +11,7 @@ import authRoutes from "./routes/authRoutes";
 import adminRoutes from "./routes/admin.route";
 import userGroupRoutes from './routes/userGroup.route';
 import applications from "./routes/application.routes";
+import dashboardRoutes from "./routes/dashboard.route";
 import cors from "cors";
 
 processErrors(); // Initialize process level error handlers
@@ -46,6 +47,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/user-groups', userGroupRoutes);
 // Register routes
 app.use('/api/admin', adminRoutes);
+// Dashboard routes
+app.use('/api/dashboard', dashboardRoutes);
 
 app.use('/api/applications', applications);
 // ✅ Error handler last
