@@ -11,7 +11,8 @@ import authRoutes from "./routes/authRoutes";
 import adminRoutes from "./routes/admin.route";
 import userGroupRoutes from './routes/userGroup.route';
 import applications from "./routes/application.routes";
-import settingsRoutes from './routes/settingsRoutes';
+import settingsRoutes from './routes/settings.Routes';    
+import atRiskRuleRoutes from './routes/atRiskRule.routes';
 import cors from "cors";
 
 processErrors(); // Initialize process level error handlers
@@ -40,9 +41,10 @@ mongoose.connect(mongoUri)
     logger.error('MongoDB connection error:', err);
   });
 
-
-// Mount settings routes
-app.use('/api/settings', settingsRoutes); 
+// Log settings routes (User Settings)
+app.use('/api/settings', settingsRoutes);
+// At-Risk Rules routes
+app.use('/api/at-risk-rules', atRiskRuleRoutes);
 // Authentication routes
 app.use('/api/auth', authRoutes);
 // ✅ Mount the routes
