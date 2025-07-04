@@ -36,15 +36,13 @@ module.exports = {
    *
    * @returns {object|undefined}
    */
-  webpack: ({ context, config }) => {
-    if (context.buildType === 'release') {
-      // update config with release / production options
-    } else {
-      // update config with development options
-    }
-    // only have to return if new config object was created but
-    // since it doesn't matter always returning the config is good
-    // practice
+   webpack: ({ context, config }) => {
+    // This ensures dev server serves index.html for unknown routes
+    config.devServer = {
+      ...config.devServer,
+      historyApiFallback: true,
+    };
+
     return { context, webpack: config };
   }
 };
