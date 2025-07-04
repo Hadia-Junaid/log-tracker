@@ -35,25 +35,6 @@ class LoginViewModel {
       }
     }
     
-    // Legacy token check (for backwards compatibility - should be removed in production)
-    if (hash.includes('token=')) {
-      const tokenMatch = hash.match(/token=([^&]+)/);
-      if (tokenMatch) {
-        const token = tokenMatch[1];
-        console.warn('JWT token received in URL - this is deprecated and insecure');
-        
-        localStorage.setItem('authToken', token);
-        
-        const authEvent = new CustomEvent('authStateChanged', { 
-          detail: { authenticated: true }
-        });
-        window.dispatchEvent(authEvent);
-        
-        window.history.replaceState({}, document.title, window.location.pathname);
-        window.location.href = '#dashboard';
-        return;
-      }
-    }
     
     // Check for error parameters
     if (hash.includes('error=')) {
@@ -95,7 +76,6 @@ class LoginViewModel {
       }
 
       if (data.token) {
-        // Store JWT token securely
         localStorage.setItem('authToken', data.token);
         
         // Dispatch authentication event

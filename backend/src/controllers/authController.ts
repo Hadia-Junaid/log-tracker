@@ -115,7 +115,31 @@ class AuthController {
   }
 
 
-  async verifyToken(req: Request, res: Response, next: NextFunction): Promise<void> {
+  async logout(req: Request, res: Response): Promise<void> {
+      const user = req.user;
+      const userEmail = user?.email;
+      const userId = user?.id;
+
+      logger.info(`Logout initiated for user: ${userEmail} (ID: ${userId})`);
+
+      try {
+        await googleAuthService.revokeTokens();
+        logger.info(`Google tokens revoked successfully for user: ${userEmail}`);
+      } catch (revokeError) {
+        logger.warn(`Failed to revoke Google tokens for user ${userEmail}:`, revokeError);
+      }
+
+      logger.info(`User logged out successfully: ${userEmail}`);
+      
+      res.status(200).json({
+        message: 'Logged out successfully',
+        user: {
+          email: userEmail
+        }
+      });  
+  }
+
+  async verifyToken(req: Request, res: Response): Promise<void> {
       const authHeader = req.headers.authorization;
       
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -153,30 +177,6 @@ class AuthController {
         }
       });
 
-  }
-
-  async logout(req: Request, res: Response): Promise<void> {
-      const user = req.user;
-      const userEmail = user?.email || 'Unknown';
-      const userId = user?.id;
-
-      logger.info(`Logout initiated for user: ${userEmail} (ID: ${userId})`);
-
-      try {
-        await googleAuthService.revokeTokens();
-        logger.info(`Google tokens revoked successfully for user: ${userEmail}`);
-      } catch (revokeError) {
-        logger.warn(`Failed to revoke Google tokens for user ${userEmail}:`, revokeError);
-      }
-
-      logger.info(`User logged out successfully: ${userEmail}`);
-      
-      res.status(200).json({
-        message: 'Logged out successfully',
-        user: {
-          email: userEmail
-        }
-      });  
   }
 }
 
