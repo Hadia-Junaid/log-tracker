@@ -94,7 +94,7 @@ class LoginViewModel {
         throw new Error(data.message || `HTTP error! status: ${response.status}`);
       }
 
-      if (data.success && data.token) {
+      if (data.token) {
         // Store JWT token securely
         localStorage.setItem('authToken', data.token);
         
@@ -138,7 +138,7 @@ class LoginViewModel {
 
       const data = await response.json();
 
-      if (data.success && data.authUrl) {
+      if (data.authUrl) {
         // Redirect to the Google OAuth URL
         console.log("Redirecting to Google OAuth URL:", data.authUrl);
         window.location.href = data.authUrl;

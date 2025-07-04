@@ -9,20 +9,14 @@ import { checkUserAdminStatus } from '../utils/checkAdminStatus';
 
 class AuthController {
  
-  async googleLogin(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
+  async googleLogin(req: Request, res: Response): Promise<void> {
       const authUrl = googleAuthService.generateAuthUrl();
-      res.json({
-        success: true,
+      res.status(200).json({
         authUrl,
         message: 'Redirect to Google OAuth'
       });
-    } catch (error) {
-      next(error);
     }
-  }
 
-  
   async googleCallback(req: Request, res: Response): Promise<void> {
     try {
       const { code } = req.query;
@@ -69,15 +63,13 @@ class AuthController {
   }
 
 
-  async exchangeAuthCode(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
+  async exchangeAuthCode(req: Request, res: Response): Promise<void> {
       const { auth_code } = req.body;
 
       const tempCodeData = tempCodeManager.getTempCodeData(auth_code);
       
       if (!tempCodeData) {
         res.status(400).json({
-          success: false,
           message: 'Invalid or expired authorization code'
         });
         return;
@@ -86,7 +78,6 @@ class AuthController {
       if (tempCodeManager.isExpired(tempCodeData)) {
         tempCodeManager.deleteTempCode(auth_code);
         res.status(400).json({
-          success: false,
           message: 'Authorization code has expired'
         });
         return;
@@ -98,7 +89,6 @@ class AuthController {
       if (!user) {
         tempCodeManager.deleteTempCode(auth_code);
         res.status(400).json({
-          success: false,
           message: 'User not found'
         });
         return;
@@ -111,8 +101,7 @@ class AuthController {
       tempCodeManager.deleteTempCode(auth_code);
       logger.info(`JWT token generated for user: ${user.email}, admin status: ${isAdmin}`);
 
-      res.json({
-        success: true,        
+      res.status(200).json({
         token,
         user: {
           id: user._id,
@@ -123,15 +112,10 @@ class AuthController {
           is_admin: isAdmin
         }
       });
-
-    } catch (error) {
-      next(error);
-    }
   }
 
 
   async verifyToken(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
       const authHeader = req.headers.authorization;
       
       if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -158,8 +142,7 @@ class AuthController {
       // Check current admin status (in case it changed since token was issued)
       const isAdmin = await checkUserAdminStatus(user.email);
 
-      res.json({
-        success: true,
+      res.status(200).json({
         user: {
           id: user._id,
           email: user.email,
@@ -170,17 +153,9 @@ class AuthController {
         }
       });
 
-    } catch (error) {
-      logger.error('Token verification error:', error);
-      res.status(401).json({
-        success: false,
-        message: 'Invalid or expired token'
-      });
-    }
   }
 
-  async logout(req: Request, res: Response, next: NextFunction): Promise<void> {
-    try {
+  async logout(req: Request, res: Response): Promise<void> {
       const user = req.user;
       const userEmail = user?.email || 'Unknown';
       const userId = user?.id;
@@ -196,17 +171,12 @@ class AuthController {
 
       logger.info(`User logged out successfully: ${userEmail}`);
       
-      res.json({
-        success: true,
+      res.status(200).json({
         message: 'Logged out successfully',
         user: {
           email: userEmail
         }
-      });
-
-    } catch (error) {
-      next(error);
-    }
+      });  
   }
 }
 
