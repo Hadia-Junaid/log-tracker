@@ -16,24 +16,35 @@ import UserManagement from "./views/UserManagement";
 import Sidebar from "./components/Sidebar";
 import Login from "./views/Login";
 import "./styles/app.css";
+import axios from "axios";
 
 type Props = {
   appName?: string;
   userLogin?: string;
 };
 
-function checkAuth() {
-  // Call backend to check if user is authenticated (returns true/false or user info)
-  return fetch("/api/auth/status", { credentials: "include" })
-    .then(res => res.ok ? res.json() : null)
-    .then(data => !!data && data.authenticated)
+function checkAuth(): Promise<boolean> {
+  const backendUrl = process.env.BACKEND_URL;
+  return axios
+    .get(`${backendUrl}/auth/status`, {
+      withCredentials: true,
+    })
+    .then((res) => {
+      console.log("Auth check response:", res);
+      return res.data?.authenticated === true;
+    })
     .catch(() => false);
 }
 
 export const App = registerCustomElement(
   "app-root",
-  ({ appName = "Log Tracker", userLogin = "john.hancock@oracle.com" }: Props) => {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  ({
+    appName = "Log Tracker",
+    userLogin = "john.hancock@oracle.com",
+  }: Props) => {
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(
+      null
+    );
 
     useEffect(() => {
       checkAuth().then(setIsAuthenticated);
@@ -54,7 +65,6 @@ export const App = registerCustomElement(
     return (
       <div id="appContainer" class="oj-web-applayout-page">
         <Header appName={appName} userLogin={userLogin} />
-      
 
         <div
           class="oj-web-applayout-content oj-flex"

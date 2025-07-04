@@ -41,6 +41,10 @@ router.get('/verify', authController.verifyToken);
  */
 router.post('/logout', authenticate, authController.logout);
 
+
+router.get("/status", authController.getAuthStatus);
+
+
 /**
  * @route   GET /auth/security/stats
  * @desc    Get OAuth security statistics
