@@ -12,36 +12,36 @@ import "ojs/ojvcomponent"; // Required for VDOM
 
 import "../styles/login.css"; // CSS styles you’ll add next
 
-const GOOGLE_AUTH_URL = `${process.env.BACKEND_URL}/auth/google`;
+// const GOOGLE_AUTH_URL = `${process.env.BACKEND_URL}/auth/google`;
 
 export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-  const hash = window.location.hash;
-  const query = hash.includes("?") ? hash.split("?")[1] : "";
-  const params = new URLSearchParams(query);
-  const authCode = params.get("auth_code");
-  const error = params.get("error");
+//   useEffect(() => {
+//   const hash = window.location.hash;
+//   const query = hash.includes("?") ? hash.split("?")[1] : "";
+//   const params = new URLSearchParams(query);
+//   const authCode = params.get("auth_code");
+//   const error = params.get("error");
 
-  if (authCode) {
-    axios
-      .post(`${process.env.BACKEND_URL}/auth/exchange`, { auth_code: authCode }, {
-        withCredentials: true,
-      })
-      .then(() => {
-        window.location.href = "/dashboard";
-      })
-      .catch(() => {
-        setError("Login failed. Please try again.");
-      });
-  }
+//   if (authCode) {
+//     axios
+//       .post(`${process.env.BACKEND_URL}/auth/exchange`, { auth_code: authCode }, {
+//         withCredentials: true,
+//       })
+//       .then(() => {
+//         window.location.href = "/dashboard";
+//       })
+//       .catch(() => {
+//         setError("Login failed. Please try again.");
+//       });
+//   }
 
-  if (error) {
-    setError(params.get("message") || "Login failed");
-  }
-}, []);
+//   if (error) {
+//     setError(params.get("message") || "Login failed");
+//   }
+// }, []);
 
 
 
