@@ -4,7 +4,8 @@
   "description": "An Oracle JavaScript Extension Toolkit(JET) web app",
   "dependencies": {
     "@oracle/oraclejet": "~18.1.0",
-    "@oracle/oraclejet-core-pack": "~18.1.0"
+    "@oracle/oraclejet-core-pack": "~18.1.0",
+    "axios": "^1.10.0"
   },
   "devDependencies": {
     "@oracle/ojet-cli": "~18.1.0",
@@ -16,6 +17,7 @@
     "copy-webpack-plugin": "13.0.0",
     "css-fix-url-loader": "1.0.2",
     "css-loader": "7.1.2",
+    "dotenv": "^17.0.1",
     "extract-zip": "^1.7.0",
     "fs-extra": "^8.1.0",
     "glob": "10.4.5",

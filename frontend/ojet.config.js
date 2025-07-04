@@ -1,9 +1,12 @@
+const webpack = require('webpack'); // ✅ Correct
+
 /**
   Copyright (c) 2015, 2025, Oracle and/or its affiliates.
   Licensed under The Universal Permissive License (UPL), Version 1.0
   as shown at https://oss.oracle.com/licenses/upl/
 
 */
+const dotenv = require('dotenv');
 module.exports = {
   /**
    *
@@ -42,6 +45,17 @@ module.exports = {
       ...config.devServer,
       historyApiFallback: true,
     };
+
+      // Load .env file
+    const env = dotenv.config().parsed || {};
+
+    // Convert to DefinePlugin format
+    const envKeys = Object.keys(env).reduce((acc, key) => {
+      acc[`process.env.${key}`] = JSON.stringify(env[key]);
+      return acc;
+    }, {});
+
+    config.plugins.push(new webpack.DefinePlugin(envKeys));
 
     return { context, webpack: config };
   }
