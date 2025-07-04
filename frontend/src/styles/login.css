@@ -1,0 +1,24 @@
+/* login.css */
+
+.login-container {
+  height: 100vh;
+  background-color: var(--oj-core-bg-color-page);
+}
+
+.login-card {
+  max-width: 400px;
+  width: 100%;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  background-color: var(--oj-core-bg-color-content);
+}
+
+.google-login-btn {
+  width: 100%;
+  font-weight: 600;
+}
+
+.error-text {
+  margin-top: 1rem;
+  text-align: center;
+}

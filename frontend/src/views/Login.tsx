@@ -1,7 +1,16 @@
 // src/views/Login.tsx
 import { h } from "preact";
-import axios from "axios";
 import { useState } from "preact/hooks";
+import axios from "axios";
+import "ojs/ojbutton";
+import "ojs/ojinputtext";
+import "ojs/ojlabel";
+import "ojs/ojformlayout";
+import "ojs/ojavatar";
+import "ojs/ojprogress-circle";
+import "ojs/ojvcomponent"; // Required for VDOM
+
+import "../styles/login.css"; // CSS styles you’ll add next
 
 const GOOGLE_AUTH_URL = `${process.env.BACKEND_URL}/auth/google`;
 
@@ -10,13 +19,12 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    console.log("Google auth URL:", GOOGLE_AUTH_URL);
     try {
       setLoading(true);
       setError(null);
 
       const response = await axios.get(GOOGLE_AUTH_URL, {
-        withCredentials: true, // sends cookies
+        withCredentials: true,
         headers: {
           "Content-Type": "application/json",
         },
@@ -39,16 +47,31 @@ export default function Login() {
   };
 
   return (
-    <div class="login-page">
-      <h2>Login</h2>
-      <button
-        class="google-login-btn"
-        onClick={handleLogin}
-        disabled={loading}
-      >
-        {loading ? "Redirecting..." : "Login with Google"}
-      </button>
-      {error && <p class="error">{error}</p>}
+    <div class="login-container oj-flex oj-sm-flex-items-initial oj-sm-justify-content-center oj-sm-align-items-center">
+      <div class="login-card oj-panel oj-sm-padding-5x">
+        <div class="oj-flex oj-sm-justify-content-center oj-sm-margin-3x-bottom">
+          <oj-avatar size="lg" role="img" initials="LT" class="oj-avatar-bg-orange" />
+        </div>
+
+        <h2 class="oj-typography-heading-md oj-sm-margin-2x-bottom oj-sm-text-align-center">Welcome to Log Tracker</h2>
+
+        <oj-button
+          class="google-login-btn"
+          chroming="solid"
+          onojAction={handleLogin}
+          disabled={loading}
+        >
+          {loading ? "Redirecting..." : "Login with Google"}
+        </oj-button>
+
+        {loading && (
+          <div class="oj-sm-margin-3x-top oj-sm-flex oj-sm-justify-content-center">
+            <oj-progress-circle size="sm" value={-1} />
+          </div>
+        )}
+
+        {error && <p class="error-text oj-text-color-danger">{error}</p>}
+      </div>
     </div>
   );
 }

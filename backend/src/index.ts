@@ -24,7 +24,12 @@ const baseUrl = config.get<string>("frontend.baseUrl");;
 const app = express();
 
 // Enable CORS for frontend
-app.use(cors());
+app.use(
+  cors({
+    origin: baseUrl,
+    credentials: true,              // allow cookies to be sent
+  })
+);
 app.use(express.json());
 app.use(morgan('tiny', { stream: morganStream }));
 
