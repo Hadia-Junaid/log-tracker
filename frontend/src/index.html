@@ -4,22 +4,17 @@
  Licensed under The Universal Permissive License (UPL), Version 1.0
  as shown at https://oss.oracle.com/licenses/upl/
  -->
-
 <!-- ************************ IMPORTANT INFORMATION ************************************
-  This web navigation drawer template is provided as an example of how to configure
-  a JET web application with a navigation drawer as a single page application
-  using ojRouter rand oj-module.  It contains the Oracle JET framework and a default
+  This web basic template is provided as an example of how to configure
+  a JET web application.  It contains the Oracle JET framework and a default
   requireJS configuration file to show how JET can be setup in a common application.
   This project template can be used in conjunction with demo code from the JET
   website to test JET component behavior and interactions.
-
   Any CSS styling with the prefix "demo-" is for demonstration only and is not
   provided as part of the JET framework.
-
   Please see the demos under Cookbook/Patterns/App Shell: Web and the CSS documentation
   under Support/API Docs/Non-Component Styling on the JET website for more information on how to use
   the best practice patterns shown in this template.
-
   Aria Landmark role attributes are added to the different sections of the application
   for accessibility compliance. If you change the type of content for a specific
   section from what is defined, you should also change the role value for that
@@ -27,164 +22,16 @@
   ***************************** IMPORTANT INFORMATION ************************************ -->
 <html lang="en-us">
   <head>
-    <title>LogTracker</title>
-
-    <meta charset="UTF-8">
-    <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1">
-    <link rel="icon" href="css/images/JET-Favicon-Red-32x32.png" type="image/x-icon" />
-
-    <!-- This is the main css file for the default theme -->
-		<!-- injector:theme -->
-		<!-- endinjector -->
-
-    <!-- This contains icon fonts used by the starter template -->
-		<!-- injector:font -->
-		<!-- endinjector:font -->
-
-    <!-- This is where you would add any app specific styling -->
-    <link rel="stylesheet" href="css/app.css" type="text/css"/>
-    <script src="https://cdn.jsdelivr.net/npm/jwt-decode@3.1.2/build/jwt-decode.min.js"></script>
-
-
+    <title>Oracle JET VDOM Starter Template - Basic</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="viewport-fit=cover, width=device-width, initial-scale=1"/>
+    <link rel="icon" href="styles/images/JET-Favicon-Red-32x32.png" type="image/x-icon" />
+    <link rel="stylesheet" id="uxiconFont"
+    href="https://static.oracle.com/cdn/fnd/gallery/2310.0.1/images/iconfont/ojuxIconFont.min.css" />
+<!-- Link-tag flag that webpack replaces with theme style links during build time -->
+<link rel="stylesheet">
   </head>
-  <body class="oj-web-applayout-body">
-    <!-- Template for rendering navigation items shared between nav bar and nav list -->
-    <script type="text/html" id="navTemplate">
-      <li><a href="#">
-        <span :class="[[$data.detail.iconClass]]"></span>
-        <oj-bind-text value="[[$data.detail.label]]"></oj-bind-text>
-      </a></li>
-    </script>
-
-    <div id="globalBody">
-
-      <div id="announce" tabindex="-1" class="send-off-screen" :aria-live="[[manner]]" aria-atomic="true">
-        <p id="ariaLiveMessage"><oj-bind-text value="[[message]]"></oj-bind-text></p>
-      </div>
-
-      <!--
-         ** Oracle JET V18.1.0 web application navigation drawer pattern.
-         ** Please see the demos under Cookbook/Patterns/App Shell: Web
-         ** and the CSS documentation under Support/API Docs/Non-Component Styling
-         ** on the JET website for more information on how to use this pattern.
-         ** The off-canvas section is used when the browser is resized to a smaller media
-         ** query size for a phone format and hidden until a user clicks on
-         ** the header hamburger icon.
-      -->
-      <!-- ko if: isAuthenticated() -->
-      <oj-drawer-popup id="navDrawer" edge="start" opened="{{sideDrawerOn}}"
-        modality="modeless" role="navigation"
-        class="oj-bg-neutral-170 oj-color-invert"
-        on-opened-changed="[[openedChangedHandler]]"
-      >
-        <oj-navigation-list id="navDrawerList"
-                            data="[[navDataProvider()]]"                  
-                            item.renderer="[[oj.KnockoutTemplateUtils.getRenderer('navTemplate', true)]]"
-                            on-click="[[toggleDrawer]]"
-                            selection="{{selection.path}}">
-        </oj-navigation-list>
-      </oj-drawer-popup>
-      <!-- /ko -->
-      <div id="pageContent" class="oj-web-applayout-page">
-        <!--
-           ** Oracle JET V18.1.0 web application header pattern.
-           ** Please see the demos under Cookbook/Patterns/App Shell: Web
-           ** and the CSS documentation under Support/API Docs/Non-Component Styling
-           ** on the JET website for more information on how to use this pattern.
-        -->
-        <header role="banner" class="oj-web-applayout-header">
-          <div class="oj-web-applayout-max-width oj-flex-bar oj-sm-align-items-center">
-            <!-- Drawer toggle button -->
-            <!-- ko if: isAuthenticated() -->
-            <div class="oj-flex-bar-start oj-md-hide">
-              <oj-button id="drawerToggleButton" class="oj-button-lg" on-oj-action="[[toggleDrawer]]" chroming="borderless" display="icons">
-                <span slot="startIcon" class="oj-web-applayout-offcanvas-icon"></span>
-                <span>Application Navigation</span>
-              </oj-button>
-            </div>
-            <!-- /ko -->
-            <div class="oj-flex-bar-middle oj-sm-align-items-baseline">
-              <img class="oj-icon demo-oracle-icon" title="Oracle Logo" alt="Oracle Logo"></img>
-              <h1 class="oj-sm-only-hide oj-web-applayout-header-title" title="Application Name"><oj-bind-text value="[[appName]]"></oj-bind-text></h1>
-            </div>
-            <!-- ko if: isAuthenticated() -->
-            <div class="oj-flex-bar-end">
-              <!-- Responsive Toolbar -->
-              <oj-toolbar>
-                <oj-menu-button id="userMenu" display="[[smScreen() ? 'icons' : 'all']]" chroming="borderless">
-                  <!-- ko if: smScreen() -->
-                  <!-- Mobile view - show only initials -->
-                  <div style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 50%; background-color: #0572ce; color: white; font-weight: bold; font-size: 14px;">
-                    <oj-bind-text value="[[userInitials]]"></oj-bind-text>
-                  </div>
-                  <!-- /ko -->
-                  <!-- ko ifnot: smScreen() -->
-                  <!-- Desktop view - show name with avatar -->
-                  <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; border-radius: 50%; background-color: #0572ce; color: white; font-weight: bold; font-size: 12px;">
-                      <oj-bind-text value="[[userInitials]]"></oj-bind-text>
-                    </div>
-                    <span><oj-bind-text value="[[userLogin]]"></oj-bind-text></span>
-                  </div>
-                  <!-- /ko -->
-                  <span slot="endIcon" class="oj-component-icon oj-button-menu-dropdown-icon"></span>
-                  <oj-menu id="menu1" slot="menu" on-oj-menu-action="[[menuItemAction]]">
-                    <oj-option id="profile" value="profile" disabled="true">
-                      <div style="padding: 8px 0; border-bottom: 1px solid #eee; margin-bottom: 8px;">
-                        <div style="font-weight: bold; color: #333; margin-bottom: 4px;">
-                          <oj-bind-text value="[[userLogin]]"></oj-bind-text>
-                        </div>
-                        <div style="font-size: 12px; color: #666;">
-                          <oj-bind-text value="[[userEmail]]"></oj-bind-text>
-                        </div>
-                      </div>
-                    </oj-option>
-                    <oj-option id="out" value="out">Sign Out</oj-option>
-                  </oj-menu>
-                </oj-menu-button>
-              </oj-toolbar>
-            </div>
-            <!-- /ko -->
-          </div>
-          <!-- ko if: isAuthenticated() -->
-          <div role="navigation" class="oj-web-applayout-max-width oj-web-applayout-navbar">
-            <oj-tab-bar id="navTabBar"
-                                class="oj-sm-only-hide oj-md-condense oj-md-justify-content-flex-end"
-                                data="[[navDataProvider()]]"
-                                edge="top"
-                                item.renderer="[[oj.KnockoutTemplateUtils.getRenderer('navTemplate', true)]]"
-                                selection="{{selection.path}}">
-            </oj-tab-bar>
-          </div>
-          <!-- /ko -->
-        </header>
-        <oj-module role="main" class="oj-web-applayout-max-width oj-web-applayout-content" config="[[moduleAdapter.koObservableConfig]]">
-        </oj-module>
-        <footer class="oj-web-applayout-footer" role="contentinfo">
-          <div class="oj-web-applayout-footer-item oj-web-applayout-max-width">
-            <ul>
-              <oj-bind-for-each data="[[footerLinks]]">
-                <template>
-                  <li>
-                    <a :id="[[$current.data.linkId]]" :href="[[$current.data.linkTarget]]">
-                      <oj-bind-text value="[[$current.data.name]]"></oj-bind-text>
-                    </a>
-                  </li>
-                </template>
-              </oj-bind-for-each>
-            </ul>
-          </div>
-          <div class="oj-web-applayout-footer-item oj-web-applayout-max-width oj-text-color-secondary oj-typography-body-sm">
-            Copyright © 2014, 2025 Oracle and/or its affiliates All rights reserved.
-          </div>
-        </footer>
-      </div>
-    </div>
-
-    <!-- This injects script tags for the main javascript files -->
-		<!-- injector:scripts -->
-		<!-- endinjector -->
-
+  <body class="oj-web-applayout-body" data-oj-binding-provider="none">
+    <app-root></app-root>
   </body>
-
 </html>

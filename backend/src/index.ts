@@ -14,6 +14,7 @@ import applications from "./routes/application.routes";
 import settingsRoutes from './routes/settings.Routes';    
 import atRiskRuleRoutes from './routes/atRiskRule.routes';
 import cors from "cors";
+import cookieParser from "cookie-parser";
 
 processErrors(); // Initialize process level error handlers
 
@@ -21,12 +22,20 @@ processErrors(); // Initialize process level error handlers
 const PORT = config.get<number>('server.port') || 3000;
 const mongoUri = config.get<string>('mongoUri') || '';
 logger.debug(`Mongo URI: ${mongoUri}`); // Log the Mongo URI for debugging
-const baseUrl = config.get<string>("frontend.baseUrl");;
+const baseUrl = config.get<string>("frontend.baseUrl");
+
 
 const app = express();
 
+// Use cookie parser to handle cookies
+app.use(cookieParser());
 // Enable CORS for frontend
-app.use(cors());
+app.use(
+  cors({
+    origin: baseUrl,
+    credentials: true,              // allow cookies to be sent
+  })
+);
 app.use(express.json());
 app.use(morgan('tiny', { stream: morganStream }));
 
