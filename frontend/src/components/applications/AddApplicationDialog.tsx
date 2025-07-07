@@ -93,7 +93,7 @@ export default function AddApplicationDialog({
       const response = await axios.post("/applications", newApp);
       setSuccessMessage("Application added successfully!");
       onApplicationAdded(response.data);
-      setTimeout(() => onClose(), 1500);
+      setTimeout(() => onClose(), 1000);
     } catch (err) {
       console.error(err);
       setError("An unexpected error occurred.");
@@ -178,9 +178,7 @@ export default function AddApplicationDialog({
               <oj-switch
                 id="appIsActive"
                 value={isActive}
-                onvalueChanged={(e: CustomEvent) =>
-                  setIsActive(e.detail.value)
-                }
+                onvalueChanged={(e: CustomEvent) => setIsActive(e.detail.value)}
                 disabled={loading}
                 aria-label="Status"
                 class="oj-form-control"
