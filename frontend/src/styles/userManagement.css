@@ -1,5 +1,191 @@
 /* User Management Styles */
 
+/* ----- GENERAL LAYOUT CONTAINER ----- */
+.oj-hybrid-padding {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ----- TITLE SECTION ----- */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 32px;
+}
+
+.page-header h1 {
+  margin-bottom: 8px;
+}
+
+/* ----- SEARCH + ADD BUTTON ROW ----- */
+.search-add-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+
+.search-add-row input {
+  flex: 1;
+  min-width: 250px;
+}
+
+/* ----- REGISTERED GROUP HEADER ROW ----- */
+.groups-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.groups-header-row h2 {
+  margin: 0;
+}
+
+.groups-header-row .group-count {
+  font-size: 13px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.group-counts-row {
+  display: flex;
+  gap: 18px;
+  margin-top: 4px;
+  margin-bottom: 2px;
+}
+
+.group-count-bold {
+  font-weight: 700;
+  color: #222;
+  font-size: 1.05em;
+  letter-spacing: 0.2px;
+}
+
+/* ----- GROUP CARD ----- */
+.group-item {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid #e1e1e1;
+  padding: 20px;
+  border-radius: 8px;
+  background-color: #fff;
+  transition: box-shadow 0.2s ease;
+}
+
+.group-item > .oj-flex {
+  flex: 1 1 auto;
+}
+
+.group-name-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.system-group-pill {
+  background-color: #495057;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+.status-pill {
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1;
+  color: white;
+}
+
+.status-active {
+  background-color: #28a745;
+}
+
+.status-inactive {
+  background-color: #6c757d;
+}
+
+.group-item:hover {
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+}
+
+.group-item .oj-flex {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ----- BUTTON GROUP INSIDE CARDS ----- */
+.group-item .oj-flex:last-child {
+  margin-top: 12px;
+}
+
+/* ----- ACTION BUTTONS ----- */
+.action-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 0;
+  align-items: center;
+  margin-left: auto;
+}
+
+/* ----- PAGINATION FIXES ----- */
+.pagination-container {
+  margin-top: 32px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+/* ----- RESPONSIVENESS ----- */
+@media (max-width: 600px) {
+  .search-add-row,
+  .groups-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .pagination-container {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .group-item {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 700px) {
+  .group-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .action-buttons {
+    margin-left: 0;
+    margin-top: 12px;
+    justify-content: flex-end;
+  }
+}
+
 /* Dialog Styles */
 .oj-dialog-mask {
   position: fixed;
@@ -197,61 +383,6 @@
   color: #2c2c2c;
 }
 
-/* Button Styles */
-.oj-button {
-  padding: 8px 16px;
-  border: 1px solid #c4c4c4;
-  border-radius: 4px;
-  background: white;
-  color: #2c2c2c;
-  cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-}
-
-.oj-button:hover {
-  background-color: #f0f0f0;
-}
-
-.oj-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.oj-button-primary {
-  background-color: #0073e6;
-  color: white;
-  border-color: #0073e6;
-}
-
-.oj-button-primary:hover {
-  background-color: #005bb8;
-}
-
-.oj-button-danger {
-  background-color: #dc3545;
-  color: white;
-  border-color: #dc3545;
-}
-
-.oj-button-danger:hover {
-  background-color: #c82333;
-}
-
-.oj-button-outlined-chrome {
-  background-color: transparent;
-  color: #0073e6;
-  border-color: #0073e6;
-}
-
-.oj-button-outlined-chrome:hover {
-  background-color: #f0f8ff;
-}
-
-.oj-button-sm {
-  padding: 6px 12px;
-  font-size: 12px;
-}
 
 /* Form Controls */
 .oj-inputtext,
@@ -445,3 +576,74 @@
     padding: 12px;
   }
 } 
+/* --- OJET Button Customization for User Management --- */
+.oj-button.edit-button {
+    --oj-button-border-color: #1877f2 !important;
+    --oj-button-text-color: #1877f2 !important;
+    --oj-button-bg-color: #fff !important;
+    --oj-button-font-weight: 700;
+    --oj-button-font-size: 1.1rem;
+    border-width: 2px !important;
+  }
+  
+  .oj-button.edit-button .oj-button-label,
+  .oj-button.edit-button .oj-button-icon {
+    color: #1877f2 !important;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+  
+  .oj-button.edit-button .oj-button-icon {
+    margin-right: 8px;
+    font-size: 1.2em;
+  }
+  
+  .oj-button.edit-button:hover,
+  .oj-button.edit-button:focus {
+    background: #1877f2 !important;
+    color: #fff !important;
+    --oj-button-text-color: #fff !important;
+  }
+  
+  .oj-button.edit-button:hover .oj-button-label,
+  .oj-button.edit-button:focus .oj-button-label,
+  .oj-button.edit-button:hover .oj-button-icon,
+  .oj-button.edit-button:focus .oj-button-icon {
+    color: #fff !important;
+  }
+  
+  /* --- Delete Button --- */
+  .oj-button.delete-button {
+    --oj-button-border-color: #dc3545 !important;
+    --oj-button-text-color: #dc3545 !important;
+    --oj-button-bg-color: #fff !important;
+    --oj-button-font-weight: 700;
+    --oj-button-font-size: 1.1rem;
+    border-width: 2px !important;
+  }
+  
+  .oj-button.delete-button .oj-button-label,
+  .oj-button.delete-button .oj-button-icon {
+    color: #dc3545 !important;
+    font-weight: 700;
+    font-size: 1.1rem;
+  }
+  
+  .oj-button.delete-button .oj-button-icon {
+    margin-right: 8px;
+    font-size: 1.2em;
+  }
+  
+  .oj-button.delete-button:hover,
+  .oj-button.delete-button:focus {
+    background: #dc3545 !important;
+    color: #fff !important;
+    --oj-button-text-color: #fff !important;
+  }
+  
+  .oj-button.delete-button:hover .oj-button-label,
+  .oj-button.delete-button:focus .oj-button-label,
+  .oj-button.delete-button:hover .oj-button-icon,
+  .oj-button.delete-button:focus .oj-button-icon {
+    color: #fff !important;
+  }
