@@ -16,6 +16,7 @@ import UserManagement from "./views/UserManagement";
 import Sidebar from "./components/Sidebar";
 import Login from "./views/Login";
 import "./styles/app.css";
+import "./styles/userManagement.css";
 import axios from "./api/axios"; // Adjust the import path as necessary
 import LoadingSpinner from "./components/LoadingSpinner"; // Adjust the import path as necessary
 
@@ -96,7 +97,7 @@ export const App = registerCustomElement(
 
                 <div
                     class="oj-web-applayout-content oj-flex"
-                    style={{ height: "100vh", overflow: "hidden" }}
+                    style={{ minHeight: "calc(100vh - 120px)" }}
                 >
                     <Sidebar />
                     <main class="oj-flex-item">

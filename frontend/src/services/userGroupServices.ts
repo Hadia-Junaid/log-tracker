@@ -1,0 +1,93 @@
+import api from '../api/axios';
+import { CreateGroupPayload, UpdateGroupPayload, GroupData, ApplicationOption, MemberData } from '../types/userManagement';
+
+export const userGroupService = {
+  // Fetch all user groups
+  async fetchUserGroups(): Promise<GroupData[]> {
+    const response = await api.get('/user-groups');
+    return response.data.map((group: any) => ({
+      groupId: group._id,
+      groupName: group.name,
+      description: group.description,
+      memberCount: group.members?.length || 0,
+      createdDate: group.createdAt,
+      createdAgo: getRelativeTime(new Date(group.createdAt)),
+      is_admin: group.is_admin,
+      members: group.members?.map((member: any) => member.email) || [],
+      assigned_applications: group.assigned_applications?.map((app: any) => app.name) || []
+    }));
+  },
+
+  // Create a new user group
+  async createUserGroup(payload: CreateGroupPayload): Promise<GroupData> {
+    const response = await api.post('/user-groups', payload);
+    return response.data;
+  },
+
+  // Update a user group
+  async updateUserGroup(groupId: string, payload: UpdateGroupPayload): Promise<GroupData> {
+    const response = await api.patch(`/user-groups/${groupId}`, payload);
+    return response.data;
+  },
+
+  // Delete a user group
+  async deleteUserGroup(groupId: string): Promise<void> {
+    await api.delete(`/user-groups/${groupId}`);
+  },
+
+  // Fetch group details by ID
+  async fetchGroupById(groupId: string): Promise<GroupData> {
+    const response = await api.get(`/user-groups/${groupId}`);
+    return response.data;
+  },
+
+  // Fetch applications
+  async fetchApplications(): Promise<ApplicationOption[]> {
+    const response = await api.get('/applications');
+    return response.data.data.map((app: any) => ({
+      id: app._id,
+      name: app.name,
+      checked: false
+    }));
+  },
+
+  // Search users in directory
+  async searchUsers(query: string): Promise<MemberData[]> {
+    const response = await api.get(`/admin/users/search?q=${encodeURIComponent(query)}`);
+    return response.data.map((user: any) => ({
+      id: user.id || user.email,
+      email: user.email,
+      name: user.name,
+      initials: getInitials(user.name)
+    }));
+  }
+};
+
+// Utility functions
+function getRelativeTime(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
+  const intervals: { [key: string]: number } = {
+    year: 31536000,
+    month: 2592000,
+    week: 604800,
+    day: 86400,
+    hour: 3600,
+    minute: 60,
+    second: 1
+  };
+  
+  for (const [unit, val] of Object.entries(intervals)) {
+    const count = Math.floor(seconds / val);
+    if (count > 0) return `${count} ${unit}${count > 1 ? 's' : ''} ago`;
+  }
+  return 'just now';
+}
+
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map(word => word.charAt(0))
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+}
