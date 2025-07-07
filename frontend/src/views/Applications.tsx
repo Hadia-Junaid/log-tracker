@@ -8,6 +8,7 @@ import LoadingSpinner from "../components/LoadingSpinner";
 import AddApplicationDialog from "../components/applications/AddApplicationDialog";
 import { Application } from "src/types/applications";
 import DeleteConfirmationDialog from "../components/applications/DeleteConfirmationDialog";
+import EditApplicationDialog from "../components/applications/EditApplicationDialog";
 
 type Props = {
   path?: string;
@@ -24,6 +25,8 @@ export default function Applications({ path }: Props) {
   const [selectedAppName, setSelectedAppName] = useState<string | undefined>(
     undefined
   );
+  const [isEditDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedApp, setSelectedApp] = useState<Application | null>(null);
 
   useEffect(() => {
     // Fetch applications from API
@@ -48,6 +51,19 @@ export default function Applications({ path }: Props) {
 
   const pushNewApplication = (newApp: Application) => {
     setApplications((prevApps) => [...prevApps, newApp]);
+  };
+
+  const updateSelectedApplication = (updatedApp: Application) => {
+    setApplications((prevApps) =>
+      prevApps.map((app) =>
+        app._id === updatedApp._id ? { ...app, ...updatedApp } : app
+      )
+    );
+  };
+
+  const handleEditClick = (app: Application) => {
+    setSelectedApp(app);
+    setEditDialogOpen(true);
   };
 
   const handleDeleteClick = (id: string, name: string) => {
@@ -87,17 +103,28 @@ export default function Applications({ path }: Props) {
             key={app._id}
             app={app}
             onDeleteClick={(id, name) => handleDeleteClick(id, name)}
+            onEditClick={() => handleEditClick(app)}
           />
         ))}
       </div>
 
-      {/* Add the new AddApplicationDialog component */}
+    {/* Add Application Dialog */}
       <AddApplicationDialog
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
         onApplicationAdded={pushNewApplication} // Pass the function to add new application
       />
 
+      {/* Edit Application Dialog */}
+      <EditApplicationDialog
+        isOpen={isEditDialogOpen}
+        application={selectedApp}
+        onClose={() => setEditDialogOpen(false)}
+        onApplicationUpdated={updateSelectedApplication}
+  
+      />
+
+      {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
         applicationId={selectedAppId}
