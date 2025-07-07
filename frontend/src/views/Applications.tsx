@@ -7,71 +7,53 @@ import axios from "../api/axios";
 import LoadingSpinner from "../components/LoadingSpinner";
 import AddApplicationDialog from "../components/applications/AddApplicationDialog";
 import { Application } from "src/types/applications";
+import DeleteConfirmationDialog from "../components/applications/DeleteConfirmationDialog";
 
 type Props = {
   path?: string;
 };
-
-// type Application = {
-//   _id: string;
-//   name: string;
-//   hostname: string;
-//   createdAt: string;
-//   isActive: boolean;
-//   environment: string;
-//   description?: string;
-// };
-
-const dummyApplications: Application[] = [
-  {
-    _id: "app-001",
-    name: "Log Processor",
-    hostname: "log-processor.local",
-    createdAt: "2025-07-05T10:00:00Z",
-    isActive: true,
-    environment: "Production",
-  },
-  {
-    _id: "app-002",
-    name: "Analytics Service",
-    hostname: "analytics.local",
-    createdAt: "2025-07-01T09:15:00Z",
-    isActive: false,
-    environment: "Staging",
-  },
-];
 
 export default function Applications({ path }: Props) {
   const [searchText, setSearchText] = useState("");
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false); // State to control dialog visibility
-
-  const fetchApplications = async () => {
-    try {
-      setLoading(true);
-      const response = await axios.get("/applications");
-
-      console.log("Fetched applications:", response.data);
-
-      setApplications(response.data.data);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching applications:", error);
-      setLoading(false);
-      setError("Failed to fetch applications");
-    }
-  };
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
+  const [selectedAppName, setSelectedAppName] = useState<string | undefined>(
+    undefined
+  );
 
   useEffect(() => {
     // Fetch applications from API
+    const fetchApplications = async () => {
+      try {
+        setLoading(true);
+        const response = await axios.get("/applications");
+
+        console.log("Fetched applications:", response.data);
+
+        setApplications(response.data.data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching applications:", error);
+        setLoading(false);
+        setError("Failed to fetch applications");
+      }
+    };
 
     fetchApplications();
   }, []);
 
   const pushNewApplication = (newApp: Application) => {
     setApplications((prevApps) => [...prevApps, newApp]);
+  };
+
+  const handleDeleteClick = (id: string, name: string) => {
+    setSelectedAppId(id);
+    setSelectedAppName(name);
+    setDeleteDialogOpen(true);
   };
 
   return (
@@ -101,7 +83,11 @@ export default function Applications({ path }: Props) {
 
       <div class="applications-container">
         {applications.map((app) => (
-          <ApplicationCard key={app._id} app={app} />
+          <ApplicationCard
+            key={app._id}
+            app={app}
+            onDeleteClick={(id, name) => handleDeleteClick(id, name)}
+          />
         ))}
       </div>
 
@@ -110,6 +96,18 @@ export default function Applications({ path }: Props) {
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
         onApplicationAdded={pushNewApplication} // Pass the function to add new application
+      />
+
+      <DeleteConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        applicationId={selectedAppId}
+        applicationName={selectedAppName}
+        onClose={() => setDeleteDialogOpen(false)}
+        onDeleteSuccess={() => {
+          setApplications((prev) =>
+            prev.filter((a) => a._id !== selectedAppId)
+          );
+        }}
       />
     </div>
   );
