@@ -57,7 +57,14 @@ export default function Applications({ path }: Props) {
   };
 
   useEffect(() => {
-    fetchApplications();
+    
+    //use debounce delay here to search
+    const delayDebounceFn = setTimeout(() => {
+      fetchApplications();
+    }, 300); // Adjust the delay as needed (300ms here)
+
+    return () => clearTimeout(delayDebounceFn); // Cleanup the timeout on unmount or when dependencies change
+
   }, [currentPage, searchQuery]);
 
   const pushNewApplication = (newApp: Application) => {
@@ -92,7 +99,7 @@ export default function Applications({ path }: Props) {
             <oj-input-text
               placeholder="Search applications"
               value={searchQuery}
-              onvalueChanged={(e) => setSearchQuery(e.detail.value)}
+              onrawValueChanged={(e) => setSearchQuery(e.detail.value)}
               class="search-input"
             ></oj-input-text>
             <oj-button
