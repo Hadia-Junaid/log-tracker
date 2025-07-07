@@ -1,4 +1,4 @@
-// src/components/applications/AddApplicationDialog.tsx
+// src/components/applications/EditApplicationDialog.tsx
 import { h } from "preact";
 import { useState, useEffect, useRef } from "preact/hooks";
 import "ojs/ojdialog";
@@ -10,21 +10,22 @@ import "ojs/ojprogress-circle";
 import axios from "../../api/axios";
 import "../../styles/applications/addApplicationDialog.css";
 import { Application } from "../../types/applications";
-import "ojs/ojswitch";
 
-type AddApplicationDialogProps = {
+type EditApplicationDialogProps = {
   isOpen: boolean;
+  application: Application | null;
   onClose: () => void;
-  onApplicationAdded: (newApp: Application) => void;
+  onApplicationUpdated: (updatedApp: Application) => void;
 };
 
 const environments = ["Development", "Testing", "Staging", "Production"];
 
-export default function AddApplicationDialog({
+export default function EditApplicationDialog({
   isOpen,
+  application,
   onClose,
-  onApplicationAdded,
-}: AddApplicationDialogProps) {
+  onApplicationUpdated,
+}: EditApplicationDialogProps) {
   const dialogRef = useRef<any>(null);
   const [name, setName] = useState("");
   const [hostname, setHostname] = useState("");
@@ -37,12 +38,13 @@ export default function AddApplicationDialog({
 
   useEffect(() => {
     if (dialogRef.current) {
-      if (isOpen) {
+      if (isOpen && application) {
         dialogRef.current.open();
-        setName("");
-        setHostname("");
-        setEnvironment("");
-        setDescription("");
+        setName(application.name || "");
+        setHostname(application.hostname || "");
+        setEnvironment(application.environment || "");
+        setDescription(application.description || "");
+        setIsActive(application.isActive);
         setLoading(false);
         setError(null);
         setSuccessMessage(null);
@@ -50,7 +52,7 @@ export default function AddApplicationDialog({
         dialogRef.current.close();
       }
     }
-  }, [isOpen]);
+  }, [isOpen, application]);
 
   const handleOjDialogClose = (event: CustomEvent) => {
     if (event.detail.originalEvent) {
@@ -81,18 +83,24 @@ export default function AddApplicationDialog({
       return;
     }
 
+    if (!application) return;
+
     setLoading(true);
     try {
-      const newApp = {
+      const updatedApp = {
         name,
         hostname,
         environment,
         description,
         isActive,
       };
-      const response = await axios.post("/applications", newApp);
-      setSuccessMessage("Application added successfully!");
-      onApplicationAdded(response.data);
+
+      console.log("Updating application:", updatedApp);
+
+      const response = await axios.patch(`/applications/${application._id}`, updatedApp);
+      setSuccessMessage("Application updated successfully!");
+      console.log("Updated application:", response.data);
+      onApplicationUpdated(response.data);
       setTimeout(() => onClose(), 1500);
     } catch (err) {
       console.error(err);
@@ -105,18 +113,15 @@ export default function AddApplicationDialog({
   return (
     <oj-dialog
       ref={dialogRef}
-      id="addApplicationDialog"
-      dialogTitle="Add New Application"
+      id="editApplicationDialog"
+      dialogTitle="Edit Application"
       onojClose={handleOjDialogClose}
     >
       <div class="oj-dialog-body">
         {loading && (
           <div class="loading-overlay">
-            <oj-progress-circle
-              value={-1}
-              class="loading-spinner"
-            ></oj-progress-circle>
-            <p>Adding application...</p>
+            <oj-progress-circle value={-1} class="loading-spinner"></oj-progress-circle>
+            <p>Saving changes...</p>
           </div>
         )}
         {error && <p class="error-message">{error}</p>}
@@ -124,27 +129,27 @@ export default function AddApplicationDialog({
 
         <form onSubmit={handleSubmit} class="add-application-form">
           <oj-form-layout labelEdge="start">
-            <oj-label for="appName">Application Name</oj-label>
+            <oj-label for="editAppName">Application Name</oj-label>
             <oj-input-text
-              id="appName"
+              id="editAppName"
               value={name}
               onvalueChanged={(e: CustomEvent) => setName(e.detail.value)}
               required
               disabled={loading}
             ></oj-input-text>
 
-            <oj-label for="appHostname">Hostname</oj-label>
+            <oj-label for="editAppHostname">Hostname</oj-label>
             <oj-input-text
-              id="appHostname"
+              id="editAppHostname"
               value={hostname}
               onvalueChanged={(e: CustomEvent) => setHostname(e.detail.value)}
               required
               disabled={loading}
             ></oj-input-text>
 
-            <oj-label for="appEnvironment">Environment</oj-label>
+            <oj-label for="editAppEnvironment">Environment</oj-label>
             <select
-              id="appEnvironment"
+              id="editAppEnvironment"
               value={environment}
               onChange={(e: Event) =>
                 setEnvironment((e.target as HTMLSelectElement).value)
@@ -153,7 +158,7 @@ export default function AddApplicationDialog({
               class="oj-form-control select-native"
               required
             >
-              <option value="" disabled selected>
+              <option value="" disabled>
                 Select Environment
               </option>
               {environments.map((env) => (
@@ -163,9 +168,9 @@ export default function AddApplicationDialog({
               ))}
             </select>
 
-            <oj-label for="appDescription">Description</oj-label>
+            <oj-label for="editAppDescription">Description</oj-label>
             <oj-input-text
-              id="appDescription"
+              id="editAppDescription"
               value={description}
               onvalueChanged={(e: CustomEvent) =>
                 setDescription(e.detail.value)
@@ -173,10 +178,10 @@ export default function AddApplicationDialog({
               disabled={loading}
             ></oj-input-text>
 
-            <oj-label for="appIsActive">Status</oj-label>
+            <oj-label for="editAppIsActive">Status</oj-label>
             <div class="oj-form-control-wrapper">
               <oj-switch
-                id="appIsActive"
+                id="editAppIsActive"
                 value={isActive}
                 onvalueChanged={(e: CustomEvent) =>
                   setIsActive(e.detail.value)
@@ -203,7 +208,7 @@ export default function AddApplicationDialog({
               disabled={loading}
               class="submit-button"
             >
-              Add Application
+              Save Changes
             </oj-button>
           </div>
         </form>
