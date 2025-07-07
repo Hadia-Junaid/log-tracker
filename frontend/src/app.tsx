@@ -16,76 +16,104 @@ import UserManagement from "./views/UserManagement";
 import Sidebar from "./components/Sidebar";
 import Login from "./views/Login";
 import "./styles/app.css";
-import axios from "axios";
+import axios from "./api/axios"; // Adjust the import path as necessary
+import LoadingSpinner from "./components/LoadingSpinner"; // Adjust the import path as necessary
 
 type Props = {
-  appName?: string;
-  userLogin?: string;
+    appName?: string;
+    userLogin?: string;
 };
 
 function checkAuth(): Promise<boolean> {
-  const backendUrl = process.env.BACKEND_URL;
-  return axios
-    .get(`${backendUrl}/auth/status`, {
-      withCredentials: true,
-    })
-    .then((res) => {
-      console.log("Auth check response:", res);
-      return res.data?.authenticated === true;
-    })
-    .catch(() => false);
+    return axios
+        .get(`/auth/status`)
+        .then((res) => {
+            console.log("Auth check response:", res);
+            return res.data?.authenticated === true;
+        })
+        .catch(() => false);
 }
 
 export const App = registerCustomElement(
-  "app-root",
-  ({
-    appName = "Log Tracker",
-    userLogin = "john.hancock@oracle.com",
-  }: Props) => {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(
-      null
-    );
+    "app-root",
+    ({
+        appName = "Log Tracker",
+        userLogin = "john.hancock@oracle.com",
+    }: Props) => {
+        const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(
+            null
+        );
 
-    useEffect(() => {
-      checkAuth().then(setIsAuthenticated);
-    }, []);
+        useEffect(() => {
+            const checkOrExchangeAuth = async () => {
+                // Look for auth_code in URL
+                const hash = window.location.hash;
+                const query = hash.includes("?") ? hash.split("?")[1] : "";
+                const params = new URLSearchParams(query);
+                const authCode = params.get("auth_code");
 
-    if (isAuthenticated === null) {
-      return <div>Loading...</div>;
+                if (authCode) {
+                    try {
+                        // Exchange code -> set cookie
+                        await axios.post("/auth/exchange", {
+                            auth_code: authCode,
+                        });
+
+                        // Clear the hash so it's clean
+                        window.location.hash = "";
+                    } catch (err) {
+                        console.error("OAuth exchange failed", err);
+                        setIsAuthenticated(false);
+                        return;
+                    }
+                }
+
+                // After possible exchange, check auth
+                const isAuthed = await checkAuth();
+                setIsAuthenticated(isAuthed);
+            };
+
+            checkOrExchangeAuth();
+        }, []);
+
+        if (isAuthenticated === null) {
+            return <LoadingSpinner />;
+        }
+
+        if (!isAuthenticated) {
+            return <Login />;
+        }
+
+        useEffect(() => {
+            Context.getPageContext()
+                .getBusyContext()
+                .applicationBootstrapComplete();
+        }, []);
+
+        return (
+            <div id="appContainer" class="oj-web-applayout-page">
+                <Header appName={appName} userLogin={userLogin} />
+
+                <div
+                    class="oj-web-applayout-content oj-flex"
+                    style={{ height: "100vh", overflow: "hidden" }}
+                >
+                    <Sidebar />
+                    <main class="oj-flex-item">
+                        <Router>
+                            <Dashboard path="/" />
+                            <Logs path="/logs" />
+                            <UserManagement path="/users" />
+                            <Applications path="/applications" />
+                            <Settings path="/settings" />
+
+                            <NotFound default />
+                        </Router>
+                    </main>
+                </div>
+
+                <Footer />
+            </div>
+        );
     }
-
-    if (!isAuthenticated) {
-      return <Login />;
-    }
-
-    useEffect(() => {
-      Context.getPageContext().getBusyContext().applicationBootstrapComplete();
-    }, []);
-
-    return (
-      <div id="appContainer" class="oj-web-applayout-page">
-        <Header appName={appName} userLogin={userLogin} />
-
-        <div
-          class="oj-web-applayout-content oj-flex"
-          style={{ height: "100vh", overflow: "hidden" }}
-        >
-          <Sidebar />
-          <main class="oj-flex-item">
-            <Router>
-              <Dashboard path="/" />
-              <Logs path="/logs" />
-              <UserManagement path="/users" />
-              <Applications path="/applications" />
-              <Settings path="/settings" />
-
-              <NotFound default />
-            </Router>
-          </main>
-        </div>
-
-        <Footer />
-      </div>
-    );
-  }
 );

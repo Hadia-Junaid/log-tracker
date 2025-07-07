@@ -3,6 +3,7 @@ import { h } from "preact";
 import { route } from "preact-router";
 import { useEffect, useState } from "preact/hooks";
 import "../styles/sidebar.css"; 
+import logoImage from "../assets/logtracker.png";
 
 const navItems = [
   { label: "Dashboard", path: "/", icon: "oj-ux-ico-dashboard" },
@@ -28,14 +29,27 @@ export default function Sidebar() {
   };
 
   return (
-    <div class={`sidebar ${collapsed ? "collapsed" : ""}`}>
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        class="collapse-button"
-        title={collapsed ? "Expand" : "Collapse"}
-      >
-        {collapsed ? "»" : "«"}
-      </button>
+    <div
+      class={`sidebar ${collapsed ? "collapsed" : ""}`}
+      onMouseEnter={() => setCollapsed(false)}
+      onMouseLeave={() => setCollapsed(true)}
+    >
+      <div class="sidebar-header">
+        <div 
+          class="sidebar-logo"
+          onClick={() => {
+            route("/");
+            setActivePath("/");
+          }}
+        >
+          <img 
+            src={logoImage} 
+            alt="LogTracker" 
+            class="sidebar-logo-image"
+          />
+          {!collapsed && <span class="sidebar-title">LogTracker</span>}
+        </div>
+      </div>
     
       <ul class="sidebar-list">
         {navItems.map(({ label, path, icon }) => {

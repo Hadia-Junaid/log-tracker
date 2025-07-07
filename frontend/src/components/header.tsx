@@ -11,6 +11,7 @@ import * as ResponsiveUtils from "ojs/ojresponsiveutils";
 import "ojs/ojtoolbar";
 import "ojs/ojmenu";
 import "ojs/ojbutton";
+import axios from "../api/axios"; // Adjust the import path as necessary
 
 type Props = Readonly<{
   appName: string,
@@ -39,6 +40,20 @@ export function Header({ appName, userLogin }: Props) {
     return (isSmallWidth ? "oj-icon demo-appheader-avatar" : "oj-component-icon oj-button-menu-dropdown-icon");
   }
 
+  async function handleSignOut() {
+    //first, make a request to the backend to sign out
+    try {
+      await axios.post(`/auth/logout`, {});
+      
+      //then, redirect to the login page
+      window.location.href = "/login";
+    }
+    catch (error) {
+      console.error("Sign out failed:", error);
+      // Can show the error here later with a banner 
+    }
+  }
+
   return (
     <header role="banner" class="oj-web-applayout-header">
       <div class="oj-web-applayout-max-width oj-flex-bar oj-sm-align-items-center">
@@ -61,7 +76,7 @@ export function Header({ appName, userLogin }: Props) {
               <oj-option id="pref" value="pref">Preferences</oj-option>
               <oj-option id="help" value="help">Help</oj-option>
               <oj-option id="about" value="about">About</oj-option>
-              <oj-option id="out" value="out">Sign Out</oj-option>
+              <oj-option id="out" value="out" onClick={handleSignOut}>Sign Out</oj-option>
             </oj-menu>
           </oj-menu-button>
         </oj-toolbar>
