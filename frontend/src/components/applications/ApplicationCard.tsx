@@ -15,9 +15,10 @@ description?: string;
 
 type Props = {
   app: Application;
+  onDeleteClick: (id: string, name: string) => void; // Uncomment if delete functionality is needed
 };
 
-export default function ApplicationCard({ app }: Props) {
+export default function ApplicationCard({ app, onDeleteClick }: Props) {
   return (
     <ojactioncard key={app._id} class="application-card">
       <div class="card-content">
@@ -47,7 +48,7 @@ export default function ApplicationCard({ app }: Props) {
             <span slot="startIcon" class="oj-ux-ico-edit"></span>
             Edit
           </oj-button>
-          <oj-button class="oj-button-sm delete-button" chroming="outlined">
+          <oj-button class="oj-button-sm delete-button" chroming="outlined" onClick={() => onDeleteClick(app._id, app.name)}>
             <span slot="startIcon" class="oj-ux-ico-trash"></span>
             Delete
           </oj-button>
