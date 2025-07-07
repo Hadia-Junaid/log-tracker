@@ -97,11 +97,14 @@ export default function EditApplicationDialog({
 
       console.log("Updating application:", updatedApp);
 
-      const response = await axios.patch(`/applications/${application._id}`, updatedApp);
+      const response = await axios.patch(
+        `/applications/${application._id}`,
+        updatedApp
+      );
       setSuccessMessage("Application updated successfully!");
       console.log("Updated application:", response.data);
       onApplicationUpdated(response.data);
-      setTimeout(() => onClose(), 1500);
+      setTimeout(() => onClose(), 1000);
     } catch (err) {
       console.error(err);
       setError("An unexpected error occurred.");
@@ -120,7 +123,10 @@ export default function EditApplicationDialog({
       <div class="oj-dialog-body">
         {loading && (
           <div class="loading-overlay">
-            <oj-progress-circle value={-1} class="loading-spinner"></oj-progress-circle>
+            <oj-progress-circle
+              value={-1}
+              class="loading-spinner"
+            ></oj-progress-circle>
             <p>Saving changes...</p>
           </div>
         )}
@@ -183,9 +189,7 @@ export default function EditApplicationDialog({
               <oj-switch
                 id="editAppIsActive"
                 value={isActive}
-                onvalueChanged={(e: CustomEvent) =>
-                  setIsActive(e.detail.value)
-                }
+                onvalueChanged={(e: CustomEvent) => setIsActive(e.detail.value)}
                 disabled={loading}
                 aria-label="Status"
                 class="oj-form-control"

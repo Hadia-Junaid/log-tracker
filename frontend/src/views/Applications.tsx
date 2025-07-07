@@ -15,7 +15,6 @@ type Props = {
 };
 
 export default function Applications({ path }: Props) {
-  const [searchText, setSearchText] = useState("");
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,26 +27,38 @@ export default function Applications({ path }: Props) {
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
 
+  const PAGE_SIZE = 6;
+  const [currentPage, setCurrentPage] = useState(1);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [totalCount, setTotalCount] = useState(0);
+
+  // Fetch applications from API
+  const fetchApplications = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get("/applications", {
+        params: {
+          page: currentPage,
+          pageSize: PAGE_SIZE,
+          search: searchQuery,
+        },
+      });
+
+      console.log("Fetched applications:", response.data);
+
+      setApplications(response.data.data);
+      setTotalCount(response.data.total);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching applications:", error);
+      setLoading(false);
+      setError("Failed to fetch applications");
+    }
+  };
+
   useEffect(() => {
-    // Fetch applications from API
-    const fetchApplications = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get("/applications");
-
-        console.log("Fetched applications:", response.data);
-
-        setApplications(response.data.data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching applications:", error);
-        setLoading(false);
-        setError("Failed to fetch applications");
-      }
-    };
-
     fetchApplications();
-  }, []);
+  }, [currentPage, searchQuery]);
 
   const pushNewApplication = (newApp: Application) => {
     setApplications((prevApps) => [...prevApps, newApp]);
@@ -74,45 +85,47 @@ export default function Applications({ path }: Props) {
 
   return (
     <div class="page-container">
-      <div class="applications-header">
-        <h1 class="applications-title">Applications</h1>
-        <div class="applications-controls">
-          <oj-input-text
-            placeholder="Search applications"
-            value={searchText}
-            onvalueChanged={(e) => setSearchText(e.detail.value)}
-            class="search-input"
-          ></oj-input-text>
-          <oj-button
-            chroming="solid"
-            class="add-button"
-            onojAction={() => setIsAddDialogOpen(true)} // This line opens the dialog
-          >
-            <span slot="startIcon" class="oj-ux-ico-plus"></span>
-            Add Application
-          </oj-button>
+      <div class="applications-page-content">
+        <div class="applications-header">
+          <h1 class="applications-title">Applications</h1>
+          <div class="applications-controls">
+            <oj-input-text
+              placeholder="Search applications"
+              value={searchQuery}
+              onvalueChanged={(e) => setSearchQuery(e.detail.value)}
+              class="search-input"
+            ></oj-input-text>
+            <oj-button
+              chroming="solid"
+              class="add-button"
+              onojAction={() => setIsAddDialogOpen(true)} // This line opens the dialog
+            >
+              <span slot="startIcon" class="oj-ux-ico-plus"></span>
+              Add Application
+            </oj-button>
+          </div>
+        </div>
+
+        {loading && <LoadingSpinner message="Loading applications..." />}
+        {error && <p class="oj-text-color-danger">{error}</p>}
+
+        <div class="applications-container">
+          {applications.map((app) => (
+            <ApplicationCard
+              key={app._id}
+              app={app}
+              onDeleteClick={(id, name) => handleDeleteClick(id, name)}
+              onEditClick={() => handleEditClick(app)}
+            />
+          ))}
         </div>
       </div>
 
-      {loading && <LoadingSpinner message="Loading applications..." />}
-      {error && <p class="oj-text-color-danger">{error}</p>}
-
-      <div class="applications-container">
-        {applications.map((app) => (
-          <ApplicationCard
-            key={app._id}
-            app={app}
-            onDeleteClick={(id, name) => handleDeleteClick(id, name)}
-            onEditClick={() => handleEditClick(app)}
-          />
-        ))}
-      </div>
-
-    {/* Add Application Dialog */}
+      {/* Add Application Dialog */}
       <AddApplicationDialog
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
-        onApplicationAdded={pushNewApplication} // Pass the function to add new application
+        onApplicationAdded={fetchApplications}
       />
 
       {/* Edit Application Dialog */}
@@ -121,7 +134,6 @@ export default function Applications({ path }: Props) {
         application={selectedApp}
         onClose={() => setEditDialogOpen(false)}
         onApplicationUpdated={updateSelectedApplication}
-  
       />
 
       {/* Delete Confirmation Dialog */}
@@ -130,12 +142,39 @@ export default function Applications({ path }: Props) {
         applicationId={selectedAppId}
         applicationName={selectedAppName}
         onClose={() => setDeleteDialogOpen(false)}
-        onDeleteSuccess={() => {
-          setApplications((prev) =>
-            prev.filter((a) => a._id !== selectedAppId)
-          );
-        }}
+        onDeleteSuccess={fetchApplications}
       />
+
+      <div class="pagination-footer">
+        {!loading && applications.length > 0 && (
+          <div class="oj-flex oj-sm-flex-direction-column oj-sm-align-items-center oj-sm-margin-2x-vertical">
+            <div class="oj-sm-margin-1x-bottom">
+              Page {currentPage} of {Math.ceil(totalCount / PAGE_SIZE)}
+            </div>
+            <div class="oj-flex oj-sm-flex-wrap-nowrap oj-sm-align-items-center">
+              <oj-button
+                chroming="outlined"
+                onojAction={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                disabled={currentPage === 1}
+                class="oj-sm-margin-1x-end"
+              >
+                ← Previous
+              </oj-button>
+              <oj-button
+                chroming="outlined"
+                onojAction={() =>
+                  setCurrentPage((p) =>
+                    p < Math.ceil(totalCount / PAGE_SIZE) ? p + 1 : p
+                  )
+                }
+                disabled={currentPage >= Math.ceil(totalCount / PAGE_SIZE)}
+              >
+                Next →
+              </oj-button>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
