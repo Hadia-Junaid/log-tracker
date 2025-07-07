@@ -1,0 +1,35 @@
+.auto-refresh-container {
+  display: flex;
+  align-items: center;
+}
+
+.custom-switch {
+  --oj-switch-track-bg-color: #e5e7eb;
+  --oj-switch-track-bg-color-selected: #3b82f6;
+  --oj-switch-thumb-bg-color: white;
+  --oj-switch-thumb-border-color: #d1d5db;
+  --oj-switch-thumb-border-color-selected: #3b82f6;
+  --oj-switch-track-border-radius: 12px;
+  --oj-switch-thumb-border-radius: 10px;
+  transform: scale(1.2);
+  transition: all 0.2s ease;
+}
+
+.custom-switch:hover {
+  --oj-switch-track-bg-color: #d1d5db;
+}
+
+.custom-switch:hover[value="true"] {
+  --oj-switch-track-bg-color-selected: #2563eb;
+}
+
+.custom-switch:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+/* Animation for switch state changes */
+.custom-switch {
+  --oj-switch-thumb-transition: transform 0.2s ease;
+  --oj-switch-track-transition: background-color 0.2s ease;
+}

@@ -1,0 +1,207 @@
+.settings-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.settings-card {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+
+.settings-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 32px 32px 24px 32px;
+  border-bottom: 1px solid #f3f4f6;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.settings-icon {
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  background: #b1341b;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.settings-title-section {
+  flex: 1;
+}
+
+.settings-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.settings-subtitle {
+  font-size: 16px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.settings-content {
+  padding: 32px;
+}
+
+.setting-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 0;
+  border-bottom: 1px solid #f3f4f6;
+}
+
+.setting-item:last-child {
+  border-bottom: none;
+}
+
+.setting-info {
+  flex: 1;
+  margin-right: 24px;
+}
+
+.setting-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.setting-description {
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.refresh-time-inline {
+  display: inline-flex;
+  align-items: center;
+}
+
+.time-input {
+  width: 60px;
+  padding: 4px 8px;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 14px;
+  text-align: center;
+  background: white;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.time-input:focus {
+  outline: none;
+  border-color: #b1341b;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.setting-control {
+  flex-shrink: 0;
+}
+
+.settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 24px 32px 32px 32px;
+  background: #f9fafb;
+  border-top: 1px solid #f3f4f6;
+}
+
+.reset-button {
+  --oj-button-outlined-border-color: #d1d5db;
+  --oj-button-outlined-text-color: #374151;
+  --oj-button-outlined-bg-color: white;
+  border-radius: 8px;
+  padding: 0 20px;
+  height: 40px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.reset-button:hover {
+  --oj-button-outlined-border-color: #9ca3af;
+  --oj-button-outlined-bg-color: #f9fafb;
+}
+
+.save-button {
+  --oj-button-solid-bg-color: #b1341b;
+  --oj-button-solid-border-color: #b1341b;
+  border-radius: 8px;
+  padding: 0 20px;
+  height: 40px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.save-button:hover:not(:disabled) {
+  --oj-button-solid-bg-color: #b1341b;
+  --oj-button-solid-border-color: #b1341b;
+}
+
+.save-button:disabled {
+  --oj-button-solid-bg-color: #9ca3af;
+  --oj-button-solid-border-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.settings-messages {
+  padding: 0 32px 24px 32px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .settings-container {
+    padding: 16px;
+  }
+  
+  .settings-header {
+    padding: 24px 24px 20px 24px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .settings-content {
+    padding: 24px;
+  }
+  
+  .setting-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 0;
+  }
+  
+  .setting-info {
+    margin-right: 0;
+  }
+  
+  .settings-actions {
+    padding: 20px 24px 24px 24px;
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  
+  .reset-button,
+  .save-button {
+    width: 100%;
+  }
+}

@@ -1,0 +1,1 @@
+{"version":3,"file":"about.js","sourceRoot":"","sources":["../../ts/viewModels/about.ts"],"names":[],"mappings":";;IAQA,MAAM,cAAc;QAElB;QAEA,CAAC;QAUD,SAAS;YACP,QAAQ,CAAC,QAAQ,CAAC,oBAAoB,CAAC,CAAC;YACxC,QAAQ,CAAC,KAAK,GAAG,OAAO,CAAC;QAE3B,CAAC;QAKD,YAAY;QAEZ,CAAC;QAMD,mBAAmB;QAEnB,CAAC;KACF;IAED,OAAS,cAAc,CAAC"}

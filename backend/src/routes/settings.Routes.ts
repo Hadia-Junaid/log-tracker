@@ -1,4 +1,5 @@
 import express from 'express';
+import { authenticate } from '../middleware/auth';
 import {
   getUserSettings,
   updateUserSettings,
@@ -13,7 +14,7 @@ const router = express.Router();
 // Routes - accessible to all authenticated users
 //But for now we did'nt add the authentication
 router.get('/:id', getUserSettings);
-router.patch('/:id', validate(updateSettingsSchema), updateUserSettings);
+router.patch('/:id', authenticate, validate(updateSettingsSchema), updateUserSettings);
 router.delete('/:id', resetUserSettings);
 
 export default router;

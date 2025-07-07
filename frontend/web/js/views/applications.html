@@ -1,0 +1,362 @@
+<div class="oj-hybrid-padding">
+    <div class="oj-flex oj-sm-flex-direction-column">
+        <div class="oj-flex oj-sm-margin-4x-bottom">
+            <h1 class="oj-typography-heading-lg oj-text-color-primary">Applications</h1>
+        </div>
+
+        <!-- ✅ Global Banner -->
+        <div id="globalBanner" style="display:none; padding: 10px; border-radius: 4px; margin: 12px 0;">
+        </div>
+
+        <!-- Search and Sort Row -->
+        <div class="oj-flex oj-sm-align-items-center oj-sm-flex-wrap oj-sm-margin-4x-bottom">
+            <!-- Search bar (left, fills width) -->
+            <div class="oj-flex-item">
+                <oj-c-input-text label-hint="Search by name, hostname, or environment" raw-value="{{searchQuery}}"
+                    placeholder="Type to filter…">
+                </oj-c-input-text>
+            </div>
+
+            <!-- Status filter dropdown -->
+            <div class="oj-sm-margin-2x-start" style="min-width: 180px;">
+                <oj-c-select-single label-hint="Filter by Status" value="{{statusFilter}}"
+                    data="[[statusFilterOptions]]" item-text="label" placeholder="Filter by status...">
+                </oj-c-select-single>
+            </div>
+
+            <!-- Environment filter dropdown -->
+            <div class="oj-sm-margin-2x-start" style="min-width: 180px;">
+                <oj-c-select-single label-hint="Filter by Environment" value="{{environmentFilter}}"
+                    data="[[environmentFilterOptions]]" item-text="label" placeholder="Filter by environment...">
+                </oj-c-select-single>
+            </div>
+
+            <!-- Sort dropdown (right) -->
+            <div class="oj-sm-margin-2x-start" style="min-width: 220px;">
+                <oj-c-select-single label-hint="Sort By" value="{{sortOption}}" data="[[sortOptions]]" item-text="label"
+                    placeholder="Sort...">
+                </oj-c-select-single>
+            </div>
+        </div>
+
+
+
+        <div class="oj-flex oj-sm-align-items-start oj-sm-margin-4x-bottom">
+            <h2 class="oj-typography-heading-md oj-text-color-primary oj-flex-item">
+                Registered Applications
+            </h2>
+
+            <div style="display: inline-flex; flex-direction: column; align-items: flex-start; margin-left: 24px;">
+                <oj-bind-if test="[[isAdmin]]">
+                    <oj-button id="addApplicationButton" class="oj-button-outlined-chrome oj-sm-margin-2x-bottom"
+                        on-oj-action="[[openAddDialog]]" chroming="outlined">
+                        <span slot="startIcon" class="oj-ux-ico-plus"></span>
+                        Add Application
+                    </oj-button>
+                </oj-bind-if>
+
+                <span class="oj-typography-body-sm oj-text-color-secondary padding-2x-left">
+                    Total: <oj-bind-text value="[[applicationDataArray().length]]"></oj-bind-text> applications
+                </span>
+            </div>
+        </div>
+
+
+        <div class="oj-flex oj-sm-flex-direction-column oj-sm-margin-4x-bottom">
+            <p class="oj-typography-body-md oj-text-color-secondary">
+                Manage access permissions for registered applications. Control which groups can access each
+                application's logs.
+            </p>
+        </div>
+    </div>
+</div>
+
+<oj-bind-if test="[[!isDataEmpty()]]">
+
+
+    <!-- Flex container for full vertical layout -->
+    <div class="oj-flex oj-sm-flex-direction-column" style="min-height: 70vh;">
+
+        <!-- List Container with fixed min height -->
+        <div style="min-height: 50vh;" class="oj-flex-item-auto">
+            <oj-list-view id="applicationsListView" aria-label="Applications" data="[[paginatedDataProvider]]"
+                on-oj-item-action="[[gotoEditApplication]]" class="demo-applications-list">
+
+                <template slot="itemTemplate" data-oj-as="item">
+                    <li>
+                        <oj-list-item-layout>
+                            <div class="oj-flex oj-sm-flex-direction-column">
+                                <span class="oj-typography-heading-sm oj-text-color-primary">
+                                    <oj-bind-text value="[[item.item.data.name]]"></oj-bind-text>
+                                </span>
+                                <span class="oj-typography-body-sm oj-text-color-primary">
+                                    <oj-bind-text value="[[item.item.data._id]]"></oj-bind-text>
+                                </span>
+                                <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
+                                    Hostname <oj-bind-text value="[[item.item.data.hostname]]"></oj-bind-text>
+                                    • <oj-bind-text
+                                        value="[[getRelativeTime(item.item.data.createdAt)]]"></oj-bind-text>
+                                </span>
+                                <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
+                                    Status:
+
+                                    <oj-bind-if test="[[item.item.data.isActive]]">
+                                        <span class="oj-text-color-success">Active</span>
+                                    </oj-bind-if>
+                                    <oj-bind-if test="[[!item.item.data.isActive]]">
+                                        <span class="oj-text-color-danger">Inactive</span>
+                                    </oj-bind-if>
+                                </span>
+                            </div>
+
+                            <div slot="metadata" class="oj-flex oj-sm-align-items-center">
+                                <span class="oj-typography-body-md oj-text-color-secondary oj-sm-margin-4x-end">
+                                    <oj-bind-text value="[[item.item.data.environment]]"></oj-bind-text>
+                                </span>
+                                <oj-bind-if test="[[isAdmin]]">
+                                    <oj-button class="oj-button-sm" chroming="outlined"
+                                        on-oj-action="[[editApplication]]" :data-app-id="[[item.item.data._id]]">
+                                        <span slot="startIcon" class="oj-ux-ico-edit"></span>
+                                        Edit
+                                    </oj-button>
+                                    <oj-button class="oj-button-sm" chroming="outlined"
+                                        on-oj-action="[[handleDeleteApp]]" :data-app-id="[[item.item.data._id]]">
+                                        <span slot="startIcon" class="oj-ux-ico-trash"></span>
+                                        Delete
+                                    </oj-button>
+                                </oj-bind-if>
+                            </div>
+                        </oj-list-item-layout>
+                    </li>
+                </template>
+
+                <template slot="noData">
+                    <div class="oj-flex oj-sm-align-items-center demo-nodata-content">
+                        <div class="oj-flex oj-sm-align-items-center oj-sm-flex-direction-column demo-nodata-inner">
+                            <h5>No Applications found!</h5>
+                            <p class="oj-text-color-secondary">Add your first application to get started.</p>
+                        </div>
+                    </div>
+                </template>
+            </oj-list-view>
+        </div>
+
+        <!-- Pagination (always stays bottom visually) -->
+        <div class="oj-flex oj-sm-justify-content-center oj-sm-align-items-center oj-sm-margin-4x-bottom">
+            <oj-button chroming="outlined" disabled="[[currentPage() === 1]]"
+                on-oj-action="[[() => currentPage(currentPage() - 1)]]">
+                Previous
+            </oj-button>
+
+            <div class="oj-flex oj-sm-align-items-center oj-sm-margin-2x-start oj-sm-margin-2x-end">
+                Page <oj-bind-text value="[[currentPage]]"></oj-bind-text>
+                / <oj-bind-text value="[[totalPages]]"></oj-bind-text>
+            </div>
+
+            <oj-button chroming="outlined" disabled="[[currentPage() >= totalPages()]]"
+                on-oj-action="[[() => currentPage(currentPage() + 1)]]">
+                Next
+            </oj-button>
+        </div>
+
+    </div>
+
+
+
+</oj-bind-if>
+
+<oj-bind-if test="[[isDataEmpty()]]">
+    <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center demo-nodata-content">
+        <div class="oj-flex oj-sm-align-items-center oj-sm-flex-direction-column demo-nodata-inner">
+            <h5>No Applications found!</h5>
+            <p class="oj-text-color-secondary">Create your first application to get started.</p>
+        </div>
+    </div>
+</oj-bind-if>
+
+<!-- Add Application Dialog -->
+<oj-dialog id="addApplicationDialog" cancel-behavior="icon" aria-labelledby="add-dialog-title">
+    <div slot="header">
+        <span id="add-dialog-title" class="oj-dialog-title">Register New Application</span>
+    </div>
+    <div slot="body">
+
+        <oj-form-layout max-columns="1" label-edge="top">
+                        <oj-bind-if test="[[addAppDialogError]]">
+                <div class="oj-sm-margin-2x-bottom" style="padding: 10px; background-color: #f2dede; color: #a94442; border-radius: 4px;">
+                    <oj-bind-text value="[[addAppDialogError]]"></oj-bind-text>
+                </div>
+            </oj-bind-if>
+            <oj-c-input-text label-hint="Application Name" value="{{newApplication.name}}" required
+                minlength="5" maxlength="20"
+                help.instruction="Name must be 5-20 characters">
+            </oj-c-input-text>
+
+            <oj-c-input-text label-hint="Hostname" value="{{newApplication.hostname}}" required>
+            </oj-c-input-text>
+
+            <oj-c-select-single label-hint="Environment" value="{{newApplication.environment}}" data="[[envOptions]]"
+                item-text="label" placeholder="Choose environment" required>
+            </oj-c-select-single>
+
+            <oj-c-text-area label-hint="Description" value="{{newApplication.description}}"
+                minlength="10" maxlength="100"
+                help.instruction="Description must be 10-100 characters">
+            </oj-c-text-area>
+
+            <oj-form-layout-item>
+                <div class="oj-flex oj-sm-align-items-center">
+                    <span class="oj-typography-body-md oj-text-color-primary"
+                        style="margin-right: 12px; min-width: 150px;">
+                        Status (Active/Inactive):
+                    </span>
+                    <oj-switch value="{{newApplication.isActive}}">
+                    </oj-switch>
+                </div>
+            </oj-form-layout-item>
+            <oj-form-layout-item>
+                <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">
+                    Group Assignment
+                </h4>
+                <div class="oj-flex oj-sm-flex-direction-column applications-checkboxes">
+                    <oj-c-checkboxset class="oj-flex oj-sm-flex-direction-column">
+                        <oj-bind-for-each data="[[availableGroups]]">
+                            <template data-oj-as="group">
+                                <div class="checkboxes">
+                                    <oj-c-checkbox value="{{group.data.checked}}" :disabled="[[group.data.isAdmin]]"
+                                        checked="[[group.data.checked]]">
+                                        <oj-bind-text
+                                            value="[[group.data.name + (group.data.isAdmin ? ' (Admin)' : '')]]"></oj-bind-text>
+                                    </oj-c-checkbox>
+                                </div>
+                            </template>
+                        </oj-bind-for-each>
+                    </oj-c-checkboxset>
+                </div>
+            </oj-form-layout-item>
+        </oj-form-layout>
+    </div>
+
+    <div slot="footer">
+        <oj-button on-oj-action="[[closeAddDialog]]">Cancel</oj-button>
+        <oj-button chroming="callToAction" on-oj-action="[[addNewApplication]]">
+            Register Application
+        </oj-button>
+    </div>
+</oj-dialog>
+
+
+
+<!-- Edit Application Dialog -->
+<oj-dialog id="editApplicationDialog" cancel-behavior="icon" aria-labelledby="dialog-title-id">
+    <div slot="header">
+        <span id="dialog-title-id" class="oj-dialog-title">
+            Edit Application: <oj-bind-text value="[[selectedApplicationName]]"></oj-bind-text>
+        </span>
+    </div>
+
+    <div slot="body" class="app-body">
+        <div class="oj-flex oj-sm-flex-direction-column oj-justify-content-center oj-sm-padding-4x">
+            <p class="oj-typography-body-md oj-text-color-secondary oj-sm-margin-4x-bottom">
+                Manage application settings using the form below.
+            </p>
+            <oj-bind-if test="[[editAppDialogError()]]">
+                <div class="oj-sm-margin-2x-bottom" style="padding: 10px; background-color: #f2dede; color: #a94442; border-radius: 4px;">
+                    <oj-bind-text value="[[editAppDialogError]]"></oj-bind-text>
+                </div>
+            </oj-bind-if>
+            <!-- Section: Application Details -->
+            <div class="oj-sm-margin-4x-bottom">
+                <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">
+                    Application Details
+                </h4>
+                <oj-form-layout max-columns="1" direction="row">
+                    <oj-c-input-text id="applicationNameField" label-hint="Application Name"
+                        value="{{selectedApplicationName}}" required></oj-c-input-text>
+
+                    <oj-c-input-text id="applicationHostName" label-hint="Application Host Name"
+                        value="{{selectedApplicationHostName}}" required></oj-c-input-text>
+
+                    <oj-c-text-area id="applicationDescriptionField" label-hint="Description"
+                        value="{{selectedApplicationDescription}}"></oj-c-text-area>
+
+
+                    <oj-c-select-single 
+  label-hint="Environment" 
+  value="{{newApplication.environment}}" 
+  data="[[envOptions]]" 
+  item-text="label" 
+  placeholder="Choose environment"
+  required>
+</oj-c-select-single>
+
+                    <oj-form-layout-item>
+                        <div class="oj-flex oj-sm-align-items-center">
+                            <span class="oj-typography-body-md oj-text-color-primary"
+                                style="margin-right: 12px; min-width: 150px;">
+                                Status (Active/Inactive):
+                            </span>
+                            <oj-switch value="{{selectedApplicationIsActive}}">
+                            </oj-switch>
+                        </div>
+                    </oj-form-layout-item>
+
+                </oj-form-layout>
+            </div>
+
+            <!-- Section: Group Assignment -->
+            <div class="oj-sm-margin-4x-bottom">
+                <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">
+                    Group Assignment
+                </h4>
+                <div class="oj-flex oj-sm-flex-direction-column applications-checkboxes">
+                    <oj-c-checkboxset class="oj-flex oj-sm-flex-direction-column">
+                        <oj-bind-for-each data="[[availableGroupsEdit]]">
+                            <template data-oj-as="group">
+                                <span>
+                                    <oj-c-checkbox value="{{group.data.checked}}" :disabled="[[group.data.isAdmin]]"
+                                        checked="[[group.data.checked]]"></oj-c-checkbox>
+                                    <oj-bind-text
+                                        value="[[group.data.name + (group.data.isAdmin ? ' (Admin)' : '')]]"></oj-bind-text>
+                                    </oj-c-checkbox>
+                                </span>
+                            </template>
+                        </oj-bind-for-each>
+                    </oj-c-checkboxset>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div slot="footer">
+        <oj-button id="cancelDialogBtn" on-oj-action="[[closeEditDialog]]">
+            Cancel
+        </oj-button>
+        <oj-button id="updateGroupBtn" chroming="callToAction" on-oj-action="[[updateApplication]]">
+            Update Application
+        </oj-button>
+    </div>
+</oj-dialog>
+
+<!-- Delete Confirmation Dialog -->
+<oj-dialog id="deleteApplicationDialog" cancel-behavior="icon" aria-labelledby="delete-app-dialog-title"
+    aria-describedby="delete-app-dialog-body">
+    <div slot="header">
+        <span id="delete-app-dialog-title" class="oj-dialog-title">
+            Delete Application
+        </span>
+    </div>
+    <div slot="body">
+        <p id="delete-app-dialog-body">
+            Are you sure you want to delete this application? This action cannot be undone.
+        </p>
+    </div>
+    <div slot="footer">
+        <oj-button on-oj-action="[[cancelDelete]]">Cancel</oj-button>
+        <oj-button chroming="danger" on-oj-action="[[confirmDelete]]">Delete</oj-button>
+    </div>
+</oj-dialog>
+
+
+
+</div>

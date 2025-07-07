@@ -1,0 +1,58 @@
+.logs-per-page-container {
+  min-width: 120px;
+}
+
+.custom-select {
+  --oj-select-bg-color: white;
+  --oj-select-border-color: #d1d5db;
+  --oj-select-border-color-focus: #3b82f6;
+  --oj-select-border-radius: 8px;
+  --oj-select-text-color: #374151;
+  --oj-select-font-size: 14px;
+  --oj-select-font-weight: 500;
+  --oj-select-padding: 8px 12px;
+  width: 100%;
+  height: 40px;
+  transition: all 0.2s ease;
+}
+
+.custom-select:hover {
+  --oj-select-border-color: #9ca3af;
+}
+
+.custom-select:focus-within {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  --oj-select-border-color: #3b82f6;
+}
+
+/* Dropdown arrow styling */
+.custom-select::after {
+  border-color: #6b7280 transparent transparent transparent;
+  transition: transform 0.2s ease;
+}
+
+.custom-select:hover::after {
+  border-color: #374151 transparent transparent transparent;
+}
+
+/* Option styling */
+.custom-select .oj-listbox-option {
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #374151;
+  transition: background-color 0.2s ease;
+}
+
+.custom-select .oj-listbox-option:hover {
+  background-color: #f3f4f6;
+}
+
+.custom-select .oj-listbox-option.oj-selected {
+  background-color: #3b82f6;
+  color: white;
+}
+
+.custom-select .oj-listbox-option.oj-focus {
+  background-color: #e0e7ff;
+  color: #1e40af;
+}

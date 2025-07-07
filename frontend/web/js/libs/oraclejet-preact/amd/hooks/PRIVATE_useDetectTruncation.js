@@ -1,0 +1,2 @@
+define(['exports', '../useDetectTruncation-dc12ec23', '../useResizeObserver-275c3e83', '../useVisAddBusyState-2d2ccb92', '../VisBusyStateContext-63467849', 'preact', '../useVisBusyStateContext-7b0606e7', 'preact/hooks'], (function(e,t,s,c,u,n,i,o){"use strict";e.useDetectTruncation=t.useDetectTruncation,Object.defineProperty(e,"__esModule",{value:!0})}));
+//# sourceMappingURL=PRIVATE_useDetectTruncation.js.map

@@ -1,0 +1,2 @@
+define(['exports', 'preact/jsx-runtime', './useDebounce-8b4d8cfb', './useTranslationBundle-7c40cb58', './LiveRegion-1917f798'], (function(e,n,t,i,o){"use strict";e.MaxLengthLiveRegion=function({maxLength:e,testId:c,valueLength:r=0}){const s=t.useDebounce(e-r,500),u=i.useTranslationBundle("@oracle/oraclejet-preact").formControl_maxLengthRemaining({CHARACTER_COUNT:`${s}`});return n.jsx(o.LiveRegion,{testId:c,children:u})}}));
+//# sourceMappingURL=MaxLengthLiveRegion-46bb45da.js.map

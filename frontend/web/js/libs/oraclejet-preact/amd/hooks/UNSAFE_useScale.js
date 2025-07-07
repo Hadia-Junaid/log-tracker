@@ -1,0 +1,2 @@
+define(['exports', '../useScale-716d3432', 'preact/hooks', '../LayerHost-733ade2f', 'preact', '../Common/themes/redwood/theme', '../Common/themes/themeContract.css', 'preact/jsx-runtime', 'preact/compat', '../UNSAFE_Layer/themes/LayerHostStyles.css', 'css!./../LayerHostStyles.styles.css'], (function(e,s,t,o,a,c,r,m,l,n,u){"use strict";e.useScale=s.useScale,Object.defineProperty(e,"__esModule",{value:!0})}));
+//# sourceMappingURL=UNSAFE_useScale.js.map
