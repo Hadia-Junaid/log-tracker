@@ -1,10 +1,12 @@
 import { h } from "preact";
-import { useState, useEffect } from "preact/hooks";
+import { useState, useEffect, useRef } from "preact/hooks";
 import { GroupData } from "../types/userManagement";
 import { userGroupService } from "../services/userGroupServices";
 import { AddGroupDialog } from "../components/AddGroupDialog";
 import { EditGroupDialog } from "../components/EditGroupDialog";
 import { DeleteGroupDialog } from "../components/DeleteGroupDialog";
+import "ojs/ojinputsearch";
+import "ojs/ojbutton";
 
 type Props = {
   path?: string; // required by preact-router
@@ -35,6 +37,9 @@ export default function UserManagement(props: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(4);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<any>(null);
+
   useEffect(() => {
     loadGroups();
   }, []);
@@ -54,12 +59,6 @@ export default function UserManagement(props: Props) {
     }
   };
 
-  const handleSearchChange = (e: Event) => {
-    const target = e.target as HTMLInputElement;
-    setSearchTerm(target.value);
-    setCurrentPage(1); // Reset to first page on search
-  };
-
   const filteredGroups = groups.filter(
     (group) =>
       group.groupName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -72,6 +71,67 @@ export default function UserManagement(props: Props) {
     startIndex,
     startIndex + itemsPerPage
   );
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    // Helper to find all oj-buttons and attach listeners
+    const addGroupBtn = container.querySelector('.oj-button-outlined-chrome');
+    const editBtns = container.querySelectorAll('.oj-button-sm:not(.oj-button-danger)');
+    const deleteBtns = container.querySelectorAll('.oj-button-danger');
+    const prevBtn = container.querySelector('.pagination-container oj-button:first-of-type');
+    const nextBtn = container.querySelector('.pagination-container oj-button:last-of-type');
+
+    // Store listeners for cleanup
+    const listeners: { el: Element, fn: EventListener }[] = [];
+
+    if (addGroupBtn) {
+      const fn = (e: Event) => { e.preventDefault(); handleAddGroup(); };
+      addGroupBtn.addEventListener('ojAction', fn);
+      listeners.push({ el: addGroupBtn, fn });
+    }
+    editBtns.forEach((btn, idx) => {
+      const fn = (e: Event) => { e.preventDefault(); handleEditGroup(paginatedGroups[idx]); };
+      btn.addEventListener('ojAction', fn);
+      listeners.push({ el: btn, fn });
+    });
+    deleteBtns.forEach((btn, idx) => {
+      // Only non-admin groups are deletable, so filter paginatedGroups
+      const nonAdminGroups = paginatedGroups.filter(g => !g.is_admin);
+      const fn = (e: Event) => { e.preventDefault(); handleDeleteGroup(nonAdminGroups[idx]); };
+      btn.addEventListener('ojAction', fn);
+      listeners.push({ el: btn, fn });
+    });
+    if (prevBtn) {
+      const fn = (e: Event) => { e.preventDefault(); goToPrevPage(); };
+      prevBtn.addEventListener('ojAction', fn);
+      listeners.push({ el: prevBtn, fn });
+    }
+    if (nextBtn) {
+      const fn = (e: Event) => { e.preventDefault(); goToNextPage(); };
+      nextBtn.addEventListener('ojAction', fn);
+      listeners.push({ el: nextBtn, fn });
+    }
+
+    // Attach search bar listener
+    if (searchInputRef.current) {
+      const searchListener = (e: Event) => {
+        const ce = e as CustomEvent;
+        setSearchTerm(ce.detail.value);
+        setCurrentPage(1);
+      };
+      searchInputRef.current.addEventListener('rawValueChanged', searchListener);
+      listeners.push({ el: searchInputRef.current, fn: searchListener });
+    }
+
+    return () => {
+      listeners.forEach(({ el, fn }) => {
+        el.removeEventListener('ojAction', fn);
+        el.removeEventListener('rawValueChanged', fn);
+      });
+    };
+  }, [paginatedGroups]);
 
   const handleAddGroup = () => {
     setIsAddDialogOpen(true);
@@ -122,7 +182,7 @@ export default function UserManagement(props: Props) {
   }
 
   return (
-    <div class="oj-hybrid-padding">
+    <div class="oj-hybrid-padding" ref={containerRef}>
       <div class="oj-flex oj-sm-flex-direction-column">
         <div class="oj-flex oj-sm-margin-4x-bottom">
           <h1 class="oj-typography-heading-lg oj-text-color-primary">Groups</h1>
@@ -139,11 +199,8 @@ export default function UserManagement(props: Props) {
             <oj-input-search
               class="oj-form-control-full-width"
               placeholder="Search groups..."
-              value={searchTerm}
-              on-oj-value-action={(e: CustomEvent) => {
-                setSearchTerm((e.target as any).value);
-                setCurrentPage(1);
-              }}
+              raw-value={searchTerm}
+              ref={searchInputRef}
             />
           </div>
 
@@ -151,7 +208,6 @@ export default function UserManagement(props: Props) {
             <oj-button
               display="all"
               class="oj-button-outlined-chrome"
-              on-oj-action={handleAddGroup}
             >
               <span
                 slot="startIcon"
@@ -235,7 +291,6 @@ export default function UserManagement(props: Props) {
                     <oj-button
                       display="all"
                       class="oj-button-sm"
-                      on-oj-action={() => handleEditGroup(group)}
                     >
                       <span slot="startIcon" class="oj-ux-ico-edit"></span>
                       Edit
@@ -245,7 +300,6 @@ export default function UserManagement(props: Props) {
                       <oj-button
                         display="all"
                         class="oj-button-sm oj-button-danger"
-                        on-oj-action={() => handleDeleteGroup(group)}
                       >
                         <span slot="startIcon" class="oj-ux-ico-trash"></span>
                         Delete
@@ -256,14 +310,19 @@ export default function UserManagement(props: Props) {
               ))}
             </div>
           ) : (
-            <div class="oj-flex oj-sm-align-items-center demo-nodata-content">
-              <div class="oj-flex oj-sm-align-items-center oj-sm-flex-direction-column demo-nodata-inner">
-                <h5>No groups found!</h5>
-                <p class="oj-text-color-secondary">
-                  {searchTerm
-                    ? "No groups match your search criteria."
-                    : "Create your first user group to get started."}
-                </p>
+            <div
+              class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center"
+              style="height: 40vh;"
+            >
+              <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center oj-sm-flex-direction-column">
+              <p
+                class="oj-text-color-secondary"
+                style="font-weight: bold; font-size: 1.25rem; text-align: center;"
+              >
+                {searchTerm
+                ? "No groups match your search criteria!"
+                : "Create your first user group to get started."}
+              </p>
               </div>
             </div>
           )}
@@ -272,7 +331,7 @@ export default function UserManagement(props: Props) {
         {/* Pagination controls */}
         <div class="pagination-container">
           <div class="oj-flex oj-sm-justify-content-center oj-sm-align-items-center">
-            <oj-button disabled={currentPage === 1} on-oj-action={goToPrevPage}>
+            <oj-button disabled={currentPage === 1}>
               Previous
             </oj-button>
 
@@ -284,7 +343,6 @@ export default function UserManagement(props: Props) {
 
             <oj-button
               disabled={currentPage === totalPages}
-              on-oj-action={goToPrevPage}
             >
               Next
             </oj-button>
