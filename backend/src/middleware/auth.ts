@@ -11,28 +11,30 @@ declare global {
   }
 }
 
-export const authenticate = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const authenticate = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> => {
   try {
-    const authHeader = req.headers.authorization;
+    const token = req.cookies?.jwt;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!token) {
       res.status(401).json({
         success: false,
-        message: 'Access token is required'
+        message: 'Authentication token is missing',
       });
       return;
     }
 
-    const token = authHeader.substring(7); // Remove 'Bearer ' prefix
-    
     const decoded = jwtService.verifyToken(token);
 
     const user = await User.findById(decoded.userId);
-    
+
     if (!user) {
       res.status(401).json({
         success: false,
-        message: 'User not found'
+        message: 'User not found',
       });
       return;
     }
@@ -43,16 +45,15 @@ export const authenticate = async (req: Request, res: Response, next: NextFuncti
       name: user.name,
       settings: user.settings,
       pinned_applications: user.pinned_applications,
-      is_admin: decoded.is_admin
+      is_admin: decoded.is_admin,
     };
 
     next();
-
   } catch (error) {
     logger.error('Authentication middleware error:', error);
     res.status(401).json({
       success: false,
-      message: 'Invalid or expired token'
+      message: 'Invalid or expired token',
     });
   }
 };

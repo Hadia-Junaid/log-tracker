@@ -16,7 +16,8 @@ import UserManagement from "./views/UserManagement";
 import Sidebar from "./components/Sidebar";
 import Login from "./views/Login";
 import "./styles/app.css";
-import axios from "axios";
+import axios from "./api/axios"; // Adjust the import path as necessary
+import LoadingSpinner from "./components/LoadingSpinner"; // Adjust the import path as necessary
 
 type Props = {
     appName?: string;
@@ -24,11 +25,8 @@ type Props = {
 };
 
 function checkAuth(): Promise<boolean> {
-    const backendUrl = process.env.BACKEND_URL;
     return axios
-        .get(`${backendUrl}/auth/status`, {
-            withCredentials: true,
-        })
+        .get(`/auth/status`)
         .then((res) => {
             console.log("Auth check response:", res);
             return res.data?.authenticated === true;
@@ -46,10 +44,6 @@ export const App = registerCustomElement(
             null
         );
 
-        // useEffect(() => {
-        //     checkAuth().then(setIsAuthenticated);
-        // }, []);
-
         useEffect(() => {
             const checkOrExchangeAuth = async () => {
                 // Look for auth_code in URL
@@ -61,11 +55,9 @@ export const App = registerCustomElement(
                 if (authCode) {
                     try {
                         // Exchange code -> set cookie
-                        await axios.post(
-                            `${process.env.BACKEND_URL}/auth/exchange`,
-                            { auth_code: authCode },
-                            { withCredentials: true }
-                        );
+                        await axios.post("/auth/exchange", {
+                            auth_code: authCode,
+                        });
 
                         // Clear the hash so it's clean
                         window.location.hash = "";
@@ -85,7 +77,7 @@ export const App = registerCustomElement(
         }, []);
 
         if (isAuthenticated === null) {
-            return <div>Loading...</div>;
+            return <LoadingSpinner />;
         }
 
         if (!isAuthenticated) {

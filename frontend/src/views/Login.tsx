@@ -1,54 +1,22 @@
-// src/views/Login.tsx
 import { h } from "preact";
 import { useState, useEffect } from "preact/hooks";
-import axios from "axios";
+import axios from "../api/axios"; 
 import "ojs/ojbutton";
 import "ojs/ojinputtext";
 import "ojs/ojlabel";
 import "ojs/ojformlayout";
 import "ojs/ojavatar";
 import "ojs/ojprogress-circle";
-import "ojs/ojvcomponent"; // Required for VDOM
+import "ojs/ojvcomponent"; 
+import "../styles/login.css"; 
 
-import "../styles/login.css"; // CSS styles you’ll add next
-
-// const GOOGLE_AUTH_URL = `${process.env.BACKEND_URL}/auth/google`;
 
 export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-//   useEffect(() => {
-//   const hash = window.location.hash;
-//   const query = hash.includes("?") ? hash.split("?")[1] : "";
-//   const params = new URLSearchParams(query);
-//   const authCode = params.get("auth_code");
-//   const error = params.get("error");
-
-//   if (authCode) {
-//     axios
-//       .post(`${process.env.BACKEND_URL}/auth/exchange`, { auth_code: authCode }, {
-//         withCredentials: true,
-//       })
-//       .then(() => {
-//         window.location.href = "/dashboard";
-//       })
-//       .catch(() => {
-//         setError("Login failed. Please try again.");
-//       });
-//   }
-
-//   if (error) {
-//     setError(params.get("message") || "Login failed");
-//   }
-// }, []);
-
-
-
   const handleLogin = async () => {
-  const response = await axios.get(`${process.env.BACKEND_URL}/auth/google`, {
-    withCredentials: true,
-  });
+  const response = await axios.get(`/auth/google`);
   window.location.href = response.data.authUrl;
 };
 
