@@ -10,6 +10,12 @@
           'oj-avatar': any;
           'oj-label': any;
           'oj-option': any;
+          "oj-card": any;
+          "oj-button": any;
+          "oj-avatar": any;
+          "oj-vcomponent-elements": any;
+          "ojactioncard": any;
+          "oj-c-card": any;
         }
       }
 
@@ -38,3 +44,5 @@
         const value: string;
         export default value;
       }
+
+    
