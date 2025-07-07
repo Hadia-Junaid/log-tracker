@@ -53,7 +53,9 @@ export const userGroupService = {
 
   // Search users in directory
   async searchUsers(query: string): Promise<MemberData[]> {
-    const response = await api.get(`/admin/users/search?q=${encodeURIComponent(query)}`);
+    // Use correct param and value for backend
+    const param = query === '' ? 'searchString=""' : `searchString=${encodeURIComponent(query)}`;
+    const response = await api.get(`/admin/users/search?${param}`);
     return response.data.map((user: any) => ({
       id: user.id || user.email,
       email: user.email,
