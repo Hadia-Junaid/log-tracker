@@ -142,7 +142,11 @@ export default function Applications({ path }: Props) {
         applicationId={selectedAppId}
         applicationName={selectedAppName}
         onClose={() => setDeleteDialogOpen(false)}
-        onDeleteSuccess={fetchApplications}
+        onDeleteSuccess={()=>{
+          setCurrentPage(1); // Reset to first page after deletion
+          console.log("Reset page after deletion")
+          fetchApplications();
+        }}
       />
 
       <div class="pagination-footer">
