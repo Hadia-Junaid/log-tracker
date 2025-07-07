@@ -2,6 +2,12 @@
       // used in JSX that do not have the required type definitions
       declare namespace preact.JSX {
         interface IntrinsicElements {
+          "oj-card": any;
+          "oj-button": any;
+          "oj-avatar": any;
+          "oj-vcomponent-elements": any;
+          "ojactioncard": any;
+          "oj-c-card": any;
         }
       }
 
