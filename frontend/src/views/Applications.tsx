@@ -5,20 +5,22 @@ import { useState, useEffect } from "preact/hooks";
 import "../styles/applications.css";
 import axios from "../api/axios";
 import LoadingSpinner from "../components/LoadingSpinner";
+import AddApplicationDialog from "../components/applications/AddApplicationDialog";
+import { Application } from "src/types/applications";
 
 type Props = {
   path?: string;
 };
 
-type Application = {
-  _id: string;
-  name: string;
-  hostname: string;
-  createdAt: string;
-  isActive: boolean;
-  environment: string;
-  description?: string;
-};
+// type Application = {
+//   _id: string;
+//   name: string;
+//   hostname: string;
+//   createdAt: string;
+//   isActive: boolean;
+//   environment: string;
+//   description?: string;
+// };
 
 const dummyApplications: Application[] = [
   {
@@ -37,36 +39,40 @@ const dummyApplications: Application[] = [
     isActive: false,
     environment: "Staging",
   },
- 
 ];
 
 export default function Applications({ path }: Props) {
   const [searchText, setSearchText] = useState("");
-  const [applications, setApplications] =
-    useState<Application[]>([]);
+  const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false); // State to control dialog visibility
+
+  const fetchApplications = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get("/applications");
+
+      console.log("Fetched applications:", response.data);
+
+      setApplications(response.data.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching applications:", error);
+      setLoading(false);
+      setError("Failed to fetch applications");
+    }
+  };
 
   useEffect(() => {
     // Fetch applications from API
-    const fetchApplications = async () => {
-      try {
-        setLoading(true);
-        const response = await axios.get("/applications");
-
-        console.log("Fetched applications:", response.data);
-
-        setApplications(response.data.data);
-        setLoading(false);
-      } catch (error) {
-        console.error("Error fetching applications:", error);
-        setLoading(false);
-        setError("Failed to fetch applications");
-      }
-    };
 
     fetchApplications();
   }, []);
+
+  const pushNewApplication = (newApp: Application) => {
+    setApplications((prevApps) => [...prevApps, newApp]);
+  };
 
   return (
     <div class="page-container">
@@ -79,7 +85,11 @@ export default function Applications({ path }: Props) {
             onvalueChanged={(e) => setSearchText(e.detail.value)}
             class="search-input"
           ></oj-input-text>
-          <oj-button chroming="solid" class="add-button">
+          <oj-button
+            chroming="solid"
+            class="add-button"
+            onojAction={() => setIsAddDialogOpen(true)} // This line opens the dialog
+          >
             <span slot="startIcon" class="oj-ux-ico-plus"></span>
             Add Application
           </oj-button>
@@ -94,6 +104,13 @@ export default function Applications({ path }: Props) {
           <ApplicationCard key={app._id} app={app} />
         ))}
       </div>
+
+      {/* Add the new AddApplicationDialog component */}
+      <AddApplicationDialog
+        isOpen={isAddDialogOpen}
+        onClose={() => setIsAddDialogOpen(false)}
+        onApplicationAdded={pushNewApplication} // Pass the function to add new application
+      />
     </div>
   );
 }

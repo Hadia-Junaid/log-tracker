@@ -8,6 +8,7 @@
           "oj-vcomponent-elements": any;
           "ojactioncard": any;
           "oj-c-card": any;
+          "oj-checkbox-set": any;
         }
       }
 
