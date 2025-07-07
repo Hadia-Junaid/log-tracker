@@ -21,6 +21,7 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
   const [selectedMembers, setSelectedMembers] = useState<MemberData[]>([]);
   const [allMembers, setAllMembers] = useState<MemberData[]>([]);
   const [applications, setApplications] = useState<ApplicationOption[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState('');
@@ -60,7 +61,7 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
     setError('');
     try {
       // Use userGroupService for consistent user fetching
-      const members = await userGroupService.searchUsers("");
+      const members = await userGroupService.searchUsers('');
       localStorage.setItem('allDirectoryMembers', JSON.stringify(members));
       setAllMembers(members);
     } catch (err) {
@@ -71,8 +72,16 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
     }
   };
 
+  const handleSearchInput = (value: string) => {
+    setSearchTerm(value);
+  };
+
+  // Available members = allMembers - selectedMembers, filtered by search term
   const availableMembers = allMembers.filter(
-    (m) => !selectedMembers.some((sel) => sel.id === m.id)
+    (m) => !selectedMembers.some((sel) => sel.id === m.id) &&
+           (searchTerm === '' || 
+            m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            m.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleAddMember = (member: MemberData) => {
@@ -144,6 +153,7 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
     setSelectedMembers([]);
     setAllMembers([]);
     setApplications([]);
+    setSearchTerm('');
     setError('');
     
     if (searchTimeoutRef.current) {
@@ -165,7 +175,216 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
   if (!isOpen) return null;
 
   return (
+    
     <div class="oj-dialog-mask">
+      <style>
+{`
+  .edit-group-content {
+    gap: 24px;
+    width: 100%;
+  }
+
+  .available-members-section,
+  .current-members-section {
+    flex: 1 1 50%;
+    background: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+
+  .available-members-section h4,
+  .current-members-section h4 {
+    margin-bottom: 16px;
+  }
+
+  .members-list {
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border: 1px solid #dcdcdc;
+    border-radius: 6px;
+    background-color: #fff;
+    padding: 8px;
+  }
+
+  .member-list-item {
+    padding: 8px;
+    border-bottom: 1px solid #e0e0e0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .member-list-item:hover {
+    background-color: #f0f0f0;
+  }
+
+  .clickable-member {
+    cursor: pointer;
+  }
+
+  .current-member-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .member-remove-btn {
+    margin-left: 8px;
+  }
+
+  .no-members-content {
+    text-align: center;
+    padding: 16px;
+    font-style: italic;
+  }
+
+  .oj-dialog-body {
+    padding: 24px;
+  }
+
+  .oj-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    padding: 16px 24px;
+    border-top: 1px solid #ddd;
+  }
+
+  .applications-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .application-checkbox-item {
+    margin-right: 16px;
+  }
+
+  .error-message {
+    color: red;
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+`}
+</style>
+<style>
+{`
+  .edit-group-content {
+    display: flex;
+    flex-direction: row;
+    gap: 24px;
+    width: 100%;
+  }
+
+  .available-members-section,
+  .current-members-section {
+    flex: 1;
+    background: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 16px;
+    box-sizing: border-box;
+    min-height: 400px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .available-members-section h4,
+  .current-members-section h4 {
+    margin-bottom: 16px;
+  }
+
+  .members-list {
+    flex: 1;
+    overflow-y: auto;
+    border: 1px solid #dcdcdc;
+    border-radius: 6px;
+    background-color: #fff;
+    padding: 8px;
+  }
+
+  .member-list-item {
+    padding: 8px;
+    border-bottom: 1px solid #e0e0e0;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.2s ease;
+  }
+
+  .member-list-item:hover {
+    background-color: #f0f0f0;
+  }
+
+  .clickable-member {
+    cursor: pointer;
+  }
+
+  .current-member-item .member-remove-btn {
+    margin-left: auto;
+  }
+
+  .no-members-content {
+    text-align: center;
+    padding: 16px;
+    font-style: italic;
+  }
+
+  .oj-dialog-body {
+    padding: 24px;
+  }
+
+  .oj-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    padding: 16px 24px;
+    border-top: 1px solid #ddd;
+  }
+
+  .applications-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .application-checkbox-item {
+    margin-right: 16px;
+  }
+
+  .error-message {
+    color: red;
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+
+  .member-list-item .oj-avatar {
+    flex-shrink: 0;
+  }
+
+  .member-details {
+    flex: 1;
+    margin-left: 12px;
+    min-width: 0;
+  }
+
+  .member-email {
+    font-weight: 500;
+    color: #1a1a1a;
+    word-break: break-word;
+  }
+
+  .member-name {
+    font-size: 0.875rem;
+    color: #6b6b6b;
+    word-break: break-word;
+  }
+`}
+</style>
+
       <div class="oj-dialog" role="dialog" aria-labelledby="add-dialog-title">
         <div class="oj-dialog-header">
           <h2 id="add-dialog-title" class="oj-dialog-title">Add New Group</h2>
@@ -201,9 +420,22 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
 
               <div class="oj-flex oj-sm-flex-direction-row edit-group-content">
                 {/* Available Members Section */}
-                <div class="oj-flex-item oj-flex oj-sm-flex-direction-column available-members-section" style={{ maxHeight: '300px', minHeight: '300px', overflowY: 'auto' }}>
+                <div class="oj-flex-item oj-flex oj-sm-flex-direction-column available-members-section">
                   <h4 class="oj-typography-heading-sm oj-text-color-primary">Available Members</h4>
-                  <div class="members-list available-members-list">
+
+                  {/* Search Input */}
+                  <div class="oj-sm-margin-4x-bottom">
+                    <oj-input-search
+                      class="oj-form-control-full-width"
+                      placeholder="Search directory..."
+                      raw-value={searchTerm}
+                      on-raw-value-changed={(e: any) => handleSearchInput(e.detail.value)}
+                      ref={searchInputRef}
+                    />
+                  </div>
+
+                  {/* Available Members List */}
+                  <div class="members-list available-members-list" style="max-height: 300px; overflow-y: auto; overflow-x: hidden;">
                     {availableMembers.length > 0 ? (
                       availableMembers.map((member) => (
                         <div
@@ -211,13 +443,13 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
                           class="clickable-member member-list-item"
                           onClick={() => handleAddMember(member)}
                         >
-                          <div class="oj-flex oj-sm-align-items-center">
+                          <div class="oj-flex oj-sm-align-items-center" style="min-width: 0; flex: 1;">
                             <oj-avatar size="xs" initials={member.initials}></oj-avatar>
-                            <div class="oj-sm-margin-2x-start">
-                              <div class="oj-typography-body-md oj-text-color-primary">
+                            <div class="oj-sm-margin-2x-start" style="min-width: 0; flex: 1;">
+                              <div class="oj-typography-body-md oj-text-color-primary" style="word-wrap: break-word; overflow-wrap: break-word;">
                                 {member.email}
                               </div>
-                              <div class="oj-typography-body-sm oj-text-color-secondary">
+                              <div class="oj-typography-body-sm oj-text-color-secondary" style="word-wrap: break-word; overflow-wrap: break-word;">
                                 {member.name}
                               </div>
                             </div>
@@ -226,7 +458,9 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
                       ))
                     ) : (
                       <div class="no-members-content">
-                        <p class="oj-text-color-secondary">No available members</p>
+                        <p class="oj-text-color-secondary">
+                          {searchTerm ? 'No members found' : 'No available members'}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -249,18 +483,18 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
                       </oj-button>
                     </div>
                   </div>
-                  <div class="members-list current-members-list">
+                  <div class="members-list current-members-list" style="max-height: 300px; overflow-y: auto; overflow-x: hidden;">
                     {selectedMembers.length > 0 ? (
                       selectedMembers.map((member) => (
                         <div key={member.id} class="member-list-item current-member-item">
-                          <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-space-between">
-                            <div class="oj-flex oj-sm-align-items-center">
+                          <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-space-between" style="min-width: 0; flex: 1;">
+                            <div class="oj-flex oj-sm-align-items-center" style="min-width: 0; flex: 1;">
                               <oj-avatar size="xs" initials={member.initials}></oj-avatar>
-                              <div class="oj-sm-margin-2x-start">
-                                <div class="oj-typography-body-md oj-text-color-primary">
+                              <div class="oj-sm-margin-2x-start" style="min-width: 0; flex: 1;">
+                                <div class="oj-typography-body-md oj-text-color-primary" style="word-wrap: break-word; overflow-wrap: break-word;">
                                   {member.email}
                                 </div>
-                                <div class="oj-typography-body-sm oj-text-color-secondary">
+                                <div class="oj-typography-body-sm oj-text-color-secondary" style="word-wrap: break-word; overflow-wrap: break-word;">
                                   {member.name}
                                 </div>
                               </div>

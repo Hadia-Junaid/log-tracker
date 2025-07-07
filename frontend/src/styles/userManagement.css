@@ -279,42 +279,44 @@
 }
 
 .member-list-item {
-  padding: 12px;
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
   border-bottom: 1px solid #e1e1e1;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: background-color 0.2s ease;
 }
 
 .member-list-item:hover {
-  background-color: #f0f0f0;
+  background-color: #f5f5f5;
 }
 
 .member-list-item:last-child {
   border-bottom: none;
 }
 
-.clickable-member {
-  cursor: pointer;
+.member-list-item span {
+  margin-right: 12px;
 }
 
-.current-member-item {
-  background-color: #e8f4fd;
+.member-email {
+  color: #666;
+  font-size: 0.9em;
 }
 
 .member-remove-btn {
-  background: none;
+  margin-left: auto;
+  padding: 4px 8px;
   border: none;
-  color: #666;
+  background: none;
+  color: #d32f2f;
   cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  font-size: 16px;
-  line-height: 1;
+  font-size: 0.9em;
+  transition: color 0.2s ease;
 }
 
 .member-remove-btn:hover {
-  background-color: #f0f0f0;
-  color: #333;
+  color: #b71c1c;
 }
 
 .no-members-content {
@@ -659,4 +661,44 @@
 .custom-search-input ::part(root):focus {
   border-color: #0066cc;
   box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+}
+
+/* Applications Section Styles */
+.applications-section {
+  margin-top: 24px;
+}
+
+.applications-checkboxes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 12px;
+}
+
+/* Search Input Styles */
+.search-input {
+  width: 100%;
+  margin-bottom: 16px;
+}
+
+/* Members List Container */
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  margin-top: 16px;
+}
+
+.members-list h4 {
+  margin: 0 0 12px 0;
+  color: #333;
+  font-size: 1rem;
+}
+
+/* List View Container */
+.oj-listview {
+  border: 1px solid #e1e1e1;
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
 }
