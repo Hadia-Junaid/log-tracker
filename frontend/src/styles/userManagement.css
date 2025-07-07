@@ -647,3 +647,16 @@
   .oj-button.delete-button:focus .oj-button-icon {
     color: #fff !important;
   }
+
+  /* styles.css or relevant CSS file */
+.custom-search-input ::part(root) {
+  outline: none !important;
+  box-shadow: none !important;
+  border: 1px solid #ccc; /* or any color you want */
+}
+
+/* Optional: Add focus style manually */
+.custom-search-input ::part(root):focus {
+  border-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+}

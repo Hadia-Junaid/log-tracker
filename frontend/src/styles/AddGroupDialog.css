@@ -199,24 +199,51 @@
   margin-right: 12px;
 }
 
-/* Applications Section */
-.applications-checkboxes {
+/* Applications Grid: 3 per row, equally spaced, no outline/rounded rectangle */
+.applications-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 12px;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px 16px; /* 24px vertical, 16px horizontal */
   margin-top: 16px;
 }
 
-.oj-checkbox {
+.application-checkbox-item {
   display: flex;
   align-items: center;
+  margin: 0;
+  padding: 0;
 }
 
-.oj-checkbox input[type="checkbox"] {
-  margin-right: 8px;
-  accent-color: #007bff;
-  width: 16px;
-  height: 16px;
+/* Remove OJET option/button look */
+.application-checkbox-item oj-option,
+.application-checkbox-item .oj-option,
+.application-checkbox-item oj-option[role="option"] {
+  border: none !important;
+  background: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  min-width: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+/* Remove extra padding from oj-checkboxset */
+.application-checkbox-item oj-checkboxset,
+.application-checkbox-item .oj-checkboxset {
+  padding: 0 !important;
+  margin: 0 !important;
+  border: none !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+/* Optional: shrink the label text if needed */
+.application-checkbox-item label {
+  margin-left: 8px;
+  font-size: 1rem;
+  font-weight: 400;
 }
 
 /* Dialog Footer */
