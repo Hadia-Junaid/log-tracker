@@ -1,0 +1,150 @@
+/* src/styles/addApplicationDialog.css */
+
+/* Dialog styling */
+#addApplicationDialog {
+  --oj-dialog-border-radius: 16px;
+  --oj-dialog-max-width: 520px;
+  --oj-dialog-header-background-color: #f0f4f8;
+  --oj-dialog-header-text-color: #1f2937;
+  --oj-dialog-header-padding: 20px 28px;
+}
+
+.oj-dialog-body {
+  padding: 28px;
+  position: relative;
+  background-color: #ffffff;
+  border-radius: 0 0 16px 16px;
+}
+
+/* Form layout enhancements */
+.add-application-form .oj-form-layout {
+  margin-bottom: 24px;
+  column-gap: 20px;
+}
+
+oj-input-text,
+oj-select-single {
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* Button styling */
+.submit-button {
+  margin-left: 12px;
+  --oj-button-solid-background-color: #2563eb;
+  --oj-button-solid-text-color: #ffffff;
+  --oj-button-solid-hover-background-color: #1d4ed8;
+  --oj-button-solid-active-background-color: #1e40af;
+  border-radius: 8px;
+}
+
+.cancel-button {
+  --oj-button-outlined-border-color: #6b7280;
+  --oj-button-outlined-text-color: #6b7280;
+  --oj-button-outlined-hover-background-color: #f3f4f6;
+  border-radius: 8px;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(255, 255, 255, 0.85);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 10;
+  border-radius: 16px;
+  text-align: center;
+  padding: 20px;
+}
+
+.loading-spinner {
+  --oj-progress-circle-color: #2563eb;
+  width: 40px;
+  height: 40px;
+}
+
+.loading-overlay p {
+  margin-top: 12px;
+  font-size: 1rem;
+  color: #4b5563;
+}
+
+/* Error and success messages */
+.error-message {
+  color: #dc2626;
+  text-align: center;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.success-message {
+  color: #10b981;
+  text-align: center;
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+/* Improve label spacing */
+oj-label {
+  margin-bottom: 4px;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Form enhancements */
+.add-application-form {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Native select element styled like oj-input-text */
+.select-native {
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 14px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  background-color: #fff;
+  margin-bottom: 15px;
+  outline: none;
+  appearance: none;
+}
+
+.select-native:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
+}
+
+
+/* Responsive dialog adjustments */
+@media (max-width: 600px) {
+  #addApplicationDialog {
+    --oj-dialog-max-width: 100%;
+    --oj-dialog-header-padding: 16px;
+  }
+  .oj-dialog-body {
+    padding: 16px;
+  }
+  oj-input-text,
+  oj-select-single {
+    margin-bottom: 16px;
+  }
+  .submit-button,
+  .cancel-button {
+    width: 100%;
+    margin-left: 0;
+    margin-top: 12px;
+  }
+  .oj-flex {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
