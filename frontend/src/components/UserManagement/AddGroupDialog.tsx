@@ -34,6 +34,7 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
   const [checkedAppIds, setCheckedAppIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchTrigger, setSearchTrigger] = useState(0);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   const searchInputRef = useRef<any>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -41,15 +42,19 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
   const checkboxRefs = useRef<{ [key: string]: any }>({});
 
   useEffect(() => {
-    if (isOpen) {
-      loadApplications();
-      fetchAndStoreAllMembers();
-      loadCurrentGroups();
+    if (isOpen && !isDataLoaded) {
+      loadAllData();
     }
   }, [isOpen]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setIsDataLoaded(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !isDataLoaded) return;
     
     const interval = setInterval(() => {
       const currentSearchValue = searchInputRef.current?.value || '';
@@ -61,45 +66,34 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
     }, 100); // Check every 100ms
     
     return () => clearInterval(interval);
-  }, [isOpen, searchTerm]);
+  }, [isOpen, isDataLoaded, searchTerm]);
 
-  const loadApplications = async () => {
+  const loadAllData = async () => {
     setIsLoading(true);
     setError('');
+
     try {
-      const allApplications = await userGroupService.fetchApplications();
+      // Load all data in parallel
+      const [allApplications, members, currentGroups] = await Promise.all([
+        userGroupService.fetchApplications(),
+        userGroupService.searchUsers(''),
+        userGroupService.fetchUserGroups(1, 1000, '')
+      ]);
+
       setApplications(allApplications);
       setCheckedAppIds([]);
-    } catch (err: any) {
-      setError('Failed to load applications. Please try again.');
-      console.error('Failed to load applications:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchAndStoreAllMembers = async () => {
-    setIsLoading(true);
-    setError('');
-    try {
-      // Use userGroupService for consistent user fetching
-      const members = await userGroupService.searchUsers('');
+      
       localStorage.setItem('allDirectoryMembers', JSON.stringify(members));
       setAllMembers(members);
-    } catch (err) {
-      setError('Failed to load members from directory.');
-      setAllMembers([]);
+      
+      localStorage.setItem('userGroups', JSON.stringify(currentGroups.data));
+      
+      setIsDataLoaded(true);
+    } catch (err: any) {
+      setError('Failed to load data. Please try again.');
+      console.error('Failed to load data:', err);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const loadCurrentGroups = async () => {
-    try {
-      const response = await userGroupService.fetchUserGroups(1, 1000, ''); // Get all groups for validation
-      localStorage.setItem('userGroups', JSON.stringify(response.data));
-    } catch (err) {
-      console.error('Failed to load current groups for validation:', err);
     }
   };
 
@@ -297,6 +291,7 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
     setApplications([]);
     setSearchTerm('');
     setError('');
+    setIsDataLoaded(false);
     
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -327,7 +322,8 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
            })()
   );
 
-    if (!isOpen) return null;
+  // Don't render the dialog until data is loaded
+  if (!isOpen || !isDataLoaded) return null;
 
   return (
     <oj-c-dialog opened={isOpen} on-oj-close={handleClose} width="850px"
