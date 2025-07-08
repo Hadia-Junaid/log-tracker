@@ -1,0 +1,32 @@
+.dashboard-container {
+  min-height: 100vh;
+  background-color: #f9fafb; /* Light gray background */
+  padding: 1.5rem; /* Equivalent to Tailwind p-6 */
+  box-sizing: border-box;
+}
+
+/* Inner wrapper with max width */
+.dashboard-inner {
+  max-width: 100%; 
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem; 
+}
+
+/* === Header Section === */
+.dashboard-header {
+  margin-bottom: 2rem;
+}
+
+.dashboard-title {
+  font-size: 1.875rem; /* text-3xl */
+  font-weight: bold;
+  color: #1f2937; /* gray-900 */
+  margin-bottom: 0.5rem;
+}
+
+.dashboard-subtitle {
+  color: #6b7280; /* gray-600 */
+  font-size: 1rem;
+}
