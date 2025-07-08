@@ -12,6 +12,7 @@ import { isAxiosError } from "../../api/axios";
 import "../../styles/applications/addApplicationDialog.css";
 import { Application } from "../../types/applications";
 import "ojs/ojswitch";
+import { UserGroup } from "../../types/applications";
 
 type AddApplicationDialogProps = {
   isOpen: boolean;
@@ -21,10 +22,7 @@ type AddApplicationDialogProps = {
 
 const environments = ["Development", "Testing", "Staging", "Production"];
 
-type UserGroup = {
-  _id: string;
-  name: string;
-}
+
 
 export default function AddApplicationDialog({
   isOpen,
@@ -111,7 +109,7 @@ export default function AddApplicationDialog({
         userGroups: selectedGroups
       };
       console.log("New application data:", newApp);
-      
+
       const response = await axios.post("/applications", newApp);
       setSuccessMessage("Application added successfully!");
       onApplicationAdded(response.data);

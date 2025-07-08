@@ -8,3 +8,7 @@ export type Application = {
   description?: string;
 };
 
+export type UserGroup = {
+  _id: string;
+  name: string;
+}

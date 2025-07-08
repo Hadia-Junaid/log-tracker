@@ -11,6 +11,7 @@ import axios from "../../api/axios";
 import "../../styles/applications/addApplicationDialog.css";
 import { Application } from "../../types/applications";
 import { isAxiosError } from "../../api/axios";
+import { UserGroup } from "../../types/applications";
 
 type EditApplicationDialogProps = {
   isOpen: boolean;
@@ -37,6 +38,9 @@ export default function EditApplicationDialog({
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  const [userGroups, setUserGroups] = useState<UserGroup[]>([]);
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+
   useEffect(() => {
     if (dialogRef.current) {
       if (isOpen && application) {
@@ -49,6 +53,18 @@ export default function EditApplicationDialog({
         setLoading(false);
         setError(null);
         setSuccessMessage(null);
+
+        axios
+          .get(`/applications/${application._id}/assigned-groups`)
+          .then((res) => {
+            console.log("Fetched user groups:", res.data);
+            setUserGroups(res.data.allGroups);
+            setSelectedGroups(res.data.assignedGroupIds);
+          })
+          .catch((err) => {
+            console.error("Failed to fetch user groups", err);
+            setError("Failed to load user groups.");
+          });
       } else {
         dialogRef.current.close();
       }
@@ -94,6 +110,7 @@ export default function EditApplicationDialog({
         environment,
         description,
         isActive,
+        userGroups: selectedGroups,
       };
 
       console.log("Updating application:", updatedApp);
@@ -110,7 +127,9 @@ export default function EditApplicationDialog({
       console.error(err);
       // If status is 409, show name already exists error
       if (isAxiosError(err) && err.response?.status === 409) {
-        setError("An application with this name already exists. Please choose a different name.");
+        setError(
+          "An application with this name already exists. Please choose a different name."
+        );
         return;
       }
       setError("An unexpected error occurred.");
@@ -200,6 +219,30 @@ export default function EditApplicationDialog({
                 aria-label="Status"
                 class="oj-form-control"
               ></oj-switch>
+            </div>
+
+            <oj-label>User Groups</oj-label>
+            <div class="user-group-checklist">
+              {userGroups.map((group) => (
+                <label key={group._id} class="user-group-item">
+                  <input
+                    type="checkbox"
+                    value={group._id}
+                    checked={selectedGroups.includes(group._id)}
+                    onChange={(e) => {
+                      const checked = e.currentTarget.checked;
+                      const groupId = e.currentTarget.value;
+                      setSelectedGroups((prev) =>
+                        checked
+                          ? [...prev, groupId]
+                          : prev.filter((id) => id !== groupId)
+                      );
+                    }}
+                    disabled={loading}
+                  />
+                  {group.name}
+                </label>
+              ))}
             </div>
           </oj-form-layout>
 

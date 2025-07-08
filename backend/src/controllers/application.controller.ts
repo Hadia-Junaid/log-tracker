@@ -23,7 +23,6 @@ export const createApplication = async (
     return;
   }
 
-
   // Validate userGroups if provided to ensure they are valid ObjectIds
   if (req.body.userGroups && Array.isArray(req.body.userGroups)) {
     const invalidIds = req.body.userGroups.filter(
@@ -103,7 +102,29 @@ export const updateApplication = async (
     res.status(400).send({ error: "Invalid ID" });
     return;
   }
-  const updated = await Application.findByIdAndUpdate(id, req.body, {
+
+  // Validate userGroups if provided to ensure they are valid ObjectIds
+  if (req.body.userGroups && Array.isArray(req.body.userGroups)) {
+    const invalidIds = req.body.userGroups.filter(
+      (id: string) => !mongoose.Types.ObjectId.isValid(id)
+    );
+
+    if (invalidIds.length > 0) {
+      logger.warn(`Invalid user group IDs: ${invalidIds.join(", ")}`);
+      res.status(400).send({ error: "Invalid user group ID(s) provided." });
+      return;
+    }
+  }
+
+  const newApp = {
+    name: req.body.name,
+    hostname: req.body.hostname,
+    environment: req.body.environment,
+    isActive: req.body.isActive,
+    description: req.body.description || "",
+  };
+
+  const updated = await Application.findByIdAndUpdate(id, newApp, {
     new: true,
     runValidators: true,
   });
@@ -112,6 +133,50 @@ export const updateApplication = async (
     logger.warn(`Update failed: Application not found (ID: ${id})`);
     res.status(404).send({ error: "Application not found" });
     return;
+  }
+
+  if (req.body.userGroups && Array.isArray(req.body.userGroups)) {
+    const incomingGroupIds = req.body.userGroups;
+
+    // Get currently assigned groups
+    const currentlyAssignedGroups = await UserGroup.find(
+      { assigned_applications: updated._id },
+      "_id"
+    ).lean();
+
+    const currentGroupIds = currentlyAssignedGroups.map((g) =>
+      g._id.toString()
+    );
+
+    // Compute differences in user groups
+    const toAdd = incomingGroupIds.filter(
+      (id: string) => !currentGroupIds.includes(id)
+    );
+    const toRemove = currentGroupIds.filter(
+      (id: string) => !incomingGroupIds.includes(id)
+    );
+
+    const updates = [];
+
+    if (toAdd.length > 0) {
+      updates.push(
+        UserGroup.updateMany(
+          { _id: { $in: toAdd } },
+          { $addToSet: { assigned_applications: updated._id } }
+        )
+      );
+    }
+
+    if (toRemove.length > 0) {
+      updates.push(
+        UserGroup.updateMany(
+          { _id: { $in: toRemove } },
+          { $pull: { assigned_applications: updated._id } }
+        )
+      );
+    }
+
+    await Promise.all(updates);
   }
 
   logger.info(`Application updated (PATCH): ${updated.name} (${updated._id})`);
@@ -152,29 +217,27 @@ export const getAssignedGroups = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const id = req.params.id.trim();
+  const appId = req.params.id.trim();
 
-  if (!mongoose.isValidObjectId(id)) {
-    logger.warn(`Invalid request for assigned groups with malformed ID: ${id}`);
+  if (!mongoose.isValidObjectId(appId)) {
+    logger.warn(
+      `Invalid request for assigned groups with malformed ID: ${appId}`
+    );
     res.status(400).send({ error: "Invalid ID" });
     return;
   }
 
-  const appObjectId = new mongoose.Types.ObjectId(id);
+  const [allGroups, assignedGroups] = await Promise.all([
+    UserGroup.find({}, "id name").lean(),
+    UserGroup.find({ assigned_applications: appId }, "_id").lean(),
+  ]);
 
-  const groups = await UserGroup.find({ assigned_applications: appObjectId })
-    .select("name is_admin _id")
-    .lean();
+  const assignedGroupIds = assignedGroups.map((g) => g._id.toString());
 
-  res.send(groups);
-
-  console.log(`Assigned groups fetched for application ID ${id}:`, groups);
-
-  if (!groups) {
-    logger.warn(`Error fetching assigned groups.`);
-    res.status(404).send({ error: "Application not found" });
-    return;
-  }
+  res.status(200).send({
+    allGroups,
+    assignedGroupIds,
+  });
 };
 
 // Updates the assigned groups for a specific application by ID
