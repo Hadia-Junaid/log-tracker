@@ -2,6 +2,7 @@
       // used in JSX that do not have the required type definitions
       declare namespace preact.JSX {
         interface IntrinsicElements {
+          "oj-c-select-multiple"?: any;
         }
       }
 
