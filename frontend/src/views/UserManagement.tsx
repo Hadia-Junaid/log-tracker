@@ -142,15 +142,11 @@ export default function UserManagement(props: Props) {
 
           <div class="oj-sm-margin-2x-start">
             <oj-button
-              display="all"
-              class="oj-button-outlined-chrome"
+              chroming="solid"
+              class="add-button"
               onojAction={handleAddGroup}
             >
-              <span
-                slot="startIcon"
-                class="oj-ux-ico-plus"
-                style="position: relative; top: -4px;"
-              ></span>
+              <span slot="startIcon" class="oj-ux-ico-plus"></span>
               Add Group
             </oj-button>
           </div>
