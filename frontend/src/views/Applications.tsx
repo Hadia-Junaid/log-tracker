@@ -234,31 +234,30 @@ export default function Applications({ path }: Props) {
 
       <div class="pagination-footer">
         {!loading && totalCount > 0 && (
-          <div class="oj-flex oj-sm-flex-direction-column oj-sm-align-items-center oj-sm-margin-2x-vertical">
-            <div class="oj-sm-margin-1x-bottom">
+          <div class="pagination-controls">
+            <oj-button
+              chroming="outlined"
+              onojAction={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              disabled={currentPage === 1}
+              class="pagination-btn"
+            >
+              ← Previous
+            </oj-button>
+            <span class="pagination-info">
               Page {currentPage} of {Math.ceil(totalCount / PAGE_SIZE)}
-            </div>
-            <div class="oj-flex oj-sm-flex-wrap-nowrap oj-sm-align-items-center">
-              <oj-button
-                chroming="outlined"
-                onojAction={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                disabled={currentPage === 1}
-                class="oj-sm-margin-1x-end"
-              >
-                ← Previous
-              </oj-button>
-              <oj-button
-                chroming="outlined"
-                onojAction={() =>
-                  setCurrentPage((p) =>
-                    p < Math.ceil(totalCount / PAGE_SIZE) ? p + 1 : p
-                  )
-                }
-                disabled={currentPage >= Math.ceil(totalCount / PAGE_SIZE)}
-              >
-                Next →
-              </oj-button>
-            </div>
+            </span>
+            <oj-button
+              chroming="outlined"
+              onojAction={() =>
+                setCurrentPage((p) =>
+                  p < Math.ceil(totalCount / PAGE_SIZE) ? p + 1 : p
+                )
+              }
+              disabled={currentPage >= Math.ceil(totalCount / PAGE_SIZE)}
+              class="pagination-btn"
+            >
+              Next →
+            </oj-button>
           </div>
         )}
       </div>
