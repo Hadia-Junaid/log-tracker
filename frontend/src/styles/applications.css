@@ -3,35 +3,90 @@
   padding: 32px 48px;
 }
 
-.applications-title {
-  font-size: 2rem;
-  font-weight: 600;
-  color: var(--oj-core-text-color-primary);
-  margin-bottom: 16px;
-}
-
 .applications-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: 16px;
+  margin-bottom: 24px;
+  position: relative;
 }
 
-.applications-controls {
+.applications-title-block {
   display: flex;
-  gap: 12px;
-  align-items: center;
+  flex-direction: column;
+  margin-right: 220px; /* space for Add button + total */
 }
 
-.search-input {
-  min-width: 200px;
+.applications-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 0;
+  color: var(--oj-core-text-color-primary);
+}
+
+.applications-description {
+  font-size: 0.9rem;
+  color: var(--oj-core-text-color-secondary);
+  margin-top: 4px;
+}
+
+.applications-header-actions {
+  position: absolute;
+  right: 0;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
 }
 
 .add-button {
   font-weight: 500;
+  white-space: nowrap;
 }
+
+.applications-total {
+  font-size: 0.85rem;
+  color: var(--oj-core-text-color-secondary);
+}
+
+.applications-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 8px;
+}
+
+/* Search (left) */
+.search-wrapper {
+  flex: 1;
+  min-width: 280px;
+}
+
+/* Match height with dropdowns */
+.search-input {
+  width: 100%;
+  height: 40px;
+  box-sizing: border-box;
+}
+
+/* Filters (right) */
+.filters-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.filter-dropdown {
+  width: 180px;
+  max-width: 100%;
+}
+
 
 .applications-container {
   display: grid;
@@ -132,4 +187,26 @@
   padding-top: 16px;
   padding-bottom: 64px; /* push it above the footer */
   text-align: center;
+}
+
+@media (max-width: 768px) {
+  .applications-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filters-group {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .search-wrapper {
+    width: 100%;
+  }
+
+  .applications-header-actions {
+    position: static;
+    margin-top: 16px;
+    align-items: flex-start;
+  }
 }
