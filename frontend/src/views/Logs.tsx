@@ -39,7 +39,7 @@ export default function Logs(props: Props) {
   const [selectedAppIds, setSelectedAppIds] = useState<string[]>([]);
   const [logLevels, setLogLevels] = useState<string[]>([]); // NEW
 
-  const userId = "68650fd57a72d0b64525da71"; // hardcoded for now
+  // const userId = "68650fd57a72d0b64525da71"; // hardcoded for postman 
 
   // Debounce search input
   useEffect(() => {
@@ -54,7 +54,7 @@ export default function Logs(props: Props) {
     const fetchLogs = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`/logs/${userId}`, {
+        const res = await axios.get(`/logs`, {
           params: {
             search: debouncedSearch,
             app_ids: Array.from(selectedAppIds).join(','),

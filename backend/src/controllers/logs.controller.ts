@@ -10,7 +10,7 @@ import { Parser as Json2csvParser } from 'json2csv';
 // GET /api/logs/:userId
 export const getLogs = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = req.params;
+    const userId = req.user.id;
     const {
       page = 1,
       app_ids = '',
