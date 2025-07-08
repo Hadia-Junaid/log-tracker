@@ -5,6 +5,7 @@ import { userGroupService } from "../services/userGroupServices";
 import { AddGroupDialog } from "../components/UserManagement/AddGroupDialog";
 import { EditGroupDialog } from "../components/UserManagement/EditGroupDialog";
 import { DeleteGroupDialog } from "../components/UserManagement/DeleteGroupDialog";
+import UserGroupsList from "../components/UserManagement/UserGroupsList";
 import "ojs/ojinputsearch";
 import "ojs/ojbutton";
 
@@ -12,19 +13,11 @@ type Props = {
   path?: string; // required by preact-router
 };
 
-function formatDateDMY(dateString?: string) {
-  if (!dateString) return "";
-  const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, "0");
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const year = date.getFullYear();
-  return `${day}-${month}-${year}`;
-}
-
 export default function UserManagement(props: Props) {
   const [groups, setGroups] = useState<GroupData[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [error, setError] = useState("");
 
   // Dialog states
@@ -35,103 +28,48 @@ export default function UserManagement(props: Props) {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(4);
+  const [totalCount, setTotalCount] = useState(0);
+  const PAGE_SIZE = 4;
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const searchInputRef = useRef<any>(null);
+  const prevSearchTermRef = useRef<string>("");
 
   useEffect(() => {
-    loadGroups();
+    loadGroups(true); // Initial load
   }, []);
 
-  const loadGroups = async () => {
-    setIsLoading(true);
+  const loadGroups = async (showLoading: boolean = true) => {
+    if (showLoading) {
+      setIsLoading(true);
+      setIsInitialLoading(true);
+    }
     setError("");
 
     try {
-      const groupsData = await userGroupService.fetchUserGroups();
-      setGroups(groupsData);
+      const response = await userGroupService.fetchUserGroups(currentPage, PAGE_SIZE, searchTerm);
+      setGroups(response.data);
+      setTotalCount(response.total);
     } catch (err: any) {
       setError("Failed to load groups. Please try again.");
       console.error("Failed to load groups:", err);
     } finally {
-      setIsLoading(false);
+      if (showLoading) {
+        setIsLoading(false);
+        setIsInitialLoading(false);
+      }
     }
   };
 
-  const filteredGroups = groups.filter(
-    (group) =>
-      group.groupName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      group.description?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const totalPages = Math.ceil(filteredGroups.length / itemsPerPage);
-  const startIndex = (currentPage - 1) * itemsPerPage;
-  const paginatedGroups = filteredGroups.slice(
-    startIndex,
-    startIndex + itemsPerPage
-  );
-
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    // Helper to find all oj-buttons and attach listeners
-    const addGroupBtn = container.querySelector('.oj-button-outlined-chrome');
-    const editBtns = container.querySelectorAll('.oj-button-sm:not(.oj-button-danger)');
-    const deleteBtns = container.querySelectorAll('.oj-button-danger');
-    const prevBtn = container.querySelector('.pagination-container oj-button:first-of-type');
-    const nextBtn = container.querySelector('.pagination-container oj-button:last-of-type');
-
-    // Store listeners for cleanup
-    const listeners: { el: Element, fn: EventListener }[] = [];
-
-    if (addGroupBtn) {
-      const fn = (e: Event) => { e.preventDefault(); handleAddGroup(); };
-      addGroupBtn.addEventListener('ojAction', fn);
-      listeners.push({ el: addGroupBtn, fn });
-    }
-    editBtns.forEach((btn, idx) => {
-      const fn = (e: Event) => { e.preventDefault(); handleEditGroup(paginatedGroups[idx]); };
-      btn.addEventListener('ojAction', fn);
-      listeners.push({ el: btn, fn });
-    });
-    deleteBtns.forEach((btn, idx) => {
-      // Only non-admin groups are deletable, so filter paginatedGroups
-      const nonAdminGroups = paginatedGroups.filter(g => !g.is_admin);
-      const fn = (e: Event) => { e.preventDefault(); handleDeleteGroup(nonAdminGroups[idx]); };
-      btn.addEventListener('ojAction', fn);
-      listeners.push({ el: btn, fn });
-    });
-    if (prevBtn) {
-      const fn = (e: Event) => { e.preventDefault(); goToPrevPage(); };
-      prevBtn.addEventListener('ojAction', fn);
-      listeners.push({ el: prevBtn, fn });
-    }
-    if (nextBtn) {
-      const fn = (e: Event) => { e.preventDefault(); goToNextPage(); };
-      nextBtn.addEventListener('ojAction', fn);
-      listeners.push({ el: nextBtn, fn });
-    }
-
-    // Attach search bar listener
-    if (searchInputRef.current) {
-      const searchListener = (e: Event) => {
-        const ce = e as CustomEvent;
-        setSearchTerm(ce.detail.value);
-        setCurrentPage(1);
-      };
-      searchInputRef.current.addEventListener('rawValueChanged', searchListener);
-      listeners.push({ el: searchInputRef.current, fn: searchListener });
-    }
-
-    return () => {
-      listeners.forEach(({ el, fn }) => {
-        el.removeEventListener('ojAction', fn);
-        el.removeEventListener('rawValueChanged', fn);
-      });
-    };
-  }, [paginatedGroups]);
+    const delayDebounceFn = setTimeout(() => {
+      // Show loading for search changes, but not for pagination
+      const isSearchChange = searchTerm !== prevSearchTermRef.current;
+      const showLoading = isSearchChange || currentPage === 1;
+      loadGroups(showLoading);
+      prevSearchTermRef.current = searchTerm;
+    }, searchTerm ? 300 : 0); // Debounce for search, no delay for pagination
+    return () => clearTimeout(delayDebounceFn);
+  }, [currentPage, searchTerm]);
 
   const handleAddGroup = () => {
     setIsAddDialogOpen(true);
@@ -148,15 +86,20 @@ export default function UserManagement(props: Props) {
   };
 
   const handleGroupCreated = () => {
-    loadGroups();
+    loadGroups(true);
   };
 
   const handleGroupUpdated = () => {
-    loadGroups();
+    loadGroups(true);
   };
 
   const handleGroupDeleted = () => {
-    loadGroups();
+    // If the last item on a page > 1 is deleted, go to the previous page
+    if (groups.length === 1 && currentPage > 1) {
+      setCurrentPage(p => p - 1);
+    } else {
+      loadGroups(true);
+    }
   };
 
   const goToPrevPage = () => {
@@ -166,20 +109,10 @@ export default function UserManagement(props: Props) {
   };
 
   const goToNextPage = () => {
-    if (currentPage < totalPages) {
+    if (currentPage < Math.ceil(totalCount / PAGE_SIZE)) {
       setCurrentPage(currentPage + 1);
     }
   };
-
-  if (isLoading) {
-    return (
-      <div class="oj-hybrid-padding">
-        <div class="oj-flex oj-sm-justify-content-center">
-          <div class="oj-spinner"></div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div class="oj-hybrid-padding" ref={containerRef}>
@@ -196,11 +129,14 @@ export default function UserManagement(props: Props) {
         {/* Search and Add Group Row */}
         <div class="oj-flex oj-sm-align-items-center oj-sm-flex-wrap oj-sm-margin-4x-bottom">
           <div class="oj-flex-item">
-            <oj-input-search
+            <oj-input-text
               class="oj-form-control-full-width"
               placeholder="Search groups..."
-              raw-value={searchTerm}
-              ref={searchInputRef}
+              value={searchTerm}
+              onrawValueChanged={(e: any) => {
+                setSearchTerm(e.detail.value);
+                setCurrentPage(1); // Reset to first page on new search
+              }}
             />
           </div>
 
@@ -208,6 +144,7 @@ export default function UserManagement(props: Props) {
             <oj-button
               display="all"
               class="oj-button-outlined-chrome"
+              onojAction={handleAddGroup}
             >
               <span
                 slot="startIcon"
@@ -226,7 +163,7 @@ export default function UserManagement(props: Props) {
 
           <div style="display: inline-flex; flex-direction: column; align-items: flex-start; margin-left: 24px;">
             <span class="oj-typography-body-sm oj-text-color-secondary padding-2x-left">
-              Total: {groups.length} groups
+              Total: {totalCount} groups
             </span>
           </div>
         </div>
@@ -245,104 +182,35 @@ export default function UserManagement(props: Props) {
         style="min-height: 70vh;"
       >
         <div style="min-height: 50vh;" class="oj-flex-item-auto">
-          {paginatedGroups.length > 0 ? (
-            <div class="groups-list">
-              {paginatedGroups.map((group) => (
-                <div key={group.groupId} class="group-item oj-list-item-layout">
-                  <div class="oj-flex oj-sm-flex-direction-column">
-                    {/* Group Name */}
-                    <div class="group-name-container">
-                      <span class="oj-typography-heading-sm oj-text-color-primary">
-                        {group.groupName}
-                      </span>
-                      {group.is_admin && (
-                        <span class="system-group-pill">System Group</span>
-                      )}
-                      <span
-                        class={`status-pill ${group.is_admin ? "status-active" : "status-inactive"}`}
-                      >
-                        {group.is_admin ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-
-                    {/* Description */}
-                    {group.description && (
-                      <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
-                        {group.description}
-                      </span>
-                    )}
-
-                    {/* Member Count and Date */}
-                    <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
-                      Created: {formatDateDMY(group.createdDate)} •{" "}
-                      {group.createdAgo}
-                    </span>
-                    <div class="group-counts-row">
-                      <span class="group-count-bold">
-                        Members: {group.members?.length || 0}
-                      </span>
-                      <span class="group-count-bold">
-                        Applications: {group.assigned_applications?.length || 0}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div class="action-buttons">
-                    <oj-button
-                      display="all"
-                      class="oj-button-sm"
-                    >
-                      <span slot="startIcon" class="oj-ux-ico-edit"></span>
-                      Edit
-                    </oj-button>
-
-                    {!group.is_admin && (
-                      <oj-button
-                        display="all"
-                        class="oj-button-sm oj-button-danger"
-                      >
-                        <span slot="startIcon" class="oj-ux-ico-trash"></span>
-                        Delete
-                      </oj-button>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div
-              class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center"
-              style="height: 40vh;"
-            >
-              <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center oj-sm-flex-direction-column">
-              <p
-                class="oj-text-color-secondary"
-                style="font-weight: bold; font-size: 1.25rem; text-align: center;"
-              >
-                {searchTerm
-                ? "No groups match your search criteria!"
-                : "Create your first user group to get started."}
-              </p>
-              </div>
-            </div>
-          )}
+          <UserGroupsList
+            loading={isInitialLoading}
+            error={error}
+            groups={groups}
+            searchTerm={searchTerm}
+            onEditClick={handleEditGroup}
+            onDeleteClick={handleDeleteGroup}
+          />
         </div>
 
         {/* Pagination controls */}
         <div class="pagination-container">
           <div class="oj-flex oj-sm-justify-content-center oj-sm-align-items-center">
-            <oj-button disabled={currentPage === 1}>
+            <oj-button 
+              disabled={currentPage === 1}
+              onojAction={goToPrevPage}
+            >
               Previous
             </oj-button>
 
             <div class="pagination-info">
-              Page {currentPage} of {totalPages} • Showing {startIndex + 1}-
-              {Math.min(startIndex + itemsPerPage, filteredGroups.length)} of{" "}
-              {filteredGroups.length} groups
+              Page {currentPage} of {Math.ceil(totalCount / PAGE_SIZE)} • Showing {((currentPage - 1) * PAGE_SIZE) + 1}-
+              {Math.min(currentPage * PAGE_SIZE, totalCount)} of{" "}
+              {totalCount} groups
             </div>
 
             <oj-button
-              disabled={currentPage === totalPages}
+              disabled={currentPage >= Math.ceil(totalCount / PAGE_SIZE)}
+              onojAction={goToNextPage}
             >
               Next
             </oj-button>

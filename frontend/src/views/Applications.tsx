@@ -92,7 +92,7 @@ export default function Applications({ path }: Props) {
             <oj-input-text
               placeholder="Search applications"
               value={searchQuery}
-              onrawValueChanged={(e) => {
+              onrawValueChanged={(e: any) => {
                 setSearchQuery(e.detail.value);
                 setCurrentPage(1); // Reset to first page on new search
               }}
