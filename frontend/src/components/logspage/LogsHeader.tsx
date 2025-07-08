@@ -2,7 +2,6 @@ import { h } from "preact";
 import ArrayDataProvider = require("ojs/ojarraydataprovider");
 import "ojs/ojinputtext";
 import 'oj-c/select-multiple';
-
 interface Application {
   _id: string;
   name: string;
@@ -53,9 +52,10 @@ export default function LogsHeader({
         <oj-input-text
           placeholder="Search messages..."
           value={search}
-          onvalueChanged={(e: any) => setSearch(e.detail.value)}
+          onrawValueChanged={(e: any) => setSearch(e.detail.value)}
           class="oj-form-control-max-width-md oj-sm-margin-end input-filter"
         ></oj-input-text>
+
         <oj-c-select-multiple
           id="applicationsDropdown"
           label-edge="none"

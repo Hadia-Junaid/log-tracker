@@ -38,7 +38,7 @@ export const getLogs = async (req: Request, res: Response): Promise<void> => {
       res.status(404).json({ error: 'User is not a member of any group' });
       return;
     }
-
+    
     // 2. Collect all assigned application IDs from these groups
     const groupAppIds = userGroups.flatMap(g => g.assigned_applications.map(id => id.toString()));
     // If app_ids is provided, filter further

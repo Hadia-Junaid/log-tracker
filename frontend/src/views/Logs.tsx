@@ -4,7 +4,7 @@ import { useEffect, useState, useMemo } from "preact/hooks";
 import "ojs/ojtable";
 import "ojs/ojprogress-circle";
 import "ojs/ojinputtext";
-import { ojTable } from "ojs/ojtable";
+// import { ojTable } from "ojs/ojtable";
 import ArrayDataProvider = require("ojs/ojarraydataprovider");
 import axios from "../api/axios";
 import "../styles/logs.css";
@@ -37,7 +37,9 @@ export default function Logs(props: Props) {
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedAppIds, setSelectedAppIds] = useState<string[]>([]);
-  const [logLevels, setLogLevels] = useState<string[]>([]); // NEW
+  const [logLevels, setLogLevels] = useState<string[]>([]); 
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   // const userId = "68650fd57a72d0b64525da71"; // hardcoded for postman 
 
@@ -59,11 +61,13 @@ export default function Logs(props: Props) {
             search: debouncedSearch,
             app_ids: Array.from(selectedAppIds).join(','),
             log_levels: logLevels.join(','),
+            page,
           },
         });
 
         setLogs(res.data.data);
         setApplications(res.data.assigned_applications || []);
+        setTotalPages(res.data.total_pages || 1);
 
         const map: Record<string, string> = {};
         res.data.assigned_applications.forEach((app: Application) => {
@@ -80,7 +84,7 @@ export default function Logs(props: Props) {
     };
 
     fetchLogs();
-  }, [debouncedSearch, selectedAppIds, logLevels]); // logLevels included
+  }, [debouncedSearch, selectedAppIds, logLevels, page]); 
 
   const dataProvider = useMemo(() => {
     const enrichedLogs = logs.map((log) => ({
@@ -120,7 +124,7 @@ export default function Logs(props: Props) {
   ];
 
   return (
-    <div class="oj-sm-padding-6x logs-page" style="width: 100%;">
+    <div class="oj-sm-padding-6x logs-page" style="width: 100%; min-height: 100vh; display: flex; flex-direction: column;">
       <LogsHeader
         search={search}
         setSearch={setSearch}
@@ -131,6 +135,57 @@ export default function Logs(props: Props) {
         setLogLevels={setLogLevels}
       />
       <LogsTable loading={loading} error={error} dataProvider={dataProvider} columns={columns} />
+      {/* Pagination Controls */}
+      <div style={{
+        marginTop: 'auto',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '2rem',
+        position: 'sticky',
+        bottom: 0,
+        // background: '#fff',
+        zIndex: 10,
+        padding: '1rem 0 0.5rem 0',
+      }}>
+        <button
+          onClick={() => setPage(page - 1)}
+          disabled={page === 1}
+          style={{
+            padding: '0.5em 1.2em',
+            borderRadius: '4px',
+            border: '1px solid #ccc',
+            background: page === 1 ? '#f0f0f0' : '#fff',
+            color: page === 1 ? '#aaa' : '#1976d2',
+            fontWeight: 600,
+            cursor: page === 1 ? 'not-allowed' : 'pointer',
+            marginRight: '1.5em',
+            transition: 'all 0.2s',
+          }}
+        >
+          Previous
+        </button>
+        <span style={{ fontWeight: 600, fontSize: '1.1em', color: '#222', minWidth: '5em', textAlign: 'center' }}>
+          Page {page} / {totalPages}
+        </span>
+        <button
+          onClick={() => setPage(page + 1)}
+          disabled={page === totalPages}
+          style={{
+            padding: '0.5em 1.2em',
+            borderRadius: '4px',
+            border: '1px solid #ccc',
+            background: page === totalPages ? '#f0f0f0' : '#fff',
+            color: page === totalPages ? '#aaa' : '#1976d2',
+            fontWeight: 600,
+            cursor: page === totalPages ? 'not-allowed' : 'pointer',
+            marginLeft: '1.5em',
+            transition: 'all 0.2s',
+          }}
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }
