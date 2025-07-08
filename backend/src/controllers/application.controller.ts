@@ -73,20 +73,60 @@ export const getApplications = async (
   const page = Math.max(1, parseInt(req.query.page as string) || 1);
   const pageSize = Math.max(1, parseInt(req.query.pageSize as string) || 8);
   const search = (req.query.search as string)?.trim() || "";
+  const status = req.query.status as string;
+  const environment = req.query.environment as string;
+  const sort = req.query.sort as string;
 
-  const filter = search ? { name: { $regex: search, $options: "i" } } : {};
+  logger.info("Filters requested:", {
+    search,
+    status, 
+    environment,
+    sort,
+    page,
+    pageSize,
+  });
 
+  // Build filter object
+  const filter: Record<string, any> = {};
+
+  if (search) {
+    filter.name = { $regex: search, $options: "i" };
+  }
+
+  if (status && status !== "all") {
+    filter.status = status;
+  }
+
+  if (environment && environment !== "all") {
+    filter.environment = environment;
+  }
+
+  // Sort mapping
+  const sortMapping: Record<string, any> = {
+    name: { name: 1 },
+    nameDesc: { name: -1 },
+    createdAt: { createdAt: 1 },
+    createdAtDesc: { createdAt: -1 },
+    updatedAt: { updatedAt: 1 },
+    updatedAtDesc: { updatedAt: -1 },
+  };
+
+  const sortOption = sortMapping[sort] || { name: 1 };
+
+  // Run count and fetch in parallel
   const [total, apps] = await Promise.all([
     Application.countDocuments(filter),
     Application.find(filter)
+      .sort(sortOption)
       .skip((page - 1) * pageSize)
       .limit(pageSize)
       .lean(),
   ]);
 
   logger.info(
-    `Fetched ${apps.length} apps (page ${page}) with search "${search}"`
+    `Fetched ${apps.length} apps (page ${page}) with filters [search="${search}", status="${status}", env="${environment}"], sorted by "${sort}"`
   );
+
   res.json({ data: apps, total });
 };
 
