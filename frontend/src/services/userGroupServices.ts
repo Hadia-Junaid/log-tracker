@@ -1,10 +1,10 @@
-import api from '../api/axios';
+import axios from '../api/axios';
 import { CreateGroupPayload, UpdateGroupPayload, GroupData, ApplicationOption, MemberData } from '../types/userManagement';
 
 export const userGroupService = {
   // Fetch all user groups
   async fetchUserGroups(): Promise<GroupData[]> {
-    const response = await api.get('/user-groups');
+    const response = await axios.get('/user-groups');
     return response.data.map((group: any) => ({
       groupId: group._id,
       groupName: group.name,
@@ -20,30 +20,30 @@ export const userGroupService = {
 
   // Create a new user group
   async createUserGroup(payload: CreateGroupPayload): Promise<GroupData> {
-    const response = await api.post('/user-groups', payload);
+    const response = await axios.post('/user-groups', payload);
     return response.data;
   },
 
   // Update a user group
   async updateUserGroup(groupId: string, payload: UpdateGroupPayload): Promise<GroupData> {
-    const response = await api.patch(`/user-groups/${groupId}`, payload);
+    const response = await axios.patch(`/user-groups/${groupId}`, payload);
     return response.data;
   },
 
   // Delete a user group
   async deleteUserGroup(groupId: string): Promise<void> {
-    await api.delete(`/user-groups/${groupId}`);
+    await axios.delete(`/user-groups/${groupId}`);
   },
 
   // Fetch group details by ID
   async fetchGroupById(groupId: string): Promise<GroupData> {
-    const response = await api.get(`/user-groups/${groupId}`);
+    const response = await axios.get(`/user-groups/${groupId}`);
     return response.data;
   },
 
   // Fetch applications
   async fetchApplications(): Promise<ApplicationOption[]> {
-    const response = await api.get('/applications');
+    const response = await axios.get('/applications');
     return response.data.data.map((app: any) => ({
       id: app._id,
       name: app.name,
@@ -55,13 +55,27 @@ export const userGroupService = {
   async searchUsers(query: string): Promise<MemberData[]> {
     // Use correct param and value for backend
     const param = query === '' ? 'searchString=""' : `searchString=${encodeURIComponent(query)}`;
-    const response = await api.get(`/admin/users/search?${param}`);
+    const response = await axios.get(`/admin/users/search?${param}`);
     return response.data.map((user: any) => ({
       id: user.id || user.email,
       email: user.email,
       name: user.name,
       initials: getInitials(user.name)
     }));
+  },
+
+  // Assign application to user group
+  async assignApplication(groupId: string, applicationId: string): Promise<void> {
+    await axios.patch(`/user-groups/${groupId}/assign-application`, {
+      applicationId: applicationId
+    });
+  },
+
+  // Unassign application from user group
+  async unassignApplication(groupId: string, applicationId: string): Promise<void> {
+    await axios.delete(`/user-groups/${groupId}/unassign-application`, {
+      data: { applicationId: applicationId }
+    });
   }
 };
 
