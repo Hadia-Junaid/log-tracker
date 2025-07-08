@@ -5,4 +5,5 @@ const api = axios.create({
   withCredentials: true,   // always send cookies
 });
 
+export const isAxiosError = axios.isAxiosError;
 export default api;
