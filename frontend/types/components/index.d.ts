@@ -2,6 +2,14 @@
       // used in JSX that do not have the required type definitions
       declare namespace preact.JSX {
         interface IntrinsicElements {
+          'oj-input-text': any;
+          'oj-input-search': any;
+          'oj-checkboxset': any;
+          'oj-c-checkbox': any;
+          'oj-button': any;
+          'oj-avatar': any;
+          'oj-label': any;
+          'oj-option': any;
         }
       }
 
