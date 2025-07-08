@@ -26,6 +26,7 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState('');
   const [checkedAppIds, setCheckedAppIds] = useState<string[]>([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [searchTrigger, setSearchTrigger] = useState(0);
 
   const searchInputRef = useRef<any>(null);
@@ -40,6 +41,21 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
       loadCurrentGroups();
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const interval = setInterval(() => {
+      const currentSearchValue = searchInputRef.current?.value || '';
+      if (currentSearchValue !== searchTerm) {
+        console.log('Search value changed from ref:', currentSearchValue);
+        setSearchTerm(currentSearchValue);
+        setSearchTrigger(prev => prev + 1);
+      }
+    }, 100); // Check every 100ms
+    
+    return () => clearInterval(interval);
+  }, [isOpen, searchTerm]);
 
   const loadApplications = async () => {
     setIsLoading(true);
@@ -272,6 +288,7 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
     setSelectedMembers([]);
     setAllMembers([]);
     setApplications([]);
+    setSearchTerm('');
     setError('');
     
     if (searchTimeoutRef.current) {
@@ -290,20 +307,16 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
       .slice(0, 2);
   };
 
-  // Handle search input changes
-  const handleSearchChange = (value: string) => {
-    // Force a re-render by updating the trigger
-    setSearchTrigger(prev => prev + 1);
-  };
-
   // Available members = allMembers - selectedMembers, filtered by search term
   const availableMembers = allMembers.filter(
     (m) => !selectedMembers.some((sel) => sel.id === m.id) &&
            (() => {
-             const searchValue = searchInputRef.current?.value || '';
-             return searchValue === '' || 
-                    m.name.toLowerCase().includes(searchValue.toLowerCase()) ||
-                    m.email.toLowerCase().includes(searchValue.toLowerCase());
+             console.log('Filtering members with searchTerm:', searchTerm);
+             const matches = searchTerm === '' || 
+                            m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            m.email.toLowerCase().includes(searchTerm.toLowerCase());
+             console.log(`Member ${m.email} matches:`, matches);
+             return matches;
            })()
   );
 
@@ -569,7 +582,6 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
                       class="oj-form-control-full-width"
                       placeholder="Search directory..."
                       ref={searchInputRef}
-                      on-value-changed={(e: any) => handleSearchChange(e.detail.value)}
                     />
                   </div>
 
@@ -598,7 +610,7 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
                     ) : (
                       <div class="no-members-content">
                         <p class="oj-text-color-secondary">
-                          {(searchInputRef.current?.value || '') ? 'No members found' : 'No available members'}
+                          {searchTerm ? 'No members found' : 'No available members'}
                         </p>
                       </div>
                     )}
