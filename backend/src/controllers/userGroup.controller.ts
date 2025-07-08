@@ -94,7 +94,7 @@ export const updateUserGroup = async (
   res: Response
 ): Promise<void> => {
   const { id } = req.params;
-  const { name, is_admin, applications = [], members = [] } = req.body;
+  const { name, is_admin, assigned_applications = [], members = [] } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     res.status(400).json({ error: "Invalid group ID." });
@@ -114,7 +114,7 @@ export const updateUserGroup = async (
   // For admin groups, override applications with all available apps
   const validAppIds = finalIsAdmin
     ? await Application.find().distinct("_id")
-    : await Application.find({ _id: { $in: applications } }).distinct("_id");
+    : await Application.find({ _id: { $in: assigned_applications } }).distinct("_id");
 
   const superAdminEmails = getSuperAdminEmails();
   const verifiedMemberIds: mongoose.Types.ObjectId[] = [];

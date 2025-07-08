@@ -1,344 +1,82 @@
-/* General Dialog Styling */
-.oj-dialog-mask {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.oj-dialog {
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 1000px;
-  display: flex;
-  flex-direction: column;
-  max-height: 90vh;
-}
-
-/* Dialog Header */
-.oj-dialog-header {
-  padding: 24px;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.oj-dialog-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  margin: 0;
-  color: #333;
-}
-
-.oj-dialog-header .oj-typography-body-sm {
-  margin-top: 8px;
-  color: #666;
-}
-
-/* Dialog Body */
-.oj-dialog-body {
-  padding: 24px;
-  overflow-y: auto;
-  flex-grow: 1;
-}
-
-/* Error Message */
-.error-message {
-  background-color: #ffebee;
-  color: #c62828;
-  padding: 12px;
-  border-radius: 8px;
-  margin-bottom: 16px;
-  text-align: center;
-}
-
-/* Form Controls */
-.oj-label {
-  display: block;
-  font-weight: 500;
-  margin-bottom: 8px;
-  color: #555;
-}
-
-.oj-form-control-full-width,
-.oj-inputtext,
-.oj-input-search {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  font-size: 1rem;
-  background: #fff;
-  box-sizing: border-box;
-  margin-bottom: 0;
-}
-
-.oj-form-control-full-width:focus,
-.oj-inputtext:focus,
-.oj-input-search:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.12);
-}
-
-/* Main Content Layout */
-.edit-group-content {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+.add-group-content {
   gap: 24px;
-  margin-top: 16px;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
 }
 
-/* Members Sections */
 .available-members-section,
 .current-members-section {
-  display: flex;
-  flex-direction: column;
+  flex: 1 1 50%;
   background: #f9f9f9;
-  border: 1px solid #e0e0e0;
+  border: 1px solid #ccc;
   border-radius: 8px;
   padding: 16px;
-  min-width: 0;
-  min-height: 340px;
-  max-height: 340px;
-  flex: 1 1 0;
   box-sizing: border-box;
+  margin: 0 8px;
 }
 
-.oj-typography-heading-sm {
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: #333;
+.available-members-section h4,
+.current-members-section h4 {
   margin-bottom: 16px;
 }
 
-.current-members-section .oj-flex {
-  margin-bottom: 0; /* Override default margin */
-}
-
-/* Members Lists */
 .members-list {
-  flex-grow: 1;
+  max-height: 400px;
   overflow-y: auto;
   overflow-x: hidden;
-  min-height: 200px;
-  max-height: 260px;
-  border: none;
-  border-radius: 0;
-  background: transparent;
-  padding: 0;
+  border: 1px solid #dcdcdc;
+  border-radius: 6px;
+  background-color: #fff;
+  padding: 8px;
 }
 
 .member-list-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 8px;
-  border-radius: 6px;
-  background: none;
-  transition: background 0.2s;
-  margin-bottom: 2px;
+  padding: 8px;
+  border-bottom: 1px solid #e0e0e0;
+  border-radius: 4px;
   cursor: pointer;
+  transition: background-color 0.2s ease;
 }
 
 .member-list-item:hover {
-  background: #e6f0fa;
+  background-color: #f0f0f0;
+}
+
+.clickable-member {
+  cursor: pointer;
 }
 
 .current-member-item {
-  background: none;
-}
-
-.oj-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background-color: #007bff;
-  color: white;
   display: flex;
   align-items: center;
-  justify-content: center;
-  font-weight: 500;
-  margin-right: 8px;
-  flex-shrink: 0;
+  justify-content: space-between;
 }
 
-.oj-typography-body-md {
-  font-weight: 500;
-  color: #333;
-  font-size: 1rem;
-  word-break: break-word;
-}
-
-.oj-typography-body-sm {
-  color: #666;
-  font-size: 0.95rem;
-  word-break: break-word;
+.member-remove-btn {
+  margin-left: 8px;
 }
 
 .no-members-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
   text-align: center;
-  color: #888;
+  padding: 16px;
+  font-style: italic;
 }
 
-/* Member List Item */
-.member-remove-btn {
-  background-color: transparent;
-  border: none;
-  color: #dc3545;
-  font-size: 1.5rem;
-  font-weight: bold;
-  cursor: pointer;
-  padding: 0 8px;
-  line-height: 1;
-}
-
-.member-remove-btn:hover {
-  color: #a71d2a;
-}
-
-/* Selected Members Header */
-.current-members-section .oj-flex.oj-sm-justify-content-space-between {
-  align-items: center;
-}
-
-.oj-text-color-secondary.oj-sm-margin-2x-end {
-  margin-right: 12px;
-}
-
-/* Applications Grid: 3 per row, equally spaced, no outline/rounded rectangle */
-.applications-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px 16px; /* 24px vertical, 16px horizontal */
-  margin-top: 16px;
-}
-
-.application-checkbox-item {
-  display: flex;
-  align-items: center;
-  margin: 0;
-  padding: 0;
-}
-
-/* Remove OJET option/button look */
-.application-checkbox-item oj-option,
-.application-checkbox-item .oj-option,
-.application-checkbox-item oj-option[role="option"] {
-  border: none !important;
-  background: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  min-width: 0 !important;
-  display: flex !important;
-  align-items: center !important;
-}
-
-/* Remove extra padding from oj-checkboxset */
-.application-checkbox-item oj-checkboxset,
-.application-checkbox-item .oj-checkboxset {
-  padding: 0 !important;
-  margin: 0 !important;
-  border: none !important;
-  background: none !important;
-  box-shadow: none !important;
-}
-
-/* Optional: shrink the label text if needed */
-.application-checkbox-item label {
-  margin-left: 8px;
-  font-size: 1rem;
-  font-weight: 400;
-}
-
-/* Dialog Footer */
-.oj-dialog-footer {
-  padding: 16px 24px;
-  border-top: 1px solid #e0e0e0;
-  display: flex;
-  justify-content: flex-end;
-  gap: 12px;
-  background-color: #f9f9f9;
-  border-bottom-left-radius: 12px;
-  border-bottom-right-radius: 12px;
-}
-
-/* Buttons */
-.oj-button {
-  padding: 10px 20px;
-  border-radius: 8px;
-  border: 1px solid #ccc;
-  background-color: #fff;
-  cursor: pointer;
-  font-size: 1rem;
+.error-message {
+  color: red;
+  margin-bottom: 16px;
   font-weight: 500;
-  transition: background-color 0.2s, border-color 0.2s;
 }
 
-.oj-button:hover:not(:disabled) {
-  background-color: #f8f9fa;
-  border-color: #bbb;
+.applications-checkboxes {
+  gap: 8px;
 }
 
-.oj-button:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.oj-button-primary {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
-}
-
-.oj-button-primary:hover:not(:disabled) {
-  background-color: #0056b3;
-  border-color: #0056b3;
-}
-
-.oj-button-sm {
-  padding: 6px 12px;
-  font-size: 0.875rem;
-}
-
-/* --- Remove extra box from selected members --- */
-.current-members-list {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 0;
-}
-
-/* --- Remove box from available members --- */
-.available-members-list {
-  background: transparent;
-  border: none;
-  border-radius: 0;
-  padding: 0;
-}
-
-/* --- Remove box from selected members container --- */
-.current-members-section {
-  background: #f9f9f9;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
-}
-
-/* --- Remove box from available members container --- */
-.available-members-section {
-  background: #f9f9f9;
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+/* Ensure the member sections are side by side */
+.member-sections-container {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  width: 100%;
 }
