@@ -1,7 +1,6 @@
 // src/components/applications/ApplicationsList.tsx
 import { h } from "preact";
 import { Application } from "src/types/applications";
-import LoadingSpinner from "../LoadingSpinner";
 import ApplicationCard from "./ApplicationCard";
 
 type Props = {
@@ -13,9 +12,6 @@ type Props = {
 };
 
 export default function ApplicationsList({ loading, error, applications, onEditClick, onDeleteClick }: Props) {
-  if (loading) {
-    return <LoadingSpinner message="Loading applications..." />;
-  }
 
   if (error) {
     return <p class="oj-text-color-danger" style={{ textAlign: 'center', marginTop: '20px' }}>{error}</p>;
