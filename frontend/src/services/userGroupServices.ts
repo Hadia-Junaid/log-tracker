@@ -2,10 +2,17 @@ import axios from '../api/axios';
 import { CreateGroupPayload, UpdateGroupPayload, GroupData, ApplicationOption, MemberData } from '../types/userManagement';
 
 export const userGroupService = {
-  // Fetch all user groups
-  async fetchUserGroups(): Promise<GroupData[]> {
-    const response = await axios.get('/user-groups');
-    return response.data.map((group: any) => ({
+  // Fetch all user groups with pagination
+  async fetchUserGroups(page: number = 1, pageSize: number = 8, search: string = ""): Promise<{ data: GroupData[], total: number }> {
+    const response = await axios.get('/user-groups', {
+      params: {
+        page,
+        pageSize,
+        search,
+      },
+    });
+    
+    const groups = response.data.data.map((group: any) => ({
       groupId: group._id,
       groupName: group.name,
       description: group.description,
@@ -16,6 +23,11 @@ export const userGroupService = {
       members: group.members?.map((member: any) => member.email) || [],
       assigned_applications: group.assigned_applications?.map((app: any) => app.name) || []
     }));
+    
+    return {
+      data: groups,
+      total: response.data.total
+    };
   },
 
   // Create a new user group

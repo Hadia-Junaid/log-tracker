@@ -134,8 +134,8 @@ export function EditGroupDialog({
 
   const loadCurrentGroups = async () => {
     try {
-      const currentGroups = await userGroupService.fetchUserGroups();
-      localStorage.setItem('userGroups', JSON.stringify(currentGroups));
+      const response = await userGroupService.fetchUserGroups(1, 1000, ''); // Get all groups for validation
+      localStorage.setItem('userGroups', JSON.stringify(response.data));
     } catch (err) {
       console.error('Failed to load current groups for validation:', err);
     }

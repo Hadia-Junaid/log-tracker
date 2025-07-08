@@ -228,18 +228,30 @@ export const getUserGroups = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { name, is_admin } = req.query;
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const pageSize = Math.max(1, parseInt(req.query.pageSize as string) || 8);
+  const search = (req.query.search as string)?.trim() || "";
+  const { is_admin } = req.query;
+  
   const filter: any = {};
 
-  if (name) filter.name = { $regex: name as string, $options: "i" };
+  if (search) filter.name = { $regex: search, $options: "i" };
   if (is_admin !== undefined) filter.is_admin = is_admin === "true";
 
-  const groups = await UserGroup.find(filter)
-    .populate("assigned_applications")
-    .populate("members");
+  const [total, groups] = await Promise.all([
+    UserGroup.countDocuments(filter),
+    UserGroup.find(filter)
+      .populate("assigned_applications")
+      .populate("members")
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .lean(),
+  ]);
 
-  logger.info(`ℹ️ Retrieved ${groups.length} user groups.`);
-  res.status(200).json(groups);
+  logger.info(
+    `Fetched ${groups.length} groups (page ${page}) with search "${search}"`
+  );
+  res.json({ data: groups, total });
 };
 
 export const getUserGroupById = async (
