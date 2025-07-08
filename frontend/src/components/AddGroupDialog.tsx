@@ -9,6 +9,8 @@ import 'ojs/ojavatar';
 import 'ojs/ojcheckboxset';
 import 'ojs/ojinputtext';
 import 'ojs/ojlabel';
+import 'oj-c/checkbox';
+
 
 interface AddGroupDialogProps {
   isOpen: boolean;
@@ -17,37 +19,54 @@ interface AddGroupDialogProps {
 }
 
 export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDialogProps) {
-  const [groupName, setGroupName] = useState('');
   const [selectedMembers, setSelectedMembers] = useState<MemberData[]>([]);
   const [allMembers, setAllMembers] = useState<MemberData[]>([]);
   const [applications, setApplications] = useState<ApplicationOption[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState('');
+  const [checkedAppIds, setCheckedAppIds] = useState<string[]>([]);
+  const [searchTrigger, setSearchTrigger] = useState(0);
 
   const searchInputRef = useRef<any>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const groupNameRef = useRef<any>(null);
+  const checkboxRefs = useRef<{ [key: string]: any }>({});
 
   useEffect(() => {
     if (isOpen) {
       loadApplications();
       fetchAndStoreAllMembers();
+      loadCurrentGroups();
     }
   }, [isOpen]);
+
+  // Add useEffect to watch search input changes
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const checkSearchInput = () => {
+      const currentValue = searchInputRef.current?.value || '';
+      setSearchTrigger(prev => {
+        // Only update if the value has actually changed
+        const newTrigger = prev + 1;
+        return newTrigger;
+      });
+    };
+
+    // Check every 100ms for changes
+    const interval = setInterval(checkSearchInput, 100);
+
+    return () => clearInterval(interval);
+  }, [isOpen, searchTrigger]);
 
   const loadApplications = async () => {
     setIsLoading(true);
     setError('');
-
     try {
       const allApplications = await userGroupService.fetchApplications();
-      const appOptions: ApplicationOption[] = allApplications.map(app => ({
-        id: app.id,
-        name: app.name,
-        checked: false
-      }));
-      setApplications(appOptions);
+      setApplications(allApplications);
+      setCheckedAppIds([]);
     } catch (err: any) {
       setError('Failed to load applications. Please try again.');
       console.error('Failed to load applications:', err);
@@ -72,17 +91,14 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
     }
   };
 
-  const handleSearchInput = (value: string) => {
-    setSearchTerm(value);
+  const loadCurrentGroups = async () => {
+    try {
+      const currentGroups = await userGroupService.fetchUserGroups();
+      localStorage.setItem('userGroups', JSON.stringify(currentGroups));
+    } catch (err) {
+      console.error('Failed to load current groups for validation:', err);
+    }
   };
-
-  // Available members = allMembers - selectedMembers, filtered by search term
-  const availableMembers = allMembers.filter(
-    (m) => !selectedMembers.some((sel) => sel.id === m.id) &&
-           (searchTerm === '' || 
-            m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            m.email.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
 
   const handleAddMember = (member: MemberData) => {
     setSelectedMembers((prev) => [...prev, member]);
@@ -97,29 +113,73 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
   };
 
   const handleApplicationToggle = (appId: string) => {
-    setApplications((prev) =>
-      prev.map((app) =>
-        app.id === appId ? { ...app, checked: !app.checked } : app
-      )
+    setCheckedAppIds((prev) =>
+      prev.includes(appId) ? prev.filter((id) => id !== appId) : [...prev, appId]
     );
   };
 
   const validateForm = (): string | null => {
-    if (!groupName.trim()) {
+    const groupName = groupNameRef.current?.value || '';
+    console.log('=== VALIDATE FORM DEBUG ===');
+    console.log('Group name from ref:', groupName);
+    console.log('Group name ref exists:', !!groupNameRef.current);
+    console.log('Group name ref value:', groupNameRef.current?.value);
+    console.log('groupName type:', typeof groupName);
+    console.log('groupName length:', groupName?.length);
+    
+    if (!groupName || !groupName.trim()) {
+      console.log('Group name is empty or undefined');
       return 'Group name is required.';
     }
-    if (groupName.trim().length < 5 || groupName.trim().length > 20) {
+    
+    const trimmedName = groupName.trim();
+    console.log('Trimmed name:', trimmedName);
+    console.log('Trimmed name length:', trimmedName.length);
+    
+    // Check length validation (5-20 characters)
+    if (trimmedName.length < 5 || trimmedName.length > 20) {
       return 'Group name must be between 5 and 20 characters.';
     }
-    if (applications.filter(app => app.checked).length === 0) {
+    
+    // Check for duplicate group names
+    const existingGroups = JSON.parse(localStorage.getItem('userGroups') || '[]');
+    const isDuplicate = existingGroups.some((group: any) => 
+      group.groupName.toLowerCase() === trimmedName.toLowerCase()
+    );
+    if (isDuplicate) {
+      return 'A group with this name already exists.';
+    }
+    
+    // Check character validation - only allow hyphens, underscores, numbers, spaces, and letters
+    const validNameRegex = /^[a-zA-Z0-9\s\-_]+$/;
+    if (!validNameRegex.test(trimmedName)) {
+      return 'Group name can only contain letters, numbers, spaces, hyphens (-), and underscores (_).';
+    }
+    
+    // Check if at least one application is selected using refs
+    const selectedAppIds = Object.keys(checkboxRefs.current).filter(appId => 
+      checkboxRefs.current[appId]?.value === true
+    );
+    console.log('Selected app IDs from refs:', selectedAppIds);
+    
+    if (selectedAppIds.length === 0) {
       return 'Please select at least one accessible application.';
     }
+    
+    console.log('Validation passed!');
     return null;
   };
 
   const handleCreateGroup = async () => {
+    const groupName = groupNameRef.current?.value || '';
+    console.log('=== CREATE GROUP DEBUG ===');
+    console.log('Group name from ref:', groupName);
+    console.log('Selected members:', selectedMembers);
+    console.log('Selected members emails:', selectedMembers.map(m => m.email));
+    
     const validationError = validateForm();
     if (validationError) {
+      console.log('Validation failed:', validationError);
       setError(validationError);
       return;
     }
@@ -128,20 +188,43 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
     setError('');
 
     try {
-      const selectedApplications = applications
-        .filter(app => app.checked)
-        .map(app => app.id);
+      // Load current groups for duplicate checking
+      const currentGroups = await userGroupService.fetchUserGroups();
+      localStorage.setItem('userGroups', JSON.stringify(currentGroups));
+      
+      // Re-validate after loading current groups
+      const revalidationError = validateForm();
+      if (revalidationError) {
+        console.log('Re-validation failed:', revalidationError);
+        setError(revalidationError);
+        setIsCreating(false);
+        return;
+      }
 
-      await userGroupService.createUserGroup({
+      // Get selected applications from refs
+      const selectedAppIds = Object.keys(checkboxRefs.current).filter(appId => 
+        checkboxRefs.current[appId]?.value === true
+      );
+      console.log('Selected app IDs:', selectedAppIds);
+
+      const payload = {
         name: groupName.trim(),
         members: selectedMembers.map(m => m.email),
-        assigned_applications: selectedApplications
-      });
+        assigned_applications: selectedAppIds,
+        is_admin: false
+      };
+      console.log('Sending payload:', payload);
+
+      await userGroupService.createUserGroup(payload);
 
       onGroupCreated();
       handleClose();
     } catch (err: any) {
-      setError('Failed to create group. Please try again.');
+      if (err.response?.status === 409) {
+        setError('A group with this name already exists.');
+      } else {
+        setError('Failed to create group. Please try again.');
+      }
       console.error('Failed to create group:', err);
     } finally {
       setIsCreating(false);
@@ -149,11 +232,9 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
   };
 
   const handleClose = () => {
-    setGroupName('');
     setSelectedMembers([]);
     setAllMembers([]);
     setApplications([]);
-    setSearchTerm('');
     setError('');
     
     if (searchTimeoutRef.current) {
@@ -171,6 +252,17 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
       .toUpperCase()
       .slice(0, 2);
   };
+
+  // Available members = allMembers - selectedMembers, filtered by search term
+  const availableMembers = allMembers.filter(
+    (m) => !selectedMembers.some((sel) => sel.id === m.id) &&
+           (() => {
+             const searchValue = searchInputRef.current?.value || '';
+             return searchValue === '' || 
+                    m.name.toLowerCase().includes(searchValue.toLowerCase()) ||
+                    m.email.toLowerCase().includes(searchValue.toLowerCase());
+           })()
+  );
 
   if (!isOpen) return null;
 
@@ -412,10 +504,15 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
                 <oj-label for="groupNameInput">Group Name</oj-label>
                 <oj-input-text
                   id="groupNameInput"
-                  value={groupName}
-                  on-value-changed={(e: any) => setGroupName(e.detail.value)}
+                  ref={groupNameRef}
                   class="oj-form-control-full-width"
                 />
+                <div class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
+                  Group name must be 5-20 characters. Allowed characters: letters, numbers, spaces, hyphens (-), and underscores (_).
+                </div>
+                <div class="oj-typography-body-sm oj-text-color-secondary" style="color: red;">
+                  Debug: Current value: "{groupNameRef.current?.value || ''}" (length: {(groupNameRef.current?.value || '').length})
+                </div>
               </div>
 
               <div class="oj-flex oj-sm-flex-direction-row edit-group-content">
@@ -428,8 +525,6 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
                     <oj-input-search
                       class="oj-form-control-full-width"
                       placeholder="Search directory..."
-                      raw-value={searchTerm}
-                      on-raw-value-changed={(e: any) => handleSearchInput(e.detail.value)}
                       ref={searchInputRef}
                     />
                   </div>
@@ -459,7 +554,7 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
                     ) : (
                       <div class="no-members-content">
                         <p class="oj-text-color-secondary">
-                          {searchTerm ? 'No members found' : 'No available members'}
+                          {(searchInputRef.current?.value || '') ? 'No members found' : 'No available members'}
                         </p>
                       </div>
                     )}
@@ -525,17 +620,24 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
                 <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">
                   Accessible Applications
                 </h4>
-                <div class="applications-grid">
+                <div class="oj-flex oj-sm-flex-direction-column applications-checkboxes">
                   {applications.map(app => (
-                    <div key={app.id} class="application-checkbox-item">
-                      <oj-checkboxset
-                        value={app.checked ? [app.id] : []}
-                        on-value-changed={(e: any) => handleApplicationToggle(app.id)}
-                      >
-                        <oj-option value={app.id}>{app.name}</oj-option>
-                      </oj-checkboxset>
-                    </div>
+                    <oj-c-checkbox 
+                      key={app.id}
+                      ref={(el: any) => {
+                        if (el) checkboxRefs.current[app.id] = el;
+                      }}
+                      value={false}
+                    >
+                      {app.name}
+                    </oj-c-checkbox>
                   ))}
+                </div>
+                <div class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
+                  At least one application must be selected for the group.
+                </div>
+                <div class="oj-typography-body-sm oj-text-color-secondary" style="color: red;">
+                  Debug: checkedAppIds: {JSON.stringify(checkedAppIds)} | Selected from refs: {JSON.stringify(Object.keys(checkboxRefs.current).filter(appId => checkboxRefs.current[appId]?.value === true))}
                 </div>
               </div>
             </div>
