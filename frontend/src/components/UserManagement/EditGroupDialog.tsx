@@ -41,22 +41,26 @@ export function EditGroupDialog({
   const [searchTerm, setSearchTerm] = useState('');
   const [searchTrigger, setSearchTrigger] = useState(0);
   const [assignedAppIds, setAssignedAppIds] = useState<string[]>([]);
+  const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   const searchInputRef = useRef<any>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const checkboxRefs = useRef<{ [key: string]: any }>({});
 
   useEffect(() => {
-    if (isOpen) {
-      loadGroupDetails();
-      loadApplications();
-      fetchAndStoreAllMembers();
-      loadCurrentGroups();
+    if (isOpen && !isDataLoaded) {
+      loadAllData();
     }
   }, [isOpen, groupId]);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      setIsDataLoaded(false);
+    }
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (!isOpen || !isDataLoaded) return;
     
     const interval = setInterval(() => {
       const currentSearchValue = searchInputRef.current?.value || '';
@@ -68,76 +72,48 @@ export function EditGroupDialog({
     }, 100); // Check every 100ms
     
     return () => clearInterval(interval);
-  }, [isOpen, searchTerm]);
+  }, [isOpen, isDataLoaded, searchTerm]);
 
-  const loadGroupDetails = async () => {
+  const loadAllData = async () => {
     setIsLoading(true);
     setError('');
 
     try {
-      const groupDetails = await userGroupService.fetchGroupById(groupId);
-      
+      // Load all data in parallel
+      const [groupDetails, allApplications, members, currentGroups] = await Promise.all([
+        userGroupService.fetchGroupById(groupId),
+        userGroupService.fetchApplications(),
+        userGroupService.searchUsers(''),
+        userGroupService.fetchUserGroups(1, 1000, '')
+      ]);
+
       // Set current members
-      const members: MemberData[] = groupDetails.members?.map((member: any) => ({
+      const membersData: MemberData[] = groupDetails.members?.map((member: any) => ({
         id: member._id || `fallback-id-${member.email}`,
         name: member.name || member.email,
         email: member.email,
         initials: getInitials(member.name || member.email)
       })) || [];
-      setSelectedMembers(members);
+      setSelectedMembers(membersData);
 
       // Set assigned applications
       const assignedAppIds = groupDetails.assigned_applications?.map((app: any) => app._id) || [];
       console.log('Assigned app IDs from group details:', assignedAppIds);
       setAssignedAppIds(assignedAppIds);
 
-    } catch (err: any) {
-      setError('Failed to load group details. Please try again.');
-      console.error('Failed to load group details:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadApplications = async () => {
-    setIsLoading(true);
-    setError('');
-    try {
-      const allApplications = await userGroupService.fetchApplications();
       setApplications(allApplications);
       
-      // After applications are loaded, we need to set the checkbox values
-      // This will be handled in loadGroupDetails with a delay
-    } catch (err: any) {
-      setError('Failed to load applications. Please try again.');
-      console.error('Failed to load applications:', err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const fetchAndStoreAllMembers = async () => {
-    setIsLoading(true);
-    setError('');
-    try {
-      // Use userGroupService for consistent user fetching
-      const members = await userGroupService.searchUsers('');
       localStorage.setItem('allDirectoryMembers', JSON.stringify(members));
       setAllMembers(members);
-    } catch (err) {
-      setError('Failed to load members from directory.');
-      setAllMembers([]);
+      
+      localStorage.setItem('userGroups', JSON.stringify(currentGroups.data));
+      
+      setIsDataLoaded(true);
+    } catch (err: any) {
+      setError('Failed to load data. Please try again.');
+      console.error('Failed to load data:', err);
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const loadCurrentGroups = async () => {
-    try {
-      const response = await userGroupService.fetchUserGroups(1, 1000, ''); // Get all groups for validation
-      localStorage.setItem('userGroups', JSON.stringify(response.data));
-    } catch (err) {
-      console.error('Failed to load current groups for validation:', err);
     }
   };
 
@@ -234,6 +210,7 @@ export function EditGroupDialog({
     setApplications([]);
     setSearchTerm('');
     setError('');
+    setIsDataLoaded(false);
     
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -262,7 +239,8 @@ export function EditGroupDialog({
            })()
   );
 
-  if (!isOpen) return null;
+  // Don't render the dialog until data is loaded
+  if (!isOpen || !isDataLoaded) return null;
 
   return (
     <oj-c-dialog opened={isOpen} on-oj-close={handleClose} width="800px"
