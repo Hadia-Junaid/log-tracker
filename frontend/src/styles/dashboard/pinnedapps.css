@@ -1,0 +1,18 @@
+/* Pinned app Card CSS */
+
+.pinned-card-width{
+  min-width: 24rem;
+  max-width: 24rem;
+}
+
+.custom-card-hover {
+  border: 1px solid var(--oj-core-divider-color);
+  border-radius: var(--oj-core-border-radius-md);
+  background-color: var(--oj-core-bg-color);
+  transition: box-shadow 0.5s ease-in-out;
+}
+
+.custom-card-hover:hover {
+  box-shadow: var(--oj-core-box-shadow-md);
+  cursor: pointer;
+}

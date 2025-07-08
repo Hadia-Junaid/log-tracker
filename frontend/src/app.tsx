@@ -22,6 +22,7 @@ import LoadingSpinner from "./components/LoadingSpinner"; // Adjust the import p
 type Props = {
     appName?: string;
     userLogin?: string;
+    userId?: string;
 };
 
 function checkAuth(): Promise<boolean> {
@@ -39,6 +40,7 @@ export const App = registerCustomElement(
     ({
         appName = "Log Tracker",
         userLogin = "john.hancock@oracle.com",
+        userId = "6862440270afcb4b63404766",
     }: Props) => {
         const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(
             null
@@ -99,9 +101,9 @@ export const App = registerCustomElement(
                     style={{ height: "100vh", overflow: "hidden" }}
                 >
                     <Sidebar />
-                    <main class="oj-flex-item">
+                    <main class="oj-flex-item oj-sm-padding-4x-start">
                         <Router>
-                            <Dashboard path="/" />
+                            <Dashboard path="/" userId={userId} />
                             <Logs path="/logs" />
                             <UserManagement path="/users" />
                             <Applications path="/applications" />

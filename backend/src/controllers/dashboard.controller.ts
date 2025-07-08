@@ -24,6 +24,10 @@ export const getPinnedApps = async (req: Request, res: Response): Promise<void> 
 
     const pinnedApps = user.pinned_applications;
 
+    const appNames = await Application.find({
+        _id: { $in: pinnedApps.map((app: any) => app._id) }
+    }).select('name').lean();
+
     if (!pinnedApps || pinnedApps.length === 0) {
         res.status(200).json({ pinned_applications: [] });
         return;
@@ -60,6 +64,7 @@ export const getPinnedApps = async (req: Request, res: Response): Promise<void> 
     // Build response array with log counts
     const response = pinnedApps.map((app: any) => ({
         _id: app._id.toString(),
+        appName: appNames.find(a => a._id.toString() === app._id.toString())?.name || 'Unknown', 
         logCounts: logCountsMap[app._id.toString()] || {}
     }));
 
