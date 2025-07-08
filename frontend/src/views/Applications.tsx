@@ -36,26 +36,29 @@ export default function Applications({ path }: Props) {
 
   const [statusFilter, setStatusFilter] = useState("all");
   const [environmentFilter, setEnvironmentFilter] = useState("all");
-  const [sortOption, setSortOption] = useState("all");
+  const [sortOption, setSortOption] = useState("name");
 
   const statusOptions = [
-    { value: "all", label: "All Statuses" },
+    { value: "all", label: "All" },
     { value: "active", label: "Active" },
     { value: "inactive", label: "Inactive" },
-    { value: "development", label: "In Development" },
   ];
 
   const environmentOptions = [
-    { value: "all", label: "All Environments" },
-    { value: "production", label: "Production" },
-    { value: "staging", label: "Staging" },
-    { value: "development", label: "Development" },
+    { value: "all", label: "All" },
+    { value: "Production", label: "Production" },
+    { value: "Staging", label: "Staging" },
+    { value: "Development", label: "Development" },
+    { value: "Testing", label: "Testing" },
   ];
 
   const sortOptions = [
     { value: "name", label: "Name (A-Z)" },
+    { value: "nameDesc", label: "Name (Z-A)" },
     { value: "createdAt", label: "Created Date" },
+    { value: "createdAtDesc", label: "Created Date (Newest First)" },
     { value: "updatedAt", label: "Last Updated" },
+    { value: "updatedAtDesc", label: "Last Updated (Newest First)" },
   ];
 
   const statusDataProvider = useMemo(() => {
@@ -68,10 +71,9 @@ export default function Applications({ path }: Props) {
     });
   }, []);
 
+  // Set the default sort option to "name" for initial load
   const sortDataProvider = useMemo(() => {
-    return new ArrayDataProvider(sortOptions, {
-      keyAttributes: "value",
-    });
+    return new ArrayDataProvider(sortOptions, { keyAttributes: "value" });
   }, []);
 
   const fetchApplications = async () => {
@@ -82,8 +84,12 @@ export default function Applications({ path }: Props) {
           page: currentPage,
           pageSize: PAGE_SIZE,
           search: searchQuery,
+          status: statusFilter,
+          environment: environmentFilter,
+          sort: sortOption,
         },
       });
+      console.log("Fetched applications:", response);
       setApplications(response.data.data);
       setTotalCount(response.data.total);
       setError(null); // Clear previous errors
@@ -100,7 +106,7 @@ export default function Applications({ path }: Props) {
       fetchApplications();
     }, 300);
     return () => clearTimeout(delayDebounceFn);
-  }, [currentPage, searchQuery]);
+  }, [currentPage, searchQuery, statusFilter, environmentFilter, sortOption]);
 
   const updateSelectedApplication = (updatedApp: Application) => {
     setApplications((prevApps) =>
@@ -152,53 +158,60 @@ export default function Applications({ path }: Props) {
               <span slot="startIcon" class="oj-ux-ico-plus"></span>
               Add Application
             </oj-button>
-            <div class="applications-total">{totalCount} total</div>
+            <div class="applications-total">Total Applications: {totalCount}</div>
           </div>
 
-        <div class="applications-toolbar">
-  {/* Left: Search */}
-  <div class="search-wrapper">
-    <oj-input-text
-      placeholder="Search applications"
-      value={searchQuery}
-      onrawValueChanged={(e) => {
-        setSearchQuery(e.detail.value);
-        setCurrentPage(1);
-      }}
-      class="search-input"
-    ></oj-input-text>
-  </div>
+          <div class="applications-toolbar">
+            {/* Left: Search */}
+            <div class="search-wrapper">
+              <oj-input-text
+                placeholder="Search applications"
+                value={searchQuery}
+                onrawValueChanged={(e) => {
+                  setSearchQuery(e.detail.value);
+                  setCurrentPage(1);
+                }}
+                class="search-input"
+              ></oj-input-text>
+            </div>
 
-  {/* Right: Filters */}
-  <div class="filters-group">
-    <oj-select-single
-      class="filter-dropdown"
-      label-hint="Status"
-      data={statusDataProvider}
-      value={statusFilter}
-      onvalue-changed={(e: any) => setStatusFilter(e.detail.value)}
-    ></oj-select-single>
+            {/* Right: Filters */}
+            <div class="filters-group">
+              <oj-select-single
+                class="filter-dropdown"
+                label-hint="Status"
+                data={statusDataProvider}
+                value={statusFilter}
+                onvalueChanged={(e: CustomEvent) => {
+                  console.log("Status filter changed:", e);
+                  setStatusFilter(e.detail.value);
+                  setCurrentPage(1);
+                }}
+              ></oj-select-single>
 
-    <oj-select-single
-      class="filter-dropdown"
-      label-hint="Environment"
-      data={environmentDataProvider}
-      value={environmentFilter}
-      onvalue-changed={(e: any) => setEnvironmentFilter(e.detail.value)}
-    ></oj-select-single>
+              <oj-select-single
+                class="filter-dropdown"
+                label-hint="Environment"
+                data={environmentDataProvider}
+                value={environmentFilter}
+                onvalueChanged={(e: CustomEvent) => {
+                  setEnvironmentFilter(e.detail.value);
+                  setCurrentPage(1);
+                }}
+              ></oj-select-single>
 
-    <oj-select-single
-      class="filter-dropdown"
-      label-hint="Sort"
-      data={sortDataProvider}
-      value={sortOption}
-      onvalue-changed={(e: any) => setSortOption(e.detail.value)}
-    ></oj-select-single>
-  </div>
-</div>
-
-
-
+              <oj-select-single
+                class="filter-dropdown"
+                label-hint="Sort"
+                data={sortDataProvider}
+                value={sortOption}
+                onvalueChanged={(e: CustomEvent) => {
+                  setSortOption(e.detail.value);
+                  setCurrentPage(1); // Reset to first page on sort change
+                }}
+              ></oj-select-single>
+            </div>
+          </div>
         </div>
 
         {/* Applications List */}
