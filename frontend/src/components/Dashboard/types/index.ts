@@ -1,5 +1,5 @@
 export interface PinnedApp {
-  userId: string;
+  _id: string;
   appName: string;
   logCounts: {
     INFO: number;

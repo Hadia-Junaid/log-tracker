@@ -61,14 +61,13 @@
 
 @media (min-width: 1024px) {
   .pinned-card-col {
-    min-width: 25%;
-    width: 30%;
+    width: 24%;
   }
-}
-
+} 
+ 
 @media (min-width: 1440px) {
   .pinned-card-col {
-    width: 25%;
+    width: 20%;
   }
 }
 
@@ -158,4 +157,34 @@
 
 .card-row-logs-label {
   font-weight: bold;
+}
+
+/* === Manage Pins === */
+
+.manage-pins-container {
+  display: flex;
+  flex-direction: column;
+}
+
+.manage-pins-body {
+  min-height: 300px; 
+  max-height: 500px;   
+  overflow-y: auto;
+}
+
+.manage-pins-search {
+  margin-bottom: 16px;
+}
+
+.manage-pins-tabs {
+  margin-bottom: 16px;
+}
+
+.manage-pins-card {
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.manage-pins-card:hover {
+  background-color: #f9f9f9;
 }

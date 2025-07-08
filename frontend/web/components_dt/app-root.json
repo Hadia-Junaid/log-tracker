@@ -14,6 +14,10 @@
     "userLogin": {
       "type": "string",
       "value": "john.hancock@oracle.com"
+    },
+    "userId": {
+      "type": "string",
+      "value": "6862440270afcb4b63404766"
     }
   },
   "methods": {
