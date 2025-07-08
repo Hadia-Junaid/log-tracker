@@ -31,7 +31,7 @@ export default function Applications({ path }: Props) {
 
   const fetchApplications = async () => {
     try {
-      setLoading(true);
+      // setLoading(true);  //commenting this out because i dont want this every time i search
       const response = await axios.get("/applications", {
         params: {
           page: currentPage,
@@ -109,7 +109,7 @@ export default function Applications({ path }: Props) {
           </div>
         </div>
 
-        {/* --- Child Component --- */}
+        {/* Applications List */}
         <ApplicationsList
             loading={loading}
             error={error}

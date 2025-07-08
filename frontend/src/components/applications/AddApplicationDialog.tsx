@@ -8,6 +8,7 @@ import "ojs/ojbutton";
 import "ojs/ojlabel";
 import "ojs/ojprogress-circle";
 import axios from "../../api/axios";
+import { isAxiosError } from "../../api/axios";
 import "../../styles/applications/addApplicationDialog.css";
 import { Application } from "../../types/applications";
 import "ojs/ojswitch";
@@ -96,7 +97,14 @@ export default function AddApplicationDialog({
       setTimeout(() => onClose(), 1000);
     } catch (err) {
       console.error(err);
-      setError("An unexpected error occurred.");
+
+      //if status is 409, show name already exists error
+      if (isAxiosError(err) && err.response?.status === 409) {
+        setError("An application with this name already exists. Please choose a different name.");
+        return;
+      }
+
+      setError("Failed to add application.");
     } finally {
       setLoading(false);
     }
