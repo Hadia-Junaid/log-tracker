@@ -1,6 +1,8 @@
-import { h } from 'preact';
-import { useState } from 'preact/hooks';
-import { userGroupService } from '../../services/userGroupServices';
+import { h } from "preact";
+import { useEffect, useRef, useState } from "preact/hooks";
+import "ojs/ojdialog";
+import "ojs/ojbutton";
+import { userGroupService } from "../../services/userGroupServices";
 
 interface DeleteGroupDialogProps {
   isOpen: boolean;
@@ -10,60 +12,79 @@ interface DeleteGroupDialogProps {
   onGroupDeleted: () => void;
 }
 
-export function DeleteGroupDialog({ isOpen, groupId, groupName, onClose, onGroupDeleted }: DeleteGroupDialogProps) {
+export function DeleteGroupDialog({
+  isOpen,
+  groupId,
+  groupName,
+  onClose,
+  onGroupDeleted,
+}: DeleteGroupDialogProps) {
+  const dialogRef = useRef<any>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (dialogRef.current) {
+      if (isOpen) {
+        dialogRef.current.open();
+        setError(null);
+      } else {
+        dialogRef.current.close();
+      }
+    }
+  }, [isOpen]);
+
+  const handleDialogClose = (event: CustomEvent) => {
+    if (event.detail.originalEvent) {
+      onClose();
+    }
+  };
 
   const handleDeleteGroup = async () => {
     setIsDeleting(true);
+    setError(null);
 
     try {
       await userGroupService.deleteUserGroup(groupId);
       onGroupDeleted();
-      handleClose();
+      onClose();
     } catch (err: any) {
-      console.error('Failed to delete group:', err);
-      alert('Failed to delete group. Please try again.');
+      console.error("Failed to delete group:", err);
+      setError("Failed to delete group. Please try again.");
     } finally {
       setIsDeleting(false);
     }
   };
 
-  const handleClose = () => {
-    setIsDeleting(false);
-    onClose();
-  };
-
-  if (!isOpen) return null;
-
   return (
-    <div class="oj-dialog-mask">
-      <div class="oj-dialog" role="dialog" aria-labelledby="delete-dialog-title">
-        <div class="oj-dialog-header">
-          <h2 id="delete-dialog-title" class="oj-dialog-title">Delete Group</h2>
-        </div>
-
-        <div class="oj-dialog-body">
-          <p>
-            Are you sure you want to delete the group <strong>{groupName}</strong>?
-          </p>
-          <p class="oj-text-color-secondary oj-typography-body-sm">
-            This action cannot be undone.
-          </p>
-        </div>
-
-        <div class="oj-dialog-footer">
-          <button class="oj-button" onClick={handleClose} disabled={isDeleting}>
-            Cancel
-          </button>
-          <button 
-            class="oj-button oj-button-danger" 
-            onClick={handleDeleteGroup}
-            disabled={isDeleting}
-          >
-            {isDeleting ? 'Deleting...' : 'Delete'}
-          </button>
-        </div>
+    <oj-dialog
+      ref={dialogRef}
+      dialogTitle="Delete Group"
+      cancelBehavior="icon"
+      onojClose={handleDialogClose}
+      id="deleteGroupDialog"
+    >
+      <div class="oj-dialog-body">
+        {error && <p class="oj-text-color-danger">{error}</p>}
+        <p>
+          Are you sure you want to delete the group <strong>{groupName}</strong>?
+        </p>
+        <p class="oj-text-color-secondary oj-typography-body-sm">
+          This action cannot be undone.
+        </p>
       </div>
-    </div>
+      <div slot="footer">
+        <oj-button onojAction={onClose} disabled={isDeleting}>
+          Cancel
+        </oj-button>
+        <oj-button
+          chroming="danger"
+          onojAction={handleDeleteGroup}
+          disabled={isDeleting}
+        >
+          {isDeleting ? "Deleting..." : "Delete"}
+        </oj-button>
+      </div>
+    </oj-dialog>
   );
-} 
+}

@@ -1,4 +1,3 @@
-User Management Styles
 
 /* ----- GENERAL LAYOUT CONTAINER ----- */
 .oj-hybrid-padding {
@@ -155,7 +154,7 @@ User Management Styles
   gap: 16px;
   flex-wrap: wrap;
 }
-
+/* 
 /* ----- RESPONSIVENESS ----- */
 @media (max-width: 600px) {
   .search-add-row,
@@ -184,4 +183,4 @@ User Management Styles
     margin-top: 12px;
     justify-content: flex-end;
   }
-}
+} 
