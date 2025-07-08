@@ -24,7 +24,7 @@ export const getLogs = async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({ error: 'Invalid userId' });
       return;
     }
-
+    logger.info(`app ids : ${app_ids}`);
     // Get user and their logsPerPage setting
     const user = await User.findById(userId).lean();
     if (!user) {
@@ -53,7 +53,7 @@ export const getLogs = async (req: Request, res: Response): Promise<void> => {
     }
 
     // 3. Get assigned applications' ids and names
-    const assignedApplications = await Application.find({ _id: { $in: filteredAppIds } })
+    const assignedApplications = await Application.find({ _id: { $in: groupAppIds } })
       .select('_id name')
       .lean();
 

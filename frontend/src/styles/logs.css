@@ -1,4 +1,8 @@
-  /* .demo-table-container {
-    width: 100%;
+  .demo-table-container {
+    width: 95%;
     height: 27rem;
-  } */
+  }
+  .input-filter {
+  height: 40px !important; /* Adjust as needed */
+  box-sizing: border-box;
+}

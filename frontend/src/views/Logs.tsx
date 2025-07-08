@@ -35,9 +35,11 @@ export default function Logs(props: Props) {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState(search);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [selectedAppIds, setSelectedAppIds] = useState<string[]>([]);
 
-  const userId = "68650fd57a72d0b64525da71"; // hardcoded
-
+  const userId = "68650fd57a72d0b64525da71"; // hardcoded for now
+  console.log("userId:", userId);
   // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -51,19 +53,24 @@ export default function Logs(props: Props) {
     const fetchLogs = async () => {
       setLoading(true);
       try {
+        console.log("selectedAppIds :", selectedAppIds);
         const res = await axios.get(`/logs/${userId}`, {
           params: {
             search: debouncedSearch,
+            app_ids: Array.from(selectedAppIds).join(','),
           },
         });
-
+      
         setLogs(res.data.data);
+        setApplications(res.data.assigned_applications || []);
+        console.log(`app: ${applications}`);
 
         const map: Record<string, string> = {};
         res.data.assigned_applications.forEach((app: Application) => {
           map[app._id] = app.name;
         });
         setAppMap(map);
+        console.log("appMap:", map);
         setError(null);
       } catch (err) {
         console.error("Failed to fetch logs:", err);
@@ -74,7 +81,7 @@ export default function Logs(props: Props) {
     };
 
     fetchLogs();
-  }, [debouncedSearch]);
+  }, [debouncedSearch, selectedAppIds]);
 
   const dataProvider = useMemo(() => {
     const enrichedLogs = logs.map((log) => ({
@@ -115,7 +122,13 @@ export default function Logs(props: Props) {
 
   return (
     <div class="oj-sm-padding-6x logs-page" style="width: 100%;">
-      <LogsHeader search={search} setSearch={setSearch} />
+      <LogsHeader
+        search={search}
+        setSearch={setSearch}
+        applications={applications}
+        selectedAppIds={selectedAppIds}
+        setSelectedAppIds={setSelectedAppIds}
+      />
       <LogsTable loading={loading} error={error} dataProvider={dataProvider} columns={columns} />
     </div>
   );
