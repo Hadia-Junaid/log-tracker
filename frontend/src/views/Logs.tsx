@@ -37,9 +37,10 @@ export default function Logs(props: Props) {
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedAppIds, setSelectedAppIds] = useState<string[]>([]);
+  const [logLevels, setLogLevels] = useState<string[]>([]); // NEW
 
   const userId = "68650fd57a72d0b64525da71"; // hardcoded for now
-  console.log("userId:", userId);
+
   // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -53,24 +54,22 @@ export default function Logs(props: Props) {
     const fetchLogs = async () => {
       setLoading(true);
       try {
-        console.log("selectedAppIds :", selectedAppIds);
         const res = await axios.get(`/logs/${userId}`, {
           params: {
             search: debouncedSearch,
             app_ids: Array.from(selectedAppIds).join(','),
+            log_levels: logLevels.join(','),
           },
         });
-      
+
         setLogs(res.data.data);
         setApplications(res.data.assigned_applications || []);
-        console.log(`app: ${applications}`);
 
         const map: Record<string, string> = {};
         res.data.assigned_applications.forEach((app: Application) => {
           map[app._id] = app.name;
         });
         setAppMap(map);
-        console.log("appMap:", map);
         setError(null);
       } catch (err) {
         console.error("Failed to fetch logs:", err);
@@ -81,7 +80,7 @@ export default function Logs(props: Props) {
     };
 
     fetchLogs();
-  }, [debouncedSearch, selectedAppIds]);
+  }, [debouncedSearch, selectedAppIds, logLevels]); // logLevels included
 
   const dataProvider = useMemo(() => {
     const enrichedLogs = logs.map((log) => ({
@@ -128,6 +127,8 @@ export default function Logs(props: Props) {
         applications={applications}
         selectedAppIds={selectedAppIds}
         setSelectedAppIds={setSelectedAppIds}
+        logLevels={logLevels}
+        setLogLevels={setLogLevels}
       />
       <LogsTable loading={loading} error={error} dataProvider={dataProvider} columns={columns} />
     </div>

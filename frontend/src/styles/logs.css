@@ -2,7 +2,14 @@
     width: 95%;
     height: 27rem;
   }
+
   .input-filter {
   height: 40px !important; /* Adjust as needed */
   box-sizing: border-box;
-}
+  }
+
+  .dropdown {
+    width: 20%
+  }
+
+  
