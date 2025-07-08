@@ -1,14 +1,13 @@
 // src/views/Applications.tsx
 import { h } from "preact";
-import ApplicationCard from "../components/applications/ApplicationCard";
 import { useState, useEffect } from "preact/hooks";
 import "../styles/applications.css";
 import axios from "../api/axios";
-import LoadingSpinner from "../components/LoadingSpinner";
 import AddApplicationDialog from "../components/applications/AddApplicationDialog";
 import { Application } from "src/types/applications";
 import DeleteConfirmationDialog from "../components/applications/DeleteConfirmationDialog";
 import EditApplicationDialog from "../components/applications/EditApplicationDialog";
+import ApplicationsList from "../components/applications/ApplicationsList"; // Import the new component
 
 type Props = {
   path?: string;
@@ -21,9 +20,7 @@ export default function Applications({ path }: Props) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
-  const [selectedAppName, setSelectedAppName] = useState<string | undefined>(
-    undefined
-  );
+  const [selectedAppName, setSelectedAppName] = useState<string | undefined>(undefined);
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
 
@@ -32,7 +29,6 @@ export default function Applications({ path }: Props) {
   const [searchQuery, setSearchQuery] = useState("");
   const [totalCount, setTotalCount] = useState(0);
 
-  // Fetch applications from API
   const fetchApplications = async () => {
     try {
       setLoading(true);
@@ -43,39 +39,27 @@ export default function Applications({ path }: Props) {
           search: searchQuery,
         },
       });
-
-      console.log("Fetched applications:", response.data);
-
       setApplications(response.data.data);
       setTotalCount(response.data.total);
+      setError(null); // Clear previous errors
+    } catch (err) {
+      console.error("Error fetching applications:", err);
+      setError("Failed to fetch applications. Please try again.");
+    } finally {
       setLoading(false);
-    } catch (error) {
-      console.error("Error fetching applications:", error);
-      setLoading(false);
-      setError("Failed to fetch applications");
     }
   };
 
   useEffect(() => {
-    
-    //use debounce delay here to search
     const delayDebounceFn = setTimeout(() => {
       fetchApplications();
-    }, 300); // Adjust the delay as needed (300ms here)
-
-    return () => clearTimeout(delayDebounceFn); // Cleanup the timeout on unmount or when dependencies change
-
+    }, 300);
+    return () => clearTimeout(delayDebounceFn);
   }, [currentPage, searchQuery]);
-
-  const pushNewApplication = (newApp: Application) => {
-    setApplications((prevApps) => [...prevApps, newApp]);
-  };
 
   const updateSelectedApplication = (updatedApp: Application) => {
     setApplications((prevApps) =>
-      prevApps.map((app) =>
-        app._id === updatedApp._id ? { ...app, ...updatedApp } : app
-      )
+      prevApps.map((app) => (app._id === updatedApp._id ? { ...app, ...updatedApp } : app))
     );
   };
 
@@ -89,6 +73,15 @@ export default function Applications({ path }: Props) {
     setSelectedAppName(name);
     setDeleteDialogOpen(true);
   };
+  
+  const handleSuccessfulDelete = () => {
+    // If the last item on a page > 1 is deleted, go to the previous page
+    if (applications.length === 1 && currentPage > 1) {
+      setCurrentPage(p => p - 1);
+    } else {
+      fetchApplications();
+    }
+  };
 
   return (
     <div class="page-container">
@@ -99,13 +92,16 @@ export default function Applications({ path }: Props) {
             <oj-input-text
               placeholder="Search applications"
               value={searchQuery}
-              onrawValueChanged={(e) => setSearchQuery(e.detail.value)}
+              onrawValueChanged={(e) => {
+                setSearchQuery(e.detail.value);
+                setCurrentPage(1); // Reset to first page on new search
+              }}
               class="search-input"
             ></oj-input-text>
             <oj-button
               chroming="solid"
               class="add-button"
-              onojAction={() => setIsAddDialogOpen(true)} // This line opens the dialog
+              onojAction={() => setIsAddDialogOpen(true)}
             >
               <span slot="startIcon" class="oj-ux-ico-plus"></span>
               Add Application
@@ -113,51 +109,39 @@ export default function Applications({ path }: Props) {
           </div>
         </div>
 
-        {loading && <LoadingSpinner message="Loading applications..." />}
-        {error && <p class="oj-text-color-danger">{error}</p>}
-
-        <div class="applications-container">
-          {applications.map((app) => (
-            <ApplicationCard
-              key={app._id}
-              app={app}
-              onDeleteClick={(id, name) => handleDeleteClick(id, name)}
-              onEditClick={() => handleEditClick(app)}
-            />
-          ))}
-        </div>
+        {/* --- Child Component --- */}
+        <ApplicationsList
+            loading={loading}
+            error={error}
+            applications={applications}
+            onEditClick={handleEditClick}
+            onDeleteClick={handleDeleteClick}
+        />
+        
       </div>
 
-      {/* Add Application Dialog */}
+      {/* Dialogs remain in the parent component */}
       <AddApplicationDialog
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
         onApplicationAdded={fetchApplications}
       />
-
-      {/* Edit Application Dialog */}
       <EditApplicationDialog
         isOpen={isEditDialogOpen}
         application={selectedApp}
         onClose={() => setEditDialogOpen(false)}
         onApplicationUpdated={updateSelectedApplication}
       />
-
-      {/* Delete Confirmation Dialog */}
       <DeleteConfirmationDialog
         isOpen={isDeleteDialogOpen}
         applicationId={selectedAppId}
         applicationName={selectedAppName}
         onClose={() => setDeleteDialogOpen(false)}
-        onDeleteSuccess={()=>{
-          setCurrentPage(1); // Reset to first page after deletion
-          console.log("Reset page after deletion")
-          fetchApplications();
-        }}
+        onDeleteSuccess={handleSuccessfulDelete}
       />
 
       <div class="pagination-footer">
-        {!loading && applications.length > 0 && (
+        {!loading && totalCount > 0 && (
           <div class="oj-flex oj-sm-flex-direction-column oj-sm-align-items-center oj-sm-margin-2x-vertical">
             <div class="oj-sm-margin-1x-bottom">
               Page {currentPage} of {Math.ceil(totalCount / PAGE_SIZE)}
@@ -173,11 +157,7 @@ export default function Applications({ path }: Props) {
               </oj-button>
               <oj-button
                 chroming="outlined"
-                onojAction={() =>
-                  setCurrentPage((p) =>
-                    p < Math.ceil(totalCount / PAGE_SIZE) ? p + 1 : p
-                  )
-                }
+                onojAction={() => setCurrentPage((p) => (p < Math.ceil(totalCount / PAGE_SIZE) ? p + 1 : p))}
                 disabled={currentPage >= Math.ceil(totalCount / PAGE_SIZE)}
               >
                 Next →
