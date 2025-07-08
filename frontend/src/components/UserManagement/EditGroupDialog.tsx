@@ -265,7 +265,12 @@ export function EditGroupDialog({
   if (!isOpen) return null;
 
   return (
-    <oj-c-dialog opened={isOpen} on-oj-close={handleClose}>
+    <oj-c-dialog opened={isOpen} on-oj-close={handleClose} width="800px"
+  height="800px"
+  min-width="600px"
+  max-width="90vw"
+  min-height="300px"
+  max-height="80vh">
       <div slot="header">
         <h2 id="edit-dialog-title">Edit Group: {groupName}</h2>
       </div>

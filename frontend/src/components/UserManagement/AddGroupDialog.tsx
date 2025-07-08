@@ -330,7 +330,12 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
     if (!isOpen) return null;
 
   return (
-    <oj-c-dialog opened={isOpen} on-oj-close={handleClose}>
+    <oj-c-dialog opened={isOpen} on-oj-close={handleClose} width="850px"
+  height="800px"
+  min-width="600px"
+  max-width="90vw"
+  min-height="300px"
+  max-height="80vh">
       <div slot="header">
         <h2 id="add-dialog-title">Add New Group</h2>
       </div>

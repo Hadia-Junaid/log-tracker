@@ -20,7 +20,7 @@ export function DeleteGroupDialog({
   onGroupDeleted,
 }: DeleteGroupDialogProps) {
   const dialogRef = useRef<any>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -41,48 +41,45 @@ export function DeleteGroupDialog({
   };
 
   const handleDeleteGroup = async () => {
-    setIsDeleting(true);
+    setLoading(true);
     setError(null);
 
     try {
       await userGroupService.deleteUserGroup(groupId);
       onGroupDeleted();
       onClose();
-    } catch (err: any) {
-      console.error("Failed to delete group:", err);
-      setError("Failed to delete group. Please try again.");
+    } catch (err) {
+      console.error("Delete failed:", err);
+      setError("Failed to delete group.");
     } finally {
-      setIsDeleting(false);
+      setLoading(false);
     }
   };
 
   return (
     <oj-dialog
       ref={dialogRef}
-      dialogTitle="Delete Group"
+      dialogTitle="Confirm Deletion"
       cancelBehavior="icon"
       onojClose={handleDialogClose}
       id="deleteGroupDialog"
     >
       <div class="oj-dialog-body">
-        {error && <p class="oj-text-color-danger">{error}</p>}
+        {error && <p class="error-message">{error}</p>}
         <p>
-          Are you sure you want to delete the group <strong>{groupName}</strong>?
-        </p>
-        <p class="oj-text-color-secondary oj-typography-body-sm">
-          This action cannot be undone.
+          Are you sure you want to delete <strong>{groupName}</strong>?
         </p>
       </div>
       <div slot="footer">
-        <oj-button onojAction={onClose} disabled={isDeleting}>
+        <oj-button onojAction={onClose} disabled={loading}>
           Cancel
         </oj-button>
         <oj-button
           chroming="danger"
           onojAction={handleDeleteGroup}
-          disabled={isDeleting}
+          disabled={loading}
         >
-          {isDeleting ? "Deleting..." : "Delete"}
+          Delete
         </oj-button>
       </div>
     </oj-dialog>
