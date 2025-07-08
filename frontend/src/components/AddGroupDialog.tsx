@@ -41,25 +41,6 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
     }
   }, [isOpen]);
 
-  // Add useEffect to watch search input changes
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const checkSearchInput = () => {
-      const currentValue = searchInputRef.current?.value || '';
-      setSearchTrigger(prev => {
-        // Only update if the value has actually changed
-        const newTrigger = prev + 1;
-        return newTrigger;
-      });
-    };
-
-    // Check every 100ms for changes
-    const interval = setInterval(checkSearchInput, 100);
-
-    return () => clearInterval(interval);
-  }, [isOpen, searchTrigger]);
-
   const loadApplications = async () => {
     setIsLoading(true);
     setError('');
@@ -174,6 +155,8 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
     const groupName = groupNameRef.current?.value || '';
     console.log('=== CREATE GROUP DEBUG ===');
     console.log('Group name from ref:', groupName);
+    console.log('Group name ref exists:', !!groupNameRef.current);
+    console.log('Group name ref value:', groupNameRef.current?.value);
     console.log('Selected members:', selectedMembers);
     console.log('Selected members emails:', selectedMembers.map(m => m.email));
     
@@ -184,6 +167,16 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
       return;
     }
 
+    // Store the group name immediately after successful validation
+    const validatedGroupName = groupNameRef.current?.value || '';
+    console.log('Group name after successful validation:', validatedGroupName);
+
+    // Store the selected application IDs immediately after successful validation
+    const validatedAppIds = Object.keys(checkboxRefs.current).filter(appId => 
+      checkboxRefs.current[appId]?.value === true
+    );
+    console.log('Selected app IDs after successful validation:', validatedAppIds);
+
     setIsCreating(true);
     setError('');
 
@@ -192,8 +185,58 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
       const currentGroups = await userGroupService.fetchUserGroups();
       localStorage.setItem('userGroups', JSON.stringify(currentGroups));
       
-      // Re-validate after loading current groups
-      const revalidationError = validateForm();
+      // Use the stored group name for re-validation instead of reading from ref again
+      console.log('=== RE-VALIDATION DEBUG ===');
+      console.log('Using stored group name for re-validation:', validatedGroupName);
+      console.log('Using stored app IDs for re-validation:', validatedAppIds);
+      
+      // Create a temporary validation function that uses the stored group name and app IDs
+      const revalidateWithStoredValues = (): string | null => {
+        console.log('=== RE-VALIDATION WITH STORED VALUES ===');
+        console.log('Stored group name:', validatedGroupName);
+        console.log('Stored app IDs:', validatedAppIds);
+        
+        if (!validatedGroupName || !validatedGroupName.trim()) {
+          console.log('Stored group name is empty');
+          return 'Group name is required.';
+        }
+        
+        const trimmedName = validatedGroupName.trim();
+        console.log('Trimmed stored name:', trimmedName);
+        console.log('Trimmed stored name length:', trimmedName.length);
+        
+        // Check length validation (5-20 characters)
+        if (trimmedName.length < 5 || trimmedName.length > 20) {
+          return 'Group name must be between 5 and 20 characters.';
+        }
+        
+        // Check for duplicate group names
+        const existingGroups = JSON.parse(localStorage.getItem('userGroups') || '[]');
+        const isDuplicate = existingGroups.some((group: any) => 
+          group.groupName.toLowerCase() === trimmedName.toLowerCase()
+        );
+        if (isDuplicate) {
+          return 'A group with this name already exists.';
+        }
+        
+        // Check character validation - only allow hyphens, underscores, numbers, spaces, and letters
+        const validNameRegex = /^[a-zA-Z0-9\s\-_]+$/;
+        if (!validNameRegex.test(trimmedName)) {
+          return 'Group name can only contain letters, numbers, spaces, hyphens (-), and underscores (_).';
+        }
+        
+        // Check if at least one application is selected using stored app IDs
+        console.log('Checking stored app IDs:', validatedAppIds);
+        
+        if (validatedAppIds.length === 0) {
+          return 'Please select at least one accessible application.';
+        }
+        
+        console.log('Re-validation with stored values passed!');
+        return null;
+      };
+      
+      const revalidationError = revalidateWithStoredValues();
       if (revalidationError) {
         console.log('Re-validation failed:', revalidationError);
         setError(revalidationError);
@@ -201,16 +244,10 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
         return;
       }
 
-      // Get selected applications from refs
-      const selectedAppIds = Object.keys(checkboxRefs.current).filter(appId => 
-        checkboxRefs.current[appId]?.value === true
-      );
-      console.log('Selected app IDs:', selectedAppIds);
-
       const payload = {
-        name: groupName.trim(),
+        name: validatedGroupName.trim(),
         members: selectedMembers.map(m => m.email),
-        assigned_applications: selectedAppIds,
+        assigned_applications: validatedAppIds,
         is_admin: false
       };
       console.log('Sending payload:', payload);
@@ -251,6 +288,12 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
       .join('')
       .toUpperCase()
       .slice(0, 2);
+  };
+
+  // Handle search input changes
+  const handleSearchChange = (value: string) => {
+    // Force a re-render by updating the trigger
+    setSearchTrigger(prev => prev + 1);
   };
 
   // Available members = allMembers - selectedMembers, filtered by search term
@@ -526,6 +569,7 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
                       class="oj-form-control-full-width"
                       placeholder="Search directory..."
                       ref={searchInputRef}
+                      on-value-changed={(e: any) => handleSearchChange(e.detail.value)}
                     />
                   </div>
 
