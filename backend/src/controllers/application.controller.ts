@@ -217,6 +217,12 @@ export const deleteApplication = async (
     return;
   }
 
+  //Remove deleted application from associated user groups
+  await UserGroup.updateMany(
+    { assigned_applications: id },
+    { $pull: { assigned_applications: id } }
+  );
+
   logger.info(`Application deleted: ${deleted.name} (${deleted._id})`);
   res.send({ message: "Application deleted successfully." });
 };

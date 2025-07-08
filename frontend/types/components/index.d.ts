@@ -9,6 +9,8 @@
           "ojactioncard": any;
           "oj-c-card": any;
           "oj-checkbox-set": any;
+          "ojselectsingle": any;
+          "ojselectcombobox": any;
         }
       }
 
