@@ -123,6 +123,21 @@ oj-label {
   box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2);
 }
 
+.user-group-checklist {
+  margin-top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.user-group-item {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  gap: 0.5rem;
+}
+
+
 
 /* Responsive dialog adjustments */
 @media (max-width: 600px) {

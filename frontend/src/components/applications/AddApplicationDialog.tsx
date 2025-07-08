@@ -21,6 +21,11 @@ type AddApplicationDialogProps = {
 
 const environments = ["Development", "Testing", "Staging", "Production"];
 
+type UserGroup = {
+  _id: string;
+  name: string;
+}
+
 export default function AddApplicationDialog({
   isOpen,
   onClose,
@@ -36,6 +41,9 @@ export default function AddApplicationDialog({
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
+  const [userGroups, setUserGroups] = useState<UserGroup[]>([]); 
+  const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+
   useEffect(() => {
     if (dialogRef.current) {
       if (isOpen) {
@@ -47,6 +55,16 @@ export default function AddApplicationDialog({
         setLoading(false);
         setError(null);
         setSuccessMessage(null);
+
+        axios
+          .get("/user-groups")
+          .then((res) => {
+            console.log("Fetched user groups:", res.data);
+            setUserGroups(res.data)})
+          .catch((err) => {
+            console.error("Failed to fetch user groups", err);
+            setError("Failed to load user groups.");
+          });
       } else {
         dialogRef.current.close();
       }
@@ -90,7 +108,10 @@ export default function AddApplicationDialog({
         environment,
         description,
         isActive,
+        userGroups: selectedGroups
       };
+      console.log("New application data:", newApp);
+      
       const response = await axios.post("/applications", newApp);
       setSuccessMessage("Application added successfully!");
       onApplicationAdded(response.data);
@@ -100,7 +121,9 @@ export default function AddApplicationDialog({
 
       //if status is 409, show name already exists error
       if (isAxiosError(err) && err.response?.status === 409) {
-        setError("An application with this name already exists. Please choose a different name.");
+        setError(
+          "An application with this name already exists. Please choose a different name."
+        );
         return;
       }
 
@@ -191,6 +214,30 @@ export default function AddApplicationDialog({
                 aria-label="Status"
                 class="oj-form-control"
               ></oj-switch>
+            </div>
+
+            <oj-label>User Groups</oj-label>
+            <div class="user-group-checklist">
+              {userGroups.map((group) => (
+                <label key={group._id} class="user-group-item">
+                  <input
+                    type="checkbox"
+                    value={group._id}
+                    checked={selectedGroups.includes(group._id)}
+                    onChange={(e) => {
+                      const checked = e.currentTarget.checked;
+                      const groupId = e.currentTarget.value;
+                      setSelectedGroups((prev) =>
+                        checked
+                          ? [...prev, groupId]
+                          : prev.filter((id) => id !== groupId)
+                      );
+                    }}
+                    disabled={loading}
+                  />
+                  {group.name}
+                </label>
+              ))}
             </div>
           </oj-form-layout>
 

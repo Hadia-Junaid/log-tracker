@@ -22,7 +22,39 @@ export const createApplication = async (
       .send({ error: "Application with this name already exists." });
     return;
   }
-  const app = await Application.create(req.body);
+
+
+  // Validate userGroups if provided to ensure they are valid ObjectIds
+  if (req.body.userGroups && Array.isArray(req.body.userGroups)) {
+    const invalidIds = req.body.userGroups.filter(
+      (id: string) => !mongoose.Types.ObjectId.isValid(id)
+    );
+
+    if (invalidIds.length > 0) {
+      logger.warn(`Invalid user group IDs: ${invalidIds.join(", ")}`);
+      res.status(400).send({ error: "Invalid user group ID(s) provided." });
+      return;
+    }
+  }
+
+  const newApp = {
+    name: req.body.name,
+    hostname: req.body.hostname,
+    environment: req.body.environment,
+    isActive: req.body.isActive,
+    description: req.body.description || "",
+  };
+
+  const app = await Application.create(newApp);
+
+  // If userGroups are provided, associate them with the application
+  if (req.body.userGroups && Array.isArray(req.body.userGroups)) {
+    //find the group by id, then add the application id to the group's assigned_applications array
+    await UserGroup.updateMany(
+      { _id: { $in: req.body.userGroups } },
+      { $addToSet: { assigned_applications: app._id } }
+    );
+  }
 
   logger.info(`Application created: ${app.name} (${app._id})`);
 
