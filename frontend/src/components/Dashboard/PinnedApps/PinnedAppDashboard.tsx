@@ -1,34 +1,37 @@
 /** @jsx h */
 import { h } from "preact";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useState, useCallback } from "preact/hooks";
 import axios from "../../../api/axios";
 import { Pin } from "lucide-preact";
 import PinnedAppCard from "./PinnedAppCard";
 import { PinnedApp } from "../types";
+import ManagePinsDialog from "./ManagePinsDialog";
 import "../../../styles/dashboard/pinnedapps.css";
 
 const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
   const [pinnedApps, setPinnedApps] = useState<PinnedApp[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
+  const [isManageDialogOpen, setManageDialogOpen] = useState(false);
+
+  const fetchPinnedApps = useCallback(async () => {
+    if (!userId) return;
+    try {
+      setLoading(true);
+      setError(false);
+      const res = await axios.get(`/dashboard/pinned/${userId}`);
+      setPinnedApps(res.data.pinned_applications || []);
+    } catch (err) {
+      console.error("Failed to fetch pinned applications:", err);
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId]);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        setError(false);
-        const res = await axios.get(`/dashboard/pinned/${userId}`);
-        setPinnedApps(res.data.pinned_applications || []);
-      } catch (err) {
-        console.error("Failed to fetch pinned applications:", err);
-        setError(true);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
-  }, [userId]);
+    fetchPinnedApps();
+  }, [fetchPinnedApps]);
 
   return (
     <div class="pinned-dashboard oj-panel">
@@ -37,7 +40,7 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
           <Pin class="oj-icon-size-sm oj-text-color-brand" aria-label="Pinned Icon" />
           <h2 class="pinned-dashboard-title">Pinned Applications</h2>
         </div>
-        <oj-button display="all" chroming="outlined">Manage Pins</oj-button>
+        <oj-button display="all" chroming="outlined" onojAction={() => setManageDialogOpen(true)}>Manage Pins</oj-button>
       </div>
 
       {loading ? (
@@ -51,12 +54,18 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
       ) : (
         <div class="pinned-cards-wrapper">
           {pinnedApps.map((app) => (
-            <div class="pinned-card-col">
+            <div key={app._id} class="pinned-card-col">
               <PinnedAppCard app={app} />
             </div>
           ))}
         </div>
       )}
+      <ManagePinsDialog
+        userId={userId}
+        open={isManageDialogOpen}
+        onClose={() => setManageDialogOpen(false)}
+        onRefresh={fetchPinnedApps} 
+      />
     </div>
   );
 };
