@@ -6,7 +6,9 @@ import 'ojs/ojinputsearch';
 import 'ojs/ojbutton';
 import 'ojs/ojlistview';
 import 'ojs/ojavatar';
-import 'ojs/ojcheckboxset';
+import 'oj-c/checkbox';
+import 'ojs/ojinputtext';
+import 'ojs/ojlabel';
 
 interface EditGroupDialogProps {
   isOpen: boolean;
@@ -23,36 +25,53 @@ export function EditGroupDialog({
   onClose, 
   onGroupUpdated 
 }: EditGroupDialogProps) {
-  const [currentMembers, setCurrentMembers] = useState<MemberData[]>([]);
-  const [availableMembers, setAvailableMembers] = useState<MemberData[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<MemberData[]>([]);
+  const [allMembers, setAllMembers] = useState<MemberData[]>([]);
   const [applications, setApplications] = useState<ApplicationOption[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState('');
   const [superAdminEmails, setSuperAdminEmails] = useState<string[]>([]);
-  const [isAdminGroup, setIsAdminGroup] = useState(false);
+  const [checkedAppIds, setCheckedAppIds] = useState<string[]>([]);
+  const [currentCheckboxValues, setCurrentCheckboxValues] = useState<{ [key: string]: boolean }>({});
 
   const searchInputRef = useRef<any>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const checkboxRefs = useRef<{ [key: string]: any }>({});
 
   useEffect(() => {
     if (isOpen) {
       loadGroupDetails();
+      loadApplications();
+      fetchAndStoreAllMembers();
+      loadCurrentGroups();
     }
   }, [isOpen, groupId]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    
+    const interval = setInterval(() => {
+      const currentSearchValue = searchInputRef.current?.value || '';
+      if (currentSearchValue !== searchTerm) {
+        console.log('Search value changed from ref:', currentSearchValue);
+        setSearchTerm(currentSearchValue);
+      }
+    }, 100); // Check every 100ms
+    
+    return () => clearInterval(interval);
+  }, [isOpen, searchTerm]);
+
+
 
   const loadGroupDetails = async () => {
     setIsLoading(true);
     setError('');
 
     try {
-      // Fetch group details and applications in parallel
-      const [groupDetails, allApplications] = await Promise.all([
-        userGroupService.fetchGroupById(groupId),
-        userGroupService.fetchApplications()
-      ]);
-
+      const groupDetails = await userGroupService.fetchGroupById(groupId);
+      
       // Set current members
       const members: MemberData[] = groupDetails.members?.map((member: any) => ({
         id: member._id || `fallback-id-${member.email}`,
@@ -60,22 +79,13 @@ export function EditGroupDialog({
         email: member.email,
         initials: getInitials(member.name || member.email)
       })) || [];
-      setCurrentMembers(members);
+      setSelectedMembers(members);
 
       // Set applications with checked state
       const assignedAppIds = new Set(groupDetails.assigned_applications?.map((app: any) => app._id) || []);
-      const appOptions: ApplicationOption[] = allApplications.map(app => ({
-        id: app.id,
-        name: app.name,
-        checked: assignedAppIds.has(app.id)
-      }));
-      setApplications(appOptions);
 
-      // Set admin status
-      setIsAdminGroup(groupDetails.is_admin || false);
-
-      // Set super admin emails if available
       setSuperAdminEmails((groupDetails as any).superAdminEmails || []);
+      setCheckedAppIds(Array.from(assignedAppIds));
 
     } catch (err: any) {
       setError('Failed to load group details. Please try again.');
@@ -85,98 +95,154 @@ export function EditGroupDialog({
     }
   };
 
-  const handleSearchInput = async (value: string) => {
-    setSearchTerm(value);
-    
-    // Clear previous timeout
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
+  const loadApplications = async () => {
+    setIsLoading(true);
+    setError('');
+
+    try {
+      const allApplications = await userGroupService.fetchApplications();
+      setApplications(allApplications);
+    } catch (err: any) {
+      setError('Failed to load applications. Please try again.');
+      console.error('Failed to load applications:', err);
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    // Debounce search
-    searchTimeoutRef.current = setTimeout(async () => {
-      if (value.trim().length < 2) {
-        setAvailableMembers([]);
-        return;
-      }
+  const fetchAndStoreAllMembers = async () => {
+    setIsLoading(true);
+    setError('');
+    try {
+      const members = await userGroupService.searchUsers('');
+      localStorage.setItem('allDirectoryMembers', JSON.stringify(members));
+      setAllMembers(members);
+    } catch (err) {
+      setError('Failed to load members from directory.');
+      setAllMembers([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-      try {
-        const users = await userGroupService.searchUsers(value);
-        // Filter out users already in current members
-        const filteredUsers = users.filter(user => 
-          !currentMembers.some(member => member.id === user.id)
-        );
-        setAvailableMembers(filteredUsers);
-      } catch (err: any) {
-        console.error('Failed to search users:', err);
-        setAvailableMembers([]);
-      }
-    }, 300);
+  const loadCurrentGroups = async () => {
+    try {
+      const currentGroups = await userGroupService.fetchUserGroups();
+      localStorage.setItem('userGroups', JSON.stringify(currentGroups));
+    } catch (err) {
+      console.error('Failed to load current groups for validation:', err);
+    }
   };
 
   const handleAddMember = (member: MemberData) => {
-    setCurrentMembers(prev => [...prev, member]);
-    setAvailableMembers(prev => prev.filter(m => m.id !== member.id));
+    setSelectedMembers((prev) => [...prev, member]);
   };
 
   const handleRemoveMember = (member: MemberData) => {
-    // Don't allow removal if the member is a super admin
-    if (superAdminEmails.includes(member.email)) {
-      return;
-    }
-
-    setCurrentMembers(prev => prev.filter(m => m.id !== member.id));
-    setAvailableMembers(prev => {
-      const alreadyAvailable = prev.some(m => m.id === member.id);
-      if (!alreadyAvailable) {
-        return [...prev, member];
-      }
-      return prev;
-    });
+if (superAdminEmails.includes(member.email)) {
+  return;
+}
+    setSelectedMembers((prev) => prev.filter((m) => m.id !== member.id));
   };
 
   const handleRemoveAllMembers = () => {
-    // Keep only super admin members
-    const remainingMembers = currentMembers.filter(member => 
-      superAdminEmails.includes(member.email)
-    );
-    const removedMembers = currentMembers.filter(member => 
-      !superAdminEmails.includes(member.email)
-    );
-
-    setCurrentMembers(remainingMembers);
-    setAvailableMembers(prev => [
-      ...prev,
-      ...removedMembers.filter(removed => 
-        !prev.some(existing => existing.id === removed.id)
-      )
-    ]);
+    setSelectedMembers([]);
   };
 
-  const handleApplicationToggle = (appId: string) => {
-    setApplications(prev => 
-      prev.map(app => 
-        app.id === appId 
-          ? { ...app, checked: !app.checked }
-          : app
-      )
+  const handleCheckboxChange = (appId: string, checked: boolean) => {
+    console.log(`Checkbox ${appId} changed to:`, checked);
+    setCurrentCheckboxValues(prev => ({
+      ...prev,
+      [appId]: checked
+    }));
+  };
+
+  const validateForm = (): string | null => {
+    // Skip application validation for admin group since checkboxes are readonly
+    if (groupName.toLowerCase() === 'admin group') {
+      console.log('Skipping application validation for admin group');
+      return null;
+    }
+    
+    // Check if at least one application is selected using refs
+    const selectedAppIds = Object.keys(checkboxRefs.current).filter(appId => 
+      checkboxRefs.current[appId]?.value === true
     );
+    console.log('Selected app IDs from refs:', selectedAppIds);
+    
+    if (selectedAppIds.length === 0) {
+      return 'Please select at least one accessible application.';
+    }
+    
+    console.log('Validation passed!');
+    return null;
   };
 
   const handleUpdateGroup = async () => {
+    console.log('=== UPDATE GROUP DEBUG ===');
+    console.log('Selected members:', selectedMembers);
+    console.log('Selected members emails:', selectedMembers.map(m => m.email));
+    
+    const validationError = validateForm();
+    if (validationError) {
+      console.log('Validation failed:', validationError);
+      setError(validationError);
+      return;
+    }
+
+    // Store the selected application IDs immediately after successful validation
+    console.log('=== CHECKBOX DEBUG ===');
+    console.log('All checkbox refs:', Object.keys(checkboxRefs.current));
+    console.log('Checked app IDs from state:', checkedAppIds);
+    
+    // Debug each checkbox value
+    Object.keys(checkboxRefs.current).forEach(appId => {
+      const checkbox = checkboxRefs.current[appId];
+      console.log(`Checkbox ${appId}:`, {
+        exists: !!checkbox,
+        value: checkbox?.value,
+        checked: checkbox?.checked,
+        shouldBeChecked: checkedAppIds.includes(appId)
+      });
+    });
+    
+    const newAppIds = Object.keys(checkboxRefs.current).filter(appId => 
+      checkboxRefs.current[appId]?.value === true
+    );
+    console.log('New app IDs after successful validation:', newAppIds);
+    console.log('Previous app IDs:', checkedAppIds);
+
     setIsUpdating(true);
     setError('');
 
     try {
-      const selectedApplications = applications
-        .filter(app => app.checked)
-        .map(app => app.id);
-
-      await userGroupService.updateUserGroup(groupId, {
+      // Update members first
+      const memberPayload = {
         name: groupName,
-        members: currentMembers.map(m => m.email),
-        assigned_applications: selectedApplications
-      });
+        members: selectedMembers.map(m => m.email),
+        is_admin: false
+      };
+      console.log('Sending member update payload:', memberPayload);
+      await userGroupService.updateUserGroup(groupId, memberPayload);
+
+      // Skip application assignment changes for admin group
+      if (groupName.toLowerCase() !== 'admin group') {
+        // Update all applications at once instead of individual calls
+        console.log('Updating applications from:', checkedAppIds, 'to:', newAppIds);
+        
+        // Update the group with the new applications array
+        const updatePayload = {
+          name: groupName,
+          members: selectedMembers.map(m => m.email),
+          applications: newAppIds,
+          is_admin: false
+        };
+        
+        console.log('Sending application update payload:', updatePayload);
+        await userGroupService.updateUserGroup(groupId, updatePayload);
+      } else {
+        console.log('Skipping application assignment changes for admin group');
+      }
 
       onGroupUpdated();
       handleClose();
@@ -189,13 +255,11 @@ export function EditGroupDialog({
   };
 
   const handleClose = () => {
-    setCurrentMembers([]);
-    setAvailableMembers([]);
+    setSelectedMembers([]);
+    setAllMembers([]);
     setApplications([]);
     setSearchTerm('');
     setError('');
-    setSuperAdminEmails([]);
-    setIsAdminGroup(false);
     
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -213,15 +277,143 @@ export function EditGroupDialog({
       .slice(0, 2);
   };
 
+  // Available members = allMembers - selectedMembers, filtered by search term
+  const availableMembers = allMembers.filter(
+    (m) => !selectedMembers.some((sel) => sel.id === m.id) &&
+           (() => {
+             const matches = searchTerm === '' || 
+                            m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                            m.email.toLowerCase().includes(searchTerm.toLowerCase());
+             return matches;
+           })()
+  );
+
   if (!isOpen) return null;
 
   return (
     <div class="oj-dialog-mask">
+      <style>
+{`
+  .edit-group-content {
+    gap: 24px;
+    width: 100%;
+  }
+
+  .available-members-section,
+  .current-members-section {
+    flex: 1 1 50%;
+    background: #f9f9f9;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 16px;
+    box-sizing: border-box;
+  }
+
+  .available-members-section h4,
+  .current-members-section h4 {
+    margin-bottom: 16px;
+  }
+
+  .members-list {
+    max-height: 300px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border: 1px solid #dcdcdc;
+    border-radius: 6px;
+    background-color: #fff;
+    padding: 8px;
+  }
+
+  .member-list-item {
+    padding: 8px;
+    border-bottom: 1px solid #e0e0e0;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+  }
+
+  .member-list-item:hover {
+    background-color: #f0f0f0;
+  }
+
+  .clickable-member {
+    cursor: pointer;
+  }
+
+  .current-member-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .member-remove-btn {
+    margin-left: 8px;
+  }
+
+  .no-members-content {
+    text-align: center;
+    padding: 16px;
+    font-style: italic;
+  }
+
+  .oj-dialog-body {
+    padding: 24px;
+  }
+
+  .oj-dialog-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 16px;
+    padding: 16px 24px;
+    border-top: 1px solid #ddd;
+  }
+
+  .applications-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .application-checkbox-item {
+    margin-right: 16px;
+  }
+
+  .error-message {
+    color: red;
+    margin-bottom: 16px;
+    font-weight: 500;
+  }
+
+  .member-list-item .oj-avatar {
+    flex-shrink: 0;
+  }
+
+  .member-details {
+    flex: 1;
+    margin-left: 12px;
+    min-width: 0;
+  }
+
+  .member-email {
+    font-weight: 500;
+    color: #1a1a1a;
+    word-break: break-word;
+  }
+
+  .member-name {
+    font-size: 0.875rem;
+    color: #6b6b6b;
+    word-break: break-word;
+  }
+`}
+</style>
+
       <div class="oj-dialog" role="dialog" aria-labelledby="edit-dialog-title">
         <div class="oj-dialog-header">
-          <h2 id="edit-dialog-title" class="oj-dialog-title">
-            Edit Group: {groupName}
-          </h2>
+          <h2 id="edit-dialog-title" class="oj-dialog-title">Edit Group: {groupName}</h2>
+          <p class="oj-typography-body-sm oj-text-color-secondary">
+            Edit group members and accessible applications.
+          </p>
         </div>
 
         <div class="oj-dialog-body">
@@ -238,9 +430,19 @@ export function EditGroupDialog({
                 </div>
               )}
 
-              <p class="oj-typography-body-md oj-text-color-secondary oj-sm-margin-4x-bottom">
-                Manage group members using the directory below.
-              </p>
+              {/* Group Name Display (Read-only) */}
+              <div class="oj-sm-margin-4x-bottom">
+                <oj-label for="groupNameDisplay">Group Name</oj-label>
+                <oj-input-text
+                  id="groupNameDisplay"
+                  value={groupName}
+                  readonly
+                  class="oj-form-control-full-width"
+                />
+                <div class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
+                  Group name cannot be edited.
+                </div>
+              </div>
 
               <div class="oj-flex oj-sm-flex-direction-row edit-group-content">
                 {/* Available Members Section */}
@@ -252,28 +454,26 @@ export function EditGroupDialog({
                     <oj-input-search
                       class="oj-form-control-full-width"
                       placeholder="Search directory..."
-                      raw-value={searchTerm}
-                      on-raw-value-changed={(e: any) => handleSearchInput(e.detail.value)}
                       ref={searchInputRef}
                     />
                   </div>
 
                   {/* Available Members List */}
-                  <div class="members-list available-members-list">
+                  <div class="members-list available-members-list" style="max-height: 300px; overflow-y: auto; overflow-x: hidden;">
                     {availableMembers.length > 0 ? (
-                      availableMembers.map(member => (
-                        <div 
+                      availableMembers.map((member) => (
+                        <div
                           key={member.id}
                           class="clickable-member member-list-item"
                           onClick={() => handleAddMember(member)}
                         >
-                          <div class="oj-flex oj-sm-align-items-center">
+                          <div class="oj-flex oj-sm-align-items-center" style="min-width: 0; flex: 1;">
                             <oj-avatar size="xs" initials={member.initials}></oj-avatar>
-                            <div class="oj-sm-margin-2x-start">
-                              <div class="oj-typography-body-md oj-text-color-primary">
+                            <div class="oj-sm-margin-2x-start" style="min-width: 0; flex: 1;">
+                              <div class="oj-typography-body-md oj-text-color-primary" style="word-wrap: break-word; overflow-wrap: break-word;">
                                 {member.email}
                               </div>
-                              <div class="oj-typography-body-sm oj-text-color-secondary">
+                              <div class="oj-typography-body-sm oj-text-color-secondary" style="word-wrap: break-word; overflow-wrap: break-word;">
                                 {member.name}
                               </div>
                             </div>
@@ -283,108 +483,102 @@ export function EditGroupDialog({
                     ) : (
                       <div class="no-members-content">
                         <p class="oj-text-color-secondary">
-                          {searchTerm ? 'No members found' : 'Type a name/email to begin search'}
+                          {searchTerm ? 'No members found' : 'No available members'}
                         </p>
                       </div>
                     )}
                   </div>
                 </div>
 
-                {/* Current Members Section */}
+                {/* Selected Members Section */}
                 <div class="oj-flex-item oj-flex oj-sm-flex-direction-column current-members-section">
                   <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-space-between oj-sm-margin-4x-bottom">
                     <h4 class="oj-typography-heading-sm oj-text-color-primary">Current Members</h4>
                     <div class="oj-flex oj-sm-align-items-center">
                       <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-end">
-                        {currentMembers.length} members
+                        {selectedMembers.length} members
                       </span>
                       <oj-button 
                         class="oj-button-sm" 
                         chroming="outlined"
-                        on-oj-action={handleRemoveAllMembers}
+                        on-oj-action={handleRemoveAllMembers} onClick={handleRemoveAllMembers}
                       >
                         Remove All
                       </oj-button>
                     </div>
                   </div>
-
-                  {/* Current Members List */}
-                  <div class="members-list current-members-list">
-                    {currentMembers.length > 0 ? (
-                      currentMembers.map(member => (
+                  <div class="members-list current-members-list" style="max-height: 300px; overflow-y: auto; overflow-x: hidden;">
+                    {selectedMembers.length > 0 ? (
+                      selectedMembers.map((member) => (
                         <div key={member.id} class="member-list-item current-member-item">
-                          <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-space-between">
-                            <div class="oj-flex oj-sm-align-items-center">
+                          <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-space-between" style="min-width: 0; flex: 1;">
+                            <div class="oj-flex oj-sm-align-items-center" style="min-width: 0; flex: 1;">
                               <oj-avatar size="xs" initials={member.initials}></oj-avatar>
-                              <div class="oj-sm-margin-2x-start">
-                                <div class="oj-typography-body-md oj-text-color-primary">
+                              <div class="oj-sm-margin-2x-start" style="min-width: 0; flex: 1;">
+                                <div class="oj-typography-body-md oj-text-color-primary" style="word-wrap: break-word; overflow-wrap: break-word;">
                                   {member.email}
                                 </div>
-                                <div class="oj-typography-body-sm oj-text-color-secondary">
+                                <div class="oj-typography-body-sm oj-text-color-secondary" style="word-wrap: break-word; overflow-wrap: break-word;">
                                   {member.name}
                                 </div>
                               </div>
                             </div>
-                            {!superAdminEmails.includes(member.email) && (
-                              <oj-button 
-                                class="member-remove-btn oj-button-sm" 
-                                chroming="borderless"
-                                display="icons"
-                                on-oj-action={() => handleRemoveMember(member)}
-                                title="Remove member"
-                              >
-                                <span slot="startIcon" class="oj-ux-ico-close"></span>
-                              </oj-button>
-                            )}
+                            <oj-button 
+                              class="member-remove-btn oj-button-sm" 
+                              chroming="borderless"
+                              display="icons"
+                              on-oj-action={() => handleRemoveMember(member)} onClick={() => handleRemoveMember(member)}
+                              title="Remove member"
+                            >
+                              <span slot="startIcon" class="oj-ux-ico-close"></span>
+                            </oj-button>
                           </div>
                         </div>
                       ))
                     ) : (
                       <div class="no-members-content">
-                        <p class="oj-text-color-secondary">No members in this group</p>
+                        <p class="oj-text-color-secondary">No members selected</p>
                       </div>
                     )}
                   </div>
                 </div>
               </div>
 
-           {/* Accessible Applications Section */}
-<div class="oj-flex oj-sm-flex-direction-column oj-sm-margin-4x-top">
-  <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">
-    Accessible Applications
-  </h4>
-
-  <div
-    class="applications-grid"
-    style={{
-      display: 'grid',
-      gridTemplateColumns: 'repeat(3, 1fr)',
-      gap: '16px',
-      alignItems: 'start',
-    }}
-  >
-    {applications.map(app => (
-      <div
-        key={app.id}
-        style={{
-          all: 'unset',
-        }}
-      >
-        <oj-checkboxset
-          value={app.checked ? [app.id] : []}
-          on-value-changed={(e: any) => handleApplicationToggle(app.id)}
-          disabled={isAdminGroup}
-          class="custom-checkboxset"
-        >
-          <oj-option value={app.id} class="custom-option">
-            {app.name}
-          </oj-option>
-        </oj-checkboxset>
-      </div>
-    ))}
-  </div>
-</div>
-
+              {/* Accessible Applications Section */}
+              <div class="oj-flex oj-sm-flex-direction-column oj-sm-margin-4x-top">
+                <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">
+                  Accessible Applications
+                  {groupName.toLowerCase() === 'admin group' && (
+                    <span class="oj-typography-body-sm oj-text-color-secondary" style="margin-left: 8px;">
+                      (Read-only for admin group)
+                    </span>
+                  )}
+                </h4>
+                <div class="oj-flex oj-sm-flex-direction-column applications-checkboxes">
+                  {applications.map(app => (
+                    <oj-c-checkbox 
+                      key={app.id}
+                      ref={(el: any) => {
+                        if (el) checkboxRefs.current[app.id] = el;
+                      }}
+                      value={currentCheckboxValues[app.id] ?? checkedAppIds.includes(app.id)}
+                      disabled={groupName.toLowerCase() === 'admin group'}
+                      on-value-changed={(event: any) => handleCheckboxChange(app.id, event.detail.value)}
+                    >
+                      {app.name}
+                    </oj-c-checkbox>
+                  ))}
+                </div>
+                <div class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
+                  {groupName.toLowerCase() === 'admin group' 
+                    ? 'Application assignments cannot be modified for the admin group.'
+                    : 'At least one application must be selected for the group.'
+                  }
+                </div>
+                <div class="oj-typography-body-sm oj-text-color-secondary" style="color: red;">
+                  Debug: checkedAppIds: {JSON.stringify(checkedAppIds)} | Selected from refs: {JSON.stringify(Object.keys(checkboxRefs.current).filter(appId => checkboxRefs.current[appId]?.value === true))}
+                </div>
+              </div>
             </div>
           )}
         </div>
@@ -395,7 +589,7 @@ export function EditGroupDialog({
           </oj-button>
           <oj-button 
             chroming="callToAction" 
-            on-oj-action={handleUpdateGroup}
+            on-oj-action={handleUpdateGroup} onClick={handleUpdateGroup}
             disabled={isUpdating}
           >
             {isUpdating ? 'Updating...' : 'Update Group'}
