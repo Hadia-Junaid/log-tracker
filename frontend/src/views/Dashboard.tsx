@@ -1,5 +1,6 @@
 import { h } from 'preact';
-import PinnedAppsCard from '../components/Dashboard/PinnedApps/PinnedAppsCard';
+import PinnedAppsDashboard from '../components/Dashboard/PinnedApps/PinnedAppDashboard';
+import '../styles/dashboard/dashboard.css';
 
 type Props = {
   path?: string; // required by preact-router
@@ -8,17 +9,15 @@ type Props = {
 
 export default function Dashboard(props: Props) {
   return (
-    <div className="min-h-screen bg-gray-50 p-6 oj-container">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div class="dashboard-container">
+      <div class="dashboard-inner">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Log Tracking Dashboard</h1>
-          <p className="text-gray-600">Monitor your applications and track critical logs</p>
+        <div class="dashboard-header">
+          <h1 class="dashboard-title">Log Tracking Dashboard</h1>
+          <p class="dashboard-subtitle">Monitor your applications and track critical logs</p>
         </div>
 
-        <PinnedAppsCard userId={props.userId} />
-
-        {/* <AtRiskAppsCard /> */}
+        <PinnedAppsDashboard userId={props.userId} />
       </div>
     </div>
   );

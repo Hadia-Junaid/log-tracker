@@ -1,18 +1,161 @@
-/* Pinned app Card CSS */
-
-.pinned-card-width{
-  min-width: 24rem;
-  max-width: 24rem;
+/* === Dashboard Wrapper === */
+.pinned-dashboard {
+  padding: 2rem;
+  background-color: #f9fafb;
+  border-radius: 6px;
 }
 
-.custom-card-hover {
-  border: 1px solid var(--oj-core-divider-color);
-  border-radius: var(--oj-core-border-radius-md);
-  background-color: var(--oj-core-bg-color);
-  transition: box-shadow 0.5s ease-in-out;
+/* === Header === */
+.pinned-dashboard-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
 }
 
-.custom-card-hover:hover {
-  box-shadow: var(--oj-core-box-shadow-md);
-  cursor: pointer;
+.pinned-dashboard-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.pinned-dashboard-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1f2937; /* Tailwind: gray-900 */
+}
+
+/* === Loading, Empty, Error States === */
+.pinned-dashboard-loading,
+.pinned-dashboard-empty,
+.pinned-dashboard-error {
+  text-align: center;
+  padding: 2rem 0;
+  font-size: 0.95rem;
+  color: #6b7280; /* gray-600 */
+}
+
+/* === Cards Container === */
+.pinned-cards-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+}
+
+/* === Responsive Grid Columns === */
+.pinned-card-col {
+  width: 100%;
+}
+
+@media (min-width: 300px) {
+  .pinned-card-col {
+    width: 100%;
+  }
+}
+
+@media (min-width: 768px) {
+  .pinned-card-col {
+    width: 60%;
+  }
+}
+
+@media (min-width: 1024px) {
+  .pinned-card-col {
+    min-width: 25%;
+    width: 30%;
+  }
+}
+
+@media (min-width: 1440px) {
+  .pinned-card-col {
+    width: 25%;
+  }
+}
+
+.padding-right-sm{
+  padding-right: 4px;
+}
+
+/* === Pinned App Card === */
+.pinned-card {
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #bdc2cc; /* gray-200 */
+  padding: 1.5rem;
+  transition: box-shadow 0.2s ease;
+}
+
+.pinned-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+/* === Card Header === */
+.pinned-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.pinned-card-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #111827; /* gray-900 */
+}
+
+/* === Card Body === */
+.pinned-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* === Card Row === */
+.card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.875rem;
+}
+
+.card-row-label {
+  color: black; 
+  font-size: 0.9 rem;
+}
+
+.card-row-value {
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+/* === Badge Variants === */
+.card-row-badge {
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.card-row-badge.INFO {
+  background-color: #d1fae5;
+  color: #065f46;
+}
+
+.card-row-badge.WARN {
+  background-color: #fef3c7;
+  color: #92400e;
+}
+
+.card-row-badge.ERROR {
+  background-color: #fee2e2;
+  color: #991b1b;
+}
+
+.card-row-badge.NEUTRAL {
+  background-color: #f3f4f6;
+  /* color: #4b5563; */
+}
+
+.card-row-logs-label {
+  font-weight: bold;
 }
