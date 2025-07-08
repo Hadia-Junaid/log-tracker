@@ -46,14 +46,16 @@ export const createApplication = async (
 
   const app = await Application.create(newApp);
 
-  // If userGroups are provided, associate them with the application
-  if (req.body.userGroups && Array.isArray(req.body.userGroups)) {
-    //find the group by id, then add the application id to the group's assigned_applications array
-    await UserGroup.updateMany(
-      { _id: { $in: req.body.userGroups } },
-      { $addToSet: { assigned_applications: app._id } }
-    );
-  }
+  const userGroupIds = req.body.userGroups || [];
+
+  await UserGroup.updateMany(
+    {
+      $or: [{ _id: { $in: userGroupIds } }, { is_admin: true }],
+    },
+    {
+      $addToSet: { assigned_applications: app._id },
+    }
+  );
 
   logger.info(`Application created: ${app.name} (${app._id})`);
 
@@ -161,8 +163,12 @@ export const updateApplication = async (
     if (toAdd.length > 0) {
       updates.push(
         UserGroup.updateMany(
-          { _id: { $in: toAdd } },
-          { $addToSet: { assigned_applications: updated._id } }
+          {
+            $or: [{ _id: { $in: toAdd } }, { is_admin: true }],
+          },
+          {
+            $addToSet: { assigned_applications: updated._id },
+          }
         )
       );
     }
@@ -170,8 +176,13 @@ export const updateApplication = async (
     if (toRemove.length > 0) {
       updates.push(
         UserGroup.updateMany(
-          { _id: { $in: toRemove } },
-          { $pull: { assigned_applications: updated._id } }
+          {
+            _id: { $in: toRemove },
+            is_admin: false,
+          },
+          {
+            $pull: { assigned_applications: updated._id },
+          }
         )
       );
     }
@@ -228,7 +239,7 @@ export const getAssignedGroups = async (
   }
 
   const [allGroups, assignedGroups] = await Promise.all([
-    UserGroup.find({}, "id name").lean(),
+    UserGroup.find({}, "id name is_admin").lean(),
     UserGroup.find({ assigned_applications: appId }, "_id").lean(),
   ]);
 

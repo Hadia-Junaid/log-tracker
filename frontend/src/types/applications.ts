@@ -11,4 +11,5 @@ export type Application = {
 export type UserGroup = {
   _id: string;
   name: string;
+  is_admin: boolean;
 }

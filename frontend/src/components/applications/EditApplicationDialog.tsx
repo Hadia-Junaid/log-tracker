@@ -223,26 +223,32 @@ export default function EditApplicationDialog({
 
             <oj-label>User Groups</oj-label>
             <div class="user-group-checklist">
-              {userGroups.map((group) => (
-                <label key={group._id} class="user-group-item">
-                  <input
-                    type="checkbox"
-                    value={group._id}
-                    checked={selectedGroups.includes(group._id)}
-                    onChange={(e) => {
-                      const checked = e.currentTarget.checked;
-                      const groupId = e.currentTarget.value;
-                      setSelectedGroups((prev) =>
-                        checked
-                          ? [...prev, groupId]
-                          : prev.filter((id) => id !== groupId)
-                      );
-                    }}
-                    disabled={loading}
-                  />
-                  {group.name}
-                </label>
-              ))}
+              {userGroups.map((group) => {
+                const isDisabled = loading || group.is_admin;
+                return (
+                  <label
+                    key={group._id}
+                    class={`user-group-item ${group.is_admin ? "disabled-group" : ""}`}
+                  >
+                    <input
+                      type="checkbox"
+                      value={group._id}
+                      checked={selectedGroups.includes(group._id)}
+                      onChange={(e) => {
+                        const checked = e.currentTarget.checked;
+                        const groupId = e.currentTarget.value;
+                        setSelectedGroups((prev) =>
+                          checked
+                            ? [...prev, groupId]
+                            : prev.filter((id) => id !== groupId)
+                        );
+                      }}
+                      disabled={isDisabled}
+                    />
+                    {group.name}
+                  </label>
+                );
+              })}
             </div>
           </oj-form-layout>
 
