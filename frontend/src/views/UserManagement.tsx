@@ -2,9 +2,9 @@ import { h } from "preact";
 import { useState, useEffect, useRef } from "preact/hooks";
 import { GroupData } from "../types/userManagement";
 import { userGroupService } from "../services/userGroupServices";
-import { AddGroupDialog } from "../components/AddGroupDialog";
-import { EditGroupDialog } from "../components/EditGroupDialog";
-import { DeleteGroupDialog } from "../components/DeleteGroupDialog";
+import { AddGroupDialog } from "../components/UserManagement/AddGroupDialog";
+import { EditGroupDialog } from "../components/UserManagement/EditGroupDialog";
+import { DeleteGroupDialog } from "../components/UserManagement/DeleteGroupDialog";
 import "ojs/ojinputsearch";
 import "ojs/ojbutton";
 

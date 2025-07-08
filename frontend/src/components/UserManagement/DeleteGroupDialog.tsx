@@ -1,6 +1,6 @@
 import { h } from 'preact';
 import { useState } from 'preact/hooks';
-import { userGroupService } from '../services/userGroupServices';
+import { userGroupService } from '../../services/userGroupServices';
 
 interface DeleteGroupDialogProps {
   isOpen: boolean;
