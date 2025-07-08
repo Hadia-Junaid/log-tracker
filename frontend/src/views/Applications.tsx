@@ -1,6 +1,6 @@
 // src/views/Applications.tsx
 import { h } from "preact";
-import { useState, useEffect } from "preact/hooks";
+import { useState, useEffect, useMemo } from "preact/hooks";
 import "../styles/applications.css";
 import axios from "../api/axios";
 import AddApplicationDialog from "../components/applications/AddApplicationDialog";
@@ -8,6 +8,9 @@ import { Application } from "src/types/applications";
 import DeleteConfirmationDialog from "../components/applications/DeleteConfirmationDialog";
 import EditApplicationDialog from "../components/applications/EditApplicationDialog";
 import ApplicationsList from "../components/applications/ApplicationsList"; // Import the new component
+import "ojs/ojselectcombobox";
+import "ojs/ojselectsingle";
+import ArrayDataProvider from "ojs/ojarraydataprovider";
 
 type Props = {
   path?: string;
@@ -20,7 +23,9 @@ export default function Applications({ path }: Props) {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedAppId, setSelectedAppId] = useState<string | null>(null);
-  const [selectedAppName, setSelectedAppName] = useState<string | undefined>(undefined);
+  const [selectedAppName, setSelectedAppName] = useState<string | undefined>(
+    undefined
+  );
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
 
@@ -28,6 +33,46 @@ export default function Applications({ path }: Props) {
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [totalCount, setTotalCount] = useState(0);
+
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [environmentFilter, setEnvironmentFilter] = useState("all");
+  const [sortOption, setSortOption] = useState("all");
+
+  const statusOptions = [
+    { value: "all", label: "All Statuses" },
+    { value: "active", label: "Active" },
+    { value: "inactive", label: "Inactive" },
+    { value: "development", label: "In Development" },
+  ];
+
+  const environmentOptions = [
+    { value: "all", label: "All Environments" },
+    { value: "production", label: "Production" },
+    { value: "staging", label: "Staging" },
+    { value: "development", label: "Development" },
+  ];
+
+  const sortOptions = [
+    { value: "name", label: "Name (A-Z)" },
+    { value: "createdAt", label: "Created Date" },
+    { value: "updatedAt", label: "Last Updated" },
+  ];
+
+  const statusDataProvider = useMemo(() => {
+    return new ArrayDataProvider(statusOptions, { keyAttributes: "value" });
+  }, []);
+
+  const environmentDataProvider = useMemo(() => {
+    return new ArrayDataProvider(environmentOptions, {
+      keyAttributes: "value",
+    });
+  }, []);
+
+  const sortDataProvider = useMemo(() => {
+    return new ArrayDataProvider(sortOptions, {
+      keyAttributes: "value",
+    });
+  }, []);
 
   const fetchApplications = async () => {
     try {
@@ -59,7 +104,9 @@ export default function Applications({ path }: Props) {
 
   const updateSelectedApplication = (updatedApp: Application) => {
     setApplications((prevApps) =>
-      prevApps.map((app) => (app._id === updatedApp._id ? { ...app, ...updatedApp } : app))
+      prevApps.map((app) =>
+        app._id === updatedApp._id ? { ...app, ...updatedApp } : app
+      )
     );
   };
 
@@ -73,11 +120,11 @@ export default function Applications({ path }: Props) {
     setSelectedAppName(name);
     setDeleteDialogOpen(true);
   };
-  
+
   const handleSuccessfulDelete = () => {
     // If the last item on a page > 1 is deleted, go to the previous page
     if (applications.length === 1 && currentPage > 1) {
-      setCurrentPage(p => p - 1);
+      setCurrentPage((p) => p - 1);
     } else {
       fetchApplications();
     }
@@ -87,17 +134,16 @@ export default function Applications({ path }: Props) {
     <div class="page-container">
       <div class="applications-page-content">
         <div class="applications-header">
-          <h1 class="applications-title">Applications</h1>
-          <div class="applications-controls">
-            <oj-input-text
-              placeholder="Search applications"
-              value={searchQuery}
-              onrawValueChanged={(e) => {
-                setSearchQuery(e.detail.value);
-                setCurrentPage(1); // Reset to first page on new search
-              }}
-              class="search-input"
-            ></oj-input-text>
+          {/* LEFT: Title + description */}
+          <div class="applications-title-block">
+            <h1 class="applications-title">Applications</h1>
+            <p class="applications-description">
+              Manage and monitor all your applications in one place.
+            </p>
+          </div>
+
+          {/* RIGHT: Add Button + Total */}
+          <div class="applications-header-actions">
             <oj-button
               chroming="solid"
               class="add-button"
@@ -106,21 +152,66 @@ export default function Applications({ path }: Props) {
               <span slot="startIcon" class="oj-ux-ico-plus"></span>
               Add Application
             </oj-button>
+            <div class="applications-total">{totalCount} total</div>
           </div>
+
+        <div class="applications-toolbar">
+  {/* Left: Search */}
+  <div class="search-wrapper">
+    <oj-input-text
+      placeholder="Search applications"
+      value={searchQuery}
+      onrawValueChanged={(e) => {
+        setSearchQuery(e.detail.value);
+        setCurrentPage(1);
+      }}
+      class="search-input"
+    ></oj-input-text>
+  </div>
+
+  {/* Right: Filters */}
+  <div class="filters-group">
+    <oj-select-single
+      class="filter-dropdown"
+      label-hint="Status"
+      data={statusDataProvider}
+      value={statusFilter}
+      onvalue-changed={(e: any) => setStatusFilter(e.detail.value)}
+    ></oj-select-single>
+
+    <oj-select-single
+      class="filter-dropdown"
+      label-hint="Environment"
+      data={environmentDataProvider}
+      value={environmentFilter}
+      onvalue-changed={(e: any) => setEnvironmentFilter(e.detail.value)}
+    ></oj-select-single>
+
+    <oj-select-single
+      class="filter-dropdown"
+      label-hint="Sort"
+      data={sortDataProvider}
+      value={sortOption}
+      onvalue-changed={(e: any) => setSortOption(e.detail.value)}
+    ></oj-select-single>
+  </div>
+</div>
+
+
+
         </div>
 
         {/* Applications List */}
         <ApplicationsList
-            loading={loading}
-            error={error}
-            applications={applications}
-            onEditClick={handleEditClick}
-            onDeleteClick={handleDeleteClick}
+          loading={loading}
+          error={error}
+          applications={applications}
+          onEditClick={handleEditClick}
+          onDeleteClick={handleDeleteClick}
         />
-        
       </div>
 
-      {/* Dialogs remain in the parent component */}
+      {/* Might need to use state variables rather than oracles opening logic here especially for edit as they sometimes open and close unprompted */}
       <AddApplicationDialog
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
@@ -157,7 +248,11 @@ export default function Applications({ path }: Props) {
               </oj-button>
               <oj-button
                 chroming="outlined"
-                onojAction={() => setCurrentPage((p) => (p < Math.ceil(totalCount / PAGE_SIZE) ? p + 1 : p))}
+                onojAction={() =>
+                  setCurrentPage((p) =>
+                    p < Math.ceil(totalCount / PAGE_SIZE) ? p + 1 : p
+                  )
+                }
                 disabled={currentPage >= Math.ceil(totalCount / PAGE_SIZE)}
               >
                 Next →
