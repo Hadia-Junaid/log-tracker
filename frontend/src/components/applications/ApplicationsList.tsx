@@ -13,6 +13,16 @@ type Props = {
 
 export default function ApplicationsList({ loading, error, applications, onEditClick, onDeleteClick }: Props) {
 
+  if(loading) {
+    //small loading spinner
+    return (
+      <div style={{ textAlign: 'center', marginTop: '20px' }}>
+        <oj-progress-circle value={-1} size="lg" />
+        <p>Loading applications...</p>
+      </div>
+    );
+  }
+
   if (error) {
     return <p class="oj-text-color-danger" style={{ textAlign: 'center', marginTop: '20px' }}>{error}</p>;
   }
