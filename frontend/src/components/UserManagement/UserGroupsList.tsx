@@ -56,69 +56,72 @@ export default function UserGroupsList({ loading, error, groups, searchTerm = ""
 
   return (
     <div class="groups-list">
-      {groups.map((group) => (
-        <div key={group.groupId} class="group-item oj-list-item-layout">
-          <div class="oj-flex oj-sm-flex-direction-column">
-            {/* Group Name */}
-            <div class="group-name-container">
-              <span class="oj-typography-heading-sm oj-text-color-primary">
-                {group.groupName}
-              </span>
-              {group.is_admin && (
-                <span class="system-group-pill">System Group</span>
+      {groups.map((group) => {
+        console.log('Group data:', group.groupName, 'is_admin:', group.is_admin);
+        return (
+          <div key={group.groupId} class="group-item oj-list-item-layout">
+            <div class="oj-flex oj-sm-flex-direction-column">
+              {/* Group Name */}
+              <div class="group-name-container">
+                <span class="oj-typography-heading-sm oj-text-color-primary">
+                  {group.groupName}
+                </span>
+                {group.is_admin && (
+                  <span class="system-group-pill">System Group</span>
+                )}
+                <span
+                  class={`status-pill ${group.is_admin ? "status-active" : "status-inactive"}`}
+                >
+                  {group.is_admin ? "Active" : "Inactive"}
+                </span>
+              </div>
+
+              {/* Description */}
+              {group.description && (
+                <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
+                  {group.description}
+                </span>
               )}
-              <span
-                class={`status-pill ${group.is_admin ? "status-active" : "status-inactive"}`}
-              >
-                {group.is_admin ? "Active" : "Inactive"}
-              </span>
-            </div>
 
-            {/* Description */}
-            {group.description && (
+              {/* Member Count and Date */}
               <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
-                {group.description}
+                Created: {formatDateDMY(group.createdDate)} •{" "}
+                {group.createdAgo}
               </span>
-            )}
-
-            {/* Member Count and Date */}
-            <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
-              Created: {formatDateDMY(group.createdDate)} •{" "}
-              {group.createdAgo}
-            </span>
-            <div class="group-counts-row">
-              <span class="group-count-bold">
-                Members: {group.members?.length || 0}
-              </span>
-              <span class="group-count-bold">
-                Applications: {group.assigned_applications?.length || 0}
-              </span>
+              <div class="group-counts-row">
+                <span class="group-count-bold">
+                  Members: {group.members?.length || 0}
+                </span>
+                <span class="group-count-bold">
+                  Applications: {group.assigned_applications?.length || 0}
+                </span>
+              </div>
             </div>
-          </div>
 
-          <div class="action-buttons">
-            <oj-button
-              display="all"
-              class="oj-button-sm"
-              onojAction={() => onEditClick(group)}
-            >
-              <span slot="startIcon" class="oj-ux-ico-edit"></span>
-              Edit
-            </oj-button>
-
-            {!group.is_admin && (
+            <div class="action-buttons">
               <oj-button
                 display="all"
-                class="oj-button-sm oj-button-danger"
-                onojAction={() => onDeleteClick(group)}
+                class="oj-button-sm"
+                onojAction={() => onEditClick(group)}
               >
-                <span slot="startIcon" class="oj-ux-ico-trash"></span>
-                Delete
+                <span slot="startIcon" class="oj-ux-ico-edit"></span>
+                Edit
               </oj-button>
-            )}
+
+              {!group.is_admin && group.groupName.toLowerCase() !== 'admin group' && (
+                <oj-button
+                  display="all"
+                  class="oj-button-sm oj-button-danger"
+                  onojAction={() => onDeleteClick(group)}
+                >
+                  <span slot="startIcon" class="oj-ux-ico-trash"></span>
+                  Delete
+                </oj-button>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 } 

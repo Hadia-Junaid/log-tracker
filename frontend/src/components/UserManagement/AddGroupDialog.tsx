@@ -31,6 +31,7 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [checkedAppIds, setCheckedAppIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchTrigger, setSearchTrigger] = useState(0);
@@ -293,12 +294,15 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
   };
 
   const handleClose = () => {
+    restoreBodyScroll();
+
     setSelectedMembers([]);
     setAllMembers([]);
     setApplications([]);
     setSearchTerm('');
     setError('');
     setSuccessMessage(''); // Clear success message
+    setShowCancelConfirmation(false); // Clear confirmation dialog
     setIsDataLoaded(false);
     
     if (searchTimeoutRef.current) {
@@ -306,6 +310,30 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
     }
     
     onClose();
+  };
+
+  const handleCancelClick = () => {
+    // Check if there's any data entered that would be lost
+    const hasGroupName = groupNameRef.current?.value?.trim();
+    const hasSelectedMembers = selectedMembers.length > 0;
+    const hasSelectedApplications = Object.keys(checkboxRefs.current).some(appId => 
+      checkboxRefs.current[appId]?.value === true
+    );
+    
+    if (hasGroupName || hasSelectedMembers || hasSelectedApplications) {
+      setShowCancelConfirmation(true);
+    } else {
+      handleClose();
+    }
+  };
+
+  const handleConfirmCancel = () => {
+    restoreBodyScroll();
+    handleClose();
+  };
+
+  const handleAbortCancel = () => {
+    setShowCancelConfirmation(false);
   };
 
   const getInitials = (name: string): string => {
@@ -329,6 +357,10 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
              return matches;
            })()
   );
+
+  const restoreBodyScroll = () => {
+  document.body.style.overflow = 'auto';
+};
 
   // Don't render the dialog until data is loaded
   if (!isOpen || !isDataLoaded) return null;
@@ -513,12 +545,41 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
         )}
       </div>
 
-      <div slot="footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-        <oj-button on-oj-action={handleClose} onClick={handleClose}>Cancel</oj-button>
+      <div slot="footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>        
+        <oj-button on-oj-action={handleCancelClick} onClick={handleCancelClick}>Cancel</oj-button>
         <oj-button chroming="callToAction" on-oj-action={handleCreateGroup} onClick={handleCreateGroup} disabled={isCreating}>
           {isCreating ? 'Creating...' : 'Create Group'}
         </oj-button>
       </div>
+
+      {/* Cancel Confirmation Dialog */}
+      {showCancelConfirmation && (
+        <oj-c-dialog 
+          opened={showCancelConfirmation} 
+          on-oj-close={handleAbortCancel}
+          width="500px"
+          height="275px"
+          min-width="300px"
+          max-width="90vw"
+          min-height="150px"
+          max-height="80vh"
+        >
+          <div slot="header">
+            <h3 id="cancel-confirmation-title">Discard Changes?</h3>
+          </div>
+
+            <div slot="body" style={{ marginBottom: '-8px' }}>
+            <p style={{ marginBottom: '-8px' }}>You have unsaved changes. Are you sure you want to discard them?</p>
+            </div>
+
+            <div slot="footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0' }}>
+            <oj-button on-oj-action={handleAbortCancel} onClick={handleAbortCancel}>Cancel</oj-button>
+            <oj-button chroming="danger" on-oj-action={handleConfirmCancel} onClick={handleConfirmCancel}>
+              Confirm
+            </oj-button>
+            </div>
+        </oj-c-dialog>
+      )}
     </oj-c-dialog>
   );
 } 
