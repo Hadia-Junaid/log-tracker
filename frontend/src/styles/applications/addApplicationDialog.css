@@ -163,3 +163,48 @@ oj-label {
     align-items: stretch;
   }
 }
+
+.native-oj-button {
+  all: unset;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  /* More prominent colors */
+  border-radius: 8px;
+  border: 1px solid #374151; /* darker gray border */
+  background-color: transparent;
+  color: #111827; /* dark black-gray text */
+  
+  padding: 6px 16px;
+  font-size: 14px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight: 600; /* increased from 500 to 600 */
+  line-height: 1.5;
+  white-space: nowrap;
+
+  cursor: pointer;
+  box-sizing: border-box;
+  user-select: none;
+
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.native-oj-button:hover {
+  background-color: #f3f4f6;
+}
+
+.native-oj-button:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+.native-oj-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
