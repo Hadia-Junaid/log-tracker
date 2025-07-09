@@ -12,8 +12,8 @@ export interface AvailableApp {
 }
 
 export const usePinnedApp = (userId?: string) => {
-  const [pinned, setPinned] = useState<PinnedApp[]>([]);
-  const [available, setAvailable] = useState<AvailableApp[]>([]);
+  const [allApps, setAllApps] = useState<AvailableApp[]>([]);
+  const [pinnedIds, setPinnedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
@@ -29,12 +29,11 @@ export const usePinnedApp = (userId?: string) => {
 
       const pinnedApps = pinnedRes.data.pinned_applications;
       const activeApps = activeRes.data.active_applications;
-      const pinnedIds = pinnedApps.map((a: any) => a._id);
 
-      setPinned(pinnedApps);
-      setAvailable(activeApps.filter((a: any) => !pinnedIds.includes(a._id)));
+      setAllApps(activeApps);
+      setPinnedIds(pinnedApps.map((a: any) => a._id));
     } catch (e) {
-      console.error("Failed to fetch pinned/available apps:", e);
+      console.error("Failed to fetch apps:", e);
       setError(true);
     } finally {
       setLoading(false);
@@ -46,12 +45,10 @@ export const usePinnedApp = (userId?: string) => {
   }, [fetchApps]);
 
   return {
-    pinned,
-    available,
+    allApps,
+    pinnedIds,
     loading,
     error,
     refresh: fetchApps,
-    setPinned,
-    setAvailable,
   };
 };
