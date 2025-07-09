@@ -90,7 +90,7 @@ export default function UserGroupsList({
 
               <div class="group-counts-row">
                 <span class="group-count-bold">Members: {item.members?.length || 0}</span>
-                <span class="group-count-bold">Applications: {item.assigned_applications?.length || 0}</span>
+                <span class="group-count-bold">Active Applications: {item.assigned_applications?.filter(app => app.isActive).length || 0}</span>
               </div>
             </div>
 

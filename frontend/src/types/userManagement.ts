@@ -14,7 +14,11 @@ export interface GroupData {
   createdAgo?: string;
   is_admin?: boolean;
   members?: string[];
-  assigned_applications?: string[];
+  assigned_applications?: {
+    _id: string;
+    name: string;
+    isActive: boolean;
+  }[];
   super_admin_emails?: string[];
 }
 
@@ -22,6 +26,7 @@ export interface ApplicationOption {
   id: string;
   name: string;
   checked: boolean;
+  isActive: boolean;
 }
 
 export interface CreateGroupPayload {

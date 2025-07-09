@@ -47,7 +47,11 @@ export const userGroupService = {
       createdAgo: getRelativeTime(new Date(group.createdAt)),
       is_admin: group.is_admin,
       members: group.members?.map((member: any) => member.email) || [],
-      assigned_applications: group.assigned_applications?.map((app: any) => app.name) || []
+      assigned_applications: group.assigned_applications?.map((app: any) => ({
+        _id: app._id,
+        name: app.name,
+        isActive: app.isActive
+      })) || []
     }));
     
     return {
@@ -101,11 +105,16 @@ export const userGroupService = {
 
   // Fetch applications
   async fetchApplications(): Promise<ApplicationOption[]> {
-    const response = await axios.get('/applications');
+    const response = await axios.get('/applications', {
+      params: {
+        pageSize: 1000 // Request a large number to get all applications
+      }
+    });
     return response.data.data.map((app: any) => ({
       id: app._id,
       name: app.name,
-      checked: false
+      checked: false,
+      isActive: app.isActive
     }));
   },
 

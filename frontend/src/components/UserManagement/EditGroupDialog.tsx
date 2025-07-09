@@ -22,37 +22,27 @@ interface EditGroupDialogProps {
   groupName: string;
   onClose: () => void;
   onGroupUpdated: () => void;
-  cachedApplications?: ApplicationOption[];
-  cachedUsers?: MemberData[];
-  isBackgroundDataLoaded?: boolean;
 }
 
-export function EditGroupDialog({ 
-  isOpen, 
-  groupId, 
-  groupName, 
-  onClose, 
-  onGroupUpdated, 
-  cachedApplications = [],
-  cachedUsers = [],
-  isBackgroundDataLoaded = false
+export function EditGroupDialog({
+  isOpen,
+  groupId,
+  groupName,
+  onClose,
+  onGroupUpdated
 }: EditGroupDialogProps) {
   const [selectedMembers, setSelectedMembers] = useState<MemberData[]>([]);
   const [allMembers, setAllMembers] = useState<MemberData[]>([]);
   const [applications, setApplications] = useState<ApplicationOption[]>([]);
+  const [assignedAppIds, setAssignedAppIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [assignedAppIds, setAssignedAppIds] = useState<string[]>([]);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
-  const [showUpdateConfirmation, setShowUpdateConfirmation] = useState(false);
   const [superAdminEmails, setSuperAdminEmails] = useState<string[]>([]);
-  
-  // Store original data for comparison
-  const [originalMembers, setOriginalMembers] = useState<MemberData[]>([]);
-  const [originalAppIds, setOriginalAppIds] = useState<string[]>([]);
 
   const searchInputRef = useRef<any>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -62,7 +52,7 @@ export function EditGroupDialog({
     if (isOpen && !isDataLoaded) {
       loadAllData();
     }
-  }, [isOpen, groupId]);
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -75,77 +65,33 @@ export function EditGroupDialog({
     setError('');
 
     try {
-      // Always need group details for edit dialog
-      const groupDetails = await userGroupService.fetchGroupById(groupId);
-      
-      // Store super admin emails if this is the admin group
-      if (groupDetails.is_admin && groupDetails.super_admin_emails) {
-        setSuperAdminEmails(groupDetails.super_admin_emails);
-      }
-
-      // Use cached data if available and fresh
-      if (isBackgroundDataLoaded && cachedApplications.length > 0 && cachedUsers.length > 0) {
-        // Set applications from cache
-        setApplications(cachedApplications);
-        
-        // Process group details regardless of cache
-        const membersData: MemberData[] = groupDetails.members.map((member) => ({
-          id: member._id,
-          name: member.name,
-          email: member.email,
-          initials: getInitials(member.name || member.email)
-        }));
-        setSelectedMembers(membersData);
-        setOriginalMembers([...membersData]);
-
-        // Filter out selected members from all members
-        const selectedEmails = new Set(membersData.map(m => m.email));
-        const availableMembers = cachedUsers.filter(m => !selectedEmails.has(m.email));
-        setAllMembers(availableMembers);
-        
-        // Only fetch current groups for reference
-        const currentGroups = await userGroupService.fetchUserGroups(1, 1000, '');
-        localStorage.setItem('userGroups', JSON.stringify(currentGroups.data));
-        
-        const assignedAppIds = groupDetails.assigned_applications.map((app) => app._id) || [];
-        setAssignedAppIds(assignedAppIds);
-        setOriginalAppIds([...assignedAppIds]);
-        
-        setIsDataLoaded(true);
-        return;
-      }
-
-      // Fallback to full API loading if no cached data
-      const [allApplications, directoryMembers, currentGroups] = await Promise.all([
+      const [allApplications, members, groupDetails] = await Promise.all([
         userGroupService.fetchApplications(),
         userGroupService.searchUsers(''),
-        userGroupService.fetchUserGroups(1, 1000, '')
+        userGroupService.fetchGroupById(groupId)
       ]);
 
-      // Set current members
-      const membersData: MemberData[] = groupDetails.members.map((member) => ({
-        id: member._id,
-        name: member.name,
-        email: member.email,
-        initials: getInitials(member.name || member.email)
-      }));
-      setSelectedMembers(membersData);
-      setOriginalMembers([...membersData]); // Store original members
-
-      // Filter out selected members from all members
-      const selectedEmails = new Set(membersData.map(m => m.email));
-      const availableMembers = directoryMembers.filter(m => !selectedEmails.has(m.email));
-      setAllMembers(availableMembers);
-
-      // Set assigned applications
-      const assignedAppIds = groupDetails.assigned_applications.map((app) => app._id);
-      setAssignedAppIds(assignedAppIds);
-      setOriginalAppIds([...assignedAppIds]); // Store original app IDs
-
-      setApplications(allApplications);
+      console.log('Fetched applications:', allApplications);
+      console.log('Active applications:', allApplications.filter((app: ApplicationOption) => app.isActive));
       
-      localStorage.setItem('allDirectoryMembers', JSON.stringify(directoryMembers));
-      localStorage.setItem('userGroups', JSON.stringify(currentGroups.data));
+      setApplications(allApplications);
+      setAllMembers(members);
+
+      // Set initial selected members and applications from group details
+      if (groupDetails) {
+        const groupMembers = groupDetails.members || [];
+        setSelectedMembers(
+          members.filter((member: MemberData) => 
+            groupMembers.some((gm: { email: string }) => gm.email === member.email)
+          )
+        );
+        setAssignedAppIds(groupDetails.assigned_applications?.map((app: { _id: string }) => app._id) || []);
+        
+        // Store super admin emails if this is the admin group
+        if (groupDetails.is_admin && groupDetails.super_admin_emails) {
+          setSuperAdminEmails(groupDetails.super_admin_emails);
+        }
+      }
       
       setIsDataLoaded(true);
     } catch (err: any) {
@@ -156,9 +102,33 @@ export function EditGroupDialog({
     }
   };
 
-  const handleAddMember = (member: MemberData) => {
-    setSelectedMembers((prev) => [...prev, member]);
-    setAllMembers((prev) => prev.filter(m => m.email !== member.email));
+  const handleClose = () => {
+    setSelectedMembers([]);
+    setAllMembers([]);
+    setApplications([]);
+    setSearchTerm('');
+    setError('');
+    setSuccessMessage('');
+    setShowCancelConfirmation(false);
+    setIsDataLoaded(false);
+    
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    onClose();
+  };
+
+  const handleCancelClick = () => {
+    setShowCancelConfirmation(true);
+  };
+
+  const handleConfirmCancel = () => {
+    handleClose();
+  };
+
+  const handleAbortCancel = () => {
+    setShowCancelConfirmation(false);
   };
 
   const handleRemoveMember = (member: MemberData) => {
@@ -169,20 +139,28 @@ export function EditGroupDialog({
       return;
     }
     setSelectedMembers((prev) => prev.filter((m) => m.id !== member.id));
-    setAllMembers((prev) => [...prev, member]);
+  };
+
+  const handleAddMember = (member: MemberData) => {
+    setSelectedMembers((prev) => [...prev, member]);
   };
 
   const handleRemoveAllMembers = () => {
-    // For admin group, only remove non-superadmin members
+    // Filter out superadmins if this is admin group
     if (groupName.toLowerCase() === 'admin group') {
-      const nonSuperAdminMembers = selectedMembers.filter(member => !superAdminEmails.includes(member.email));
-      setAllMembers((prev) => [...prev, ...nonSuperAdminMembers]);
-      setSelectedMembers((prev) => prev.filter(member => superAdminEmails.includes(member.email)));
-    } else {
-      setAllMembers((prev) => [...prev, ...selectedMembers]);
-      setSelectedMembers([]);
+      setSelectedMembers(prev => prev.filter(member => superAdminEmails.includes(member.email)));
+      return;
     }
+    setSelectedMembers([]);
   };
+
+  // Available members = allMembers - selectedMembers, filtered by search term
+  const availableMembers = allMembers.filter(
+    (m: MemberData) => !selectedMembers.some((sel) => sel.id === m.id) &&
+           (searchTerm === '' || 
+            m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            m.email.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
   const handleApplicationToggle = (appId: string) => {
     // Skip for admin group
@@ -197,18 +175,12 @@ export function EditGroupDialog({
   };
 
   const handleUpdateGroup = async () => {
-    // Show confirmation dialog instead of directly updating
-    setShowUpdateConfirmation(true);
-  };
-
-  const handleConfirmUpdate = async () => {
     const selectedAppIds = Object.keys(checkboxRefs.current).filter(appId => 
       checkboxRefs.current[appId]?.value === true
     );
 
     setIsUpdating(true);
     setError('');
-    setShowUpdateConfirmation(false);
 
     try {
       const payload = {
@@ -247,69 +219,6 @@ export function EditGroupDialog({
     }
   };
 
-  const handleAbortUpdate = () => {
-    setShowUpdateConfirmation(false);
-  };
-
-  const getChangesSummary = () => {
-    const changes: string[] = [];
-    
-    // Check member changes
-    const currentMemberEmails = selectedMembers.map(m => m.email).sort();
-    const originalMemberEmails = originalMembers.map(m => m.email).sort();
-    
-    const addedMembers = currentMemberEmails.filter(email => !originalMemberEmails.includes(email));
-    const removedMembers = originalMemberEmails.filter(email => !currentMemberEmails.includes(email));
-    
-    if (addedMembers.length > 0) {
-      changes.push(`Added ${addedMembers.length} member(s): ${addedMembers.join(', ')}`);
-    }
-    if (removedMembers.length > 0) {
-      changes.push(`Removed ${removedMembers.length} member(s): ${removedMembers.join(', ')}`);
-    }
-    
-    // Check application changes (skip for admin group)
-    if (groupName.toLowerCase() !== 'admin group') {
-      const currentAppIds = Object.keys(checkboxRefs.current).filter(appId => 
-        checkboxRefs.current[appId]?.value === true
-      ).sort();
-      const originalAppIdsSorted = [...originalAppIds].sort();
-      
-      const addedApps = currentAppIds.filter(id => !originalAppIdsSorted.includes(id));
-      const removedApps = originalAppIdsSorted.filter(id => !currentAppIds.includes(id));
-      
-      if (addedApps.length > 0) {
-        const addedAppNames = addedApps.map(id => applications.find(app => app.id === id)?.name || id);
-        changes.push(`Added ${addedApps.length} application(s): ${addedAppNames.join(', ')}`);
-      }
-      if (removedApps.length > 0) {
-        const removedAppNames = removedApps.map(id => applications.find(app => app.id === id)?.name || id);
-        changes.push(`Removed ${removedApps.length} application(s): ${removedAppNames.join(', ')}`);
-      }
-    }
-    
-    return changes;
-  };
-
-  const handleClose = () => {
-    setSelectedMembers([]);
-    setAllMembers([]);
-    setApplications([]);
-    setSearchTerm('');
-    setError('');
-    setSuccessMessage('');
-    setIsDataLoaded(false);
-    setShowUpdateConfirmation(false);
-    setOriginalMembers([]);
-    setOriginalAppIds([]);
-    
-    if (searchTimeoutRef.current) {
-      clearTimeout(searchTimeoutRef.current);
-    }
-    
-    onClose();
-  };
-
   const getInitials = (name: string): string => {
     return name
       .split(' ')
@@ -318,14 +227,6 @@ export function EditGroupDialog({
       .toUpperCase()
       .slice(0, 2);
   };
-
-  // Available members = allMembers - selectedMembers, filtered by search term
-  const availableMembers = allMembers.filter(
-    (m) => !selectedMembers.some((sel) => sel.id === m.id) &&
-           (searchTerm === '' || 
-            m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            m.email.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
 
   // Don't render the dialog until opened
   if (!isOpen) return null;
@@ -510,7 +411,7 @@ export function EditGroupDialog({
                 )}
               </h4>
                                <div class="oj-flex oj-sm-flex-direction-column applications-checkboxes">
-                   {applications.map(app => (
+                   {applications.filter(app => app.isActive).map(app => (
                      <oj-c-checkbox 
                        key={app.id}
                        ref={(el: any) => {
@@ -545,57 +446,6 @@ export function EditGroupDialog({
           {isUpdating ? 'Updating...' : 'Update Group'}
         </oj-button>
       </div>
-
-      {/* Update Confirmation Dialog */}
-      {showUpdateConfirmation && (
-        <oj-c-dialog 
-          opened={showUpdateConfirmation} 
-          on-oj-close={handleAbortUpdate}
-          width="600px"
-          height="400px"
-          min-width="500px"
-          max-width="90vw"
-          min-height="300px"
-          max-height="80vh"
-        >
-          <div slot="header">
-            <h3 id="update-confirmation-title">Confirm Group Update</h3>
-          </div>
-
-          <div slot="body">
-            <p style={{ marginBottom: '16px' }}>
-              You are about to update the group <strong>"{groupName}"</strong>.
-            </p>
-            
-            {(() => {
-              const changes = getChangesSummary();
-              return changes.length > 0 ? (
-                <div>
-                  <p style={{ marginBottom: '12px', fontWeight: 'bold' }}>Summary of changes:</p>
-                  <ul style={{ marginBottom: '16px', paddingLeft: '20px' }}>
-                    {changes.map((change, index) => (
-                      <li key={index} style={{ marginBottom: '8px' }}>{change}</li>
-                    ))}
-                  </ul>
-                </div>
-              ) : (
-                <p style={{ marginBottom: '16px', fontStyle: 'italic', color: '#6c757d' }}>
-                  No changes detected.
-                </p>
-              );
-            })()}
-            
-            <p>Are you sure you want to proceed with these changes?</p>
-          </div>
-
-          <div slot="footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-            <oj-button on-oj-action={handleAbortUpdate} onClick={handleAbortUpdate}>Cancel</oj-button>
-            <oj-button chroming="callToAction" on-oj-action={handleConfirmUpdate} onClick={handleConfirmUpdate}>
-              Confirm
-            </oj-button>
-          </div>
-        </oj-c-dialog>
-      )}
     </oj-c-dialog>
   );
 } 
