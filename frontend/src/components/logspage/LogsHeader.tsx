@@ -2,6 +2,7 @@ import { h } from "preact";
 import ArrayDataProvider = require("ojs/ojarraydataprovider");
 import "ojs/ojinputtext";
 import 'oj-c/select-multiple';
+import 'oj-c/select-single'; // ✅ Added for Time Range dropdown
 import { useEffect, useState } from "preact/hooks";
 
 interface Application {
@@ -9,6 +10,10 @@ interface Application {
   name: string;
 }
 
+interface TimeRangeOption {
+  value: string;
+  label: string;
+}
 interface LogsHeaderProps {
   search: string;
   setSearch: (value: string) => void;
@@ -19,6 +24,8 @@ interface LogsHeaderProps {
   setLogLevels: (value: string[] | ((prevState: string[]) => string[])) => void;
   setPage: (page: number) => void;
   onExport: (format: "csv" | "json") => void;
+  selectedTimeRange: string; // ✅ Added
+  setSelectedTimeRange: (value: string) => void; // ✅ Added
 }
 
 export default function LogsHeader({
@@ -31,6 +38,8 @@ export default function LogsHeader({
   setLogLevels,
   setPage,
   onExport,
+  selectedTimeRange, // ✅ Added
+  setSelectedTimeRange, // ✅ Added
 }: LogsHeaderProps) {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const appDataProvider = new ArrayDataProvider(applications, { keyAttributes: "_id" });
@@ -40,10 +49,18 @@ export default function LogsHeader({
     );
   };
   const logLevelOptions = ["INFO", "ERROR", "WARN", "DEBUG"];
+  const timeRangeOptions: TimeRangeOption[] = [
+    { value: "Last hour", label: "Last hour" },
+    { value: "Last 24 hours", label: "Last 24 hours" },
+    { value: "7 days", label: "7 days" },
+    { value: "All", label: "All" },
+    { value: "custom", label: "Custom" },
+  ];
+  const timeRangeDP = new ArrayDataProvider(timeRangeOptions, { keyAttributes: "value" });
 
   useEffect(() => {
     setPage(1);
-  }, [search, selectedAppIds, logLevels]);
+  }, [search, selectedAppIds, logLevels, selectedTimeRange]); // ✅ include selectedTimeRange
 
   return (
     <>
@@ -93,6 +110,17 @@ export default function LogsHeader({
           onvalueChanged={(e: any) => { setSelectedAppIds(e.detail.value ?? []); setPage(1); }}
           item-text="name"
         ></oj-c-select-multiple>
+        {/* ✅ Time Range Filter */}
+        {/* <span class="time-range-label">Time Range:</span> */}
+        <oj-c-select-single
+          label-edge="none"
+          placeholder="Time Range"
+          class="oj-form-control-max-width-md input-filter dropdown"
+          data={timeRangeDP}
+          item-text="label"
+          value={selectedTimeRange}
+          onvalueChanged={(e: any) => { setSelectedTimeRange(e.detail.value); setPage(1); }}
+        ></oj-c-select-single>
       </div>
 
       <div class="oj-flex oj-sm-margin-4x-bottom log-level-btn-row">

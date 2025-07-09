@@ -41,12 +41,45 @@ export default function Logs(props: Props) {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  // Time range state
+  const time = new Date();
+  const initialStartTime = new Date(time.getTime() - 24 * 60 * 60 * 1000).toISOString();
+  const initialEndTime = time.toISOString();
+  const [timeRange, setTimeRange] = useState("Last 24 hours");
+  const [startTime, setStartTime] = useState<string | null>(initialStartTime);
+  const [endTime, setEndTime] = useState<string | null>(initialEndTime);
+
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
     }, 400);
     return () => clearTimeout(handler);
   }, [search]);
+
+  // Time range effect
+  useEffect(() => {
+    const now = new Date();
+    let start: Date | null = null;
+    console.log("timeRange", timeRange);
+    switch (timeRange) {
+      case "Last hour":
+        start = new Date(now.getTime() - 60 * 60 * 1000);
+        break;
+      case "Last 24 hours":
+        start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        break;
+      case "7 days":
+        start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case "All":
+        start = null; 
+      default:
+        start = null;
+    }
+    setStartTime(start ? start.toISOString() : null);
+    setEndTime(start ? now.toISOString(): null);
+    setPage(1);
+  }, [timeRange]);
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -58,6 +91,8 @@ export default function Logs(props: Props) {
             app_ids: Array.from(selectedAppIds).join(','),
             log_levels: logLevels.join(','),
             page,
+            start_time: startTime ?? undefined,
+            end_time: endTime ?? undefined,
           },
         });
 
@@ -80,7 +115,7 @@ export default function Logs(props: Props) {
     };
 
     fetchLogs();
-  }, [debouncedSearch, selectedAppIds, logLevels, page]);
+  }, [debouncedSearch, selectedAppIds, logLevels, page, startTime, endTime]);
 
   const dataProvider = useMemo(() => {
     const enrichedLogs = logs.map((log) => ({
@@ -131,6 +166,8 @@ export default function Logs(props: Props) {
           search: debouncedSearch,
           app_ids: Array.from(selectedAppIds).join(','),
           log_levels: logLevels.join(','),
+          start_time: startTime ?? undefined,
+          end_time: endTime ?? undefined,
           is_csv: format === "csv",
         },
         responseType: format === "csv" ? "blob" : "json",
@@ -165,6 +202,8 @@ export default function Logs(props: Props) {
         setLogLevels={setLogLevels}
         setPage={setPage}
         onExport={handleExport}
+        selectedTimeRange={timeRange}
+        setSelectedTimeRange={setTimeRange}
       />
       <LogsTable loading={loading} error={error} dataProvider={dataProvider} columns={columns} />
       <Pagination page={page} totalPages={totalPages} setPage={setPage} />
