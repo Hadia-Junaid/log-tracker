@@ -11,6 +11,8 @@ import ApplicationsList from "../components/applications/ApplicationsList"; // I
 import "ojs/ojselectcombobox";
 import "ojs/ojselectsingle";
 import ArrayDataProvider from "ojs/ojarraydataprovider";
+import "oj-c/select-multiple";
+import qs from "qs";
 
 type Props = {
   path?: string;
@@ -35,7 +37,9 @@ export default function Applications({ path }: Props) {
   const [totalCount, setTotalCount] = useState(0);
 
   const [statusFilter, setStatusFilter] = useState("all");
-  const [environmentFilter, setEnvironmentFilter] = useState("all");
+  const [environmentFilter, setEnvironmentFilter] = useState<Set<string>>(
+    new Set()
+  );
   const [sortOption, setSortOption] = useState("name");
 
   const statusOptions = [
@@ -45,7 +49,6 @@ export default function Applications({ path }: Props) {
   ];
 
   const environmentOptions = [
-    { value: "all", label: "All" },
     { value: "Production", label: "Production" },
     { value: "Staging", label: "Staging" },
     { value: "Development", label: "Development" },
@@ -78,6 +81,13 @@ export default function Applications({ path }: Props) {
 
   const fetchApplications = async () => {
     try {
+      console.log("Fetching applications with filters:", {
+        currentPage,
+        searchQuery,
+        statusFilter,
+        environmentFilter: environmentFilter ? Array.from(environmentFilter) : [],
+        sortOption,
+      });
       // setLoading(true);  //commenting this out because i dont want this every time i search
       const response = await axios.get("/applications", {
         params: {
@@ -85,9 +95,11 @@ export default function Applications({ path }: Props) {
           pageSize: PAGE_SIZE,
           search: searchQuery,
           status: statusFilter,
-          environment: environmentFilter,
+          environment: Array.from(environmentFilter),
           sort: sortOption,
         },
+        paramsSerializer: (params) =>
+          qs.stringify(params, { arrayFormat: "repeat" }),
       });
       console.log("Fetched applications:", response);
       setApplications(response.data.data);
@@ -138,7 +150,7 @@ export default function Applications({ path }: Props) {
 
   const handleResetFilters = () => {
     setStatusFilter("all");
-    setEnvironmentFilter("all");
+    setEnvironmentFilter(new Set());
     setSortOption("name");
     setSearchQuery("");
     setCurrentPage(1);
@@ -200,16 +212,22 @@ export default function Applications({ path }: Props) {
                 }}
               ></oj-select-single>
 
-              <oj-select-single
+              <oj-c-select-multiple
                 class="filter-dropdown"
-                label-hint="Environment"
+                labelHint="Environments"
                 data={environmentDataProvider}
+                // Bind the component's value to your state
                 value={environmentFilter}
-                onvalueChanged={(e: CustomEvent) => {
-                  setEnvironmentFilter(e.detail.value);
+                item-text="label"
+                // Use the event handler to update your state
+                onvalueChanged={(event) => {
+                  const newValue = event.detail.value as Set<string> | null;
+                  console.log("Environment filter changed:", newValue);
+                  setEnvironmentFilter(newValue ?? new Set<string>());
                   setCurrentPage(1);
                 }}
-              ></oj-select-single>
+                placeholder="Select Environments"
+              ></oj-c-select-multiple>
 
               <oj-select-single
                 class="filter-dropdown"

@@ -71,21 +71,13 @@ export const getApplications = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+
   const page = Math.max(1, parseInt(req.query.page as string) || 1);
   const pageSize = Math.max(1, parseInt(req.query.pageSize as string) || 8);
   const search = (req.query.search as string)?.trim() || "";
   const status = req.query.status as string;
-  const environment = req.query.environment as string;
+  const environment = req.query.environment as string[] || [];
   const sort = req.query.sort as string;
-
-  logger.info("Filters requested:", {
-    search,
-    status, 
-    environment,
-    sort,
-    page,
-    pageSize,
-  });
 
   // Build filter object
   const filter: Record<string, any> = {};
@@ -103,8 +95,13 @@ export const getApplications = async (
 
   logger.info("Filter State:" + filter);
 
-  if (environment && environment !== "all") {
-    filter.environment = environment;
+  logger.debug("Environment filter before processing:" + environment);
+
+  // environment is now an array of strings already
+  if (environment && environment.length > 0) {
+    // Convert to array if it's a single string
+    const envArray = Array.isArray(environment) ? environment : [environment];
+    filter.environment = { $in: envArray };
   }
 
   // Sort mapping
