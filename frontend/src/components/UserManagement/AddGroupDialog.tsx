@@ -20,18 +20,12 @@ interface AddGroupDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onGroupCreated: () => void;
-  cachedApplications?: ApplicationOption[];
-  cachedUsers?: MemberData[];
-  isBackgroundDataLoaded?: boolean;
 }
 
 export function AddGroupDialog({ 
   isOpen, 
   onClose, 
-  onGroupCreated,
-  cachedApplications = [],
-  cachedUsers = [],
-  isBackgroundDataLoaded = false
+  onGroupCreated
 }: AddGroupDialogProps) {
   const [selectedMembers, setSelectedMembers] = useState<MemberData[]>([]);
   const [allMembers, setAllMembers] = useState<MemberData[]>([]);
@@ -67,34 +61,18 @@ export function AddGroupDialog({
     setError('');
 
     try {
-      // Use cached data if available and fresh
-      if (isBackgroundDataLoaded && cachedApplications.length > 0 && cachedUsers.length > 0) {
-        setApplications(cachedApplications);
-        setCheckedAppIds([]);
-        setAllMembers(cachedUsers);
-        
-        // Only fetch current groups for reference
-        const currentGroups = await userGroupService.fetchUserGroups(1, 1000, '');
-        localStorage.setItem('userGroups', JSON.stringify(currentGroups.data));
-        
-        setIsDataLoaded(true);
-        return;
-      }
-
-      // Fallback to full API loading if no cached data
       const [allApplications, members, currentGroups] = await Promise.all([
         userGroupService.fetchApplications(),
         userGroupService.searchUsers(''),
         userGroupService.fetchUserGroups(1, 1000, '')
       ]);
 
+      console.log('Fetched applications:', allApplications);
+      console.log('Active applications:', allApplications.filter(app => app.isActive));
+      
       setApplications(allApplications);
       setCheckedAppIds([]);
-      
-      localStorage.setItem('allDirectoryMembers', JSON.stringify(members));
       setAllMembers(members);
-      
-      localStorage.setItem('userGroups', JSON.stringify(currentGroups.data));
       
       setIsDataLoaded(true);
     } catch (err: any) {
@@ -422,8 +400,7 @@ export function AddGroupDialog({
                 Accessible Applications
               </h4>
               <div class="applications-checkboxes">
-                {applications.map(app => (
-
+                {applications.filter(app => app.isActive).map(app => (
                   <oj-c-checkbox 
                     key={app.id}
                     ref={(el: any) => {

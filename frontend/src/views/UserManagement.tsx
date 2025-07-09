@@ -1,6 +1,6 @@
 import { h } from "preact";
 import { useState, useEffect, useRef } from "preact/hooks";
-import { GroupData, MemberData, ApplicationOption } from "../types/userManagement";
+import { GroupData } from "../types/userManagement";
 import { userGroupService } from "../services/userGroupServices";
 import { AddGroupDialog } from "../components/UserManagement/AddGroupDialog";
 import { EditGroupDialog } from "../components/UserManagement/EditGroupDialog";
@@ -34,14 +34,8 @@ export default function UserManagement(props: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const prevSearchTermRef = useRef<string>("");
 
-  // Add caching states
-  const [cachedApplications, setCachedApplications] = useState<ApplicationOption[]>([]);
-  const [cachedUsers, setCachedUsers] = useState<MemberData[]>([]);
-  const [isBackgroundDataLoaded, setIsBackgroundDataLoaded] = useState(false);
-
   useEffect(() => {
     loadGroups(true); // Initial load
-    preloadDialogData(); // Background load dialog data
   }, []);
 
   const loadGroups = async (showLoading: boolean = true) => {
@@ -72,7 +66,8 @@ export default function UserManagement(props: Props) {
       loadGroups(true);
       prevSearchTermRef.current = searchTerm;
     }, searchTerm ? 300 : 0); // Debounce for search, no delay for pagination
-    return () => clearTimeout(delayDebounceFn);}, [currentPage, searchTerm]);
+    return () => clearTimeout(delayDebounceFn);
+  }, [currentPage, searchTerm]);
 
   const handleAddGroup = () => {
     setIsAddDialogOpen(true);
@@ -114,50 +109,6 @@ export default function UserManagement(props: Props) {
   const goToNextPage = () => {
     if (currentPage < Math.ceil(totalCount / PAGE_SIZE)) {
       setCurrentPage(currentPage + 1);
-    }
-  };
-
-  // Background data preloading
-  const preloadDialogData = async () => {
-    try {
-      // Check if we have cached data that's still fresh (5 minutes)
-      const cachedApps = localStorage.getItem('cachedApplications');
-      const cachedUsersData = localStorage.getItem('allDirectoryMembers');
-      const cacheTimestamp = localStorage.getItem('dialogDataCacheTime');
-      
-      const now = Date.now();
-      const fiveMinutes = 5 * 60 * 1000;
-      
-      if (cachedApps && cachedUsersData && cacheTimestamp && 
-          (now - parseInt(cacheTimestamp)) < fiveMinutes) {
-        // Use cached data
-        setCachedApplications(JSON.parse(cachedApps));
-        setCachedUsers(JSON.parse(cachedUsersData));
-        setIsBackgroundDataLoaded(true);
-        console.log('Using cached dialog data');
-        return;
-      }
-
-      // Load fresh data in background
-      console.log('Preloading dialog data in background...');
-      const [applications, users] = await Promise.all([
-        userGroupService.fetchApplications(),
-        userGroupService.searchUsers('') // Load first batch only
-      ]);
-
-      setCachedApplications(applications);
-      setCachedUsers(users);
-      setIsBackgroundDataLoaded(true);
-
-      // Cache the data
-      localStorage.setItem('cachedApplications', JSON.stringify(applications));
-      localStorage.setItem('allDirectoryMembers', JSON.stringify(users));
-      localStorage.setItem('dialogDataCacheTime', now.toString());
-      
-      console.log('Dialog data preloaded and cached');
-    } catch (error) {
-      console.error('Failed to preload dialog data:', error);
-      // Don't set error state - this is background loading
     }
   };
 
@@ -266,9 +217,6 @@ export default function UserManagement(props: Props) {
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
         onGroupCreated={handleGroupCreated}
-        cachedApplications={cachedApplications}
-        cachedUsers={cachedUsers}
-        isBackgroundDataLoaded={isBackgroundDataLoaded}
       />
 
       {selectedGroup && (
@@ -281,9 +229,6 @@ export default function UserManagement(props: Props) {
             setSelectedGroup(null);
           }}
           onGroupUpdated={handleGroupUpdated}
-          cachedApplications={cachedApplications}
-          cachedUsers={cachedUsers}
-          isBackgroundDataLoaded={isBackgroundDataLoaded}
         />
       )}
 
