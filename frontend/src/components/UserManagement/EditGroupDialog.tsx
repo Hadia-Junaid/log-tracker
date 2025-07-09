@@ -42,6 +42,11 @@ export function EditGroupDialog({
   const [searchTrigger, setSearchTrigger] = useState(0);
   const [assignedAppIds, setAssignedAppIds] = useState<string[]>([]);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+  const [showUpdateConfirmation, setShowUpdateConfirmation] = useState(false);
+  
+  // Store original data for comparison
+  const [originalMembers, setOriginalMembers] = useState<MemberData[]>([]);
+  const [originalAppIds, setOriginalAppIds] = useState<string[]>([]);
 
   const searchInputRef = useRef<any>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -95,11 +100,13 @@ export function EditGroupDialog({
         initials: getInitials(member.name || member.email)
       })) || [];
       setSelectedMembers(membersData);
+      setOriginalMembers([...membersData]); // Store original members
 
       // Set assigned applications
       const assignedAppIds = groupDetails.assigned_applications?.map((app: any) => app._id) || [];
       console.log('Assigned app IDs from group details:', assignedAppIds);
       setAssignedAppIds(assignedAppIds);
+      setOriginalAppIds([...assignedAppIds]); // Store original app IDs
 
       setApplications(allApplications);
       
@@ -174,6 +181,11 @@ export function EditGroupDialog({
       return;
     }
 
+    // Show confirmation dialog instead of directly updating
+    setShowUpdateConfirmation(true);
+  };
+
+  const handleConfirmUpdate = async () => {
     // Store the selected application IDs immediately after successful validation
     const validatedAppIds = Object.keys(checkboxRefs.current).filter(appId => 
       checkboxRefs.current[appId]?.value === true
@@ -182,6 +194,7 @@ export function EditGroupDialog({
 
     setIsUpdating(true);
     setError('');
+    setShowUpdateConfirmation(false);
 
     try {
       const payload = {
@@ -211,6 +224,50 @@ export function EditGroupDialog({
     }
   };
 
+  const handleAbortUpdate = () => {
+    setShowUpdateConfirmation(false);
+  };
+
+  const getChangesSummary = () => {
+    const changes: string[] = [];
+    
+    // Check member changes
+    const currentMemberEmails = selectedMembers.map(m => m.email).sort();
+    const originalMemberEmails = originalMembers.map(m => m.email).sort();
+    
+    const addedMembers = currentMemberEmails.filter(email => !originalMemberEmails.includes(email));
+    const removedMembers = originalMemberEmails.filter(email => !currentMemberEmails.includes(email));
+    
+    if (addedMembers.length > 0) {
+      changes.push(`Added ${addedMembers.length} member(s): ${addedMembers.join(', ')}`);
+    }
+    if (removedMembers.length > 0) {
+      changes.push(`Removed ${removedMembers.length} member(s): ${removedMembers.join(', ')}`);
+    }
+    
+    // Check application changes (skip for admin group)
+    if (groupName.toLowerCase() !== 'admin group') {
+      const currentAppIds = Object.keys(checkboxRefs.current).filter(appId => 
+        checkboxRefs.current[appId]?.value === true
+      ).sort();
+      const originalAppIdsSorted = [...originalAppIds].sort();
+      
+      const addedApps = currentAppIds.filter(id => !originalAppIdsSorted.includes(id));
+      const removedApps = originalAppIdsSorted.filter(id => !currentAppIds.includes(id));
+      
+      if (addedApps.length > 0) {
+        const addedAppNames = addedApps.map(id => applications.find(app => app.id === id)?.name || id);
+        changes.push(`Added ${addedApps.length} application(s): ${addedAppNames.join(', ')}`);
+      }
+      if (removedApps.length > 0) {
+        const removedAppNames = removedApps.map(id => applications.find(app => app.id === id)?.name || id);
+        changes.push(`Removed ${removedApps.length} application(s): ${removedAppNames.join(', ')}`);
+      }
+    }
+    
+    return changes;
+  };
+
   const handleClose = () => {
     setSelectedMembers([]);
     setAllMembers([]);
@@ -219,6 +276,9 @@ export function EditGroupDialog({
     setError('');
     setSuccessMessage('');
     setIsDataLoaded(false);
+    setShowUpdateConfirmation(false);
+    setOriginalMembers([]);
+    setOriginalAppIds([]);
     
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
@@ -445,6 +505,57 @@ export function EditGroupDialog({
           {isUpdating ? 'Updating...' : 'Update Group'}
         </oj-button>
       </div>
+
+      {/* Update Confirmation Dialog */}
+      {showUpdateConfirmation && (
+        <oj-c-dialog 
+          opened={showUpdateConfirmation} 
+          on-oj-close={handleAbortUpdate}
+          width="600px"
+          height="400px"
+          min-width="500px"
+          max-width="90vw"
+          min-height="300px"
+          max-height="80vh"
+        >
+          <div slot="header">
+            <h3 id="update-confirmation-title">Confirm Group Update</h3>
+          </div>
+
+          <div slot="body">
+            <p style={{ marginBottom: '16px' }}>
+              You are about to update the group <strong>"{groupName}"</strong>.
+            </p>
+            
+            {(() => {
+              const changes = getChangesSummary();
+              return changes.length > 0 ? (
+                <div>
+                  <p style={{ marginBottom: '12px', fontWeight: 'bold' }}>Summary of changes:</p>
+                  <ul style={{ marginBottom: '16px', paddingLeft: '20px' }}>
+                    {changes.map((change, index) => (
+                      <li key={index} style={{ marginBottom: '8px' }}>{change}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : (
+                <p style={{ marginBottom: '16px', fontStyle: 'italic', color: '#6c757d' }}>
+                  No changes detected.
+                </p>
+              );
+            })()}
+            
+            <p>Are you sure you want to proceed with these changes?</p>
+          </div>
+
+          <div slot="footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
+            <oj-button on-oj-action={handleAbortUpdate} onClick={handleAbortUpdate}>Cancel</oj-button>
+            <oj-button chroming="callToAction" on-oj-action={handleConfirmUpdate} onClick={handleConfirmUpdate}>
+              Confirm
+            </oj-button>
+          </div>
+        </oj-c-dialog>
+      )}
     </oj-c-dialog>
   );
 } 
