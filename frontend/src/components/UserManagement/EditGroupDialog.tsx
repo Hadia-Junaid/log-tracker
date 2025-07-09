@@ -14,7 +14,6 @@ import 'oj-c/dialog';
 import 'oj-c/form-layout';
 import 'oj-c/list-view';
 import 'oj-c/skeleton';
-import 'oj-c/message-banner';
 import '../../styles/AddGroupDialog.css';
 
 interface EditGroupDialogProps {
@@ -38,6 +37,7 @@ export function EditGroupDialog({
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [searchTrigger, setSearchTrigger] = useState(0);
   const [assignedAppIds, setAssignedAppIds] = useState<string[]>([]);
@@ -194,8 +194,15 @@ export function EditGroupDialog({
 
       await userGroupService.updateUserGroup(groupId, payload);
 
-      onGroupUpdated();
-      handleClose();
+      // Set success message
+      setSuccessMessage('Group updated successfully');
+      
+      // Close dialog after a short delay to show the message
+      setTimeout(() => {
+        onGroupUpdated();
+        handleClose();
+      }, 1500);
+      
     } catch (err: any) {
       setError('Failed to update group. Please try again.');
       console.error('Failed to update group:', err);
@@ -210,6 +217,7 @@ export function EditGroupDialog({
     setApplications([]);
     setSearchTerm('');
     setError('');
+    setSuccessMessage('');
     setIsDataLoaded(false);
     
     if (searchTimeoutRef.current) {
@@ -262,10 +270,23 @@ export function EditGroupDialog({
           </div>
         ) : (
           <div class="oj-flex oj-sm-flex-direction-column">
+            {/* Success Message */}
+            {successMessage && (
+              <div class="oj-sm-margin-4x-bottom success-message-banner">
+                <div class="oj-flex oj-sm-align-items-center">
+                  <span class="oj-ux-ico-status-confirmation oj-text-color-success oj-sm-margin-2x-end"></span>
+                  <span class="oj-text-color-success">{successMessage}</span>
+                </div>
+              </div>
+            )}
+
             {/* Error Message */}
             {error && (
-              <div class="error-message">
-                {error}
+              <div class="oj-sm-margin-4x-bottom error-message-banner">
+                <div class="oj-flex oj-sm-align-items-center">
+                  <span class="oj-ux-ico-status-error oj-text-color-danger oj-sm-margin-2x-end"></span>
+                  <span class="oj-text-color-danger">{error}</span>
+                </div>
               </div>
             )}
 

@@ -14,7 +14,6 @@ import 'oj-c/dialog';
 import 'oj-c/form-layout';
 import 'oj-c/list-view';
 import 'oj-c/skeleton';
-import 'oj-c/message-banner';
 import '../../styles/AddGroupDialog.css';
 
 
@@ -31,6 +30,7 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
   const [checkedAppIds, setCheckedAppIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [searchTrigger, setSearchTrigger] = useState(0);
@@ -271,8 +271,15 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
 
       await userGroupService.createUserGroup(payload);
 
-      onGroupCreated();
-      handleClose();
+      // Set success message
+      setSuccessMessage('Group created successfully');
+      
+      // Close dialog after a short delay to show the message
+      setTimeout(() => {
+        onGroupCreated();
+        handleClose();
+      }, 1500);
+      
     } catch (err: any) {
       if (err.response?.status === 409) {
         setError('A group with this name already exists.');
@@ -291,6 +298,7 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
     setApplications([]);
     setSearchTerm('');
     setError('');
+    setSuccessMessage(''); // Clear success message
     setIsDataLoaded(false);
     
     if (searchTimeoutRef.current) {
@@ -345,10 +353,23 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
           </div>
         ) : (
           <div class="oj-flex oj-sm-flex-direction-column">
+            {/* Success Message */}
+            {successMessage && (
+              <div class="oj-sm-margin-4x-bottom success-message-banner">
+                <div class="oj-flex oj-sm-align-items-center">
+                  <span class="oj-ux-ico-status-confirmation oj-text-color-success oj-sm-margin-2x-end"></span>
+                  <span class="oj-text-color-success">{successMessage}</span>
+                </div>
+              </div>
+            )}
+
             {/* Error Message */}
             {error && (
-              <div class="error-message">
-                {error}
+              <div class="oj-sm-margin-4x-bottom error-message-banner">
+                <div class="oj-flex oj-sm-align-items-center">
+                  <span class="oj-ux-ico-status-error oj-text-color-danger oj-sm-margin-2x-end"></span>
+                  <span class="oj-text-color-danger">{error}</span>
+                </div>
               </div>
             )}
 
