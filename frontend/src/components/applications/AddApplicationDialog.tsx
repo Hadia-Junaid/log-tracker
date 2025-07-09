@@ -76,13 +76,13 @@ export default function AddApplicationDialog({
 
   const validate = () => {
     if (name.trim().length < 5 || name.length > 20)
-      return "Name must be 5–20 characters.";
+      return "Name must be 5-20 characters.";
     if (!hostname.trim() || hostname.length > 255)
       return "Hostname is required and must be less than 255 characters.";
     if (!environments.includes(environment))
       return "Please select a valid environment.";
     if (description && (description.length < 10 || description.length > 100))
-      return "Description must be 10–100 characters or left blank.";
+      return "Description must be 10-100 characters or left blank.";
     return null;
   };
 

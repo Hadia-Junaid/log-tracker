@@ -4,6 +4,7 @@ import Application from "../models/Application";
 import mongoose from "mongoose";
 import logger from "../utils/logger";
 import UserGroup from "../models/UserGroup";
+import { escapeRegex } from "../utils/escapeRegex";
 
 // Creates a new application
 // Expects req.body to contain application data
@@ -90,7 +91,10 @@ export const getApplications = async (
   const filter: Record<string, any> = {};
 
   if (search) {
-    filter.name = { $regex: search, $options: "i" };
+    const escapedSearch = escapeRegex(search);
+    logger.info(`Escaped search term: ${escapedSearch}`);
+    logger.debug(`Search regex: /${escapedSearch}/i`);
+    filter.name = { $regex: escapedSearch, $options: "i" };
   }
 
   if (status && status !== "all") {
