@@ -55,10 +55,10 @@ export default function Applications({ path }: Props) {
   const sortOptions = [
     { value: "name", label: "Name (A-Z)" },
     { value: "nameDesc", label: "Name (Z-A)" },
-    { value: "createdAt", label: "Created Date" },
     { value: "createdAtDesc", label: "Created Date (Newest First)" },
-    { value: "updatedAt", label: "Last Updated" },
+    { value: "createdAt", label: "Created Date (Oldest First)" },
     { value: "updatedAtDesc", label: "Last Updated (Newest First)" },
+    { value: "updatedAt", label: "Last Updated (Oldest First)" },
   ];
 
   const statusDataProvider = useMemo(() => {

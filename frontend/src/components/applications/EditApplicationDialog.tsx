@@ -253,14 +253,16 @@ export default function EditApplicationDialog({
           </oj-form-layout>
 
           <div class="oj-flex oj-sm-justify-content-end oj-sm-margin-2x-top">
-            <oj-button
-              chroming="outlined"
-              onojAction={onClose}
-              disabled={loading}
-              class="cancel-button"
+            <button
+              type="button"
+              class="oj-button cancel-button native-oj-button"
+              onClick={onClose}
             >
-              Cancel
-            </oj-button>
+              <div class="oj-button-label">
+                <span class="oj-button-text">Cancel</span>
+              </div>
+            </button>
+
             <oj-button
               chroming="solid"
               type="submit"
