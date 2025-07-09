@@ -22,7 +22,7 @@ const PinnedAppList = ({ apps, isPinned, userId, onRefresh, loading }: Props) =>
   }
 
   return (
-    <div class="oj-flex oj-flex-direction-column oj-sm-gap-1x">
+    <div class="oj-flex oj-flex-direction-column oj-sm-gap-1x manage-pins-grid">
       {apps.map((app) => (
         <ManagePinsCard
           app={app}
