@@ -74,105 +74,50 @@ export const getPinnedApps = async (req: Request, res: Response): Promise<void> 
     return;
 };
 
-export const addPinnedApps = async (req: Request, res: Response): Promise<void> => {
+export const updatePinnedApps = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { appIds } = req.body;
 
-    const { id, appId } = req.params;
+  if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+    logger.warn(`Invalid userId: ${id}`);
+    res.status(400).json({ error: 'Invalid userId' });
+    return;
+  }
 
-    // Validate that the application exists
-    const applicationExists = await Application.exists({ _id: appId });
-    if (!applicationExists) {
-        res.status(404).json({ message: 'Application not found' });
-        return;
+  if (!Array.isArray(appIds)) {
+    res.status(400).json({ error: 'appIds must be an array of application IDs' });
+    return;
+  }
+
+  try {
+    // Validate that all appIds exist
+    const validAppIds = await Application.find({ _id: { $in: appIds } }).distinct("_id");
+
+    if (validAppIds.length !== appIds.length) {
+      res.status(400).json({ error: "One or more applications do not exist" });
+      return;
     }
 
-    // Check if user exists and if app is already pinned
-    if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
-        logger.warn(`Invalid userId: ${id}`);
-        res.status(400).json({ error: 'Invalid userId' });
-        return;
-    }
-    const user = await User.findById(id).select('pinned_applications');
-
-    if (!user) {
-        logger.warn(`User not found: ${id}`);
-        res.status(404).json({ error: 'User not found' });
-        return;
-    }
-
-    // Check if app is already pinned
-    const isAlreadyPinned = user.pinned_applications.some(app => app._id.toString() === appId);
-
-    if (isAlreadyPinned) {
-
-        res.status(200).json({
-            message: 'Application is already pinned',
-            pinned_applications: user.pinned_applications
-        });
-        return;
-    }
-
-    // Add the application to pinned applications using $push
     const updatedUser = await User.findByIdAndUpdate(
-        id,
-        { $push: { pinned_applications: appId } },
-        { new: true, select: 'pinned_applications' }
-    ).populate('pinned_applications', 'name description'); // Populate with app details
+      id,
+      { pinned_applications: appIds },
+      { new: true }
+    ).populate('pinned_applications', 'name description');
 
     if (!updatedUser) {
-        res.status(500).json({ message: 'Failed to update user' });
-        return;
+      res.status(404).json({ error: 'User not found' });
+      return;
     }
 
     res.status(200).json({
-        message: 'Application pinned successfully',
-        pinned_applications: updatedUser.pinned_applications
+      message: 'Pinned applications updated successfully',
+      pinned_applications: updatedUser.pinned_applications
     });
-};
 
-export const removePinnedApps = async (req: Request, res: Response): Promise<void> => {
-    const { id, appId } = req.params;
-
-    if (!id || !appId) {
-        logger.warn("Unauthorized: User ID and Application ID are required to remove pinned apps");
-        res.status(401).json({ error: "User ID and Application ID are required" });
-        return;
-    }
-
-    const user = await User.findById(id).lean();
-
-    if (!user) {
-        logger.warn(`User not found: ${id}`);
-        res.status(404).json({ error: 'User not found' });
-        return;
-    }
-
-    const isPinned = user.pinned_applications.some(app => app._id.toString() === appId);
-
-    if (!isPinned) {
-        res.status(200).json({
-            message: 'Application is not pinned',
-            pinned_applications: user.pinned_applications
-        });
-        return;
-    }
-
-    // Remove using $pull
-    const updatedUser = await User.findByIdAndUpdate(
-        id,
-        { $pull: { pinned_applications: appId } },
-        { new: true, select: 'pinned_applications' }
-    );
-
-    if (!updatedUser) {
-        logger.error(`Failed to update user: ${id}`);
-        res.status(500).json({ error: 'Failed to update user' });
-        return;
-    }
-
-    res.status(200).json({
-        message: 'Application unpinned successfully',
-        pinned_applications: updatedUser.pinned_applications
-    });
+  } catch (error) {
+    logger.error(`Failed to update pinned apps for user ${id}:`, error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
 };
 
 // Fetch Active Applications
