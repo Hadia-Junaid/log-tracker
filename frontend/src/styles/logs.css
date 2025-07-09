@@ -1,13 +1,108 @@
-  .demo-table-container {
-    width: 93%;
-  }
+.logs-page-root {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
 
-  .input-filter {
-  height: 40px !important; /* Adjust as needed */
+.logs-pagination-container {
+  margin-top: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 2rem;
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  padding: 1rem 0 0.5rem 0;
+  /* background: #fff; */
+}
+
+.logs-pagination-btn {
+  padding: 0.5em 1.2em;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background: #fff;
+  color: #1976d2;
+  font-weight: 600;
+  cursor: pointer;
+  margin: 0 1.5em;
+  transition: all 0.2s;
+}
+.logs-pagination-btn.disabled,
+.logs-pagination-btn:disabled {
+  background: #f0f0f0;
+  color: #aaa;
+  cursor: not-allowed;
+  border: 1px solid #ccc;
+}
+
+.logs-pagination-info {
+  font-weight: 600;
+  font-size: 1.1em;
+  color: #222;
+  min-width: 5em;
+  text-align: center;
+}
+
+.demo-table-container {
+  width: 93%;
+}
+
+.input-filter {
+  height: 40px !important;
   box-sizing: border-box;
-  }
+}
 
-  .dropdown {
-    width: 15%
-  }
+.dropdown {
+  width: 15%;
+}
+
+/* Log Level Button Styles */
+.log-level-btn {
+  background: #fff;
+  color: #222;
+  border: 1px solid #bbb;
+  font-weight: 500;
+  border-radius: 6px;
+  box-shadow: none;
+  padding: 0.4em 1.2em;
+  transition: all 0.2s;
+  cursor: pointer;
+  margin-right: 0.5em;
+}
+.log-level-btn.selected.INFO {
+  background: #e3f0ff;
+  color: #0b3d91;
+  border: 2px solid #0b3d91;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.log-level-btn.selected.WARN {
+  background: #fffbe3;
+  color: #b88600;
+  border: 2px solid #b88600;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.log-level-btn.selected.ERROR {
+  background: #ffe3e3;
+  color: #b00020;
+  border: 2px solid #b00020;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+.log-level-btn.selected.DEBUG {
+  background: #f0f0f0;
+  color: #444;
+  border: 2px solid #888;
+  font-weight: 600;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.log-level-btn-row {
+  gap: 1rem;
+  align-items: center;
+  display: flex;
+}
 

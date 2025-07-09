@@ -10,6 +10,7 @@ import axios from "../api/axios";
 import "../styles/logs.css";
 import LogsHeader from "../components/logspage/LogsHeader";
 import LogsTable from "../components/logspage/LogsTable";
+import Pagination from "../components/logspage/Pagination";
 
 type LogEntry = {
   _id: string;
@@ -124,7 +125,7 @@ export default function Logs(props: Props) {
   ];
 
   return (
-    <div class="oj-sm-padding-6x logs-page" style="width: 100%; min-height: 100vh; display: flex; flex-direction: column;">
+    <div class="oj-sm-padding-6x logs-page logs-page-root">
       <LogsHeader
         search={search}
         setSearch={setSearch}
@@ -133,59 +134,15 @@ export default function Logs(props: Props) {
         setSelectedAppIds={setSelectedAppIds}
         logLevels={logLevels}
         setLogLevels={setLogLevels}
+        setPage={setPage}
       />
-      <LogsTable loading={loading} error={error} dataProvider={dataProvider} columns={columns} />
-      {/* Pagination Controls */}
-      <div style={{
-        marginTop: 'auto',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        minHeight: '2rem',
-        position: 'sticky',
-        bottom: 0,
-        // background: '#fff',
-        zIndex: 10,
-        padding: '1rem 0 0.5rem 0',
-      }}>
-        <button
-          onClick={() => setPage(page - 1)}
-          disabled={page === 1}
-          style={{
-            padding: '0.5em 1.2em',
-            borderRadius: '4px',
-            border: '1px solid #ccc',
-            background: page === 1 ? '#f0f0f0' : '#fff',
-            color: page === 1 ? '#aaa' : '#1976d2',
-            fontWeight: 600,
-            cursor: page === 1 ? 'not-allowed' : 'pointer',
-            marginRight: '1.5em',
-            transition: 'all 0.2s',
-          }}
-        >
-          Previous
-        </button>
-        <span style={{ fontWeight: 600, fontSize: '1.1em', color: '#222', minWidth: '5em', textAlign: 'center' }}>
-          Page {page} / {totalPages}
-        </span>
-        <button
-          onClick={() => setPage(page + 1)}
-          disabled={page === totalPages}
-          style={{
-            padding: '0.5em 1.2em',
-            borderRadius: '4px',
-            border: '1px solid #ccc',
-            background: page === totalPages ? '#f0f0f0' : '#fff',
-            color: page === totalPages ? '#aaa' : '#1976d2',
-            fontWeight: 600,
-            cursor: page === totalPages ? 'not-allowed' : 'pointer',
-            marginLeft: '1.5em',
-            transition: 'all 0.2s',
-          }}
-        >
-          Next
-        </button>
-      </div>
+      <LogsTable 
+        loading={loading} 
+        error={error} 
+        dataProvider={dataProvider} 
+        columns={columns} 
+      />
+      <Pagination page={page} totalPages={totalPages} setPage={setPage} />
     </div>
   );
 }
