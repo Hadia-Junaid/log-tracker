@@ -15,6 +15,7 @@ export interface GroupData {
   is_admin?: boolean;
   members?: string[];
   assigned_applications?: string[];
+  super_admin_emails?: string[];
 }
 
 export interface ApplicationOption {

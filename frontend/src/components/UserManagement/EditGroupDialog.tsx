@@ -49,6 +49,7 @@ export function EditGroupDialog({
   const [assignedAppIds, setAssignedAppIds] = useState<string[]>([]);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [showUpdateConfirmation, setShowUpdateConfirmation] = useState(false);
+  const [superAdminEmails, setSuperAdminEmails] = useState<string[]>([]);
   
   // Store original data for comparison
   const [originalMembers, setOriginalMembers] = useState<MemberData[]>([]);
@@ -91,6 +92,11 @@ export function EditGroupDialog({
     try {
       // Always need group details for edit dialog
       const groupDetails = await userGroupService.fetchGroupById(groupId);
+      
+      // Store super admin emails if this is the admin group
+      if (groupDetails.is_admin && groupDetails.super_admin_emails) {
+        setSuperAdminEmails(groupDetails.super_admin_emails);
+      }
 
       // Use cached data if available and fresh
       if (isBackgroundDataLoaded && cachedApplications.length > 0 && cachedUsers.length > 0) {
@@ -103,16 +109,16 @@ export function EditGroupDialog({
         localStorage.setItem('userGroups', JSON.stringify(currentGroups.data));
         
         // Process group details regardless of cache
-        const membersData: MemberData[] = groupDetails.members?.map((member: any) => ({
-          id: member._id || `fallback-id-${member.email}`,
-          name: member.name || member.email,
+        const membersData: MemberData[] = groupDetails.members.map((member) => ({
+          id: member._id,
+          name: member.name,
           email: member.email,
           initials: getInitials(member.name || member.email)
-        })) || [];
+        }));
         setSelectedMembers(membersData);
         setOriginalMembers([...membersData]);
 
-        const assignedAppIds = groupDetails.assigned_applications?.map((app: any) => app._id) || [];
+        const assignedAppIds = groupDetails.assigned_applications.map((app) => app._id) || [];
         setAssignedAppIds(assignedAppIds);
         setOriginalAppIds([...assignedAppIds]);
         
@@ -128,17 +134,17 @@ export function EditGroupDialog({
       ]);
 
       // Set current members
-      const membersData: MemberData[] = groupDetails.members?.map((member: any) => ({
-        id: member._id || `fallback-id-${member.email}`,
-        name: member.name || member.email,
+      const membersData: MemberData[] = groupDetails.members.map((member) => ({
+        id: member._id,
+        name: member.name,
         email: member.email,
         initials: getInitials(member.name || member.email)
-      })) || [];
+      }));
       setSelectedMembers(membersData);
       setOriginalMembers([...membersData]); // Store original members
 
       // Set assigned applications
-      const assignedAppIds = groupDetails.assigned_applications?.map((app: any) => app._id) || [];
+      const assignedAppIds = groupDetails.assigned_applications.map((app) => app._id);
       setAssignedAppIds(assignedAppIds);
       setOriginalAppIds([...assignedAppIds]); // Store original app IDs
 
@@ -163,11 +169,22 @@ export function EditGroupDialog({
   };
 
   const handleRemoveMember = (member: MemberData) => {
+    // Prevent removing superadmins from admin group
+    if (groupName.toLowerCase() === 'admin group' && superAdminEmails.includes(member.email)) {
+      setError('Cannot remove superadmin users from admin group');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
     setSelectedMembers((prev) => prev.filter((m) => m.id !== member.id));
   };
 
   const handleRemoveAllMembers = () => {
-    setSelectedMembers([]);
+    // For admin group, only remove non-superadmin members
+    if (groupName.toLowerCase() === 'admin group') {
+      setSelectedMembers((prev) => prev.filter(member => superAdminEmails.includes(member.email)));
+    } else {
+      setSelectedMembers([]);
+    }
   };
 
   const handleApplicationToggle = (appId: string) => {
@@ -181,8 +198,6 @@ export function EditGroupDialog({
       checkbox.value = !checkbox.value;
     }
   };
-
-
 
   const handleUpdateGroup = async () => {
     // Show confirmation dialog instead of directly updating
@@ -221,6 +236,10 @@ export function EditGroupDialog({
       // Handle validation errors from backend (400) and display the exact error message
       if (err.response?.status === 400) {
         setError(err.response.data.error);
+        //unset error after 3 seconds
+        setTimeout(() => {
+          setError('');
+        }, 3000);
       } else {
         setError('Failed to update group. Please try again.');
         // Only log unexpected errors (not validation errors)
@@ -394,6 +413,7 @@ export function EditGroupDialog({
                     class="oj-form-control-full-width"
                     placeholder="Search directory..."
                     ref={searchInputRef}
+                    
                   />
                 </div>
 
@@ -459,18 +479,25 @@ export function EditGroupDialog({
                               </div>
                               <div class="oj-typography-body-sm oj-text-color-secondary">
                                 {member.name}
+                                {groupName.toLowerCase() === 'admin group' && superAdminEmails.includes(member.email) && (
+                                  <span class="oj-typography-body-xs oj-text-color-info" style="margin-left: 8px;">(Superadmin)</span>
+                                )}
                               </div>
                             </div>
                           </div>
-                          <oj-button 
-                            class="member-remove-btn oj-button-sm" 
-                            chroming="borderless"
-                            display="icons"
-                            on-oj-action={() => handleRemoveMember(member)} onClick={() => handleRemoveMember(member)}
-                            title="Remove member"
-                          >
-                            <span slot="startIcon" class="oj-ux-ico-close"></span>
-                          </oj-button>
+                          {/* Only show remove button if not a superadmin in admin group */}
+                          {!(groupName.toLowerCase() === 'admin group' && superAdminEmails.includes(member.email)) && (
+                            <oj-button 
+                              class="member-remove-btn oj-button-sm" 
+                              chroming="borderless"
+                              display="icons"
+                              on-oj-action={() => handleRemoveMember(member)} 
+                              onClick={() => handleRemoveMember(member)}
+                              title="Remove member"
+                            >
+                              <span slot="startIcon" class="oj-ux-ico-close"></span>
+                            </oj-button>
+                          )}
                         </div>
                       </div>
                     ))

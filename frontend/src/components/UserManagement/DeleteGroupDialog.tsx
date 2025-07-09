@@ -60,8 +60,11 @@ export function DeleteGroupDialog({
       }, 1500);
       
     } catch (err) {
-      console.error("Delete failed:", err);
       setError("Failed to delete group.");
+      //unset error after 3 seconds
+      setTimeout(() => {
+        setError('');
+      }, 3000);
     } finally {
       setLoading(false);
     }

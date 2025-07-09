@@ -1,6 +1,24 @@
 import axios from '../api/axios';
 import { CreateGroupPayload, UpdateGroupPayload, GroupData, ApplicationOption, MemberData } from '../types/userManagement';
 
+interface GroupDetailsResponse {
+  _id: string;
+  name: string;
+  description?: string;
+  is_admin: boolean;
+  super_admin_emails?: string[];
+  members: Array<{
+    _id: string;
+    email: string;
+    name: string;
+  }>;
+  assigned_applications: Array<{
+    _id: string;
+    name: string;
+  }>;
+  createdAt?: string;
+}
+
 export const userGroupService = {
   // Fetch all user groups with pagination
   async fetchUserGroups(page: number = 1, pageSize: number = 8, search: string = ""): Promise<{ data: GroupData[], total: number }> {
@@ -75,8 +93,8 @@ export const userGroupService = {
     await axios.delete(`/user-groups/${groupId}`);
   },
 
-  // Fetch group details by ID
-  async fetchGroupById(groupId: string): Promise<GroupData> {
+  // Fetch group by ID
+  async fetchGroupById(groupId: string): Promise<GroupDetailsResponse> {
     const response = await axios.get(`/user-groups/${groupId}`);
     return response.data;
   },

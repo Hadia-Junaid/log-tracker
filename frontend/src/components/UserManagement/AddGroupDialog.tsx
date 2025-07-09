@@ -172,6 +172,10 @@ export function AddGroupDialog({
       // Handle validation errors from backend (400) and display the exact error message
       if (err.response?.status === 400) {
         setError(err.response.data.error);
+        //unset error after 3 seconds
+        setTimeout(() => {
+          setError('');
+        }, 3000);
       } else {
         setError('Failed to create group. Please try again.');
         // Only log unexpected errors (not validation errors)
