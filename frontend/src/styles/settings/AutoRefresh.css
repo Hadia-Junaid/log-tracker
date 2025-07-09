@@ -3,33 +3,69 @@
   align-items: center;
 }
 
-.custom-switch {
-  --oj-switch-track-bg-color: #e5e7eb;
+.professional-switch {
+  /* Track Colors */
+  --oj-switch-track-bg-color: #e5e5e5;
   --oj-switch-track-bg-color-selected: #3b82f6;
-  --oj-switch-thumb-bg-color: white;
-  --oj-switch-thumb-border-color: #d1d5db;
+  --oj-switch-track-bg-color-hover: #d4d4d4;
+  --oj-switch-track-bg-color-selected-hover: #2563eb;
+
+  /* Thumb Colors */
+  --oj-switch-thumb-bg-color: #ffffff;
+  --oj-switch-thumb-bg-color-selected: #ffffff;
+  --oj-switch-thumb-border-color: #d4d4d4;
   --oj-switch-thumb-border-color-selected: #3b82f6;
-  --oj-switch-track-border-radius: 12px;
-  --oj-switch-thumb-border-radius: 10px;
-  transform: scale(1.2);
+  --oj-switch-thumb-border-color-hover: #a3a3a3;
+  --oj-switch-thumb-border-color-selected-hover: #2563eb;
+
+  /* Shape */
+  --oj-switch-track-border-radius: 14px;
+  --oj-switch-thumb-border-radius: 12px;
+  --oj-switch-track-height: 24px;
+  --oj-switch-track-width: 44px;
+  --oj-switch-thumb-height: 20px;
+  --oj-switch-thumb-width: 20px;
+
+  /* Transitions */
+  --oj-switch-thumb-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --oj-switch-track-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Shadow */
+  --oj-switch-thumb-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --oj-switch-thumb-shadow-selected: 0 2px 4px rgba(59, 130, 246, 0.2);
+
+  transform: scale(1.1);
   transition: all 0.2s ease;
 }
 
-.custom-switch:hover {
-  --oj-switch-track-bg-color: #d1d5db;
+.professional-switch:hover {
+  transform: scale(1.15);
 }
 
-.custom-switch:hover[value="true"] {
-  --oj-switch-track-bg-color-selected: #2563eb;
-}
-
-.custom-switch:focus {
+.professional-switch:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-radius: 16px;
 }
 
-/* Animation for switch state changes */
-.custom-switch {
-  --oj-switch-thumb-transition: transform 0.2s ease;
-  --oj-switch-track-transition: background-color 0.2s ease;
+.professional-switch:active {
+  transform: scale(1.05);
+}
+
+/* Enhanced visual feedback */
+.professional-switch[value="true"] {
+  --oj-switch-thumb-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  .professional-switch {
+    --oj-switch-thumb-transition: none;
+    --oj-switch-track-transition: none;
+    transform: none;
+  }
+
+  .professional-switch:hover {
+    transform: none;
+  }
 }
