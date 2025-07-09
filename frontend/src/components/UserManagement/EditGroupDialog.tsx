@@ -187,7 +187,7 @@ export function EditGroupDialog({
         name: groupName,
         members: selectedMembers.map(m => m.email),
         assigned_applications: selectedAppIds,
-        is_admin: false
+        is_admin: groupName.toLowerCase() === 'admin group'
       };
 
       await userGroupService.updateUserGroup(groupId, payload);
