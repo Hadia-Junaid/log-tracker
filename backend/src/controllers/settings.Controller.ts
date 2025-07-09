@@ -164,11 +164,19 @@ export const createAtRiskRule = async (
     return;
   }
 
+  // ❗ Check for duplicate rule
+  const existingRule = await AtRiskRule.findOne({ type_of_logs, operator });
+  if (existingRule) {
+    res.status(409).json({ error: 'A rule with the same type_of_logs and operator already exists.' });
+    return;
+  }
+
   const rule = await AtRiskRule.create(req.body);
 
   logger.info('✅ Created new at-risk rule');
   res.status(201).json(rule);
 };
+
 
 // PATCH /api/at-risk-rules/:id
 export const updateAtRiskRule = async (
@@ -194,6 +202,18 @@ export const updateAtRiskRule = async (
     return;
   }
 
+  // ❗ Check for duplicates excluding current rule
+  const duplicate = await AtRiskRule.findOne({
+    _id: { $ne: ruleId },
+    type_of_logs,
+    operator
+  });
+
+  if (duplicate) {
+    res.status(409).json({ error: 'Another rule with the same type_of_logs and operator already exists.' });
+    return;
+  }
+
   const updatedRule = await AtRiskRule.findByIdAndUpdate(ruleId, req.body, { new: true });
 
   if (!updatedRule) {
@@ -204,6 +224,7 @@ export const updateAtRiskRule = async (
   logger.info(`✅ Updated at-risk rule: ${ruleId}`);
   res.status(200).json(updatedRule);
 };
+
 
 // DELETE /api/at-risk-rules/:id
 export const deleteAtRiskRule = async (

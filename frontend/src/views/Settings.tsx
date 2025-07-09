@@ -3,7 +3,7 @@ import { h } from 'preact';
 import SettingsPanel from './logviewsettings/SettingsPanel';
 
 type SettingsProps = {
-  path?: string; // ✅ allow Preact Router to pass this
+  path?: string; // for Preact Router
 };
 
 const Settings = (_props: SettingsProps) => {

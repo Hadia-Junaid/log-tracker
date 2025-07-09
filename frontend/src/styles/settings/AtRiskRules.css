@@ -1,0 +1,286 @@
+.atrisk-container {
+  width: 100%;
+}
+
+.atrisk-header {
+  margin-bottom: 24px;
+}
+
+.atrisk-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #111827;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+}
+
+.atrisk-description {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.atrisk-rules-list {
+  margin-bottom: 24px;
+}
+
+/* Empty State */
+.atrisk-empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background: #f9fafb;
+  border: 2px dashed #d1d5db;
+  border-radius: 12px;
+}
+
+.atrisk-empty-icon {
+  color: #9ca3af;
+  margin-bottom: 16px;
+}
+
+.atrisk-empty-title {
+  font-size: 16px;
+  font-weight: 500;
+  color: #374151;
+  margin: 0 0 8px 0;
+}
+
+.atrisk-empty-text {
+  font-size: 14px;
+  color: #6b7280;
+  margin: 0;
+}
+
+/* Rule Cards */
+.atrisk-rule-card {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  transition: all 0.2s ease;
+}
+
+.atrisk-rule-card:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.atrisk-rule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.atrisk-rule-number {
+  font-size: 12px;
+  font-weight: 500;
+  color: #3b82f6;
+  background: #eff6ff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.atrisk-delete-btn {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.atrisk-delete-btn:hover {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.atrisk-rule-content {
+  space-y: 12px;
+}
+
+.atrisk-rule-sentence {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.atrisk-text {
+  font-size: 14px;
+  color: #374151;
+  white-space: nowrap;
+}
+
+.atrisk-field-group {
+  display: inline-flex;
+  align-items: center;
+}
+
+.atrisk-select,
+.atrisk-input {
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 14px;
+  background: white;
+  transition: all 0.2s ease;
+  min-width: 0;
+}
+
+.atrisk-select {
+  min-width: 100px;
+}
+
+.atrisk-number-input {
+  width: 70px;
+  text-align: center;
+}
+
+.atrisk-select:focus,
+.atrisk-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.atrisk-select:hover,
+.atrisk-input:hover {
+  border-color: #9ca3af;
+}
+
+.atrisk-rule-action {
+  padding: 12px 16px;
+  background: #f0f9ff;
+  border: 1px solid #e0f2fe;
+  border-radius: 8px;
+  margin-top: 12px;
+}
+
+.atrisk-action-text {
+  font-size: 14px;
+  font-weight: 500;
+  color: #0369a1;
+}
+
+/* Actions */
+.atrisk-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 16px;
+  border-top: 1px solid #f3f4f6;
+}
+
+.atrisk-add-btn {
+  --oj-button-outlined-border-color: #3b82f6;
+  --oj-button-outlined-text-color: #3b82f6;
+  --oj-button-outlined-bg-color: white;
+  border-radius: 8px;
+  padding: 0 16px;
+  height: 40px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.atrisk-add-btn:hover {
+  --oj-button-outlined-bg-color: #f0f9ff;
+  --oj-button-outlined-border-color: #2563eb;
+}
+
+.atrisk-save-btn {
+  --oj-button-solid-bg-color: #3b82f6;
+  --oj-button-solid-border-color: #3b82f6;
+  border-radius: 8px;
+  padding: 0 20px;
+  height: 40px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.atrisk-save-btn:hover {
+  --oj-button-solid-bg-color: #2563eb;
+  --oj-button-solid-border-color: #2563eb;
+}
+
+.atrisk-messages {
+  margin-top: 16px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .atrisk-rule-sentence {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .atrisk-field-group {
+    width: 100%;
+  }
+  
+  .atrisk-select,
+  .atrisk-input {
+    width: 100%;
+  }
+  
+  .atrisk-number-input {
+    width: 100%;
+    text-align: left;
+  }
+  
+  .atrisk-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .atrisk-add-btn,
+  .atrisk-save-btn {
+    width: 100%;
+  }
+}
+
+/* Animation for new rules */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.atrisk-rule-card {
+  animation: slideIn 0.3s ease-out;
+}
+
+/* Focus styles for accessibility */
+.atrisk-delete-btn:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Log type specific styling */
+.atrisk-select option[value="Error"] {
+  color: #dc2626;
+}
+
+.atrisk-select option[value="Warning"] {
+  color: #d97706;
+}
+
+.atrisk-select option[value="Info"] {
+  color: #2563eb;
+}
