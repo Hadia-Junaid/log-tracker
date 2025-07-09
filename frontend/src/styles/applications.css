@@ -1,8 +1,8 @@
 /* src/styles/applications.css */
-.page-container {
-  padding: 32px 48px;
+div.page-container {
+  padding-left: 40px !important;
+  padding-right: 40px !important;
 }
-
 .applications-header {
   display: flex;
   flex-direction: column;
@@ -97,14 +97,14 @@
 }
 
 /* 2. For medium screens (e.g., tablets), switch to 2 columns. */
-@media (min-width: 600px) {
+@media (min-width: 1120px) {
   .applications-container {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 /* 3. For large screens, switch to 3 columns and stop there. */
-@media (min-width: 900px) {
+@media (min-width: 1200px) {
   .applications-container {
     grid-template-columns: repeat(3, 1fr);
   }
