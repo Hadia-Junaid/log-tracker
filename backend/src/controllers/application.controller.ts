@@ -94,8 +94,10 @@ export const getApplications = async (
   }
 
   if (status && status !== "all") {
-    filter.status = status;
+    filter.isActive = status === "active" ? true : false;
   }
+
+  logger.info("Filter State:" + filter);
 
   if (environment && environment !== "all") {
     filter.environment = environment;
@@ -117,6 +119,7 @@ export const getApplications = async (
   const [total, apps] = await Promise.all([
     Application.countDocuments(filter),
     Application.find(filter)
+    .collation({ locale: "en", strength: 2 })
       .sort(sortOption)
       .skip((page - 1) * pageSize)
       .limit(pageSize)
