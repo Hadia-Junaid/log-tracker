@@ -19,6 +19,9 @@
           "oj-checkbox-set": any;
           "oj-c-message-banner": any;
           "oj-c-message-toast": any;
+          "oj-c-flex": any;
+    "oj-c-list-item-layout": any;
+    "oj-c-flex": any;
         }
       }
 

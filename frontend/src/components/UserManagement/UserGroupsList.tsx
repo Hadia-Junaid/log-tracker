@@ -1,5 +1,9 @@
-import { h } from "preact";
+import { h } from 'preact';
 import { GroupData } from "../../types/userManagement";
+import "oj-c/list-item-layout";
+import "ojs/ojbutton";
+import "ojs/ojprogress-circle";
+import "../../styles/userManagement.css";
 
 type Props = {
   loading: boolean;
@@ -19,11 +23,17 @@ function formatDateDMY(dateString?: string) {
   return `${day}-${month}-${year}`;
 }
 
-export default function UserGroupsList({ loading, error, groups, searchTerm = "", onEditClick, onDeleteClick }: Props) {
-
-  if(loading) {
+export default function UserGroupsList({
+  loading,
+  error,
+  groups,
+  searchTerm = "",
+  onEditClick,
+  onDeleteClick,
+}: Props) {
+  if (loading) {
     return (
-      <div style={{ textAlign: 'center', marginTop: '20px' }}>
+      <div style={{ textAlign: "center", marginTop: "20px" }}>
         <oj-progress-circle value={-1} size="lg" />
         <p>Loading groups...</p>
       </div>
@@ -31,20 +41,18 @@ export default function UserGroupsList({ loading, error, groups, searchTerm = ""
   }
 
   if (error) {
-    return <p class="oj-text-color-danger" style={{ textAlign: 'center', marginTop: '20px' }}>{error}</p>;
+    return (
+      <p class="oj-text-color-danger" style={{ textAlign: "center", marginTop: "20px" }}>
+        {error}
+      </p>
+    );
   }
 
   if (groups.length === 0) {
     return (
-      <div
-        class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center"
-        style="height: 40vh;"
-      >
+      <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center" style="height: 40vh;">
         <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center oj-sm-flex-direction-column">
-          <p
-            class="oj-text-color-secondary"
-            style="font-weight: bold; font-size: 1.25rem; text-align: center;"
-          >
+          <p class="oj-text-color-secondary" style="font-weight: bold; font-size: 1.25rem; text-align: center;">
             {searchTerm
               ? "No groups match your search criteria!"
               : "Create your first user group to get started."}
@@ -54,74 +62,70 @@ export default function UserGroupsList({ loading, error, groups, searchTerm = ""
     );
   }
 
-  return (
-    <div class="groups-list">
-      {groups.map((group) => {
-        console.log('Group data:', group.groupName, 'is_admin:', group.is_admin);
-        return (
-          <div key={group.groupId} class="group-item oj-list-item-layout">
-            <div class="oj-flex oj-sm-flex-direction-column">
-              {/* Group Name */}
+  const renderGroupItem = (item: GroupData) => {
+    return (
+      <div class="group-list-item">
+        <oj-c-list-item-layout inset="none">
+          <div class="group-content">
+            <div class="group-main-content">
               <div class="group-name-container">
                 <span class="oj-typography-heading-sm oj-text-color-primary">
-                  {group.groupName}
+                  {item.groupName}
                 </span>
-                {group.is_admin && (
-                  <span class="system-group-pill">System Group</span>
-                )}
-                <span
-                  class={`status-pill ${group.is_admin ? "status-active" : "status-inactive"}`}
-                >
-                  {group.is_admin ? "Active" : "Inactive"}
+                {item.is_admin && <span class="system-group-pill">System Group</span>}
+                <span class={`status-pill ${item.is_admin ? 'status-active' : 'status-inactive'}`}>
+                  {item.is_admin ? 'Active' : 'Inactive'}
                 </span>
               </div>
 
-              {/* Description */}
-              {group.description && (
-                <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
-                  {group.description}
-                </span>
+              {item.description && (
+                <div class="group-description">
+                  {item.description}
+                </div>
               )}
 
-              {/* Member Count and Date */}
-              <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
-                Created: {formatDateDMY(group.createdDate)} •{" "}
-                {group.createdAgo}
-              </span>
+              <div class="group-meta">
+                Created: {formatDateDMY(item.createdDate)} • {item.createdAgo}
+              </div>
+
               <div class="group-counts-row">
-                <span class="group-count-bold">
-                  Members: {group.members?.length || 0}
-                </span>
-                <span class="group-count-bold">
-                  Applications: {group.assigned_applications?.length || 0}
-                </span>
+                <span class="group-count-bold">Members: {item.members?.length || 0}</span>
+                <span class="group-count-bold">Applications: {item.assigned_applications?.length || 0}</span>
               </div>
             </div>
 
-            <div class="action-buttons">
-              <oj-button
-                display="all"
-                class="oj-button-sm"
-                onojAction={() => onEditClick(group)}
-              >
-                <span slot="startIcon" class="oj-ux-ico-edit"></span>
-                Edit
-              </oj-button>
-
-              {!group.is_admin && group.groupName.toLowerCase() !== 'admin group' && (
-                <oj-button
-                  display="all"
-                  class="oj-button-sm oj-button-danger"
-                  onojAction={() => onDeleteClick(group)}
-                >
-                  <span slot="startIcon" class="oj-ux-ico-trash"></span>
-                  Delete
+            <div class="group-actions">
+              <div class="action-buttons">
+                <oj-button display="all" class="oj-button-sm" onojAction={() => onEditClick(item)}>
+                  <span slot="startIcon" class="oj-ux-ico-edit"></span>
+                  Edit
                 </oj-button>
-              )}
+
+                {!item.is_admin && item.groupName.toLowerCase() !== 'admin group' && (
+                  <oj-button
+                    display="all"
+                    class="oj-button-sm oj-button-danger"
+                    onojAction={() => onDeleteClick(item)}
+                  >
+                    <span slot="startIcon" class="oj-ux-ico-trash"></span>
+                    Delete
+                  </oj-button>
+                )}
+              </div>
             </div>
           </div>
-        );
-      })}
+        </oj-c-list-item-layout>
+      </div>
+    );
+  };
+
+  return (
+    <div class="groups-list-container">
+      {groups.map((group) => (
+        <div key={group.groupId}>
+          {renderGroupItem(group)}
+        </div>
+      ))}
     </div>
   );
 } 

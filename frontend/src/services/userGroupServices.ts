@@ -11,6 +11,14 @@ export const userGroupService = {
         search,
       },
     });
+
+    //if server returns 500 error, send data as empty array
+    if (response.status === 500) {
+      return {
+        data: [],
+        total: 0
+      };
+    }
     
     const groups = response.data.data.map((group: any) => ({
       groupId: group._id,
