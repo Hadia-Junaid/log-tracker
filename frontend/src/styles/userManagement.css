@@ -1,8 +1,12 @@
 /* ----- GENERAL LAYOUT CONTAINER ----- */
 .oj-hybrid-padding {
-  padding: 24px;
-  max-width: 1200px;
+  padding: 24px 32px;
+  max-width: 1400px;
   margin: 0 auto;
+  width: calc(100% - 64px);
+  box-sizing: border-box;
+  position: relative;
+  overflow-x: hidden;
 }
 
 /* ----- TITLE SECTION ----- */
@@ -238,27 +242,49 @@
 }
 
 /* ----- RESPONSIVENESS ----- */
-@media (max-width: 768px) {
-  .group-content {
-    flex-direction: column;
-    gap: 16px;
+@media (min-width: 1400px) {
+  .oj-hybrid-padding {
+    max-width: 1600px;
+    width: calc(100% - 96px);
+    padding: 24px 48px;
+  }
+}
+
+@media (min-width: 1800px) {
+  .oj-hybrid-padding {
+    max-width: 1800px;
+    width: calc(100% - 128px);
+    padding: 24px 64px;
+  }
+}
+
+@media (max-width: 480px) {
+  .oj-hybrid-padding {
+    padding: 16px 20px;
+    width: calc(100% - 40px);
+    max-width: none;
+    margin: 0;
+    position: static;
+    overflow-x: visible;
   }
   
-  .group-actions {
-    align-self: stretch;
-    justify-content: flex-end;
+  .groups-list-container {
+    width: 100%;
+    max-width: none;
   }
   
-  .group-name-container {
-    flex-wrap: wrap;
-  }
-  
-  .group-counts-row {
-    gap: 16px;
+  .group-list-item {
+    width: 100%;
+    box-sizing: border-box;
   }
 }
 
 @media (max-width: 600px) {
+  .oj-hybrid-padding {
+    padding: 20px 24px;
+    width: calc(100% - 48px);
+  }
+  
   .search-add-row,
   .groups-header-row {
     flex-direction: column;
@@ -282,5 +308,25 @@
   .action-buttons oj-button {
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 768px) {
+  .group-content {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .group-actions {
+    align-self: stretch;
+    justify-content: flex-end;
+  }
+  
+  .group-name-container {
+    flex-wrap: wrap;
+  }
+  
+  .group-counts-row {
+    gap: 16px;
   }
 } 

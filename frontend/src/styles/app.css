@@ -6,6 +6,33 @@
         This is where any of your application specific styles should be included
 */
 
+/* Main layout responsiveness */
+.oj-web-applayout-content {
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  .oj-web-applayout-content {
+    flex-direction: row;
+  }
+  
+  .oj-web-applayout-content main.oj-flex-item {
+    flex: 1;
+    min-width: 0;
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 480px) {
+  .oj-web-applayout-content {
+    padding: 0;
+  }
+  
+  .oj-web-applayout-content main.oj-flex-item {
+    width: calc(100vw - 50px);
+    max-width: calc(100vw - 50px);
+  }
+}
 
 .demo-oracle-icon {
     width:137px;
