@@ -136,6 +136,14 @@ export default function Applications({ path }: Props) {
     }
   };
 
+  const handleResetFilters = () => {
+    setStatusFilter("all");
+    setEnvironmentFilter("all");
+    setSortOption("name");
+    setSearchQuery("");
+    setCurrentPage(1);
+  };
+
   return (
     <div class="page-container">
       <div class="applications-page-content">
@@ -158,7 +166,9 @@ export default function Applications({ path }: Props) {
               <span slot="startIcon" class="oj-ux-ico-plus"></span>
               Add Application
             </oj-button>
-            <div class="applications-total">Total Applications: {totalCount}</div>
+            <div class="applications-total">
+              Total Applications: {totalCount}
+            </div>
           </div>
 
           <div class="applications-toolbar">
@@ -207,9 +217,19 @@ export default function Applications({ path }: Props) {
                 value={sortOption}
                 onvalueChanged={(e: CustomEvent) => {
                   setSortOption(e.detail.value);
-                  setCurrentPage(1); // Reset to first page on sort change
+                  setCurrentPage(1);
                 }}
               ></oj-select-single>
+
+              {/* Reset Filters Button */}
+              <oj-button
+                chroming="solid"
+                class="add-button"
+                onojAction={handleResetFilters}
+              >
+                <span slot="startIcon" class="oj-ux-ico-refresh"></span>
+                Reset
+              </oj-button>
             </div>
           </div>
         </div>
