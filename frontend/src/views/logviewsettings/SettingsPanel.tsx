@@ -33,6 +33,7 @@ const SettingsPanel = () => {
     logsPerPage: "50" as LogsPerPageValue,
   })
   const [message, setMessage] = useState<MessageItem | null>(null)
+  const [showConfirmation, setShowConfirmation] = useState(false)
 
   useEffect(() => {
     setIsLoading(true)
@@ -85,9 +86,13 @@ const SettingsPanel = () => {
     autoRefreshTime !== originalSettings.autoRefreshTime ||
     logsPerPage !== originalSettings.logsPerPage
 
-  const handleSave = async () => {
+  const handleSaveInitiate = () => {
     if (!userId || !hasChanges) return
+    setShowConfirmation(true)
+  }
 
+  const handleSaveConfirm = async () => {
+    setShowConfirmation(false)
     setIsSaving(true)
     try {
       await updateLogSettings(userId, {
@@ -95,11 +100,10 @@ const SettingsPanel = () => {
         autoRefreshTime,
         logsPerPage: Number.parseInt(logsPerPage),
       })
-
       setMessage({
         severity: "confirmation",
         summary: "Success",
-        detail: "Settings updated successfully",
+        detail: "Changes Updated Successfully",
       })
       setOriginalSettings({ autoRefresh, autoRefreshTime, logsPerPage })
     } catch (error) {
@@ -113,9 +117,17 @@ const SettingsPanel = () => {
     }
   }
 
+  const handleSaveCancel = () => {
+    setShowConfirmation(false)
+    setMessage({
+      severity: "info",
+      summary: "Action Cancelled",
+      detail: "Settings changes were not saved.",
+    })
+  }
+
   const handleReset = async () => {
     if (!userId) return
-
     setIsSaving(true)
     try {
       await resetLogSettings(userId)
@@ -171,6 +183,13 @@ const SettingsPanel = () => {
                 <circle cx="12" cy="12" r="10" />
                 <line x1="15" y1="9" x2="9" y2="15" />
                 <line x1="9" y1="9" x2="15" y2="15" />
+              </svg>
+            )}
+            {message.severity === "info" && (
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="12" y1="8" x2="12" y2="12" />
+                <line x1="12" y1="16" x2="12.01" y2="16" />
               </svg>
             )}
           </div>
@@ -275,7 +294,7 @@ const SettingsPanel = () => {
                 chroming="solid"
                 class={`save-button ${hasChanges ? "save-button-active" : ""}`}
                 disabled={!hasChanges || isSaving}
-                onojAction={handleSave}
+                onojAction={handleSaveInitiate}
               >
                 {isSaving ? (
                   <div class="button-content">
@@ -373,6 +392,47 @@ const SettingsPanel = () => {
           )}
         </div>
       </div>
+
+      {/* Confirmation Modal */}
+      {showConfirmation && (
+        <div class="modal-overlay">
+          <div class="modal-content confirmation-modal">
+            <div class="modal-header">
+              <div class="modal-icon confirmation-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="modal-title">Confirm Changes</h3>
+              <button class="modal-close-btn" onClick={handleSaveCancel}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p class="modal-message">Are you sure you want to save these changes?</p>
+              <p class="modal-submessage">This will apply your new settings immediately.</p>
+            </div>
+            <div class="modal-footer">
+              <oj-button chroming="outlined" class="modal-cancel-btn" onojAction={handleSaveCancel} disabled={isSaving}>
+                Cancel
+              </oj-button>
+              <oj-button chroming="solid" class="modal-confirm-btn" onojAction={handleSaveConfirm} disabled={isSaving}>
+                {isSaving ? (
+                  <div class="button-content">
+                    <div class="button-spinner"></div>
+                    <span>Confirming...</span>
+                  </div>
+                ) : (
+                  <span>Confirm</span>
+                )}
+              </oj-button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

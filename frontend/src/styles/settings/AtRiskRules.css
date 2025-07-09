@@ -160,6 +160,7 @@
   overflow: hidden;
   animation: slideInUp 0.6s ease-out forwards;
   opacity: 0;
+  cursor: pointer;
 }
 
 .atrisk-rule-card::before {
@@ -281,15 +282,161 @@
 
 /* ===== RULE CONTENT ===== */
 .atrisk-rule-content {
-  space-y: 16px;
+  margin-bottom: 16px;
 }
 
-.rule-sentence {
+.rule-summary {
+  font-size: 14px;
+  color: var(--neutral-700);
+  line-height: 1.6;
+  margin-bottom: 16px;
+  padding: 16px;
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
+  border-radius: 8px;
+}
+
+.rule-summary .summary-value {
+  font-weight: 600;
+  color: var(--primary-600);
+}
+
+/* ===== RULE ACTION ===== */
+.rule-action {
   display: flex;
   align-items: center;
-  flex-wrap: wrap;
   gap: 12px;
-  margin-bottom: 20px;
+  padding: 16px 20px;
+  background: var(--warning-50);
+  border: 1px solid var(--warning-200);
+  border-radius: 10px;
+}
+
+.action-icon {
+  color: var(--warning-600);
+  flex-shrink: 0;
+}
+
+.action-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--warning-700);
+}
+
+/* ===== EDIT HINT ===== */
+.rule-edit-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 8px;
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
+  border-radius: 6px;
+  font-size: 12px;
+  color: var(--primary-600);
+  opacity: 0;
+  transition: all 0.2s ease;
+}
+
+.atrisk-rule-card:hover .rule-edit-hint {
+  opacity: 1;
+}
+
+/* ===== ACTIONS ===== */
+.atrisk-actions {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 24px 0;
+  border-top: 1px solid var(--neutral-200);
+}
+
+.atrisk-add-btn {
+  --oj-button-outlined-border-color: var(--primary-500);
+  --oj-button-outlined-text-color: var(--primary-600);
+  --oj-button-outlined-bg-color: white;
+  border-radius: 8px;
+  padding: 0 20px;
+  height: 40px;
+  font-weight: 600;
+  font-size: 14px;
+  transition: all 0.3s ease;
+}
+
+.atrisk-add-btn:hover {
+  --oj-button-outlined-bg-color: var(--primary-50);
+  --oj-button-outlined-border-color: var(--primary-600);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+/* ===== BUTTON CONTENT ALIGNMENT ===== */
+.button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  height: 100%;
+}
+
+.save-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  flex-shrink: 0;
+}
+
+/* Ensure proper button structure */
+.atrisk-add-btn {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.atrisk-add-btn .button-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+
+.atrisk-add-btn [slot="startIcon"] {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.atrisk-messages {
+  margin-top: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== MODAL SPECIFIC STYLES ===== */
+.rule-sentence-modal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: center;
   padding: 20px;
   background: var(--neutral-50);
   border: 1px solid var(--neutral-200);
@@ -352,154 +499,15 @@
   min-width: 100px;
 }
 
-/* ===== RULE ACTION ===== */
-.rule-action {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 20px;
-  background: var(--warning-50);
-  border: 1px solid var(--warning-200);
-  border-radius: 10px;
-  margin-top: 16px;
-}
-
-.action-icon {
-  color: var(--warning-600);
-  flex-shrink: 0;
-}
-
-.action-text {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--warning-700);
-}
-
-/* ===== ACTIONS ===== */
-.atrisk-actions {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  justify-content: flex-start;
-  padding: 24px 0;
-  border-top: 1px solid var(--neutral-200);
-}
-
-.atrisk-add-btn {
-  --oj-button-outlined-border-color: var(--primary-500);
-  --oj-button-outlined-text-color: var(--primary-600);
-  --oj-button-outlined-bg-color: white;
-  border-radius: 8px;
-  padding: 0 20px;
-  height: 40px;
-  font-weight: 600;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.atrisk-add-btn:hover {
-  --oj-button-outlined-bg-color: var(--primary-50);
-  --oj-button-outlined-border-color: var(--primary-600);
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
-}
-
-.atrisk-save-btn {
-  --oj-button-solid-bg-color: var(--primary-500);
-  --oj-button-solid-border-color: var(--primary-500);
-  border-radius: 8px;
-  padding: 0 24px;
-  height: 40px;
-  font-weight: 600;
-  font-size: 14px;
-  transition: all 0.3s ease;
-}
-
-.atrisk-save-btn:hover:not(:disabled) {
-  --oj-button-solid-bg-color: var(--primary-600);
-  --oj-button-solid-border-color: var(--primary-600);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-}
-
-.atrisk-save-btn:disabled {
-  --oj-button-solid-bg-color: var(--neutral-400);
-  --oj-button-solid-border-color: var(--neutral-400);
-  cursor: not-allowed;
-  transform: none;
-  box-shadow: none;
-}
-
-/* ===== BUTTON CONTENT ALIGNMENT ===== */
-.button-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: 100%;
-  height: 100%;
-}
-
-.save-spinner {
-  width: 14px;
-  height: 14px;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-top: 2px solid white;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  flex-shrink: 0;
-}
-
-/* Ensure proper button structure */
-.atrisk-save-btn,
-.atrisk-add-btn {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-}
-
-.atrisk-save-btn .button-content,
-.atrisk-add-btn .button-content {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  white-space: nowrap;
-}
-
-.atrisk-save-btn [slot="startIcon"],
-.atrisk-add-btn [slot="startIcon"] {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.atrisk-messages {
-  margin-top: 20px;
-  animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
 /* ===== RESPONSIVE DESIGN ===== */
 @media (max-width: 768px) {
   .atrisk-rule-card {
     padding: 20px;
   }
 
-  .rule-sentence {
+  .rule-sentence-modal {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: 16px;
     padding: 16px;
   }
@@ -525,8 +533,7 @@
     gap: 12px;
   }
 
-  .atrisk-add-btn,
-  .atrisk-save-btn {
+  .atrisk-add-btn {
     width: 100%;
     height: 44px;
   }
@@ -572,6 +579,10 @@
   }
 
   .atrisk-actions {
+    display: none;
+  }
+
+  .rule-edit-hint {
     display: none;
   }
 }
