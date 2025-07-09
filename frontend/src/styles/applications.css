@@ -56,16 +56,13 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 16px;
-  margin-top: 8px;
+  /* margin-top: 4px; */
 }
 
 .search-wrapper {
-  /* Let it grow, but also let it shrink. 
-     The 280px is now a preferred size, not a hard minimum. */
-  flex: 1 1 280px; 
-  
-  /* This is key to allowing the flex item to shrink below its preferred size */
-  min-width: 0; 
+  flex: 1 1 420px; /* Growable, shrinkable, prefers 320px */
+  max-width: 1000px; /* Prevent it from stretching too much */
+  min-width: 180px;
 }
 
 /* Match height with dropdowns */
@@ -89,7 +86,6 @@
   width: 180px;
   max-width: 100%;
 }
-
 
 .applications-container {
   display: grid;
@@ -307,7 +303,8 @@
   }
 }
 
-body, .page-container {
+body,
+.page-container {
   overflow-x: hidden;
 }
 
@@ -315,7 +312,8 @@ body, .page-container {
   overflow-x: auto;
 }
 
-.application-card, .card-content {
+.application-card,
+.card-content {
   min-width: 0;
   box-sizing: border-box;
 }

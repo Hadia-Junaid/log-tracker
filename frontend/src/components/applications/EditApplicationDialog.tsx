@@ -77,17 +77,46 @@ export default function EditApplicationDialog({
     }
   };
 
-  const validate = () => {
-    if (name.trim().length < 5 || name.length > 20)
-      return "Name must be 5–20 characters.";
-    if (!hostname.trim() || hostname.length > 255)
+   const validate = () => {
+    const nameTrimmed = name.trim();
+    const hostnameTrimmed = hostname.trim();
+    const descriptionTrimmed = description?.trim() ?? "";
+
+    // Name validation
+    if (nameTrimmed.length < 5 || nameTrimmed.length > 20) {
+      return "Name must be between 5 and 20 characters.";
+    }
+
+    const namePattern = /^[a-zA-Z0-9 _-]+$/;
+    if (!namePattern.test(nameTrimmed)) {
+      return "Name can only contain letters, numbers, spaces, hyphens, and underscores.";
+    }
+
+    // Hostname validation
+    if (!hostnameTrimmed || hostnameTrimmed.length > 255) {
       return "Hostname is required and must be less than 255 characters.";
-    if (!environments.includes(environment))
+    }
+
+    // Environment validation
+    if (!environments.includes(environment)) {
       return "Please select a valid environment.";
-    if (description && (description.length < 10 || description.length > 100))
-      return "Description must be 10–100 characters or left blank.";
-    return null;
+    }
+
+    // Description validation (optional)
+    if (descriptionTrimmed) {
+      if (descriptionTrimmed.length < 10 || descriptionTrimmed.length > 100) {
+        return "Description must be between 10 and 100 characters.";
+      }
+
+      const descriptionPattern = /^[a-zA-Z0-9 _\-\.,:;()[\]'""]*$/;
+      if (!descriptionPattern.test(descriptionTrimmed)) {
+        return "Description contains invalid characters.";
+      }
+    }
+
+    return null; // No errors
   };
+
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
