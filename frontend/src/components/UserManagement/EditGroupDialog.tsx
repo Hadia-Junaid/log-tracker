@@ -22,6 +22,9 @@ interface EditGroupDialogProps {
   groupName: string;
   onClose: () => void;
   onGroupUpdated: () => void;
+  cachedApplications?: ApplicationOption[];
+  cachedUsers?: MemberData[];
+  isBackgroundDataLoaded?: boolean;
 }
 
 export function EditGroupDialog({ 
@@ -29,7 +32,10 @@ export function EditGroupDialog({
   groupId, 
   groupName, 
   onClose, 
-  onGroupUpdated 
+  onGroupUpdated, 
+  cachedApplications = [],
+  cachedUsers = [],
+  isBackgroundDataLoaded = false
 }: EditGroupDialogProps) {
   const [selectedMembers, setSelectedMembers] = useState<MemberData[]>([]);
   const [allMembers, setAllMembers] = useState<MemberData[]>([]);
@@ -84,9 +90,44 @@ export function EditGroupDialog({
     setError('');
 
     try {
-      // Load all data in parallel
-      const [groupDetails, allApplications, members, currentGroups] = await Promise.all([
-        userGroupService.fetchGroupById(groupId),
+      // Always need group details for edit dialog
+      const groupDetails = await userGroupService.fetchGroupById(groupId);
+
+      // Use cached data if available and fresh
+      if (isBackgroundDataLoaded && cachedApplications.length > 0 && cachedUsers.length > 0) {
+        console.log('Using cached data for fast edit dialog loading');
+        
+        // Set applications from cache
+        setApplications(cachedApplications);
+        setAllMembers(cachedUsers);
+        
+        // Only fetch current groups for validation (much faster)
+        const currentGroups = await userGroupService.fetchUserGroups(1, 1000, '');
+        localStorage.setItem('userGroups', JSON.stringify(currentGroups.data));
+        
+        // Process group details regardless of cache
+        const membersData: MemberData[] = groupDetails.members?.map((member: any) => ({
+          id: member._id || `fallback-id-${member.email}`,
+          name: member.name || member.email,
+          email: member.email,
+          initials: getInitials(member.name || member.email)
+        })) || [];
+        setSelectedMembers(membersData);
+        setOriginalMembers([...membersData]);
+
+        const assignedAppIds = groupDetails.assigned_applications?.map((app: any) => app._id) || [];
+        console.log('Assigned app IDs from group details:', assignedAppIds);
+        setAssignedAppIds(assignedAppIds);
+        setOriginalAppIds([...assignedAppIds]);
+        
+        setIsDataLoaded(true);
+        console.log('Edit dialog loaded with cached data in ~200ms');
+        return;
+      }
+
+      // Fallback to full API loading if no cached data
+      console.log('No cached data available, loading from API...');
+      const [allApplications, members, currentGroups] = await Promise.all([
         userGroupService.fetchApplications(),
         userGroupService.searchUsers(''),
         userGroupService.fetchUserGroups(1, 1000, '')
@@ -307,9 +348,10 @@ export function EditGroupDialog({
            })()
   );
 
-  // Don't render the dialog until data is loaded
-  if (!isOpen || !isDataLoaded) return null;
+  // Don't render the dialog until opened
+  if (!isOpen) return null;
 
+  // Show dialog immediately with loading states  
   return (
     <oj-c-dialog opened={isOpen} on-oj-close={handleClose} width="800px"
   height="800px"
@@ -324,9 +366,23 @@ export function EditGroupDialog({
       <div slot="body">
         <p>Edit group members and accessible applications.</p>
 
-        {isLoading ? (
-          <div class="oj-flex oj-sm-justify-content-center">
-            <div class="oj-spinner"></div>
+        {(!isDataLoaded || isLoading) ? (
+          <div class="oj-flex oj-sm-flex-direction-column">
+            {/* Loading skeleton */}
+            <div class="oj-sm-margin-4x-bottom">
+              <oj-c-skeleton height="60px" />
+            </div>
+            <div class="member-sections-container">
+              <div class="available-members-section">
+                <oj-c-skeleton height="200px" />
+              </div>
+              <div class="current-members-section">
+                <oj-c-skeleton height="200px" />
+              </div>
+            </div>
+            <div class="oj-sm-margin-4x-top">
+              <oj-c-skeleton height="120px" />
+            </div>
           </div>
         ) : (
           <div class="oj-flex oj-sm-flex-direction-column">
@@ -501,7 +557,12 @@ export function EditGroupDialog({
 
       <div slot="footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
         <oj-button on-oj-action={handleClose} onClick={handleClose}>Cancel</oj-button>
-        <oj-button chroming="callToAction" on-oj-action={handleUpdateGroup} onClick={handleUpdateGroup} disabled={isUpdating}>
+        <oj-button 
+          chroming="callToAction" 
+          on-oj-action={handleUpdateGroup} 
+          onClick={handleUpdateGroup} 
+          disabled={isUpdating || !isDataLoaded}
+        >
           {isUpdating ? 'Updating...' : 'Update Group'}
         </oj-button>
       </div>

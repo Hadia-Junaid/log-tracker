@@ -16,14 +16,23 @@ import 'oj-c/list-view';
 import 'oj-c/skeleton';
 import '../../styles/AddGroupDialog.css';
 
-
 interface AddGroupDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onGroupCreated: () => void;
+  cachedApplications?: ApplicationOption[];
+  cachedUsers?: MemberData[];
+  isBackgroundDataLoaded?: boolean;
 }
 
-export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDialogProps) {
+export function AddGroupDialog({ 
+  isOpen, 
+  onClose, 
+  onGroupCreated,
+  cachedApplications = [],
+  cachedUsers = [],
+  isBackgroundDataLoaded = false
+}: AddGroupDialogProps) {
   const [selectedMembers, setSelectedMembers] = useState<MemberData[]>([]);
   const [allMembers, setAllMembers] = useState<MemberData[]>([]);
   const [applications, setApplications] = useState<ApplicationOption[]>([]);
@@ -74,7 +83,25 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
     setError('');
 
     try {
-      // Load all data in parallel
+      // Use cached data if available and fresh
+      if (isBackgroundDataLoaded && cachedApplications.length > 0 && cachedUsers.length > 0) {
+        console.log('Using cached data for fast dialog loading');
+        
+        setApplications(cachedApplications);
+        setCheckedAppIds([]);
+        setAllMembers(cachedUsers);
+        
+        // Only fetch current groups for validation (much faster)
+        const currentGroups = await userGroupService.fetchUserGroups(1, 1000, '');
+        localStorage.setItem('userGroups', JSON.stringify(currentGroups.data));
+        
+        setIsDataLoaded(true);
+        console.log('Dialog loaded with cached data in ~100ms');
+        return;
+      }
+
+      // Fallback to full API loading if no cached data
+      console.log('No cached data available, loading from API...');
       const [allApplications, members, currentGroups] = await Promise.all([
         userGroupService.fetchApplications(),
         userGroupService.searchUsers(''),
@@ -363,8 +390,9 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
 };
 
   // Don't render the dialog until data is loaded
-  if (!isOpen || !isDataLoaded) return null;
+  if (!isOpen) return null;
 
+  // Show dialog immediately with loading states
   return (
     <oj-c-dialog opened={isOpen} on-oj-close={handleClose} width="850px"
   height="800px"
@@ -379,9 +407,23 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
       <div slot="body">
         <p>Create a new group and manage members using the directory below.</p>
 
-        {isLoading ? (
-          <div class="oj-flex oj-sm-justify-content-center">
-            <div class="oj-spinner"></div>
+        {(!isDataLoaded || isLoading) ? (
+          <div class="oj-flex oj-sm-flex-direction-column">
+            {/* Loading skeleton */}
+            <div class="oj-sm-margin-4x-bottom">
+              <oj-c-skeleton height="60px" />
+            </div>
+            <div class="member-sections-container">
+              <div class="available-members-section">
+                <oj-c-skeleton height="200px" />
+              </div>
+              <div class="current-members-section">
+                <oj-c-skeleton height="200px" />
+              </div>
+            </div>
+            <div class="oj-sm-margin-4x-top">
+              <oj-c-skeleton height="120px" />
+            </div>
           </div>
         ) : (
           <div class="oj-flex oj-sm-flex-direction-column">
@@ -547,7 +589,12 @@ export function AddGroupDialog({ isOpen, onClose, onGroupCreated }: AddGroupDial
 
       <div slot="footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>        
         <oj-button on-oj-action={handleCancelClick} onClick={handleCancelClick}>Cancel</oj-button>
-        <oj-button chroming="callToAction" on-oj-action={handleCreateGroup} onClick={handleCreateGroup} disabled={isCreating}>
+        <oj-button 
+          chroming="callToAction" 
+          on-oj-action={handleCreateGroup} 
+          onClick={handleCreateGroup} 
+          disabled={isCreating || !isDataLoaded}
+        >
           {isCreating ? 'Creating...' : 'Create Group'}
         </oj-button>
       </div>
