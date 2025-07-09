@@ -62,14 +62,11 @@ export default function UserManagement(props: Props) {
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      // Show loading for search changes, but not for pagination
-      const isSearchChange = searchTerm !== prevSearchTermRef.current;
-      const showLoading = isSearchChange || currentPage === 1;
-      loadGroups(showLoading);
+      // Always show loading for both search and pagination
+      loadGroups(true);
       prevSearchTermRef.current = searchTerm;
     }, searchTerm ? 300 : 0); // Debounce for search, no delay for pagination
-    return () => clearTimeout(delayDebounceFn);
-  }, [currentPage, searchTerm]);
+    return () => clearTimeout(delayDebounceFn);}, [currentPage, searchTerm]);
 
   const handleAddGroup = () => {
     setIsAddDialogOpen(true);
