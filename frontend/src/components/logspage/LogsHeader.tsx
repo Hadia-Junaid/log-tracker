@@ -2,7 +2,8 @@ import { h } from "preact";
 import ArrayDataProvider = require("ojs/ojarraydataprovider");
 import "ojs/ojinputtext";
 import 'oj-c/select-multiple';
-import { useEffect } from "preact/hooks";
+import { useEffect, useState } from "preact/hooks";
+
 interface Application {
   _id: string;
   name: string;
@@ -15,8 +16,9 @@ interface LogsHeaderProps {
   selectedAppIds: string[];
   setSelectedAppIds: (ids: string[]) => void;
   logLevels: string[];
-  setLogLevels: (value: string[] | ((prevState: string[]) => string[])) => void; // ✅ FIXED
+  setLogLevels: (value: string[] | ((prevState: string[]) => string[])) => void;
   setPage: (page: number) => void;
+  onExport: (format: "csv" | "json") => void;
 }
 
 export default function LogsHeader({
@@ -28,34 +30,51 @@ export default function LogsHeader({
   logLevels,
   setLogLevels,
   setPage,
+  onExport,
 }: LogsHeaderProps) {
-
+  const [showExportMenu, setShowExportMenu] = useState(false);
   const appDataProvider = new ArrayDataProvider(applications, { keyAttributes: "_id" });
-
   const toggleLogLevel = (level: string) => {
-  setLogLevels((prev: string[]) =>
-    prev.includes(level) ? prev.filter((l: string) => l !== level) : [...prev, level]
-  );
+    setLogLevels((prev: string[]) =>
+      prev.includes(level) ? prev.filter((l: string) => l !== level) : [...prev, level]
+    );
   };
-
   const logLevelOptions = ["INFO", "ERROR", "WARN", "DEBUG"];
 
-  // Color map for log levels
-  // const logLevelStyles: Record<string, { bg: string; text: string; border: string }> = {
-  //   INFO:   { bg: '#e3f0ff', text: '#0b3d91', border: '#0b3d91' }, // blue
-  //   WARN:   { bg: '#fffbe3', text: '#b88600', border: '#b88600' }, // yellow
-  //   ERROR:  { bg: '#ffe3e3', text: '#b00020', border: '#b00020' }, // red
-  //   DEBUG:  { bg: '#f0f0f0', text: '#444', border: '#888' },      // grey
-  // };
-
-  // Whenever any filter changes, reset page to 1
   useEffect(() => {
     setPage(1);
   }, [search, selectedAppIds, logLevels]);
 
   return (
     <>
-      <h2 class="oj-typography-heading-lg oj-sm-margin-4x-bottom">Logs</h2>
+      <div class="oj-flex oj-sm-margin-4x-bottom" style="justify-content: space-between; align-items: center;">
+        <h2 class="oj-typography-heading-lg">Logs</h2>
+        <div class="export-wrapper">
+          <button
+            class="export-btn"
+            onClick={() => setShowExportMenu(prev => !prev)}
+          >
+            Export ▼
+          </button>
+          {showExportMenu && (
+            <div class="export-menu">
+              <button
+                class="export-menu-item"
+                onClick={() => { onExport("csv"); setShowExportMenu(false); }}
+              >
+                Download CSV
+              </button>
+              <button
+                class="export-menu-item"
+                onClick={() => { onExport("json"); setShowExportMenu(false); }}
+              >
+                Download JSON
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
       <div class="oj-flex oj-sm-margin-4x-bottom" style="gap: 1rem; align-items: flex-end;">
         <oj-input-text
           placeholder="Search messages..."
@@ -76,7 +95,6 @@ export default function LogsHeader({
         ></oj-c-select-multiple>
       </div>
 
-      {/* Log Level Buttons */}
       <div class="oj-flex oj-sm-margin-4x-bottom log-level-btn-row">
         <span class="oj-typography-body-md">Log Levels:</span>
         {logLevelOptions.map((level) => {

@@ -102,10 +102,9 @@ export const getLogs = async (req: Request, res: Response): Promise<void> => {
 };
 
 
-
 export const exportLogs = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { userId } = req.params;
+    const userId = req.user.id;
     const {
       app_ids = '',
       log_levels = '',

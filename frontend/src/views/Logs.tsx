@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo } from "preact/hooks";
 import "ojs/ojtable";
 import "ojs/ojprogress-circle";
 import "ojs/ojinputtext";
-// import { ojTable } from "ojs/ojtable";
 import ArrayDataProvider = require("ojs/ojarraydataprovider");
 import axios from "../api/axios";
 import "../styles/logs.css";
@@ -38,13 +37,10 @@ export default function Logs(props: Props) {
   const [debouncedSearch, setDebouncedSearch] = useState(search);
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedAppIds, setSelectedAppIds] = useState<string[]>([]);
-  const [logLevels, setLogLevels] = useState<string[]>([]); 
+  const [logLevels, setLogLevels] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // const userId = "68650fd57a72d0b64525da71"; // hardcoded for postman 
-
-  // Debounce search input
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(search);
@@ -52,7 +48,6 @@ export default function Logs(props: Props) {
     return () => clearTimeout(handler);
   }, [search]);
 
-  // Fetch logs from backend
   useEffect(() => {
     const fetchLogs = async () => {
       setLoading(true);
@@ -85,7 +80,7 @@ export default function Logs(props: Props) {
     };
 
     fetchLogs();
-  }, [debouncedSearch, selectedAppIds, logLevels, page]); 
+  }, [debouncedSearch, selectedAppIds, logLevels, page]);
 
   const dataProvider = useMemo(() => {
     const enrichedLogs = logs.map((log) => ({
@@ -93,7 +88,6 @@ export default function Logs(props: Props) {
       application_name: appMap[log.application_id] || "—",
       formatted_time: new Date(log.timestamp).toLocaleString(),
     }));
-
     return new ArrayDataProvider(enrichedLogs, { keyAttributes: "_id" });
   }, [logs, appMap]);
 
@@ -102,27 +96,62 @@ export default function Logs(props: Props) {
       headerText: "Time",
       field: "formatted_time",
       resizable: "enabled" as const,
+      sortable: "disabled",
       id: "col_time",
+      headerStyle: "text-align: center;",
     },
     {
       headerText: "Level",
       field: "log_level",
       resizable: "enabled" as const,
+      sortable: "disabled",
       id: "col_level",
     },
     {
       headerText: "Service",
       field: "application_name",
       resizable: "enabled" as const,
+      sortable: "disabled",
       id: "col_service",
     },
     {
       headerText: "Message",
       field: "message",
       resizable: "enabled" as const,
+      sortable: "disabled",
       id: "col_message",
+      headerStyle: "text-align: center",
     },
   ];
+
+  const handleExport = async (format: "csv" | "json") => {
+    try {
+      const res = await axios.get(`/logs/export`, {
+        params: {
+          search: debouncedSearch,
+          app_ids: Array.from(selectedAppIds).join(','),
+          log_levels: logLevels.join(','),
+          is_csv: format === "csv",
+        },
+        responseType: format === "csv" ? "blob" : "json",
+      });
+
+      const blob = new Blob(
+        [format === "csv" ? res.data : JSON.stringify(res.data.data, null, 2)],
+        { type: format === "csv" ? "text/csv" : "application/json" }
+      );
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", `logs.${format}`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (err) {
+      console.error("Failed to export logs:", err);
+    }
+  };
 
   return (
     <div class="oj-sm-padding-6x logs-page logs-page-root">
@@ -135,13 +164,9 @@ export default function Logs(props: Props) {
         logLevels={logLevels}
         setLogLevels={setLogLevels}
         setPage={setPage}
+        onExport={handleExport}
       />
-      <LogsTable 
-        loading={loading} 
-        error={error} 
-        dataProvider={dataProvider} 
-        columns={columns} 
-      />
+      <LogsTable loading={loading} error={error} dataProvider={dataProvider} columns={columns} />
       <Pagination page={page} totalPages={totalPages} setPage={setPage} />
     </div>
   );

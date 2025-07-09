@@ -11,5 +11,6 @@ router.get('/', authenticate, getLogs);
 // GET /apilogs/:userId/export
 // router.get('/apilogs/:userId/export', authenticate, exportLogs);
 router.get('/:userId/export', exportLogs);
+router.get('/export', authenticate, exportLogs);
 
 export default router; 
