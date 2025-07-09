@@ -35,22 +35,15 @@ const ManagePinsCard = ({ app, isPinned, userId, onRefresh }: Props) => {
 
     return (
         <div class="manage-pins-card oj-panel oj-sm-padding-2x oj-sm-margin-bottom-1x oj-flex oj-sm-justify-content-space-between">
-            <div>
-                <div class="oj-typography-body-md oj-text-color-primary">{name}</div>
-                {environment && (
-                    <div class="oj-typography-caption oj-text-color-secondary">
-                        {environment} | {description}
-                    </div>
-                )}
-            </div>
+            <div class="oj-typography-body-md oj-text-color-primary manage-pins-card-title">{name}</div>
             <oj-button chroming="outlined" display="all" onojAction={handleToggle}>
                 {isPinned ? (
                     <>
-                        <PinOff class="oj-icon-size-sm" /> Unpin
+                        <PinOff size={16} /> Unpin
                     </>
                 ) : (
                     <>
-                        <Pin class="oj-icon-size-sm" /> Pin
+                        <Pin size={16} /> Pin
                     </>
                 )}
             </oj-button>
