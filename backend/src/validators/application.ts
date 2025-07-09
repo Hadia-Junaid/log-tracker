@@ -16,11 +16,10 @@ export const applicationSchema = Joi.object({
   isActive: Joi.boolean().required(),
 
   description: Joi.string()
-    .allow("")
-    .optional()
     .min(10)
     .max(100)
-    .pattern(/^[a-zA-Z0-9 _\-\.,:;()[\]\'""]*$/),
+    .pattern(/^[a-zA-Z0-9 _\-\.,:;()[\]'""]*$/)
+    .required(), 
 
   userGroups: Joi.array().items(Joi.string()).optional(),
 });
