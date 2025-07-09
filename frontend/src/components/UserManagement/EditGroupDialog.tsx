@@ -45,7 +45,6 @@ export function EditGroupDialog({
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchTrigger, setSearchTrigger] = useState(0);
   const [assignedAppIds, setAssignedAppIds] = useState<string[]>([]);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
   const [showUpdateConfirmation, setShowUpdateConfirmation] = useState(false);
@@ -70,20 +69,6 @@ export function EditGroupDialog({
       setIsDataLoaded(false);
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen || !isDataLoaded) return;
-    
-    const interval = setInterval(() => {
-      const currentSearchValue = searchInputRef.current?.value || '';
-      if (currentSearchValue !== searchTerm) {
-        setSearchTerm(currentSearchValue);
-        setSearchTrigger(prev => prev + 1);
-      }
-    }, 100); // Check every 100ms
-    
-    return () => clearInterval(interval);
-  }, [isOpen, isDataLoaded, searchTerm]);
 
   const loadAllData = async () => {
     setIsLoading(true);
@@ -400,19 +385,7 @@ export function EditGroupDialog({
               </div>
             )}
 
-            {/* Group Name Display (Read-only) */}
-            <div class="oj-sm-margin-4x-bottom">
-              <oj-label for="groupNameDisplay">Group Name</oj-label>
-              <oj-input-text
-                id="groupNameDisplay"
-                value={groupName}
-                readonly
-                class="oj-form-control-full-width"
-              />
-              <div class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
-                Group name cannot be edited.
-              </div>
-            </div>
+            
 
             <div class="member-sections-container">
               {/* Available Members Section */}
@@ -421,11 +394,13 @@ export function EditGroupDialog({
 
                 {/* Search Input */}
                 <div class="oj-sm-margin-4x-bottom">
-                  <oj-input-search
+                  <oj-input-text
                     class="oj-form-control-full-width"
                     placeholder="Search directory..."
-                    ref={searchInputRef}
-                    
+                    value={searchTerm}
+                    onrawValueChanged={(event: any) => {
+                      setSearchTerm(event.detail.value || '');
+                    }}
                   />
                 </div>
 
@@ -482,14 +457,14 @@ export function EditGroupDialog({
                   {selectedMembers.length > 0 ? (
                     selectedMembers.map((member) => (
                       <div key={member.id} class="member-list-item current-member-item">
-                        <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-space-between">
-                          <div class="oj-flex oj-sm-align-items-center">
+                        <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-space-between" style="width: 100%;">
+                          <div class="oj-flex oj-sm-align-items-center" style="min-width: 0; flex: 1;">
                             <oj-avatar size="xs" initials={member.initials}></oj-avatar>
-                            <div class="oj-sm-margin-2x-start">
-                              <div class="oj-typography-body-md oj-text-color-primary">
+                            <div class="oj-sm-margin-2x-start" style="min-width: 0; flex: 1;">
+                              <div class="oj-typography-body-md oj-text-color-primary" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
                                 {member.email}
                               </div>
-                              <div class="oj-typography-body-sm oj-text-color-secondary">
+                              <div class="oj-typography-body-sm oj-text-color-secondary" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
                                 {member.name}
                                 {groupName.toLowerCase() === 'admin group' && superAdminEmails.includes(member.email) && (
                                   <span class="oj-typography-body-xs oj-text-color-info" style="margin-left: 8px;">(Superadmin)</span>
@@ -499,16 +474,18 @@ export function EditGroupDialog({
                           </div>
                           {/* Only show remove button if not a superadmin in admin group */}
                           {!(groupName.toLowerCase() === 'admin group' && superAdminEmails.includes(member.email)) && (
-                            <oj-button 
-                              class="member-remove-btn oj-button-sm" 
-                              chroming="borderless"
-                              display="icons"
-                              on-oj-action={() => handleRemoveMember(member)} 
-                              onClick={() => handleRemoveMember(member)}
-                              title="Remove member"
-                            >
-                              <span slot="startIcon" class="oj-ux-ico-close"></span>
-                            </oj-button>
+                            <div style="flex-shrink: 0; margin-left: 8px;">
+                              <oj-button 
+                                class="member-remove-btn oj-button-sm" 
+                                chroming="borderless"
+                                display="icons"
+                                on-oj-action={() => handleRemoveMember(member)} 
+                                onClick={() => handleRemoveMember(member)}
+                                title="Remove member"
+                              >
+                                <span slot="startIcon" class="oj-ux-ico-close"></span>
+                              </oj-button>
+                            </div>
                           )}
                         </div>
                       </div>

@@ -43,7 +43,6 @@ export function AddGroupDialog({
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
   const [checkedAppIds, setCheckedAppIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [searchTrigger, setSearchTrigger] = useState(0);
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   const searchInputRef = useRef<any>(null);
@@ -62,20 +61,6 @@ export function AddGroupDialog({
       setIsDataLoaded(false);
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen || !isDataLoaded) return;
-    
-    const interval = setInterval(() => {
-      const currentSearchValue = searchInputRef.current?.value || '';
-      if (currentSearchValue !== searchTerm) {
-        setSearchTerm(currentSearchValue);
-        setSearchTrigger(prev => prev + 1);
-      }
-    }, 100); // Check every 100ms
-    
-    return () => clearInterval(interval);
-  }, [isOpen, isDataLoaded, searchTerm]);
 
   const loadAllData = async () => {
     setIsLoading(true);
@@ -137,8 +122,6 @@ export function AddGroupDialog({
       prev.includes(appId) ? prev.filter((id) => id !== appId) : [...prev, appId]
     );
   };
-
-
 
   const handleCreateGroup = async () => {
     const groupName = groupNameRef.current?.value || '';
@@ -326,14 +309,19 @@ export function AddGroupDialog({
               {/* Available Members Section */}
               <div class="available-members-section">
                 
-                <h4 class="oj-typography-body-sm oj-text-color-primary oj-sm-margin-1x-bottom" style={{ marginTop: 0 }}>Available Members</h4>
+                <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-1x-bottom" style={{ marginTop: 0, fontWeight: 'bold' }}>
+                  Available Members
+                </h4>
 
                 {/* Search Input */}
                 <div class="oj-sm-margin-4x-bottom">
-                  <oj-input-search
+                  <oj-input-text
                     class="oj-form-control-full-width"
                     placeholder="Search directory..."
-                    ref={searchInputRef}
+                    value={searchTerm}
+                    onrawValueChanged={(event: any) => {
+                      setSearchTerm(event.detail.value || '');
+                    }}
                   />
                 </div>
 
@@ -372,7 +360,9 @@ export function AddGroupDialog({
               {/* Selected Members Section */}
               <div class="current-members-section">
                 <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-space-between oj-sm-margin-4x-bottom">
-                  <h4 class="oj-typography-heading-sm oj-text-color-primary">Selected Members</h4>
+                <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-1x-bottom" style={{ marginTop: 0, fontWeight: 'bold' }}>
+                  Selected Members
+                </h4>
                   <div class="oj-flex oj-sm-align-items-center">
                     <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-end">
                       {selectedMembers.length} members
@@ -390,27 +380,30 @@ export function AddGroupDialog({
                   {selectedMembers.length > 0 ? (
                     selectedMembers.map((member) => (
                       <div key={member.id} class="member-list-item current-member-item">
-                        <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-space-between">
-                          <div class="oj-flex oj-sm-align-items-center">
+                        <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-space-between" style="width: 100%;">
+                          <div class="oj-flex oj-sm-align-items-center" style="min-width: 0; flex: 1;">
                             <oj-avatar size="xs" initials={member.initials}></oj-avatar>
-                            <div class="oj-sm-margin-2x-start">
-                              <div class="oj-typography-body-md oj-text-color-primary">
+                            <div class="oj-sm-margin-2x-start" style="min-width: 0; flex: 1;">
+                              <div class="oj-typography-body-md oj-text-color-primary" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
                                 {member.email}
                               </div>
-                              <div class="oj-typography-body-sm oj-text-color-secondary">
+                              <div class="oj-typography-body-sm oj-text-color-secondary" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
                                 {member.name}
                               </div>
                             </div>
                           </div>
-                          <oj-button 
-                            class="member-remove-btn oj-button-sm" 
-                            chroming="borderless"
-                            display="icons"
-                            on-oj-action={() => handleRemoveMember(member)} onClick={() => handleRemoveMember(member)}
-                            title="Remove member"
-                          >
-                            <span slot="startIcon" class="oj-ux-ico-close"></span>
-                          </oj-button>
+                          <div style="flex-shrink: 0; margin-left: 8px;">
+                            <oj-button 
+                              class="member-remove-btn oj-button-sm" 
+                              chroming="borderless"
+                              display="icons"
+                              on-oj-action={() => handleRemoveMember(member)} 
+                              onClick={() => handleRemoveMember(member)}
+                              title="Remove member"
+                            >
+                              <span slot="startIcon" class="oj-ux-ico-close"></span>
+                            </oj-button>
+                          </div>
                         </div>
                       </div>
                     ))
@@ -428,8 +421,9 @@ export function AddGroupDialog({
               <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">
                 Accessible Applications
               </h4>
-              <div class="oj-flex oj-sm-flex-direction-column applications-checkboxes">
+              <div class="applications-checkboxes">
                 {applications.map(app => (
+
                   <oj-c-checkbox 
                     key={app.id}
                     ref={(el: any) => {
