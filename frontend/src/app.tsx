@@ -39,12 +39,10 @@ export const App = registerCustomElement(
     "app-root",
     ({
         appName = "Log Tracker",
-        userLogin = "john.hancock@oracle.com",
-        userId = "6862440270afcb4b63404766",
     }: Props) => {
-        const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(
-            null
-        );
+        const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+        const [userLogin, setUserLogin] = useState<string>("");
+        const [userId, setUserId] = useState<string>("");
 
         useEffect(() => {
             const checkOrExchangeAuth = async () => {
@@ -70,9 +68,21 @@ export const App = registerCustomElement(
                     }
                 }
 
-                // After possible exchange, check auth
-                const isAuthed = await checkAuth();
-                setIsAuthenticated(isAuthed);
+                const res = await axios.get("/auth/status");
+                const userId = res.data?.user.id;
+                const userLogin = res.data?.user.email;
+                const isAuthed = res.data?.authenticated === true;
+
+                console.log("Auth status response:", res);
+
+                if (!isAuthed || !userId || !userLogin) {
+                    setIsAuthenticated(false);
+                    return;
+                }
+
+                setUserId(userId);
+                setUserLogin(userLogin);
+                setIsAuthenticated(true);
             };
 
             checkOrExchangeAuth();
