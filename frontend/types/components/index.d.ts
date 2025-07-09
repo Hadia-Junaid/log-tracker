@@ -17,6 +17,8 @@
           "ojactioncard": any;
           "oj-c-card": any;
           "oj-checkbox-set": any;
+          "oj-c-message-banner": any;
+          "oj-c-message-toast": any;
         }
       }
 
