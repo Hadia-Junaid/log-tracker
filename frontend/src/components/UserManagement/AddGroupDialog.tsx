@@ -325,7 +325,8 @@ export function AddGroupDialog({
             <div class="member-sections-container">
               {/* Available Members Section */}
               <div class="available-members-section">
-                <h4 class="oj-typography-heading-sm oj-text-color-primary">Available Members</h4>
+                
+                <h4 class="oj-typography-body-sm oj-text-color-primary oj-sm-margin-1x-bottom" style={{ marginTop: 0 }}>Available Members</h4>
 
                 {/* Search Input */}
                 <div class="oj-sm-margin-4x-bottom">

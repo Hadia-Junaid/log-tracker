@@ -1,28 +1,45 @@
 .add-group-content {
-  gap: 24px;
-  width: 100%;
   display: flex;
   flex-direction: row;
+  gap: 24px;
+  width: 100%;
+  flex-wrap: wrap;
+}
+
+/* Make both sections always same size and responsive */
+.member-sections-container {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  width: 100%;
+  height: 300px; /* Fixed height for both lists */
+  flex-wrap: wrap;
 }
 
 .available-members-section,
 .current-members-section {
-  flex: 1 1 50%;
+  flex: 1 1 48%;
+  display: flex;
+  flex-direction: column;
   background: #f9f9f9;
   border: 1px solid #ccc;
   border-radius: 8px;
   padding: 16px;
   box-sizing: border-box;
-  margin: 0 8px;
+  min-width: 250px;
+  height: 100%;
 }
 
+/* Titles */
 .available-members-section h4,
 .current-members-section h4 {
   margin-bottom: 16px;
 }
 
+/* Members list area */
 .members-list {
-  max-height: 400px;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   border: 1px solid #dcdcdc;
@@ -31,6 +48,7 @@
   padding: 8px;
 }
 
+/* List items */
 .member-list-item {
   padding: 8px;
   border-bottom: 1px solid #e0e0e0;
@@ -58,11 +76,16 @@
 }
 
 .no-members-content {
+  flex: 1;
   text-align: center;
   padding: 16px;
   font-style: italic;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+/* Error messages */
 .error-message {
   color: red;
   margin-bottom: 16px;
@@ -71,14 +94,8 @@
 
 .applications-checkboxes {
   gap: 8px;
-}
-
-/* Ensure the member sections are side by side */
-.member-sections-container {
   display: flex;
-  flex-direction: row;
-  gap: 16px;
-  width: 100%;
+  flex-direction: column;
 }
 
 /* Success and Error Message Banners */
@@ -102,4 +119,17 @@
 .error-message-banner .oj-text-color-danger {
   font-weight: 500;
   font-size: 0.95rem;
+}
+
+/* 🔁 Mobile Responsiveness */
+@media (max-width: 768px) {
+  .member-sections-container {
+    flex-direction: column;
+    height: auto;
+  }
+
+  .available-members-section,
+  .current-members-section {
+    height: 250px; /* still equal height, just stacked now */
+  }
 }
