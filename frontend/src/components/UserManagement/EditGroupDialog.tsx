@@ -102,11 +102,6 @@ export function EditGroupDialog({
       if (isBackgroundDataLoaded && cachedApplications.length > 0 && cachedUsers.length > 0) {
         // Set applications from cache
         setApplications(cachedApplications);
-        setAllMembers(cachedUsers);
-        
-        // Only fetch current groups for reference
-        const currentGroups = await userGroupService.fetchUserGroups(1, 1000, '');
-        localStorage.setItem('userGroups', JSON.stringify(currentGroups.data));
         
         // Process group details regardless of cache
         const membersData: MemberData[] = groupDetails.members.map((member) => ({
@@ -118,6 +113,15 @@ export function EditGroupDialog({
         setSelectedMembers(membersData);
         setOriginalMembers([...membersData]);
 
+        // Filter out selected members from all members
+        const selectedEmails = new Set(membersData.map(m => m.email));
+        const availableMembers = cachedUsers.filter(m => !selectedEmails.has(m.email));
+        setAllMembers(availableMembers);
+        
+        // Only fetch current groups for reference
+        const currentGroups = await userGroupService.fetchUserGroups(1, 1000, '');
+        localStorage.setItem('userGroups', JSON.stringify(currentGroups.data));
+        
         const assignedAppIds = groupDetails.assigned_applications.map((app) => app._id) || [];
         setAssignedAppIds(assignedAppIds);
         setOriginalAppIds([...assignedAppIds]);
@@ -127,7 +131,7 @@ export function EditGroupDialog({
       }
 
       // Fallback to full API loading if no cached data
-      const [allApplications, members, currentGroups] = await Promise.all([
+      const [allApplications, directoryMembers, currentGroups] = await Promise.all([
         userGroupService.fetchApplications(),
         userGroupService.searchUsers(''),
         userGroupService.fetchUserGroups(1, 1000, '')
@@ -143,6 +147,11 @@ export function EditGroupDialog({
       setSelectedMembers(membersData);
       setOriginalMembers([...membersData]); // Store original members
 
+      // Filter out selected members from all members
+      const selectedEmails = new Set(membersData.map(m => m.email));
+      const availableMembers = directoryMembers.filter(m => !selectedEmails.has(m.email));
+      setAllMembers(availableMembers);
+
       // Set assigned applications
       const assignedAppIds = groupDetails.assigned_applications.map((app) => app._id);
       setAssignedAppIds(assignedAppIds);
@@ -150,9 +159,7 @@ export function EditGroupDialog({
 
       setApplications(allApplications);
       
-      localStorage.setItem('allDirectoryMembers', JSON.stringify(members));
-      setAllMembers(members);
-      
+      localStorage.setItem('allDirectoryMembers', JSON.stringify(directoryMembers));
       localStorage.setItem('userGroups', JSON.stringify(currentGroups.data));
       
       setIsDataLoaded(true);
@@ -166,6 +173,7 @@ export function EditGroupDialog({
 
   const handleAddMember = (member: MemberData) => {
     setSelectedMembers((prev) => [...prev, member]);
+    setAllMembers((prev) => prev.filter(m => m.email !== member.email));
   };
 
   const handleRemoveMember = (member: MemberData) => {
@@ -176,13 +184,17 @@ export function EditGroupDialog({
       return;
     }
     setSelectedMembers((prev) => prev.filter((m) => m.id !== member.id));
+    setAllMembers((prev) => [...prev, member]);
   };
 
   const handleRemoveAllMembers = () => {
     // For admin group, only remove non-superadmin members
     if (groupName.toLowerCase() === 'admin group') {
+      const nonSuperAdminMembers = selectedMembers.filter(member => !superAdminEmails.includes(member.email));
+      setAllMembers((prev) => [...prev, ...nonSuperAdminMembers]);
       setSelectedMembers((prev) => prev.filter(member => superAdminEmails.includes(member.email)));
     } else {
+      setAllMembers((prev) => [...prev, ...selectedMembers]);
       setSelectedMembers([]);
     }
   };
