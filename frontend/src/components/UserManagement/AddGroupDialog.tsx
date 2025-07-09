@@ -69,7 +69,6 @@ export function AddGroupDialog({
     const interval = setInterval(() => {
       const currentSearchValue = searchInputRef.current?.value || '';
       if (currentSearchValue !== searchTerm) {
-        console.log('Search value changed from ref:', currentSearchValue);
         setSearchTerm(currentSearchValue);
         setSearchTrigger(prev => prev + 1);
       }
@@ -85,23 +84,19 @@ export function AddGroupDialog({
     try {
       // Use cached data if available and fresh
       if (isBackgroundDataLoaded && cachedApplications.length > 0 && cachedUsers.length > 0) {
-        console.log('Using cached data for fast dialog loading');
-        
         setApplications(cachedApplications);
         setCheckedAppIds([]);
         setAllMembers(cachedUsers);
         
-        // Only fetch current groups for validation (much faster)
+        // Only fetch current groups for reference
         const currentGroups = await userGroupService.fetchUserGroups(1, 1000, '');
         localStorage.setItem('userGroups', JSON.stringify(currentGroups.data));
         
         setIsDataLoaded(true);
-        console.log('Dialog loaded with cached data in ~100ms');
         return;
       }
 
       // Fallback to full API loading if no cached data
-      console.log('No cached data available, loading from API...');
       const [allApplications, members, currentGroups] = await Promise.all([
         userGroupService.fetchApplications(),
         userGroupService.searchUsers(''),
@@ -143,159 +138,24 @@ export function AddGroupDialog({
     );
   };
 
-  const validateForm = (): string | null => {
-    const groupName = groupNameRef.current?.value || '';
-    console.log('=== VALIDATE FORM DEBUG ===');
-    console.log('Group name from ref:', groupName);
-    console.log('Group name ref exists:', !!groupNameRef.current);
-    console.log('Group name ref value:', groupNameRef.current?.value);
-    console.log('groupName type:', typeof groupName);
-    console.log('groupName length:', groupName?.length);
-    
-    if (!groupName || !groupName.trim()) {
-      console.log('Group name is empty or undefined');
-      return 'Group name is required.';
-    }
-    
-    const trimmedName = groupName.trim();
-    console.log('Trimmed name:', trimmedName);
-    console.log('Trimmed name length:', trimmedName.length);
-    
-    // Check length validation (5-20 characters)
-    if (trimmedName.length < 5 || trimmedName.length > 20) {
-      return 'Group name must be between 5 and 20 characters.';
-    }
-    
-    // Check for duplicate group names
-    const existingGroups = JSON.parse(localStorage.getItem('userGroups') || '[]');
-    const isDuplicate = existingGroups.some((group: any) => 
-      group.groupName.toLowerCase() === trimmedName.toLowerCase()
-    );
-    if (isDuplicate) {
-      return 'A group with this name already exists.';
-    }
-    
-    // Check character validation - only allow hyphens, underscores, numbers, spaces, and letters
-    const validNameRegex = /^[a-zA-Z0-9\s\-_]+$/;
-    if (!validNameRegex.test(trimmedName)) {
-      return 'Group name can only contain letters, numbers, spaces, hyphens (-), and underscores (_).';
-    }
-    
-    // Check if at least one application is selected using refs
-    const selectedAppIds = Object.keys(checkboxRefs.current).filter(appId => 
-      checkboxRefs.current[appId]?.value === true
-    );
-    console.log('Selected app IDs from refs:', selectedAppIds);
-    
-    if (selectedAppIds.length === 0) {
-      return 'Please select at least one accessible application.';
-    }
-    
-    console.log('Validation passed!');
-    return null;
-  };
+
 
   const handleCreateGroup = async () => {
     const groupName = groupNameRef.current?.value || '';
-    console.log('=== CREATE GROUP DEBUG ===');
-    console.log('Group name from ref:', groupName);
-    console.log('Group name ref exists:', !!groupNameRef.current);
-    console.log('Group name ref value:', groupNameRef.current?.value);
-    console.log('Selected members:', selectedMembers);
-    console.log('Selected members emails:', selectedMembers.map(m => m.email));
-    
-    const validationError = validateForm();
-    if (validationError) {
-      console.log('Validation failed:', validationError);
-      setError(validationError);
-      return;
-    }
-
-    // Store the group name immediately after successful validation
-    const validatedGroupName = groupNameRef.current?.value || '';
-    console.log('Group name after successful validation:', validatedGroupName);
-
-    // Store the selected application IDs immediately after successful validation
-    const validatedAppIds = Object.keys(checkboxRefs.current).filter(appId => 
+    const selectedAppIds = Object.keys(checkboxRefs.current).filter(appId => 
       checkboxRefs.current[appId]?.value === true
     );
-    console.log('Selected app IDs after successful validation:', validatedAppIds);
 
     setIsCreating(true);
     setError('');
 
     try {
-      // Load current groups for duplicate checking
-      const response = await userGroupService.fetchUserGroups(1, 1000, ''); // Get all groups for validation
-    const currentGroups = response.data;
-      localStorage.setItem('userGroups', JSON.stringify(currentGroups));
-      
-      // Use the stored group name for re-validation instead of reading from ref again
-      console.log('=== RE-VALIDATION DEBUG ===');
-      console.log('Using stored group name for re-validation:', validatedGroupName);
-      console.log('Using stored app IDs for re-validation:', validatedAppIds);
-      
-      // Create a temporary validation function that uses the stored group name and app IDs
-      const revalidateWithStoredValues = (): string | null => {
-        console.log('=== RE-VALIDATION WITH STORED VALUES ===');
-        console.log('Stored group name:', validatedGroupName);
-        console.log('Stored app IDs:', validatedAppIds);
-        
-        if (!validatedGroupName || !validatedGroupName.trim()) {
-          console.log('Stored group name is empty');
-          return 'Group name is required.';
-        }
-        
-        const trimmedName = validatedGroupName.trim();
-        console.log('Trimmed stored name:', trimmedName);
-        console.log('Trimmed stored name length:', trimmedName.length);
-        
-        // Check length validation (5-20 characters)
-        if (trimmedName.length < 5 || trimmedName.length > 20) {
-          return 'Group name must be between 5 and 20 characters.';
-        }
-        
-        // Check for duplicate group names
-        const existingGroups = JSON.parse(localStorage.getItem('userGroups') || '[]');
-        const isDuplicate = existingGroups.some((group: any) => 
-          group.groupName.toLowerCase() === trimmedName.toLowerCase()
-        );
-        if (isDuplicate) {
-          return 'A group with this name already exists.';
-        }
-        
-        // Check character validation - only allow hyphens, underscores, numbers, spaces, and letters
-        const validNameRegex = /^[a-zA-Z0-9\s\-_]+$/;
-        if (!validNameRegex.test(trimmedName)) {
-          return 'Group name can only contain letters, numbers, spaces, hyphens (-), and underscores (_).';
-        }
-        
-        // Check if at least one application is selected using stored app IDs
-        console.log('Checking stored app IDs:', validatedAppIds);
-        
-        if (validatedAppIds.length === 0) {
-          return 'Please select at least one accessible application.';
-        }
-        
-        console.log('Re-validation with stored values passed!');
-        return null;
-      };
-      
-      const revalidationError = revalidateWithStoredValues();
-      if (revalidationError) {
-        console.log('Re-validation failed:', revalidationError);
-        setError(revalidationError);
-        setIsCreating(false);
-        return;
-      }
-
       const payload = {
-        name: validatedGroupName.trim(),
+        name: groupName,
         members: selectedMembers.map(m => m.email),
-        assigned_applications: validatedAppIds,
+        assigned_applications: selectedAppIds,
         is_admin: false
       };
-      console.log('Sending payload:', payload);
 
       await userGroupService.createUserGroup(payload);
 
@@ -309,12 +169,14 @@ export function AddGroupDialog({
       }, 1500);
       
     } catch (err: any) {
-      if (err.response?.status === 409) {
-        setError('A group with this name already exists.');
+      // Handle validation errors from backend (400) and display the exact error message
+      if (err.response?.status === 400) {
+        setError(err.response.data.error);
       } else {
         setError('Failed to create group. Please try again.');
+        // Only log unexpected errors (not validation errors)
+        console.error('Failed to create group:', err);
       }
-      console.error('Failed to create group:', err);
     } finally {
       setIsCreating(false);
     }
@@ -375,14 +237,9 @@ export function AddGroupDialog({
   // Available members = allMembers - selectedMembers, filtered by search term
   const availableMembers = allMembers.filter(
     (m) => !selectedMembers.some((sel) => sel.id === m.id) &&
-           (() => {
-             console.log('Filtering members with searchTerm:', searchTerm);
-             const matches = searchTerm === '' || 
-                            m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            m.email.toLowerCase().includes(searchTerm.toLowerCase());
-             console.log(`Member ${m.email} matches:`, matches);
-             return matches;
-           })()
+           (searchTerm === '' || 
+            m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            m.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const restoreBodyScroll = () => {

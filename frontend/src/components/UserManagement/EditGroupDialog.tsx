@@ -76,7 +76,6 @@ export function EditGroupDialog({
     const interval = setInterval(() => {
       const currentSearchValue = searchInputRef.current?.value || '';
       if (currentSearchValue !== searchTerm) {
-        console.log('Search value changed from ref:', currentSearchValue);
         setSearchTerm(currentSearchValue);
         setSearchTrigger(prev => prev + 1);
       }
@@ -95,13 +94,11 @@ export function EditGroupDialog({
 
       // Use cached data if available and fresh
       if (isBackgroundDataLoaded && cachedApplications.length > 0 && cachedUsers.length > 0) {
-        console.log('Using cached data for fast edit dialog loading');
-        
         // Set applications from cache
         setApplications(cachedApplications);
         setAllMembers(cachedUsers);
         
-        // Only fetch current groups for validation (much faster)
+        // Only fetch current groups for reference
         const currentGroups = await userGroupService.fetchUserGroups(1, 1000, '');
         localStorage.setItem('userGroups', JSON.stringify(currentGroups.data));
         
@@ -116,17 +113,14 @@ export function EditGroupDialog({
         setOriginalMembers([...membersData]);
 
         const assignedAppIds = groupDetails.assigned_applications?.map((app: any) => app._id) || [];
-        console.log('Assigned app IDs from group details:', assignedAppIds);
         setAssignedAppIds(assignedAppIds);
         setOriginalAppIds([...assignedAppIds]);
         
         setIsDataLoaded(true);
-        console.log('Edit dialog loaded with cached data in ~200ms');
         return;
       }
 
       // Fallback to full API loading if no cached data
-      console.log('No cached data available, loading from API...');
       const [allApplications, members, currentGroups] = await Promise.all([
         userGroupService.fetchApplications(),
         userGroupService.searchUsers(''),
@@ -145,7 +139,6 @@ export function EditGroupDialog({
 
       // Set assigned applications
       const assignedAppIds = groupDetails.assigned_applications?.map((app: any) => app._id) || [];
-      console.log('Assigned app IDs from group details:', assignedAppIds);
       setAssignedAppIds(assignedAppIds);
       setOriginalAppIds([...assignedAppIds]); // Store original app IDs
 
@@ -189,49 +182,17 @@ export function EditGroupDialog({
     }
   };
 
-  const validateForm = (): string | null => {
-    // Skip application validation for admin group since checkboxes are readonly
-    if (groupName.toLowerCase() === 'admin group') {
-      console.log('Skipping application validation for admin group');
-      return null;
-    }
-    
-    // Check if at least one application is selected using refs
-    const selectedAppIds = Object.keys(checkboxRefs.current).filter(appId => 
-      checkboxRefs.current[appId]?.value === true
-    );
-    console.log('Selected app IDs from refs:', selectedAppIds);
-    
-    if (selectedAppIds.length === 0) {
-      return 'Please select at least one accessible application.';
-    }
-    
-    console.log('Validation passed!');
-    return null;
-  };
+
 
   const handleUpdateGroup = async () => {
-    console.log('=== UPDATE GROUP DEBUG ===');
-    console.log('Selected members:', selectedMembers);
-    console.log('Selected members emails:', selectedMembers.map(m => m.email));
-    
-    const validationError = validateForm();
-    if (validationError) {
-      console.log('Validation failed:', validationError);
-      setError(validationError);
-      return;
-    }
-
     // Show confirmation dialog instead of directly updating
     setShowUpdateConfirmation(true);
   };
 
   const handleConfirmUpdate = async () => {
-    // Store the selected application IDs immediately after successful validation
-    const validatedAppIds = Object.keys(checkboxRefs.current).filter(appId => 
+    const selectedAppIds = Object.keys(checkboxRefs.current).filter(appId => 
       checkboxRefs.current[appId]?.value === true
     );
-    console.log('Selected app IDs after successful validation:', validatedAppIds);
 
     setIsUpdating(true);
     setError('');
@@ -241,10 +202,9 @@ export function EditGroupDialog({
       const payload = {
         name: groupName,
         members: selectedMembers.map(m => m.email),
-        assigned_applications: validatedAppIds,
+        assigned_applications: selectedAppIds,
         is_admin: false
       };
-      console.log('Sending payload:', payload);
 
       await userGroupService.updateUserGroup(groupId, payload);
 
@@ -258,8 +218,14 @@ export function EditGroupDialog({
       }, 1500);
       
     } catch (err: any) {
-      setError('Failed to update group. Please try again.');
-      console.error('Failed to update group:', err);
+      // Handle validation errors from backend (400) and display the exact error message
+      if (err.response?.status === 400) {
+        setError(err.response.data.error);
+      } else {
+        setError('Failed to update group. Please try again.');
+        // Only log unexpected errors (not validation errors)
+        console.error('Failed to update group:', err);
+      }
     } finally {
       setIsUpdating(false);
     }
@@ -340,12 +306,9 @@ export function EditGroupDialog({
   // Available members = allMembers - selectedMembers, filtered by search term
   const availableMembers = allMembers.filter(
     (m) => !selectedMembers.some((sel) => sel.id === m.id) &&
-           (() => {
-             const matches = searchTerm === '' || 
-                            m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                            m.email.toLowerCase().includes(searchTerm.toLowerCase());
-             return matches;
-           })()
+           (searchTerm === '' || 
+            m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            m.email.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   // Don't render the dialog until opened

@@ -6,15 +6,21 @@ import logger from "../utils/logger";
 import mongoose from "mongoose";
 import { fetchUserFromDirectory } from "../utils/fetchUserFromDirectory";
 import { getSuperAdminEmails } from "../utils/getSuperAdminEmails";
+import { createUserGroupSchema, updateUserGroupSchema } from "../validators/userGroup.validator";
 
 export const createUserGroup = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  //check if the group name is already in the database
-  const existingGroup = await UserGroup.findOne({ name: req.body.name });
-  if (existingGroup) {
-    res.status(409).json({ error: "Group name already exists." });
+  // Trim the name before validation
+  if (req.body.name) {
+    req.body.name = req.body.name.trim();
+  }
+
+  // Validate input using Joi schema
+  const { error, value } = createUserGroupSchema.validate(req.body);
+  if (error) {
+    res.status(400).json({ error: error.details[0].message });
     return;
   }
 
@@ -23,10 +29,12 @@ export const createUserGroup = async (
     is_admin = false,
     members = [],
     assigned_applications = [],
-  } = req.body;
+  } = value;
 
-  if (!name) {
-    res.status(400).json({ error: "Group name is required." });
+  // Check if the group name already exists (after trim and validation)
+  const existingGroup = await UserGroup.findOne({ name });
+  if (existingGroup) {
+    res.status(400).json({ error: "A group with this name already exists." });
     return;
   }
 
@@ -110,6 +118,15 @@ export const updateUserGroup = async (
   // Determine if this is an admin group (existing or being updated to one)
   const finalIsAdmin =
     typeof is_admin === "boolean" ? is_admin : group.is_admin;
+
+  // Validate input for non-admin groups
+  if (!finalIsAdmin) {
+    const { error } = updateUserGroupSchema.validate(req.body);
+    if (error) {
+      res.status(400).json({ error: error.details[0].message });
+      return;
+    }
+  }
 
   // For admin groups, override applications with all available apps
   const validAppIds = finalIsAdmin

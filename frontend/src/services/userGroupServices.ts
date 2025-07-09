@@ -40,14 +40,34 @@ export const userGroupService = {
 
   // Create a new user group
   async createUserGroup(payload: CreateGroupPayload): Promise<GroupData> {
-    const response = await axios.post('/user-groups', payload);
-    return response.data;
+    try {
+      const response = await axios.post('/user-groups', payload);
+      return response.data;
+    } catch (error: any) {
+      // Re-throw the error for the component to handle, but don't log validation errors
+      if (error.response?.status === 400) {
+        throw error; // Validation errors are expected, just re-throw
+      }
+      // Log unexpected errors
+      console.error('Unexpected error creating user group:', error);
+      throw error;
+    }
   },
 
   // Update a user group
   async updateUserGroup(groupId: string, payload: UpdateGroupPayload): Promise<GroupData> {
-    const response = await axios.patch(`/user-groups/${groupId}`, payload);
-    return response.data;
+    try {
+      const response = await axios.patch(`/user-groups/${groupId}`, payload);
+      return response.data;
+    } catch (error: any) {
+      // Re-throw the error for the component to handle, but don't log validation errors
+      if (error.response?.status === 400) {
+        throw error; // Validation errors are expected, just re-throw
+      }
+      // Log unexpected errors
+      console.error('Unexpected error updating user group:', error);
+      throw error;
+    }
   },
 
   // Delete a user group
