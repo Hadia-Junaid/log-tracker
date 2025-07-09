@@ -57,8 +57,8 @@ export default function Applications({ path }: Props) {
     { value: "nameDesc", label: "Name (Z-A)" },
     { value: "createdAtDesc", label: "Created Date (Newest First)" },
     { value: "createdAt", label: "Created Date (Oldest First)" },
-    { value: "updatedAtDesc", label: "Last Updated (Newest First)" },
-    { value: "updatedAt", label: "Last Updated (Oldest First)" },
+    // { value: "updatedAtDesc", label: "Last Updated (Newest First)" },
+    // { value: "updatedAt", label: "Last Updated (Oldest First)" },
   ];
 
   const statusDataProvider = useMemo(() => {

@@ -7,9 +7,14 @@ const logFormat = printf(({ level, message, timestamp }) => {
   return `[${timestamp}] [${level.toUpperCase()}] [trace-id-placeholder]${message}\n`;
 });
 
+const env = process.env.NODE_ENV || 'development';
+
+// Set level: 'debug' in production, 'info' otherwise
+const logLevel = env === 'production' ? 'info' : 'debug';
+
 // Create the logger
 const logger = winston.createLogger({
-  level: process.env.LOG_LEVEL || 'info',
+  level: logLevel,
   format: combine(
     timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }),
     logFormat
