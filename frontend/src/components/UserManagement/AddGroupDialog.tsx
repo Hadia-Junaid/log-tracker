@@ -226,6 +226,15 @@ export function AddGroupDialog({
   max-height="80vh">
       <div slot="header">
         <h2 id="add-dialog-title">Add New Group</h2>
+        {/* Error Message */}
+        {error && (
+              <div class="oj-sm-margin-4x-bottom error-message-banner">
+                <div class="oj-flex oj-sm-align-items-center">
+                  <span class="oj-ux-ico-status-error oj-text-color-danger oj-sm-margin-2x-end"></span>
+                  <span class="oj-text-color-danger">{error}</span>
+                </div>
+              </div>
+            )}
       </div>
 
       <div slot="body">
@@ -274,15 +283,7 @@ export function AddGroupDialog({
               </div>
             )}
 
-            {/* Error Message */}
-            {error && (
-              <div class="oj-sm-margin-4x-bottom error-message-banner">
-                <div class="oj-flex oj-sm-align-items-center">
-                  <span class="oj-ux-ico-status-error oj-text-color-danger oj-sm-margin-2x-end"></span>
-                  <span class="oj-text-color-danger">{error}</span>
-                </div>
-              </div>
-            )}
+            
 
             {/* Group Name Input */}
             <div class="oj-sm-margin-4x-bottom">
