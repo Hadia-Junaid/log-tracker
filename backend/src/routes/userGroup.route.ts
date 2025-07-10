@@ -17,7 +17,7 @@ const router = Router();
 router.get('/', getUserGroups);
 router.get('/:id', authenticate, getUserGroupById);
 
-// Admin-only routes - require both authentication and admin privileges
+// Admin-only routes - require both authentication and admin privilege
 router.post('/', authenticate, requireAdmin, createUserGroup);
 router.patch('/:id', authenticate, requireAdmin, updateUserGroup);
 router.delete('/:id', authenticate, requireAdmin, deleteUserGroup);

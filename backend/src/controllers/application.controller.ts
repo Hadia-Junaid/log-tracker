@@ -71,13 +71,13 @@ export const getApplications = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-
   const page = Math.max(1, parseInt(req.query.page as string) || 1);
   const pageSize = Math.max(1, parseInt(req.query.pageSize as string) || 8);
   const search = (req.query.search as string)?.trim() || "";
   const status = req.query.status as string;
-  const environment = req.query.environment as string[] || [];
+  const environment = (req.query.environment as string[]) || [];
   const sort = req.query.sort as string;
+  const allPages = req.query.allPages === "true" ? true : false;
 
   // Build filter object
   const filter: Record<string, any> = {};
@@ -120,10 +120,10 @@ export const getApplications = async (
   const [total, apps] = await Promise.all([
     Application.countDocuments(filter),
     Application.find(filter)
-    .collation({ locale: "en", strength: 2 })
+      .collation({ locale: "en", strength: 2 })
       .sort(sortOption)
-      .skip((page - 1) * pageSize)
-      .limit(pageSize)
+      .skip(allPages ? 0 : (page - 1) * pageSize)
+      .limit(allPages ? 0 : pageSize)
       .lean(),
   ]);
 
@@ -271,9 +271,9 @@ export const deleteApplication = async (
   res.send({ message: "Application deleted successfully." });
 };
 
-// Gets groups assigned to a specific application by ID
+// Gets groups assigned to a specific application by ID and also the list of all active groups
 // Expects req.params.id to be the application ID
-// Returns a list of groups with their ids, names and admin status
+// Returns a JSON object with all groups as objects and the IDs of those assigned to the application as strings
 export const getAssignedGroups = async (
   req: Request,
   res: Response
@@ -289,8 +289,11 @@ export const getAssignedGroups = async (
   }
 
   const [allGroups, assignedGroups] = await Promise.all([
-    UserGroup.find({}, "id name is_admin").lean(),
-    UserGroup.find({ assigned_applications: appId }, "_id").lean(),
+    UserGroup.find({ is_active: true }, "id name is_admin").lean(),
+    UserGroup.find(
+      { assigned_applications: appId, is_active: true },
+      "_id"
+    ).lean(),
   ]);
 
   const assignedGroupIds = assignedGroups.map((g) => g._id.toString());

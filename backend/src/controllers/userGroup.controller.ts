@@ -252,7 +252,10 @@ export const getUserGroups = async (
   const pageSize = Math.max(1, parseInt(req.query.pageSize as string) || 8);
   const search = (req.query.search as string)?.trim() || "";
   const { is_admin, is_active } = req.query;
-  
+  const allPages = req.query.allPages === "true" ? true : false;
+
+  logger.debug(`Fetching user groups (allPages: ${allPages})`);
+
   const filter: any = {};
 
   if (search) filter.name = { $regex: search, $options: "i" };
@@ -265,8 +268,8 @@ export const getUserGroups = async (
       .select('name is_admin is_active assigned_applications members createdAt updatedAt')
       .populate("assigned_applications")
       .populate("members")
-      .skip((page - 1) * pageSize)
-      .limit(pageSize)
+      .skip(allPages ? 0 : (page - 1) * pageSize)
+      .limit(allPages ? 0 : pageSize)
       .lean(),
   ]);
 
