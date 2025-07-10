@@ -17,8 +17,8 @@ import Sidebar from "./components/Sidebar";
 import Login from "./views/Login";
 import "./styles/app.css";
 // import "./styles/userManagement.css";
-import axios from "./api/axios"; 
-import LoadingSpinner from "./components/LoadingSpinner"; 
+import axios from "./api/axios";
+import LoadingSpinner from "./components/LoadingSpinner";
 
 type Props = {
     appName?: string;
@@ -26,14 +26,17 @@ type Props = {
     userId?: string;
 };
 
-function checkAuth(): Promise<boolean> {
-    return axios
-        .get(`/auth/status`)
-        .then((res) => {
-            console.log("Auth check response:", res);
-            return res.data?.authenticated === true;
-        })
-        .catch(() => false);
+function checkAuth(): Promise<{ authenticated: boolean; email?: string }> {
+  return axios
+    .get(`/auth/status`)
+    .then((res) => {
+      console.log("Auth check response:", res);
+      return {
+        authenticated: res.data?.authenticated === true,
+        email: res.data?.user?.email,
+      };
+    })
+    .catch(() => ({ authenticated: false }));
 }
 
 export const App = registerCustomElement(
@@ -45,29 +48,29 @@ export const App = registerCustomElement(
         const [userLogin, setUserLogin] = useState<string>("");
         const [userId, setUserId] = useState<string>("");
 
-        useEffect(() => {
-            const checkOrExchangeAuth = async () => {
-                // Look for auth_code in URL
-                const hash = window.location.hash;
-                const query = hash.includes("?") ? hash.split("?")[1] : "";
-                const params = new URLSearchParams(query);
-                const authCode = params.get("auth_code");
+    useEffect(() => {
+      const checkOrExchangeAuth = async () => {
+        // Look for auth_code in URL
+        const hash = window.location.hash;
+        const query = hash.includes("?") ? hash.split("?")[1] : "";
+        const params = new URLSearchParams(query);
+        const authCode = params.get("auth_code");
 
-                if (authCode) {
-                    try {
-                        // Exchange code -> set cookie
-                        await axios.post("/auth/exchange", {
-                            auth_code: authCode,
-                        });
+        if (authCode) {
+          try {
+            // Exchange code -> set cookie
+            await axios.post("/auth/exchange", {
+              auth_code: authCode,
+            });
 
-                        // Clear the hash so it's clean
-                        window.location.hash = "";
-                    } catch (err) {
-                        console.error("OAuth exchange failed", err);
-                        setIsAuthenticated(false);
-                        return;
-                    }
-                }
+            // Clear the hash so it's clean
+            window.location.hash = "";
+          } catch (err) {
+            console.error("OAuth exchange failed", err);
+            setIsAuthenticated(false);
+            return;
+          }
+        }
 
                 const res = await axios.get("/auth/status");
                 const isAuthed = res.data?.authenticated === true;
@@ -83,26 +86,24 @@ export const App = registerCustomElement(
                 setIsAuthenticated(true);
             };
 
-            checkOrExchangeAuth();
-        }, []);
+      checkOrExchangeAuth();
+    }, []);
 
-        if (isAuthenticated === null) {
-            return <LoadingSpinner />;
-        }
+    if (isAuthenticated === null) {
+      return <LoadingSpinner />;
+    }
 
-        if (!isAuthenticated) {
-            return <Login />;
-        }
+    if (!isAuthenticated) {
+      return <Login />;
+    }
 
-        useEffect(() => {
-            Context.getPageContext()
-                .getBusyContext()
-                .applicationBootstrapComplete();
-        }, []);
+    useEffect(() => {
+      Context.getPageContext().getBusyContext().applicationBootstrapComplete();
+    }, []);
 
-        return (
-            <div id="appContainer" class="oj-web-applayout-page">
-                <Header appName={appName} userLogin={userLogin} />
+    return (
+      <div id="appContainer" class="oj-web-applayout-page">
+        <Header appName={appName} userLogin={userLogin} />
 
                 <div
                     class="oj-web-applayout-content oj-flex"
@@ -117,12 +118,11 @@ export const App = registerCustomElement(
                             <Applications path="/applications" />
                             <Settings path="/settings" />
 
-                            <NotFound default />
-                        </Router>
-                    </main>
-                </div>
-
-            </div>
-        );
-    }
+              <NotFound default />
+            </Router>
+          </main>
+        </div>
+      </div>
+    );
+  }
 );
