@@ -189,7 +189,7 @@ export default function Applications({ path }: Props) {
               <oj-input-text
                 placeholder="Search applications"
                 value={searchQuery}
-                onrawValueChanged={(e: any) => {
+                onrawValueChanged={(e:CustomEvent) => {
                   setSearchQuery(e.detail.value);
                   setCurrentPage(1);
                 }}

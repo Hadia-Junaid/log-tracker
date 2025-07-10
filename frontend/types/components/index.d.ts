@@ -14,6 +14,11 @@
           "ojactioncard": any;
           "oj-c-card": any;
           "oj-checkbox-set": any;
+          "ojselectsingle": any;
+          "ojselectcombobox": any;
+          "oj-form-layout": any;
+          "oj-form-item": any;
+          "oj-form-message": any;
           "oj-c-message-banner": any;
           "oj-c-message-toast": any;
           "oj-c-flex": any;
