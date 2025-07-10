@@ -40,6 +40,13 @@ export default function AddApplicationDialog({
   const [userGroups, setUserGroups] = useState<UserGroup[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
 
+
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [hostnameError, setHostnameError] = useState<string | null>(null);
+  const [environmentError, setEnvironmentError] = useState<string | null>(null);
+  const [descriptionError, setDescriptionError] = useState<string | null>(null);
+
+
   useEffect(() => {
     if (dialogRef.current) {
       if (isOpen) {
@@ -73,55 +80,61 @@ export default function AddApplicationDialog({
       onClose();
     }
   };
+const validate = () => {
+  let valid = true;
 
-  const validate = () => {
-    const nameTrimmed = name.trim();
-    const hostnameTrimmed = hostname.trim();
-    const descriptionTrimmed = description?.trim() ?? "";
+  const nameTrimmed = name.trim();
+  const hostnameTrimmed = hostname.trim();
+  const descriptionTrimmed = description?.trim() ?? "";
 
-    // Name validation
-    if (nameTrimmed.length < 5 || nameTrimmed.length > 20) {
-      return "Name must be between 5 and 20 characters.";
-    }
+  // Reset all errors first
+  setNameError(null);
+  setHostnameError(null);
+  setEnvironmentError(null);
+  setDescriptionError(null);
 
-    const namePattern = /^[a-zA-Z0-9 _-]+$/;
-    if (!namePattern.test(nameTrimmed)) {
-      return "Name can only contain letters, numbers, spaces, hyphens, and underscores.";
-    }
+  // Name
+  if (nameTrimmed.length < 5 || nameTrimmed.length > 20) {
+    setNameError("Name must be between 5 and 20 characters.");
+    valid = false;
+  } else if (!/^[a-zA-Z0-9 _-]+$/.test(nameTrimmed)) {
+    setNameError("Name can only contain letters, numbers, spaces, hyphens, and underscores.");
+    valid = false;
+  }
 
-    // Hostname validation
-    if (!hostnameTrimmed || hostnameTrimmed.length > 255) {
-      return "Hostname is required and must be less than 255 characters.";
-    }
+  // Hostname
+  if (!hostnameTrimmed || hostnameTrimmed.length > 255) {
+    setHostnameError("Hostname is required and must be less than 255 characters.");
+    valid = false;
+  }
 
-    // Environment validation
-    if (!environments.includes(environment)) {
-      return "Please select a valid environment.";
-    }
+  // Environment
+  if (!environments.includes(environment)) {
+    setEnvironmentError("Please select a valid environment.");
+    valid = false;
+  }
 
-    // Description validation (optional)
-    if (descriptionTrimmed) {
-      if (descriptionTrimmed.length < 10 || descriptionTrimmed.length > 100) {
-        return "Description must be between 10 and 100 characters.";
-      }
+  // Description
+  if (descriptionTrimmed.length < 10 || descriptionTrimmed.length > 100) {
+    setDescriptionError("Description must be between 10 and 100 characters.");
+    valid = false;
+  } else if (!/^[a-zA-Z0-9 _\-\.,:;()[\]'""]*$/.test(descriptionTrimmed)) {
+    setDescriptionError("Description contains invalid characters.");
+    valid = false;
+  }
 
-      const descriptionPattern = /^[a-zA-Z0-9 _\-\.,:;()[\]'""]*$/;
-      if (!descriptionPattern.test(descriptionTrimmed)) {
-        return "Description contains invalid characters.";
-      }
-    }
+  return valid;
+};
 
-    return null; // No errors
-  };
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
 
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
+    const isValid = validate();
+    if (!isValid) {
+      console.error("Validation failed");
       return;
     }
 
@@ -188,6 +201,8 @@ export default function AddApplicationDialog({
               required
               disabled={loading}
             ></oj-input-text>
+            {nameError && <p class="field-error">{nameError}</p>}
+
 
             <oj-label for="appHostname">Hostname</oj-label>
             <oj-input-text
@@ -197,6 +212,7 @@ export default function AddApplicationDialog({
               required
               disabled={loading}
             ></oj-input-text>
+            {hostnameError && <p class="field-error">{hostnameError}</p>}
 
             <oj-label for="appEnvironment">Environment</oj-label>
             <select
@@ -218,6 +234,7 @@ export default function AddApplicationDialog({
                 </option>
               ))}
             </select>
+            {environmentError && <p class="field-error">{environmentError}</p>}
 
             <oj-label for="appDescription">Description</oj-label>
             <oj-input-text
@@ -228,6 +245,7 @@ export default function AddApplicationDialog({
               }
               disabled={loading}
             ></oj-input-text>
+            {descriptionError && <p class="field-error">{descriptionError}</p>}
 
             <oj-label for="appIsActive">Status</oj-label>
             <div class="oj-form-control-wrapper">
