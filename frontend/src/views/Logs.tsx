@@ -1,6 +1,6 @@
 /** @jsx h */
 import { h } from "preact";
-import { useEffect, useState, useMemo } from "preact/hooks";
+import { useEffect, useState, useMemo, useRef } from "preact/hooks";
 import "ojs/ojtable";
 import "ojs/ojprogress-circle";
 import "ojs/ojinputtext";
@@ -11,6 +11,7 @@ import "../styles/logs.css";
 import LogsHeader from "../components/logspage/LogsHeader";
 import LogsTable from "../components/logspage/LogsTable";
 import Pagination from "../components/logspage/Pagination";
+import { set } from "mongoose";
 
 type LogEntry = {
   _id: string;
@@ -41,6 +42,7 @@ export default function Logs(props: Props) {
   const [logLevels, setLogLevels] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [exportStatus, setExportStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const time = new Date();
   const initialStartTime = new Date(time.getTime() - 24 * 60 * 60 * 1000).toISOString();
@@ -52,6 +54,13 @@ export default function Logs(props: Props) {
   // ✅ Custom start/end for manual inputs
   const [customStart, setCustomStart] = useState<string | null>(null);
   const [customEnd, setCustomEnd] = useState<string | null>(null);
+
+  const [autoRefresh, setAutoRefresh] = useState<boolean | undefined>(undefined);
+  const [autoRefreshTime, setAutoRefreshTime] = useState<number | undefined>(undefined);
+  const [logTTL, setLogTTL] = useState<number | null>(null);
+
+  // Ref to track last fetch time (ms since epoch)
+  const lastFetchTimeRef = useRef<number>(Date.now());
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -110,41 +119,69 @@ useEffect(() => {
 }, [customStart, customEnd]);
 
 
+  // Refactor fetchLogs so it can be called from anywhere
+  const fetchLogs = async () => {
+    setLoading(true);
+    try {
+      const res = await axios.get(`/logs`, {
+        params: {
+          search: debouncedSearch,
+          app_ids: Array.from(selectedAppIds).join(','),
+          log_levels: logLevels.join(','),
+          page,
+          start_time: startTime ?? undefined,
+          end_time: endTime ?? undefined,
+        },
+      });
+      setLogs(res.data.data);
+      setTotalPages(res.data.total_pages || 1);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to fetch logs:", err);
+      setError("Could not load logs.");
+    } finally {
+      setLoading(false);
+      lastFetchTimeRef.current = Date.now(); // Update last fetch time
+    }
+  };
+
+  // Manual fetch: run when filters, page, etc. change
   useEffect(() => {
-    const fetchLogs = async () => {
-      setLoading(true);
+    fetchLogs();
+  }, [debouncedSearch, selectedAppIds, logLevels, page, startTime, endTime]);
+
+  // Auto-refresh effect
+  useEffect(() => {
+    if (!autoRefresh || !autoRefreshTime) return;
+    const interval = setInterval(() => {
+      const now = Date.now();
+      if (now - lastFetchTimeRef.current >= autoRefreshTime * 1000) {
+        fetchLogs();
+      }
+    }, 1000); // Check every second
+    return () => clearInterval(interval);
+  }, [autoRefresh, autoRefreshTime, debouncedSearch, selectedAppIds, logLevels, page, startTime, endTime]);
+
+  useEffect(() => {
+    // Fetch user data (applications, autoRefresh, autoRefreshTime, logTTL) on mount
+    const fetchUserData = async () => {
       try {
-        const res = await axios.get(`/logs`, {
-          params: {
-            search: debouncedSearch,
-            app_ids: Array.from(selectedAppIds).join(','),
-            log_levels: logLevels.join(','),
-            page,
-            start_time: startTime ?? undefined,
-            end_time: endTime ?? undefined,
-          },
-        });
-
-        setLogs(res.data.data);
+        const res = await axios.get('/logs/userdata');
         setApplications(res.data.assigned_applications || []);
-        setTotalPages(res.data.total_pages || 1);
-
+        setAutoRefresh(res.data.autoRefresh);
+        setAutoRefreshTime(res.data.autoRefreshTime);
+        setLogTTL(res.data.logTTL);
         const map: Record<string, string> = {};
         res.data.assigned_applications.forEach((app: Application) => {
           map[app._id] = app.name;
         });
-        setAppMap(map);
-        setError(null);
+        setAppMap(map);       
       } catch (err) {
-        console.error("Failed to fetch logs:", err);
-        setError("Could not load logs.");
-      } finally {
-        setLoading(false);
+        console.error('Failed to fetch user data:', err);
       }
     };
-
-    fetchLogs();
-  }, [debouncedSearch, selectedAppIds, logLevels, page, startTime, endTime]);
+    fetchUserData();
+  }, []);
 
   const dataProvider = useMemo(() => {
     const enrichedLogs = logs.map((log) => ({
@@ -154,6 +191,8 @@ useEffect(() => {
     }));
     return new ArrayDataProvider(enrichedLogs, { keyAttributes: "_id" });
   }, [logs, appMap]);
+
+  
 
   const columns = [
     {
@@ -187,7 +226,23 @@ useEffect(() => {
       headerStyle: "text-align: center",
     },
   ];
+  const handleResetFilters = () => {
+  setSearch("");
+  setDebouncedSearch(""); 
+  setSelectedAppIds([]);
+  setLogLevels([]);
+  setTimeRange("Last 24 hours");
+  setCustomStart(null);
+  setCustomEnd(null);
+  setPage(1);
+  const now = new Date();
+  let start: Date | null = null;
+  start = new Date(now.getTime() - 60 * 60 * 1000);
+  setStartTime(start.toISOString());
+  setEndTime(now.toISOString());
 
+  };
+  
   const handleExport = async (format: "csv" | "json") => {
     try {
       const res = await axios.get(`/logs/export`, {
@@ -214,8 +269,12 @@ useEffect(() => {
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      setExportStatus({ type: 'success', message: `Exported logs as ${format.toUpperCase()}` });
     } catch (err) {
       console.error("Failed to export logs:", err);
+      setExportStatus({ type: 'error', message: 'Failed to export logs.' });
+    } finally {
+      setTimeout(() => setExportStatus(null), 4000);
     }
   };
 
@@ -237,6 +296,9 @@ useEffect(() => {
         setCustomStart={setCustomStart} // ✅
         customEnd={customEnd} // ✅
         setCustomEnd={setCustomEnd} // ✅
+        onResetFilters={handleResetFilters}
+        exportStatus={exportStatus}
+        logTTL={logTTL}
       />
       <LogsTable loading={loading} error={error} dataProvider={dataProvider} columns={columns} />
       <Pagination page={page} totalPages={totalPages} setPage={setPage} />

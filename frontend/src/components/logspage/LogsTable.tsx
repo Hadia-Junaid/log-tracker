@@ -2,7 +2,7 @@ import { h } from "preact";
 import "ojs/ojtable";
 import "ojs/ojprogress-circle";
 import { ojTable } from "ojs/ojtable";
-
+import "../../styles/logs.css";
 interface LogsTableProps {
   loading: boolean;
   error: string | null;
@@ -10,7 +10,7 @@ interface LogsTableProps {
   columns: any[];
 }
 
-export default function LogsTable({ loading, error, dataProvider, columns }: LogsTableProps) {
+export default function LogsTable({loading, error, dataProvider, columns }: LogsTableProps) {
   return (
     <>
       {loading ? (

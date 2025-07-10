@@ -24,7 +24,6 @@ export const getLogs = async (req: Request, res: Response): Promise<void> => {
       res.status(400).json({ error: 'Invalid userId' });
       return;
     }
-    logger.info(`app ids : ${app_ids}`);
     // Get user and their logsPerPage setting
     const user = await User.findById(userId).lean();
     if (!user) {
@@ -33,12 +32,14 @@ export const getLogs = async (req: Request, res: Response): Promise<void> => {
     }
     const limitNum = user.settings?.logsPerPage || 10;
     // 1. Find user groups for the user
-    const userGroups = await UserGroup.find({ members: userId }).lean();
+    let userGroups = await UserGroup.find({ members: userId }).lean();
+    // Only keep active groups
+    userGroups = userGroups.filter(g => g.is_active === true);
     if (!userGroups.length) {
-      res.status(404).json({ error: 'User is not a member of any group' });
+      res.status(404).json({ error: 'User is not a member of any active group' });
       return;
     }
-    
+    logger.info(`start time ${start_time}`);
     // 2. Collect all assigned application IDs from these groups
     const groupAppIds = userGroups.flatMap(g => g.assigned_applications.map(id => id.toString()));
     // If app_ids is provided, filter further
@@ -70,7 +71,8 @@ export const getLogs = async (req: Request, res: Response): Promise<void> => {
       if (end_time) logQuery.timestamp.$lte = new Date(end_time as string);
     }
     if (search) {
-      logQuery.message = { $regex: search as string, $options: 'i' };
+      const safeSearch = escapeRegex(search as string);
+      logQuery.message = { $regex: safeSearch, $options: 'i' };
     }
 
     // 5. Pagination
@@ -127,12 +129,13 @@ export const exportLogs = async (req: Request, res: Response): Promise<void> => 
     }
 
     // 1. Find user groups for the user
-    const userGroups = await UserGroup.find({ members: userId }).lean();
+    let userGroups = await UserGroup.find({ members: userId }).lean();
+    // Only keep active groups
+    userGroups = userGroups.filter(g => g.is_active === true);
     if (!userGroups.length) {
-      res.status(404).json({ error: 'User is not a member of any group' });
+      res.status(404).json({ error: 'User is not a member of any active group' });
       return;
     }
-
     // 2. Collect all assigned application IDs from these groups
     const groupAppIds = userGroups.flatMap(g => g.assigned_applications.map(id => id.toString()));
     // If app_ids is provided, filter further
@@ -159,7 +162,8 @@ export const exportLogs = async (req: Request, res: Response): Promise<void> => 
       if (end_time) logQuery.timestamp.$lte = new Date(end_time as string);
     }
     if (search) {
-      logQuery.message = { $regex: search as string, $options: 'i' };
+      const safeSearch = escapeRegex(search as string);
+      logQuery.message = { $regex: safeSearch, $options: 'i' };
     }
 
     // 4. Query all logs (no pagination)
@@ -180,9 +184,65 @@ export const exportLogs = async (req: Request, res: Response): Promise<void> => 
         res.status(500).json({ error: 'Failed to export logs as CSV', details: err });
       }
     } else {
-      res.status(200).json({ data: logs, total: logs.length });
+      const allowedFields = ['_id', 'application_id', 'timestamp', 'log_level', 'trace_id', 'message'];
+      const filteredLogs = logs.map(log => {
+        const filtered: any = {};
+        const logObj = log as Record<string, any>;
+        allowedFields.forEach(field => { if (logObj[field] !== undefined) filtered[field] = logObj[field]; });
+        return filtered;
+      });
+      res.status(200).json({ data: filteredLogs, total: filteredLogs.length });
     }
   } catch (err) {
     res.status(500).json({ error: 'Failed to export logs', details: err });
   }
-}; 
+};
+
+export const userdata = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      res.status(400).json({ error: 'Invalid userId' });
+      return;
+    }
+    // Get user
+    const user = await User.findById(userId).lean();
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+    // 1. Find user groups for the user (active only)
+    let userGroups = await UserGroup.find({ members: userId }).lean();
+    userGroups = userGroups.filter(g => g.is_active === true);
+    if (!userGroups.length) {
+      res.status(404).json({ error: 'User is not a member of any active group' });
+      return;
+    }
+    // 2. Collect all assigned application IDs from these groups
+    const groupAppIds = userGroups.flatMap(g => g.assigned_applications.map(id => id.toString()));
+    // 3. Get assigned applications' ids and names
+    const assignedApplications = await Application.find({ _id: { $in: groupAppIds } })
+      .select('_id name')
+      .lean();
+    // 4. Get user settings
+    const { autoRefresh, autoRefreshTime } = user.settings || {};
+    logger.info(`User settings: autoRefresh=${autoRefresh}, autoRefreshTime=${autoRefreshTime}`);
+    // 5. Get TTL index value from Log collection
+    const indexes = await Log.collection.indexes();
+    const ttlIndex = indexes.find(idx => idx.key && idx.key.timestamp === 1 && idx.expireAfterSeconds);
+    const logTTL = ttlIndex ? ttlIndex.expireAfterSeconds : null;
+    res.status(200).json({
+      assigned_applications: assignedApplications,
+      autoRefresh,
+      autoRefreshTime,
+      logTTL
+    });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to fetch user data', details: err });
+  }
+};
+
+// Helper to escape regex special characters
+function escapeRegex(str: string) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+} 

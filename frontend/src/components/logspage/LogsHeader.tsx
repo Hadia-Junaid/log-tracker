@@ -32,6 +32,9 @@ interface LogsHeaderProps {
   setCustomStart: (value: string | null) => void;
   customEnd: string | null;
   setCustomEnd: (value: string | null) => void;
+  onResetFilters: () => void;
+  exportStatus?: { type: 'success' | 'error'; message: string } | null;
+  logTTL?: number | null;
 }
 
 export default function LogsHeader({
@@ -50,6 +53,9 @@ export default function LogsHeader({
   setCustomStart,
   customEnd,
   setCustomEnd,
+  onResetFilters,
+  exportStatus,
+  logTTL
 }: LogsHeaderProps) {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const appDataProvider = new ArrayDataProvider(applications, { keyAttributes: "_id" });
@@ -60,7 +66,7 @@ export default function LogsHeader({
   };
   const logLevelOptions = ["INFO", "ERROR", "WARN", "DEBUG"];
   const [currentDateTime, setCurrentDateTime] = useState(new Date().toISOString());
-
+  console.log("currentDateTime", currentDateTime);
   const timeRangeOptions: TimeRangeOption[] = [
     { value: "Last hour", label: "Last hour" },
     { value: "Last 24 hours", label: "Last 24 hours" },
@@ -68,7 +74,8 @@ export default function LogsHeader({
     { value: "All", label: "All" },
     { value: "custom", label: "Custom" },
   ];
-  const handleResetFilters = () => {}
+  // const handleResetFilters = () => {}
+
   const timeRangeDP = new ArrayDataProvider(timeRangeOptions, { keyAttributes: "value" });
   useEffect(() => {
     setPage(1);
@@ -82,6 +89,7 @@ export default function LogsHeader({
     return () => clearInterval(interval);
   }, []);
 
+  const minDate = logTTL ? new Date(Date.now() - logTTL * 1000).toISOString() : undefined;
 
   return (
     <>
@@ -110,6 +118,9 @@ export default function LogsHeader({
               </button>
             </div>
           )}
+          {exportStatus && (
+            <div class={`export-status-message ${exportStatus.type}`}>{exportStatus.message}</div>
+          )}
         </div>
       </div>
 
@@ -117,7 +128,11 @@ export default function LogsHeader({
         <oj-input-text
           placeholder="Search messages..."
           value={search}
-          onrawValueChanged={(e: any) => { setSearch(e.detail.value); setPage(1); }}
+          onrawValueChanged={(e: any) => {
+            const value = e.detail.value || "";
+            setSearch(value.replace(/\s+$/, ""));
+            setPage(1);
+          }}
           class="oj-form-control-max-width-md oj-sm-margin-end input-filter search"
         ></oj-input-text>
 
@@ -154,6 +169,7 @@ export default function LogsHeader({
           class="oj-form-control-max-width-md input-filter datetime"
           disabled={selectedTimeRange !== 'custom'}
           max={currentDateTime}
+          min={minDate}
         ></oj-input-date-time>
       
         <div class="oj-typography-body-md" style="align-self: center; font-weight: bold;">to</div>
@@ -167,12 +183,13 @@ export default function LogsHeader({
           class="oj-form-control-max-width-md input-filter datetime"
           disabled={selectedTimeRange !== 'custom'}
           max={currentDateTime}
+          min={minDate}
         ></oj-input-date-time>
 
         <oj-button
                 chroming="solid"
                 class="add-button resetbutton"
-                onojAction={handleResetFilters}
+                onojAction={onResetFilters} 
               >
                 <span slot="startIcon" class="oj-ux-ico-refresh reset"></span>
                 Reset
