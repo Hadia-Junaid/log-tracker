@@ -12,6 +12,7 @@ import { isAxiosError } from "../../api/axios";
 import "../../styles/applications/addApplicationDialog.css";
 import { Application } from "../../types/applications";
 import "ojs/ojswitch";
+import { UserGroup } from "../../types/applications";
 
 type AddApplicationDialogProps = {
   isOpen: boolean;
@@ -20,11 +21,6 @@ type AddApplicationDialogProps = {
 };
 
 const environments = ["Development", "Testing", "Staging", "Production"];
-
-type UserGroup = {
-  _id: string;
-  name: string;
-}
 
 export default function AddApplicationDialog({
   isOpen,
@@ -41,8 +37,15 @@ export default function AddApplicationDialog({
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  const [userGroups, setUserGroups] = useState<UserGroup[]>([]); 
+  const [userGroups, setUserGroups] = useState<UserGroup[]>([]);
   const [selectedGroups, setSelectedGroups] = useState<string[]>([]);
+
+
+  const [nameError, setNameError] = useState<string | null>(null);
+  const [hostnameError, setHostnameError] = useState<string | null>(null);
+  const [environmentError, setEnvironmentError] = useState<string | null>(null);
+  const [descriptionError, setDescriptionError] = useState<string | null>(null);
+
 
   useEffect(() => {
     if (dialogRef.current) {
@@ -60,7 +63,8 @@ export default function AddApplicationDialog({
           .get("/user-groups")
           .then((res) => {
             console.log("Fetched user groups:", res.data);
-            setUserGroups(res.data)})
+            setUserGroups(res.data);
+          })
           .catch((err) => {
             console.error("Failed to fetch user groups", err);
             setError("Failed to load user groups.");
@@ -76,27 +80,61 @@ export default function AddApplicationDialog({
       onClose();
     }
   };
+const validate = () => {
+  let valid = true;
 
-  const validate = () => {
-    if (name.trim().length < 5 || name.length > 20)
-      return "Name must be 5–20 characters.";
-    if (!hostname.trim() || hostname.length > 255)
-      return "Hostname is required and must be less than 255 characters.";
-    if (!environments.includes(environment))
-      return "Please select a valid environment.";
-    if (description && (description.length < 10 || description.length > 100))
-      return "Description must be 10–100 characters or left blank.";
-    return null;
-  };
+  const nameTrimmed = name.trim();
+  const hostnameTrimmed = hostname.trim();
+  const descriptionTrimmed = description?.trim() ?? "";
+
+  // Reset all errors first
+  setNameError(null);
+  setHostnameError(null);
+  setEnvironmentError(null);
+  setDescriptionError(null);
+
+  // Name
+  if (nameTrimmed.length < 5 || nameTrimmed.length > 20) {
+    setNameError("Name must be between 5 and 20 characters.");
+    valid = false;
+  } else if (!/^[a-zA-Z0-9 _-]+$/.test(nameTrimmed)) {
+    setNameError("Name can only contain letters, numbers, spaces, hyphens, and underscores.");
+    valid = false;
+  }
+
+  // Hostname
+  if (!hostnameTrimmed || hostnameTrimmed.length > 255) {
+    setHostnameError("Hostname is required and must be less than 255 characters.");
+    valid = false;
+  }
+
+  // Environment
+  if (!environments.includes(environment)) {
+    setEnvironmentError("Please select a valid environment.");
+    valid = false;
+  }
+
+  // Description
+  if (descriptionTrimmed.length < 10 || descriptionTrimmed.length > 100) {
+    setDescriptionError("Description must be between 10 and 100 characters.");
+    valid = false;
+  } else if (!/^[a-zA-Z0-9 _\-\.,:;()[\]'""]*$/.test(descriptionTrimmed)) {
+    setDescriptionError("Description contains invalid characters.");
+    valid = false;
+  }
+
+  return valid;
+};
+
 
   const handleSubmit = async (e: Event) => {
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
 
-    const validationError = validate();
-    if (validationError) {
-      setError(validationError);
+    const isValid = validate();
+    if (!isValid) {
+      console.error("Validation failed");
       return;
     }
 
@@ -108,10 +146,10 @@ export default function AddApplicationDialog({
         environment,
         description,
         isActive,
-        userGroups: selectedGroups
+        userGroups: selectedGroups,
       };
       console.log("New application data:", newApp);
-      
+
       const response = await axios.post("/applications", newApp);
       setSuccessMessage("Application added successfully!");
       onApplicationAdded(response.data);
@@ -163,6 +201,8 @@ export default function AddApplicationDialog({
               required
               disabled={loading}
             ></oj-input-text>
+            {nameError && <p class="field-error">{nameError}</p>}
+
 
             <oj-label for="appHostname">Hostname</oj-label>
             <oj-input-text
@@ -172,6 +212,7 @@ export default function AddApplicationDialog({
               required
               disabled={loading}
             ></oj-input-text>
+            {hostnameError && <p class="field-error">{hostnameError}</p>}
 
             <oj-label for="appEnvironment">Environment</oj-label>
             <select
@@ -193,6 +234,7 @@ export default function AddApplicationDialog({
                 </option>
               ))}
             </select>
+            {environmentError && <p class="field-error">{environmentError}</p>}
 
             <oj-label for="appDescription">Description</oj-label>
             <oj-input-text
@@ -203,6 +245,7 @@ export default function AddApplicationDialog({
               }
               disabled={loading}
             ></oj-input-text>
+            {descriptionError && <p class="field-error">{descriptionError}</p>}
 
             <oj-label for="appIsActive">Status</oj-label>
             <div class="oj-form-control-wrapper">
@@ -218,38 +261,47 @@ export default function AddApplicationDialog({
 
             <oj-label>User Groups</oj-label>
             <div class="user-group-checklist">
-              {userGroups.map((group) => (
-                <label key={group._id} class="user-group-item">
-                  <input
-                    type="checkbox"
-                    value={group._id}
-                    checked={selectedGroups.includes(group._id)}
-                    onChange={(e) => {
-                      const checked = e.currentTarget.checked;
-                      const groupId = e.currentTarget.value;
-                      setSelectedGroups((prev) =>
-                        checked
-                          ? [...prev, groupId]
-                          : prev.filter((id) => id !== groupId)
-                      );
-                    }}
-                    disabled={loading}
-                  />
-                  {group.name}
-                </label>
-              ))}
+              {userGroups.map((group) => {
+                const isDisabled = loading || group.is_admin;
+                return (
+                  <label
+                    key={group._id}
+                    class={`user-group-item ${group.is_admin ? "disabled-group" : ""}`}
+                  >
+                    <input
+                      type="checkbox"
+                      value={group._id}
+                      checked={
+                        selectedGroups.includes(group._id) || group.is_admin
+                      }
+                      onChange={(e) => {
+                        const checked = e.currentTarget.checked;
+                        const groupId = e.currentTarget.value;
+                        setSelectedGroups((prev) =>
+                          checked
+                            ? [...prev, groupId]
+                            : prev.filter((id) => id !== groupId)
+                        );
+                      }}
+                      disabled={isDisabled}
+                    />
+                    {group.name}
+                  </label>
+                );
+              })}
             </div>
           </oj-form-layout>
 
           <div class="oj-flex oj-sm-justify-content-end oj-sm-margin-2x-top">
-            <oj-button
-              chroming="outlined"
-              onojAction={onClose}
-              disabled={loading}
-              class="cancel-button"
+            <button
+              type="button"
+              class="oj-button cancel-button native-oj-button"
+              onClick={onClose}
             >
-              Cancel
-            </oj-button>
+              <div class="oj-button-label">
+                <span class="oj-button-text">Cancel</span>
+              </div>
+            </button>
             <oj-button
               chroming="solid"
               type="submit"

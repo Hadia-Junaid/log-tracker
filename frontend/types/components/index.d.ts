@@ -19,6 +19,8 @@
           "oj-c-flex": any;
     "oj-c-list-item-layout": any;
     "oj-c-flex": any;
+          "ojselectsingle": any;
+          "ojselectcombobox": any;
         }
       }
 

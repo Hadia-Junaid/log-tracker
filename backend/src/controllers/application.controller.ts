@@ -4,6 +4,7 @@ import Application from "../models/Application";
 import mongoose from "mongoose";
 import logger from "../utils/logger";
 import UserGroup from "../models/UserGroup";
+import { escapeRegex } from "../utils/escapeRegex";
 
 // Creates a new application
 // Expects req.body to contain application data
@@ -22,7 +23,6 @@ export const createApplication = async (
       .send({ error: "Application with this name already exists." });
     return;
   }
-
 
   // Validate userGroups if provided to ensure they are valid ObjectIds
   if (req.body.userGroups && Array.isArray(req.body.userGroups)) {
@@ -47,14 +47,16 @@ export const createApplication = async (
 
   const app = await Application.create(newApp);
 
-  // If userGroups are provided, associate them with the application
-  if (req.body.userGroups && Array.isArray(req.body.userGroups)) {
-    //find the group by id, then add the application id to the group's assigned_applications array
-    await UserGroup.updateMany(
-      { _id: { $in: req.body.userGroups } },
-      { $addToSet: { assigned_applications: app._id } }
-    );
-  }
+  const userGroupIds = req.body.userGroups || [];
+
+  await UserGroup.updateMany(
+    {
+      $or: [{ _id: { $in: userGroupIds } }, { is_admin: true }],
+    },
+    {
+      $addToSet: { assigned_applications: app._id },
+    }
+  );
 
   logger.info(`Application created: ${app.name} (${app._id})`);
 
@@ -69,23 +71,66 @@ export const getApplications = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+
   const page = Math.max(1, parseInt(req.query.page as string) || 1);
   const pageSize = Math.max(1, parseInt(req.query.pageSize as string) || 8);
   const search = (req.query.search as string)?.trim() || "";
+  const status = req.query.status as string;
+  const environment = req.query.environment as string[] || [];
+  const sort = req.query.sort as string;
 
-  const filter = search ? { name: { $regex: search, $options: "i" } } : {};
+  // Build filter object
+  const filter: Record<string, any> = {};
 
+  if (search) {
+    const escapedSearch = escapeRegex(search);
+    logger.info(`Escaped search term: ${escapedSearch}`);
+    logger.debug(`Search regex: /${escapedSearch}/i`);
+    filter.name = { $regex: escapedSearch, $options: "i" };
+  }
+
+  if (status && status !== "all") {
+    filter.isActive = status === "active" ? true : false;
+  }
+
+  logger.info("Filter State:" + filter);
+
+  logger.debug("Environment filter before processing:" + environment);
+
+  // environment is now an array of strings already
+  if (environment && environment.length > 0) {
+    // Convert to array if it's a single string
+    const envArray = Array.isArray(environment) ? environment : [environment];
+    filter.environment = { $in: envArray };
+  }
+
+  // Sort mapping
+  const sortMapping: Record<string, any> = {
+    name: { name: 1 },
+    nameDesc: { name: -1 },
+    createdAt: { createdAt: 1 },
+    createdAtDesc: { createdAt: -1 },
+    updatedAt: { updatedAt: 1 },
+    updatedAtDesc: { updatedAt: -1 },
+  };
+
+  const sortOption = sortMapping[sort] || { name: 1 };
+
+  // Run count and fetch in parallel
   const [total, apps] = await Promise.all([
     Application.countDocuments(filter),
     Application.find(filter)
+    .collation({ locale: "en", strength: 2 })
+      .sort(sortOption)
       .skip((page - 1) * pageSize)
       .limit(pageSize)
       .lean(),
   ]);
 
   logger.info(
-    `Fetched ${apps.length} apps (page ${page}) with search "${search}"`
+    `Fetched ${apps.length} apps (page ${page}) with filters [search="${search}", status="${status}", env="${environment}"], sorted by "${sort}"`
   );
+
   res.json({ data: apps, total });
 };
 
@@ -103,7 +148,29 @@ export const updateApplication = async (
     res.status(400).send({ error: "Invalid ID" });
     return;
   }
-  const updated = await Application.findByIdAndUpdate(id, req.body, {
+
+  // Validate userGroups if provided to ensure they are valid ObjectIds
+  if (req.body.userGroups && Array.isArray(req.body.userGroups)) {
+    const invalidIds = req.body.userGroups.filter(
+      (id: string) => !mongoose.Types.ObjectId.isValid(id)
+    );
+
+    if (invalidIds.length > 0) {
+      logger.warn(`Invalid user group IDs: ${invalidIds.join(", ")}`);
+      res.status(400).send({ error: "Invalid user group ID(s) provided." });
+      return;
+    }
+  }
+
+  const newApp = {
+    name: req.body.name,
+    hostname: req.body.hostname,
+    environment: req.body.environment,
+    isActive: req.body.isActive,
+    description: req.body.description || "",
+  };
+
+  const updated = await Application.findByIdAndUpdate(id, newApp, {
     new: true,
     runValidators: true,
   });
@@ -112,6 +179,59 @@ export const updateApplication = async (
     logger.warn(`Update failed: Application not found (ID: ${id})`);
     res.status(404).send({ error: "Application not found" });
     return;
+  }
+
+  if (req.body.userGroups && Array.isArray(req.body.userGroups)) {
+    const incomingGroupIds = req.body.userGroups;
+
+    // Get currently assigned groups
+    const currentlyAssignedGroups = await UserGroup.find(
+      { assigned_applications: updated._id },
+      "_id"
+    ).lean();
+
+    const currentGroupIds = currentlyAssignedGroups.map((g) =>
+      g._id.toString()
+    );
+
+    // Compute differences in user groups
+    const toAdd = incomingGroupIds.filter(
+      (id: string) => !currentGroupIds.includes(id)
+    );
+    const toRemove = currentGroupIds.filter(
+      (id: string) => !incomingGroupIds.includes(id)
+    );
+
+    const updates = [];
+
+    if (toAdd.length > 0) {
+      updates.push(
+        UserGroup.updateMany(
+          {
+            $or: [{ _id: { $in: toAdd } }, { is_admin: true }],
+          },
+          {
+            $addToSet: { assigned_applications: updated._id },
+          }
+        )
+      );
+    }
+
+    if (toRemove.length > 0) {
+      updates.push(
+        UserGroup.updateMany(
+          {
+            _id: { $in: toRemove },
+            is_admin: false,
+          },
+          {
+            $pull: { assigned_applications: updated._id },
+          }
+        )
+      );
+    }
+
+    await Promise.all(updates);
   }
 
   logger.info(`Application updated (PATCH): ${updated.name} (${updated._id})`);
@@ -141,6 +261,12 @@ export const deleteApplication = async (
     return;
   }
 
+  //Remove deleted application from associated user groups
+  await UserGroup.updateMany(
+    { assigned_applications: id },
+    { $pull: { assigned_applications: id } }
+  );
+
   logger.info(`Application deleted: ${deleted.name} (${deleted._id})`);
   res.send({ message: "Application deleted successfully." });
 };
@@ -152,29 +278,27 @@ export const getAssignedGroups = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const id = req.params.id.trim();
+  const appId = req.params.id.trim();
 
-  if (!mongoose.isValidObjectId(id)) {
-    logger.warn(`Invalid request for assigned groups with malformed ID: ${id}`);
+  if (!mongoose.isValidObjectId(appId)) {
+    logger.warn(
+      `Invalid request for assigned groups with malformed ID: ${appId}`
+    );
     res.status(400).send({ error: "Invalid ID" });
     return;
   }
 
-  const appObjectId = new mongoose.Types.ObjectId(id);
+  const [allGroups, assignedGroups] = await Promise.all([
+    UserGroup.find({}, "id name is_admin").lean(),
+    UserGroup.find({ assigned_applications: appId }, "_id").lean(),
+  ]);
 
-  const groups = await UserGroup.find({ assigned_applications: appObjectId })
-    .select("name is_admin _id")
-    .lean();
+  const assignedGroupIds = assignedGroups.map((g) => g._id.toString());
 
-  res.send(groups);
-
-  console.log(`Assigned groups fetched for application ID ${id}:`, groups);
-
-  if (!groups) {
-    logger.warn(`Error fetching assigned groups.`);
-    res.status(404).send({ error: "Application not found" });
-    return;
-  }
+  res.status(200).send({
+    allGroups,
+    assignedGroupIds,
+  });
 };
 
 // Updates the assigned groups for a specific application by ID
