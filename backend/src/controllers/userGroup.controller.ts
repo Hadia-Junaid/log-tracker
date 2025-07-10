@@ -6,27 +6,36 @@ import logger from "../utils/logger";
 import mongoose from "mongoose";
 import { fetchUserFromDirectory } from "../utils/fetchUserFromDirectory";
 import { getSuperAdminEmails } from "../utils/getSuperAdminEmails";
+import { createUserGroupSchema, updateUserGroupSchema } from "../validators/userGroup.validator";
 
 export const createUserGroup = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  //check if the group name is already in the database
-  const existingGroup = await UserGroup.findOne({ name: req.body.name });
-  if (existingGroup) {
-    res.status(409).json({ error: "Group name already exists." });
+  // Trim the name before validation
+  if (req.body.name) {
+    req.body.name = req.body.name.trim();
+  }
+
+  // Validate input using Joi schema
+  const { error, value } = createUserGroupSchema.validate(req.body);
+  if (error) {
+    res.status(400).json({ error: error.details[0].message });
     return;
   }
 
   const {
     name,
     is_admin = false,
+    is_active = true,
     members = [],
     assigned_applications = [],
-  } = req.body;
+  } = value;
 
-  if (!name) {
-    res.status(400).json({ error: "Group name is required." });
+  // Check if the group name already exists (after trim and validation)
+  const existingGroup = await UserGroup.findOne({ name });
+  if (existingGroup) {
+    res.status(400).json({ error: "A group with this name already exists." });
     return;
   }
 
@@ -78,6 +87,7 @@ export const createUserGroup = async (
   const userGroup = new UserGroup({
     name,
     is_admin,
+    is_active,
     assigned_applications: validAppIds,
     members: verifiedMemberIds,
   });
@@ -94,7 +104,7 @@ export const updateUserGroup = async (
   res: Response
 ): Promise<void> => {
   const { id } = req.params;
-  const { name, is_admin, applications = [], members = [] } = req.body;
+  const { name, is_admin, is_active, assigned_applications = [], members = [] } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     res.status(400).json({ error: "Invalid group ID." });
@@ -111,10 +121,19 @@ export const updateUserGroup = async (
   const finalIsAdmin =
     typeof is_admin === "boolean" ? is_admin : group.is_admin;
 
+  // Validate input for non-admin groups
+  if (!finalIsAdmin) {
+    const { error } = updateUserGroupSchema.validate(req.body);
+    if (error) {
+      res.status(400).json({ error: error.details[0].message });
+      return;
+    }
+  }
+
   // For admin groups, override applications with all available apps
   const validAppIds = finalIsAdmin
     ? await Application.find().distinct("_id")
-    : await Application.find({ _id: { $in: applications } }).distinct("_id");
+    : await Application.find({ _id: { $in: assigned_applications } }).distinct("_id");
 
   const superAdminEmails = getSuperAdminEmails();
   const verifiedMemberIds: mongoose.Types.ObjectId[] = [];
@@ -171,6 +190,7 @@ export const updateUserGroup = async (
       ...(typeof is_admin === "boolean" && { is_admin }),
       assigned_applications: validAppIds,
       members: verifiedMemberIds,
+      is_active: typeof is_active === "boolean" ? is_active : group.is_active,
     },
     { new: true }
   );
@@ -228,18 +248,33 @@ export const getUserGroups = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { name, is_admin } = req.query;
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const pageSize = Math.max(1, parseInt(req.query.pageSize as string) || 8);
+  const search = (req.query.search as string)?.trim() || "";
+  const { is_admin, is_active } = req.query;
+  
   const filter: any = {};
 
-  if (name) filter.name = { $regex: name as string, $options: "i" };
+  if (search) filter.name = { $regex: search, $options: "i" };
   if (is_admin !== undefined) filter.is_admin = is_admin === "true";
+  if (is_active !== undefined) filter.is_active = is_active === "true";
 
-  const groups = await UserGroup.find(filter)
-    .populate("assigned_applications")
-    .populate("members");
+  const [total, groups] = await Promise.all([
+    UserGroup.countDocuments(filter),
+    UserGroup.find(filter)
+      .select('name is_admin is_active assigned_applications members createdAt updatedAt')
+      .populate("assigned_applications")
+      .populate("members")
+      .skip((page - 1) * pageSize)
+      .limit(pageSize)
+      .lean(),
+  ]);
 
-  logger.info(`ℹ️ Retrieved ${groups.length} user groups.`);
-  res.status(200).json(groups);
+  logger.info(
+    `Fetched ${groups.length} groups (page ${page}) with search "${search}"`
+  );
+  
+  res.json({ data: groups, total });
 };
 
 export const getUserGroupById = async (
@@ -255,7 +290,8 @@ export const getUserGroupById = async (
 
   const group = await UserGroup.findById(id)
     .populate("assigned_applications")
-    .populate("members");
+    .populate("members")
+    .populate("is_active");
 
   if (!group) {
     res.status(404).json({ error: "User group not found" });
@@ -270,7 +306,7 @@ export const getUserGroupById = async (
     responseGroup.super_admin_emails = superAdminEmails;
   }
 
-  logger.info(`ℹ️ Retrieved user group: ${group.name}`);
+  logger.info(`ℹ️ Retrieved user group: ${group}`);
   res.status(200).json(responseGroup);
 };
 

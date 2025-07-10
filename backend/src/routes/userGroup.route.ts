@@ -14,7 +14,7 @@ import { requireAdmin } from '../middleware/adminAuth';
 const router = Router();
 
 // GET routes - accessible to all authenticated users
-router.get('/', authenticate, getUserGroups);
+router.get('/', getUserGroups);
 router.get('/:id', authenticate, getUserGroupById);
 
 // Admin-only routes - require both authentication and admin privileges
@@ -23,7 +23,7 @@ router.patch('/:id', authenticate, requireAdmin, updateUserGroup);
 router.delete('/:id', authenticate, requireAdmin, deleteUserGroup);
 
 //API endpoint for assigning application to user group (PATCH)
-router.patch('/:id/assign-application',authenticate,requireAdmin, assignApplicationToUserGroup);
+router.patch('/:id/assign-application', authenticate, requireAdmin,assignApplicationToUserGroup);
 //API endpoint for unassigning application from user group (DELETE)
 router.delete('/:id/unassign-application', authenticate, requireAdmin, removeApplicationFromUserGroup);
 
