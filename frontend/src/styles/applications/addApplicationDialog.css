@@ -17,7 +17,7 @@
 }
 
 /* Form layout enhancements */
-.add-application-form .oj-form-layout {
+.application-form .oj-form-layout {
   margin-bottom: 24px;
   column-gap: 20px;
 }
@@ -100,7 +100,7 @@ oj-label {
 }
 
 /* Form enhancements */
-.add-application-form {
+.application-form {
   display: flex;
   flex-direction: column;
 }

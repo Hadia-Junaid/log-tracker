@@ -51,10 +51,8 @@ export default function AddApplicationDialog({
         null
     );
 
-    const [bannerMessage, setBannerMessage] = useState("");
-    const [bannerType, setBannerType] = useState<"success" | "error" | null>(
-        null
-    );
+    const cancelDialogRef = useRef<any>(null);
+    const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
     useEffect(() => {
         if (dialogRef.current) {
@@ -67,12 +65,14 @@ export default function AddApplicationDialog({
                 setLoading(false);
                 setError(null);
                 setSuccessMessage(null);
+                setSelectedGroups([]);
+                setUserGroups([]);
 
                 axios
                     .get("/user-groups")
                     .then((res) => {
                         console.log("Fetched user groups:", res.data);
-                        setUserGroups(res.data);
+                        setUserGroups(res.data.data);
                     })
                     .catch((err) => {
                         console.error("Failed to fetch user groups", err);
@@ -94,7 +94,7 @@ export default function AddApplicationDialog({
                 setHostnameError(null);
                 setEnvironmentError(null);
                 setDescriptionError(null);
-            }, 3000);
+            }, 4000);
 
             return () => clearTimeout(timeout); // Clean up on re-render
         }
@@ -103,6 +103,26 @@ export default function AddApplicationDialog({
     const handleOjDialogClose = (event: CustomEvent) => {
         if (event.detail.originalEvent) {
             onClose();
+        }
+    };
+
+    const isDirty = useMemo(() => {
+        return (
+            name.trim() !== "" ||
+            hostname.trim() !== "" ||
+            environment !== "" ||
+            description.trim() !== "" ||
+            !isActive || // If default is true
+            selectedGroups.length > 0
+        );
+    }, [name, hostname, environment, description, isActive, selectedGroups]);
+
+    const handleCancelClick = () => {
+        if (isDirty) {
+            setShowCancelConfirm(true);
+            cancelDialogRef.current?.open();
+        } else {
+            onClose(); // close immediately if untouched
         }
     };
 
@@ -221,9 +241,24 @@ export default function AddApplicationDialog({
         <oj-dialog
             ref={dialogRef}
             id="addApplicationDialog"
-            dialogTitle="Add New Application"
             onojClose={handleOjDialogClose}
         >
+            <div slot="header" class="custom-dialog-title">
+                <h6>Add New Application</h6>
+
+                {error && (
+                    <div style="color: red; font-size: 0.9em; margin-top: 4px;">
+                        {error}
+                    </div>
+                )}
+
+                {successMessage && !error && (
+                    <div style="color: green; font-size: 0.9em; margin-top: 4px;">
+                        {successMessage}
+                    </div>
+                )}
+            </div>
+
             <div class="oj-dialog-body">
                 {loading && (
                     <div class="loading-overlay">
@@ -234,19 +269,51 @@ export default function AddApplicationDialog({
                         <p>Adding application...</p>
                     </div>
                 )}
-                {error && <p class="error-message">{error}</p>}
-                {successMessage && (
-                    <p class="success-message">{successMessage}</p>
-                )}
 
-                <form onSubmit={handleSubmit} class="add-application-form">
+                <oj-dialog
+                    ref={cancelDialogRef}
+                    dialogTitle="Discard Changes?"
+                    cancelBehavior="none"
+                    onojClose={() => setShowCancelConfirm(false)}
+                    id="cancelConfirmationDialog"
+                >
+                    <div class="oj-dialog-body">
+                        <p>Are you sure you want to discard your changes?</p>
+                    </div>
+                    <div slot="footer">
+                        <oj-button
+                            onojAction={() => {
+                                setShowCancelConfirm(false);
+                                cancelDialogRef.current?.close();
+                            }}
+                            disabled={loading}
+                        >
+                            Cancel
+                        </oj-button>
+                        <oj-button
+                            chroming="danger"
+                            onojAction={() => {
+                                cancelDialogRef.current?.close();
+                                setShowCancelConfirm(false);
+                                onClose();
+                            }}
+                            disabled={loading}
+                        >
+                            Confirm
+                        </oj-button>
+                    </div>
+                </oj-dialog>
+
+                <form onSubmit={handleSubmit} class="application-form">
                     <oj-form-layout labelEdge="start">
                         <div class="oj-form-item">
                             <oj-label for="appName">Application Name</oj-label>
                             <oj-input-text
                                 id="appName"
                                 value={name}
-                                onvalueChanged={(e) => setName(e.detail.value)}
+                                onvalueChanged={(e: CustomEvent) =>
+                                    setName(e.detail.value)
+                                }
                                 required
                                 disabled={loading}
                             />
@@ -276,7 +343,7 @@ export default function AddApplicationDialog({
                             </oj-label>
                             <oj-select-single
                                 id="appEnvironment"
-                                label-hint="Select Environment"
+                                // label-hint="Select Environment"
                                 value={environment}
                                 onvalueChanged={(e: CustomEvent) => {
                                     const selected = e.detail.value as string;
@@ -373,7 +440,7 @@ export default function AddApplicationDialog({
                         <button
                             type="button"
                             class="oj-button cancel-button native-oj-button"
-                            onClick={onClose}
+                            onClick={handleCancelClick}
                         >
                             <div class="oj-button-label">
                                 <span class="oj-button-text">Cancel</span>
