@@ -11,6 +11,7 @@ import "ojs/ojformlayout"
 import "ojs/ojanimation"
 import "../../styles/settings/SettingsPanel.css"
 import type { LogsPerPageValue } from "./LogsPerPage"
+import type { AtRiskRule } from "./AtRiskRules"
 
 type MessageItem = {
   severity: "error" | "confirmation" | "warning" | "info"
@@ -34,6 +35,11 @@ const SettingsPanel = () => {
   })
   const [message, setMessage] = useState<MessageItem | null>(null)
   const [showConfirmation, setShowConfirmation] = useState(false)
+
+  // Risk Rules Modal State
+  const [isRuleModalOpen, setIsRuleModalOpen] = useState(false)
+  const [currentRule, setCurrentRule] = useState<AtRiskRule | null>(null)
+  const [editingRuleIndex, setEditingRuleIndex] = useState<number | null>(null)
 
   useEffect(() => {
     setIsLoading(true)
@@ -155,6 +161,31 @@ const SettingsPanel = () => {
     }
   }
 
+  // Risk Rules Modal Functions
+  const handleAddRule = () => {
+    setCurrentRule({
+      type_of_logs: "",
+      operator: "",
+      unit: "Minutes",
+      time: 1,
+      number_of_logs: 1,
+    })
+    setEditingRuleIndex(null)
+    setIsRuleModalOpen(true)
+  }
+
+  const handleEditRule = (rule: AtRiskRule, index: number) => {
+    setCurrentRule({ ...rule })
+    setEditingRuleIndex(index)
+    setIsRuleModalOpen(true)
+  }
+
+  const handleCloseRuleModal = () => {
+    setIsRuleModalOpen(false)
+    setCurrentRule(null)
+    setEditingRuleIndex(null)
+  }
+
   if (isLoading) {
     return (
       <div class="settings-loading-container">
@@ -210,12 +241,24 @@ const SettingsPanel = () => {
             <h1 class="settings-main-title">Application Settings</h1>
             <p class="settings-main-subtitle">Configure your preferences and system behavior</p>
           </div>
-          {hasChanges && (
-            <div class="unsaved-indicator">
-              <div class="unsaved-dot"></div>
-              <span>Unsaved changes</span>
-            </div>
-          )}
+          <div class="settings-header-actions">
+            {hasChanges && (
+              <div class="unsaved-indicator">
+                <div class="unsaved-dot"></div>
+                <span>Unsaved changes</span>
+              </div>
+            )}
+            {isAdmin && (
+              <oj-button chroming="outlined" class="quick-add-rule-btn" onojAction={handleAddRule}>
+                <span slot="startIcon">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 5v14m-7-7h14" />
+                  </svg>
+                </span>
+                Quick Add Rule
+              </oj-button>
+            )}
+          </div>
         </div>
 
         <div class="settings-grid">
@@ -386,7 +429,15 @@ const SettingsPanel = () => {
               </div>
 
               <div class="settings-card-content">
-                <AtRiskRules isAdmin={isAdmin} />
+                <AtRiskRules
+                  isAdmin={isAdmin}
+                  isModalOpen={isRuleModalOpen}
+                  currentRule={currentRule}
+                  editingIndex={editingRuleIndex}
+                  onAddRule={handleAddRule}
+                  onEditRule={handleEditRule}
+                  onCloseModal={handleCloseRuleModal}
+                />
               </div>
             </div>
           )}

@@ -21,15 +21,32 @@ interface MessageItem {
   detail: string
 }
 
-const AtRiskRules = ({ isAdmin }: { isAdmin: boolean }) => {
+interface AtRiskRulesProps {
+  isAdmin: boolean
+  isModalOpen: boolean
+  currentRule: AtRiskRule | null
+  editingIndex: number | null
+  onAddRule: () => void
+  onEditRule: (rule: AtRiskRule, index: number) => void
+  onCloseModal: () => void
+}
+
+const AtRiskRules = ({
+  isAdmin,
+  isModalOpen,
+  currentRule,
+  editingIndex,
+  onAddRule,
+  onEditRule,
+  onCloseModal,
+}: AtRiskRulesProps) => {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [rules, setRules] = useState<AtRiskRule[]>([])
   const [message, setMessage] = useState<MessageItem | null>(null)
   const [deletingIndex, setDeletingIndex] = useState<number | null>(null)
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [currentRule, setCurrentRule] = useState<AtRiskRule | null>(null)
-  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [modalError, setModalError] = useState<string | null>(null)
+  const [workingRule, setWorkingRule] = useState<AtRiskRule | null>(null)
 
   useEffect(() => {
     if (!isAdmin) return
@@ -45,31 +62,64 @@ const AtRiskRules = ({ isAdmin }: { isAdmin: boolean }) => {
       .finally(() => setTimeout(() => setLoading(false), 600))
   }, [isAdmin])
 
-  const handleAddRule = () => {
-    setCurrentRule({
-      type_of_logs: "",
-      operator: "",
-      unit: "Minutes",
-      time: 1,
-      number_of_logs: 1,
-    })
-    setEditingIndex(null)
-    setIsModalOpen(true)
-  }
+  // Sync working rule with current rule from parent
+  useEffect(() => {
+    if (currentRule) {
+      setWorkingRule({ ...currentRule })
+    } else {
+      setWorkingRule(null)
+    }
+  }, [currentRule])
 
-  const handleEditRule = (rule: AtRiskRule, index: number) => {
-    setCurrentRule({ ...rule })
-    setEditingIndex(index)
-    setIsModalOpen(true)
-  }
+  // Auto-dismiss modal errors after 3 seconds
+  useEffect(() => {
+    if (modalError) {
+      const timer = setTimeout(() => {
+        setModalError(null)
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [modalError])
 
   const handleModalSave = async () => {
-    if (!currentRule) return
+    if (!workingRule) return
+
+    // Clear previous modal errors
+    setModalError(null)
+
+    // Validate required fields
+    if (
+      !workingRule.operator ||
+      !workingRule.type_of_logs ||
+      !workingRule.unit ||
+      !workingRule.time ||
+      !workingRule.number_of_logs
+    ) {
+      setModalError("Please fill in all required fields.")
+      return
+    }
+
+    // Check for duplicate rules with detailed message
+    const duplicateRule = rules.find(
+      (rule, index) =>
+        rule.operator === workingRule.operator &&
+        rule.type_of_logs === workingRule.type_of_logs &&
+        index !== editingIndex, // Exclude current rule when editing
+    )
+
+    if (duplicateRule) {
+      const ruleIndex = rules.findIndex((r) => r === duplicateRule) + 1
+      setModalError(
+        `A rule with "${workingRule.operator}" condition for "${workingRule.type_of_logs}" logs already exists (Rule #${ruleIndex}). Please choose a different combination.`,
+      )
+      return
+    }
+
     setSaving(true)
     try {
-      const cleaned = sanitizeRuleForPatch(currentRule)
-      if (currentRule._id) {
-        await updateAtRiskRule(currentRule._id, cleaned)
+      const cleaned = sanitizeRuleForPatch(workingRule)
+      if (workingRule._id) {
+        await updateAtRiskRule(workingRule._id, cleaned)
       } else {
         await addAtRiskRule(cleaned)
       }
@@ -78,25 +128,16 @@ const AtRiskRules = ({ isAdmin }: { isAdmin: boolean }) => {
       setMessage({
         severity: "confirmation",
         summary: "Rule Saved",
-        detail: currentRule._id ? "Rule updated successfully." : "New rule added successfully.",
+        detail: workingRule._id ? "Rule updated successfully." : "New rule added successfully.",
       })
-      setIsModalOpen(false)
-      setCurrentRule(null)
-      setEditingIndex(null)
+      onCloseModal()
+      setModalError(null)
     } catch (error: any) {
       console.error("Save failed:", error)
       if (error.response?.status === 409) {
-        setMessage({
-          severity: "error",
-          summary: "Duplicate Rule",
-          detail: "A rule with the same configuration already exists.",
-        })
+        setModalError("A rule with the same configuration already exists.")
       } else {
-        setMessage({
-          severity: "error",
-          summary: "Save Failed",
-          detail: "Could not save rule. Please check your configuration.",
-        })
+        setModalError("Could not save rule. Please check your configuration and try again.")
       }
     } finally {
       setTimeout(() => setSaving(false), 500)
@@ -104,9 +145,8 @@ const AtRiskRules = ({ isAdmin }: { isAdmin: boolean }) => {
   }
 
   const handleModalCancel = () => {
-    setIsModalOpen(false)
-    setCurrentRule(null)
-    setEditingIndex(null)
+    onCloseModal()
+    setModalError(null)
   }
 
   const sanitizeRuleForPatch = (rule: AtRiskRule) => {
@@ -141,8 +181,8 @@ const AtRiskRules = ({ isAdmin }: { isAdmin: boolean }) => {
     }
   }
 
-  const updateCurrentRule = (field: keyof AtRiskRule, value: string | number) => {
-    setCurrentRule((prev) => {
+  const updateWorkingRule = (field: keyof AtRiskRule, value: string | number) => {
+    setWorkingRule((prev) => {
       if (!prev) return null
       const parsedValue = field === "number_of_logs" || field === "time" ? +value || 0 : value
       return { ...prev, [field]: parsedValue }
@@ -183,7 +223,7 @@ const AtRiskRules = ({ isAdmin }: { isAdmin: boolean }) => {
               Create automated rules to monitor application health and detect potential issues based on log patterns and
               thresholds.
             </p>
-            <oj-button chroming="solid" class="empty-state-button" onojAction={handleAddRule}>
+            <oj-button chroming="solid" class="empty-state-button" onojAction={onAddRule}>
               <span slot="startIcon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M12 5v14m-7-7h14" />
@@ -198,7 +238,7 @@ const AtRiskRules = ({ isAdmin }: { isAdmin: boolean }) => {
               class={`atrisk-rule-card ${deletingIndex === i ? "deleting" : ""}`}
               key={r._id || `new-${i}`}
               style={`animation-delay: ${i * 0.1}s`}
-              onClick={() => handleEditRule(r, i)}
+              onClick={() => onEditRule(r, i)}
             >
               <div class="atrisk-rule-header">
                 <div class="rule-badge-container">
@@ -258,7 +298,7 @@ const AtRiskRules = ({ isAdmin }: { isAdmin: boolean }) => {
 
       <div class="atrisk-actions">
         {rules.length > 0 && (
-          <oj-button chroming="outlined" class="atrisk-add-btn" onojAction={handleAddRule}>
+          <oj-button chroming="outlined" class="atrisk-add-btn" onojAction={onAddRule}>
             <span slot="startIcon">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12 5v14m-7-7h14" />
@@ -276,7 +316,7 @@ const AtRiskRules = ({ isAdmin }: { isAdmin: boolean }) => {
       )}
 
       {/* Rule Configuration Modal */}
-      {isModalOpen && currentRule && (
+      {isModalOpen && workingRule && (
         <div class="modal-overlay">
           <div class="modal-content rule-modal">
             <div class="modal-header">
@@ -287,7 +327,7 @@ const AtRiskRules = ({ isAdmin }: { isAdmin: boolean }) => {
                   <line x1="12" y1="17" x2="12.01" y2="17" />
                 </svg>
               </div>
-              <h3 class="modal-title">{currentRule._id ? "Edit Rule" : "Add New Rule"}</h3>
+              <h3 class="modal-title">{workingRule._id ? "Edit Rule" : "Add New Rule"}</h3>
               <button class="modal-close-btn" onClick={handleModalCancel}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18" />
@@ -296,13 +336,28 @@ const AtRiskRules = ({ isAdmin }: { isAdmin: boolean }) => {
               </button>
             </div>
             <div class="modal-body">
+              {modalError && (
+                <div class="modal-error-message">
+                  <div class="error-icon">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <circle cx="12" cy="12" r="10" />
+                      <line x1="15" y1="9" x2="9" y2="15" />
+                      <line x1="9" y1="9" x2="15" y2="15" />
+                    </svg>
+                  </div>
+                  <span class="error-text">{modalError}</span>
+                  <div class="error-timer">
+                    <div class="timer-bar"></div>
+                  </div>
+                </div>
+              )}
               <div class="rule-sentence-modal">
                 <span class="sentence-part">If an application receives</span>
                 <div class="input-group">
                   <select
                     class="professional-select operator-select"
-                    value={currentRule.operator}
-                    onChange={(e) => updateCurrentRule("operator", e.currentTarget.value)}
+                    value={workingRule.operator}
+                    onChange={(e) => updateWorkingRule("operator", e.currentTarget.value)}
                   >
                     <option value="">Select condition</option>
                     <option value="less">less than</option>
@@ -315,20 +370,21 @@ const AtRiskRules = ({ isAdmin }: { isAdmin: boolean }) => {
                     type="number"
                     min="1"
                     placeholder="0"
-                    value={currentRule.number_of_logs}
-                    onChange={(e) => updateCurrentRule("number_of_logs", +e.currentTarget.value)}
+                    value={workingRule.number_of_logs}
+                    onChange={(e) => updateWorkingRule("number_of_logs", +e.currentTarget.value)}
                   />
                 </div>
                 <div class="input-group">
                   <select
                     class="professional-select log-type-select"
-                    value={currentRule.type_of_logs}
-                    onChange={(e) => updateCurrentRule("type_of_logs", e.currentTarget.value)}
+                    value={workingRule.type_of_logs}
+                    onChange={(e) => updateWorkingRule("type_of_logs", e.currentTarget.value)}
                   >
                     <option value="">Select log type</option>
                     <option value="Error">🔴 Error logs</option>
                     <option value="Warning">🟡 Warning logs</option>
                     <option value="Info">🔵 Info logs</option>
+                    <option value="Debug">🟢 Debug logs</option>
                   </select>
                 </div>
                 <span class="sentence-part">within the last</span>
@@ -338,15 +394,15 @@ const AtRiskRules = ({ isAdmin }: { isAdmin: boolean }) => {
                     type="number"
                     min="1"
                     placeholder="0"
-                    value={currentRule.time}
-                    onChange={(e) => updateCurrentRule("time", +e.currentTarget.value)}
+                    value={workingRule.time}
+                    onChange={(e) => updateWorkingRule("time", +e.currentTarget.value)}
                   />
                 </div>
                 <div class="input-group">
                   <select
                     class="professional-select unit-select"
-                    value={currentRule.unit}
-                    onChange={(e) => updateCurrentRule("unit", e.currentTarget.value)}
+                    value={workingRule.unit}
+                    onChange={(e) => updateWorkingRule("unit", e.currentTarget.value)}
                   >
                     <option value="">Select unit</option>
                     <option value="Minutes">Minutes</option>
