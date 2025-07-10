@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "preact/hooks";
 import "ojs/ojtable";
 import "ojs/ojprogress-circle";
 import "ojs/ojinputtext";
+import "ojs/ojdatetimepicker"; // ✅ Add datetime picker component
 import ArrayDataProvider = require("ojs/ojarraydataprovider");
 import axios from "../api/axios";
 import "../styles/logs.css";
@@ -41,13 +42,16 @@ export default function Logs(props: Props) {
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Time range state
   const time = new Date();
   const initialStartTime = new Date(time.getTime() - 24 * 60 * 60 * 1000).toISOString();
   const initialEndTime = time.toISOString();
   const [timeRange, setTimeRange] = useState("Last 24 hours");
   const [startTime, setStartTime] = useState<string | null>(initialStartTime);
   const [endTime, setEndTime] = useState<string | null>(initialEndTime);
+
+  // ✅ Custom start/end for manual inputs
+  const [customStart, setCustomStart] = useState<string | null>(null);
+  const [customEnd, setCustomEnd] = useState<string | null>(null);
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -56,30 +60,55 @@ export default function Logs(props: Props) {
     return () => clearTimeout(handler);
   }, [search]);
 
-  // Time range effect
   useEffect(() => {
-    const now = new Date();
-    let start: Date | null = null;
-    console.log("timeRange", timeRange);
+  const now = new Date();
+  let start: Date | null = null;
+
+  if (timeRange === "custom") {
+    // Don’t update start/endTime unless both are selected
+    if (customStart && customEnd) {
+      setStartTime(customStart);
+      setEndTime(customEnd);
+    }
+  } else {
     switch (timeRange) {
       case "Last hour":
         start = new Date(now.getTime() - 60 * 60 * 1000);
+        setStartTime(start.toISOString());
+        setEndTime(now.toISOString());
         break;
       case "Last 24 hours":
         start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+        setStartTime(start.toISOString());
+        setEndTime(now.toISOString());
         break;
       case "7 days":
         start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        setStartTime(start.toISOString());
+        setEndTime(now.toISOString());
         break;
       case "All":
-        start = null; 
+        setStartTime(null);
+        setEndTime(null);
+        break;
       default:
-        start = null;
+        setStartTime(null);
+        setEndTime(null);
     }
-    setStartTime(start ? start.toISOString() : null);
-    setEndTime(start ? now.toISOString(): null);
+  }
+
+  setPage(1);
+}, [timeRange]);
+
+// NEW: Separate effect for when both customStart and customEnd are filled
+useEffect(() => {
+  if (timeRange === "custom" && customStart && customEnd) {
+    setStartTime(customStart);
+    setEndTime(customEnd);
     setPage(1);
-  }, [timeRange]);
+  }
+}, [customStart, customEnd]);
+
 
   useEffect(() => {
     const fetchLogs = async () => {
@@ -204,6 +233,10 @@ export default function Logs(props: Props) {
         onExport={handleExport}
         selectedTimeRange={timeRange}
         setSelectedTimeRange={setTimeRange}
+        customStart={customStart} // ✅
+        setCustomStart={setCustomStart} // ✅
+        customEnd={customEnd} // ✅
+        setCustomEnd={setCustomEnd} // ✅
       />
       <LogsTable loading={loading} error={error} dataProvider={dataProvider} columns={columns} />
       <Pagination page={page} totalPages={totalPages} setPage={setPage} />

@@ -53,11 +53,31 @@
 .input-filter {
   height: 40px !important;
   box-sizing: border-box;
+  /* max-width: 100%; */
+}
+
+.search{
+  /* min-width: 280px; */
+  flex: 2 1 320px;
+  min-width: 10px  !important;
+  max-width: 300px  !important;
 }
 
 .dropdown {
-  width: 15%;
+  flex: 1 1 250px;
+  min-width: 10px  !important;
+  max-width: 200px  !important;
+
 }
+.datetime{
+  flex: 1 1 250px;
+  min-width: 10px  !important;
+  max-width: 200px  !important;
+}
+
+/* .oj-form-control-max-width-md {
+  max-width: none !important;
+} */
 
 /* Log Level Button Styles */
 .log-level-btn {

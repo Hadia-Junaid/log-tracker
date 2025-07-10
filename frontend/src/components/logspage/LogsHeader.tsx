@@ -2,7 +2,9 @@ import { h } from "preact";
 import ArrayDataProvider = require("ojs/ojarraydataprovider");
 import "ojs/ojinputtext";
 import 'oj-c/select-multiple';
-import 'oj-c/select-single'; // ✅ Added for Time Range dropdown
+import 'oj-c/select-single';
+import { ojDatePicker } from 'ojs/ojdatetimepicker';
+import 'ojs/ojdatetimepicker';
 import { useEffect, useState } from "preact/hooks";
 
 interface Application {
@@ -24,8 +26,13 @@ interface LogsHeaderProps {
   setLogLevels: (value: string[] | ((prevState: string[]) => string[])) => void;
   setPage: (page: number) => void;
   onExport: (format: "csv" | "json") => void;
-  selectedTimeRange: string; // ✅ Added
-  setSelectedTimeRange: (value: string) => void; // ✅ Added
+  selectedTimeRange: string;
+  setSelectedTimeRange: (value: string) => void;
+
+  customStart: string | null;
+  setCustomStart: (value: string | null) => void;
+  customEnd: string | null;
+  setCustomEnd: (value: string | null) => void;
 }
 
 export default function LogsHeader({
@@ -38,8 +45,12 @@ export default function LogsHeader({
   setLogLevels,
   setPage,
   onExport,
-  selectedTimeRange, // ✅ Added
-  setSelectedTimeRange, // ✅ Added
+  selectedTimeRange,
+  setSelectedTimeRange,
+  customStart,
+  setCustomStart,
+  customEnd,
+  setCustomEnd,
 }: LogsHeaderProps) {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const appDataProvider = new ArrayDataProvider(applications, { keyAttributes: "_id" });
@@ -49,6 +60,8 @@ export default function LogsHeader({
     );
   };
   const logLevelOptions = ["INFO", "ERROR", "WARN", "DEBUG"];
+  const [currentDateTime, setCurrentDateTime] = useState(new Date().toISOString());
+
   const timeRangeOptions: TimeRangeOption[] = [
     { value: "Last hour", label: "Last hour" },
     { value: "Last 24 hours", label: "Last 24 hours" },
@@ -57,10 +70,17 @@ export default function LogsHeader({
     { value: "custom", label: "Custom" },
   ];
   const timeRangeDP = new ArrayDataProvider(timeRangeOptions, { keyAttributes: "value" });
-
   useEffect(() => {
     setPage(1);
-  }, [search, selectedAppIds, logLevels, selectedTimeRange]); // ✅ include selectedTimeRange
+  }, [search, selectedAppIds, logLevels, selectedTimeRange]);
+  
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentDateTime(new Date().toISOString());
+    }, 60000); // update every 60 seconds
+    console.log(",currentDateTime", currentDateTime)
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <>
@@ -97,7 +117,7 @@ export default function LogsHeader({
           placeholder="Search messages..."
           value={search}
           onrawValueChanged={(e: any) => { setSearch(e.detail.value); setPage(1); }}
-          class="oj-form-control-max-width-md oj-sm-margin-end input-filter"
+          class="oj-form-control-max-width-md oj-sm-margin-end input-filter search"
         ></oj-input-text>
 
         <oj-c-select-multiple
@@ -110,8 +130,7 @@ export default function LogsHeader({
           onvalueChanged={(e: any) => { setSelectedAppIds(e.detail.value ?? []); setPage(1); }}
           item-text="name"
         ></oj-c-select-multiple>
-        {/* ✅ Time Range Filter */}
-        {/* <span class="time-range-label">Time Range:</span> */}
+
         <oj-c-select-single
           label-edge="none"
           placeholder="Time Range"
@@ -119,8 +138,35 @@ export default function LogsHeader({
           data={timeRangeDP}
           item-text="label"
           value={selectedTimeRange}
-          onvalueChanged={(e: any) => { setSelectedTimeRange(e.detail.value); setPage(1); }}
-        ></oj-c-select-single>
+          onvalueChanged={(e: any) => {
+            setSelectedTimeRange(e.detail.value);
+            setPage(1);
+          }}
+        ></oj-c-select-single> 
+
+        <oj-input-date-time
+          id="startDateTime"
+          label-edge="none"
+          placeholder="Start Time"
+          value={customStart ?? undefined}
+          onvalueChanged={(event) => setCustomStart(event.detail.value)}
+          class="oj-form-control-max-width-md input-filter datetime"
+          disabled={selectedTimeRange !== 'custom'}
+          max={currentDateTime}
+        ></oj-input-date-time>
+      
+        <div class="oj-typography-body-md" style="align-self: center; font-weight: bold;">to</div>
+
+        <oj-input-date-time
+          id="endDateTime"
+          label-edge="none"
+          placeholder="End Time"
+          value={customEnd ?? undefined}
+          onvalueChanged={(event) => setCustomEnd(event.detail.value)}
+          class="oj-form-control-max-width-md input-filter datetime"
+          disabled={selectedTimeRange !== 'custom'}
+          max={currentDateTime}
+        ></oj-input-date-time>
       </div>
 
       <div class="oj-flex oj-sm-margin-4x-bottom log-level-btn-row">
