@@ -27,6 +27,7 @@ export const createUserGroup = async (
   const {
     name,
     is_admin = false,
+    is_active = true,
     members = [],
     assigned_applications = [],
   } = value;
@@ -86,6 +87,7 @@ export const createUserGroup = async (
   const userGroup = new UserGroup({
     name,
     is_admin,
+    is_active,
     assigned_applications: validAppIds,
     members: verifiedMemberIds,
   });
@@ -102,7 +104,7 @@ export const updateUserGroup = async (
   res: Response
 ): Promise<void> => {
   const { id } = req.params;
-  const { name, is_admin, assigned_applications = [], members = [] } = req.body;
+  const { name, is_admin, is_active, assigned_applications = [], members = [] } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     res.status(400).json({ error: "Invalid group ID." });
@@ -248,16 +250,18 @@ export const getUserGroups = async (
   const page = Math.max(1, parseInt(req.query.page as string) || 1);
   const pageSize = Math.max(1, parseInt(req.query.pageSize as string) || 8);
   const search = (req.query.search as string)?.trim() || "";
-  const { is_admin } = req.query;
+  const { is_admin, is_active } = req.query;
   
   const filter: any = {};
 
   if (search) filter.name = { $regex: search, $options: "i" };
   if (is_admin !== undefined) filter.is_admin = is_admin === "true";
+  if (is_active !== undefined) filter.is_active = is_active === "true";
 
   const [total, groups] = await Promise.all([
     UserGroup.countDocuments(filter),
     UserGroup.find(filter)
+      .select('name is_admin is_active assigned_applications members createdAt updatedAt')
       .populate("assigned_applications")
       .populate("members")
       .skip((page - 1) * pageSize)
@@ -268,6 +272,10 @@ export const getUserGroups = async (
   logger.info(
     `Fetched ${groups.length} groups (page ${page}) with search "${search}"`
   );
+  //print all groups
+  groups.forEach(group => {
+    logger.info(`Group: ${group.name}, Admin: ${group.is_admin}, Active: ${group.is_active}`);
+  });
   res.json({ data: groups, total });
 };
 

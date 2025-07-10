@@ -46,6 +46,7 @@ export const userGroupService = {
       createdDate: group.createdAt,
       createdAgo: getRelativeTime(new Date(group.createdAt)),
       is_admin: group.is_admin,
+      is_active: group.is_active,
       members: group.members?.map((member: any) => member.email) || [],
       assigned_applications: group.assigned_applications?.map((app: any) => ({
         _id: app._id,

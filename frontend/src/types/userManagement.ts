@@ -13,6 +13,7 @@ export interface GroupData {
   createdDate?: string;
   createdAgo?: string;
   is_admin?: boolean;
+  is_active?: boolean;
   members?: string[];
   assigned_applications?: {
     _id: string;

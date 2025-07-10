@@ -14,7 +14,7 @@ import { requireAdmin } from '../middleware/adminAuth';
 const router = Router();
 
 // GET routes - accessible to all authenticated users
-router.get('/', authenticate, getUserGroups);
+router.get('/', getUserGroups);
 router.get('/:id', authenticate, getUserGroupById);
 
 // Admin-only routes - require both authentication and admin privileges

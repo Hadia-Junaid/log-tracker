@@ -73,8 +73,8 @@ export default function UserGroupsList({
                   {item.groupName}
                 </span>
                 {item.is_admin && <span class="system-group-pill">System Group</span>}
-                <span class={`status-pill ${item.is_admin ? 'status-active' : 'status-inactive'}`}>
-                  {item.is_admin ? 'Active' : 'Inactive'}
+                <span class={`status-pill ${item.is_active === true ? 'status-active' : 'status-inactive'}`}>
+                  {item.is_active === true ? 'Active' : 'Inactive'}
                 </span>
               </div>
 
