@@ -6,6 +6,7 @@ interface GroupDetailsResponse {
   name: string;
   description?: string;
   is_admin: boolean;
+  is_active?: boolean;
   super_admin_emails?: string[];
   members: Array<{
     _id: string;
