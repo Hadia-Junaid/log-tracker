@@ -190,6 +190,7 @@ export const updateUserGroup = async (
       ...(typeof is_admin === "boolean" && { is_admin }),
       assigned_applications: validAppIds,
       members: verifiedMemberIds,
+      is_active: typeof is_active === "boolean" ? is_active : group.is_active,
     },
     { new: true }
   );
@@ -289,7 +290,8 @@ export const getUserGroupById = async (
 
   const group = await UserGroup.findById(id)
     .populate("assigned_applications")
-    .populate("members");
+    .populate("members")
+    .populate("is_active");
 
   if (!group) {
     res.status(404).json({ error: "User group not found" });
@@ -304,7 +306,7 @@ export const getUserGroupById = async (
     responseGroup.super_admin_emails = superAdminEmails;
   }
 
-  logger.info(`ℹ️ Retrieved user group: ${group.name}`);
+  logger.info(`ℹ️ Retrieved user group: ${group}`);
   res.status(200).json(responseGroup);
 };
 
