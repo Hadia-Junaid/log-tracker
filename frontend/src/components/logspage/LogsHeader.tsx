@@ -3,7 +3,6 @@ import ArrayDataProvider = require("ojs/ojarraydataprovider");
 import "ojs/ojinputtext";
 import 'oj-c/select-multiple';
 import 'oj-c/select-single';
-import { ojDatePicker } from 'ojs/ojdatetimepicker';
 import 'ojs/ojdatetimepicker';
 import { useEffect, useState } from "preact/hooks";
 
@@ -69,6 +68,7 @@ export default function LogsHeader({
     { value: "All", label: "All" },
     { value: "custom", label: "Custom" },
   ];
+  const handleResetFilters = () => {}
   const timeRangeDP = new ArrayDataProvider(timeRangeOptions, { keyAttributes: "value" });
   useEffect(() => {
     setPage(1);
@@ -81,6 +81,7 @@ export default function LogsHeader({
     console.log(",currentDateTime", currentDateTime)
     return () => clearInterval(interval);
   }, []);
+
 
   return (
     <>
@@ -112,7 +113,7 @@ export default function LogsHeader({
         </div>
       </div>
 
-      <div class="oj-flex oj-sm-margin-4x-bottom" style="gap: 1rem; align-items: flex-end;">
+      <div class="oj-flex oj-sm-margin-4x-bottom" style="gap: 1.3rem; align-items: flex-end;">
         <oj-input-text
           placeholder="Search messages..."
           value={search}
@@ -167,6 +168,16 @@ export default function LogsHeader({
           disabled={selectedTimeRange !== 'custom'}
           max={currentDateTime}
         ></oj-input-date-time>
+
+        <oj-button
+                chroming="solid"
+                class="add-button resetbutton"
+                onojAction={handleResetFilters}
+              >
+                <span slot="startIcon" class="oj-ux-ico-refresh reset"></span>
+                Reset
+        </oj-button>
+        
       </div>
 
       <div class="oj-flex oj-sm-margin-4x-bottom log-level-btn-row">
@@ -182,8 +193,10 @@ export default function LogsHeader({
             >
               {level}
             </button>
+  
           );
         })}
+        
       </div>
     </>
   );

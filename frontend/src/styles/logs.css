@@ -48,33 +48,47 @@
 .demo-table-container {
   width: 93%;
   height: 30rem;
+  line-height: 1.2 !important
 }
 
 .input-filter {
   height: 40px !important;
   box-sizing: border-box;
+  width: 20px
   /* max-width: 100%; */
 }
 
 .search{
   /* min-width: 280px; */
-  flex: 2 1 320px;
+  flex: 2 1 280px;
   min-width: 10px  !important;
   max-width: 300px  !important;
 }
 
 .dropdown {
-  flex: 1 1 250px;
+  flex: 1 1 200px;
   min-width: 10px  !important;
   max-width: 200px  !important;
 
 }
 .datetime{
-  flex: 1 1 250px;
+  flex: 1 1 200px;
   min-width: 10px  !important;
   max-width: 200px  !important;
 }
 
+/* .reset{
+  flex: 1 1 100px;
+  min-width: 10px  !important;
+  max-width: 200px  !important;
+  background: #f0f0f0;
+} */
+ .resetbutton{
+  flex: 1 1 100px;
+  min-width: 10px  !important;
+  max-width: 110px  !important;
+  height: 40px !important;
+ }
 /* .oj-form-control-max-width-md {
   max-width: none !important;
 } */
@@ -190,4 +204,11 @@
   display: flex;
   align-items: center;
 }
+
+/* Reduce row height in oj-table */
+
+#LogsTable table tr td {
+  padding: 4px 8px !important;
+  line-height: 1.2 !important;
+  font-size: 0.875rem; }
 
