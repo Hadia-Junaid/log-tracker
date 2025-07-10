@@ -17,7 +17,7 @@
 }
 
 /* Form layout enhancements */
-.add-application-form .oj-form-layout {
+.application-form .oj-form-layout {
   margin-bottom: 24px;
   column-gap: 20px;
 }
@@ -100,7 +100,7 @@ oj-label {
 }
 
 /* Form enhancements */
-.add-application-form {
+.application-form {
   display: flex;
   flex-direction: column;
 }
@@ -214,4 +214,25 @@ oj-label {
   font-size: 0.9rem;
   margin-top: 4px;
   margin-bottom: 12px;
+}
+
+.switch-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.user-group-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 4px;
+}
+
+.user-group-item {
+  font-size: 0.9rem;
+}
+
+.disabled-group {
+  opacity: 0.5;
+  pointer-events: none;
 }

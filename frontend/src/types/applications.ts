@@ -6,6 +6,7 @@ export type Application = {
   isActive: boolean;
   environment: string;
   description?: string;
+  selectedGroups?: string[];
 };
 
 export type UserGroup = {
