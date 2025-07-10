@@ -22,7 +22,7 @@ type Props = {
 export default function ApplicationCard({
   app,
   onDeleteClick,
-  onEditClick,
+  onEditClick, 
 }: Props) {
   return (
     <ojactioncard key={app._id} class="application-card">
@@ -34,10 +34,9 @@ export default function ApplicationCard({
           Created: {new Date(app.createdAt).toLocaleDateString()}
         </div>
         <div class="app-status">
-          Status:{" "}
-          <span class={app.isActive ? "status-active" : "status-inactive"}>
-            {app.isActive ? "Active" : "Inactive"}
-          </span>
+           <span class={`status-pill ${app.isActive === true ? 'status-active' : 'status-inactive'}`}>
+                  {app.isActive === true ? 'Active' : 'Inactive'}
+                </span>
         </div>
 
         <div class="app-detail app-description">
