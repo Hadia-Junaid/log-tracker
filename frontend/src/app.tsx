@@ -17,103 +17,107 @@ import Sidebar from "./components/Sidebar";
 import Login from "./views/Login";
 import "./styles/app.css";
 // import "./styles/userManagement.css";
-import axios from "./api/axios"; 
-import LoadingSpinner from "./components/LoadingSpinner"; 
+import axios from "./api/axios";
+import LoadingSpinner from "./components/LoadingSpinner";
 
 type Props = {
-    appName?: string;
-    userLogin?: string;
+  appName?: string;
+  userLogin?: string;
 };
 
-function checkAuth(): Promise<boolean> {
-    return axios
-        .get(`/auth/status`)
-        .then((res) => {
-            console.log("Auth check response:", res);
-            return res.data?.authenticated === true;
-        })
-        .catch(() => false);
+function checkAuth(): Promise<{ authenticated: boolean; email?: string }> {
+  return axios
+    .get(`/auth/status`)
+    .then((res) => {
+      console.log("Auth check response:", res);
+      return {
+        authenticated: res.data?.authenticated === true,
+        email: res.data?.user?.email,
+      };
+    })
+    .catch(() => ({ authenticated: false }));
 }
 
 export const App = registerCustomElement(
-    "app-root",
-    ({
-        appName = "",
-        userLogin = "john.hancock@oracle.com",
-    }: Props) => {
-        const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(
-            null
-        );
+  "app-root",
+  ({ appName = "" }: Props) => {
+    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(
+      null
+    );
 
-        useEffect(() => {
-            const checkOrExchangeAuth = async () => {
-                // Look for auth_code in URL
-                const hash = window.location.hash;
-                const query = hash.includes("?") ? hash.split("?")[1] : "";
-                const params = new URLSearchParams(query);
-                const authCode = params.get("auth_code");
+    const [userLogin, setUserLogin] = useState<string>("");
 
-                if (authCode) {
-                    try {
-                        // Exchange code -> set cookie
-                        await axios.post("/auth/exchange", {
-                            auth_code: authCode,
-                        });
 
-                        // Clear the hash so it's clean
-                        window.location.hash = "";
-                    } catch (err) {
-                        console.error("OAuth exchange failed", err);
-                        setIsAuthenticated(false);
-                        return;
-                    }
-                }
+    useEffect(() => {
+      const checkOrExchangeAuth = async () => {
+        // Look for auth_code in URL
+        const hash = window.location.hash;
+        const query = hash.includes("?") ? hash.split("?")[1] : "";
+        const params = new URLSearchParams(query);
+        const authCode = params.get("auth_code");
 
-                // After possible exchange, check auth
-                const isAuthed = await checkAuth();
-                setIsAuthenticated(isAuthed);
-            };
+        if (authCode) {
+          try {
+            // Exchange code -> set cookie
+            await axios.post("/auth/exchange", {
+              auth_code: authCode,
+            });
 
-            checkOrExchangeAuth();
-        }, []);
-
-        if (isAuthenticated === null) {
-            return <LoadingSpinner />;
+            // Clear the hash so it's clean
+            window.location.hash = "";
+          } catch (err) {
+            console.error("OAuth exchange failed", err);
+            setIsAuthenticated(false);
+            return;
+          }
         }
 
-        if (!isAuthenticated) {
-            return <Login />;
-        }
+        // After possible exchange, check auth
+        const { authenticated, email } = await checkAuth();
+        setIsAuthenticated(authenticated);
+        setUserLogin(email || "");
+      };
 
-        useEffect(() => {
-            Context.getPageContext()
-                .getBusyContext()
-                .applicationBootstrapComplete();
-        }, []);
+      checkOrExchangeAuth();
+    }, []);
 
-        return (
-            <div id="appContainer" class="oj-web-applayout-page">
-                <Header appName={appName} userLogin={userLogin} />
-
-                <div
-                    class="oj-web-applayout-content oj-flex"
-                    style={{ height: "calc(100vh - 120px)", overflow: "hidden" }}
-                >
-                    <Sidebar />
-                    <main class="oj-flex-item" style={{ overflow: "auto", height: "100%" }}>
-                        <Router>
-                            <Dashboard path="/" />
-                            <Logs path="/logs" />
-                            <UserManagement path="/users" />
-                            <Applications path="/applications" />
-                            <Settings path="/settings" />
-
-                            <NotFound default />
-                        </Router>
-                    </main>
-                </div>
-
-            </div>
-        );
+    if (isAuthenticated === null) {
+      return <LoadingSpinner />;
     }
+
+    if (!isAuthenticated) {
+      return <Login />;
+    }
+
+    useEffect(() => {
+      Context.getPageContext().getBusyContext().applicationBootstrapComplete();
+    }, []);
+
+    return (
+      <div id="appContainer" class="oj-web-applayout-page">
+        <Header appName={appName} userLogin={userLogin} />
+
+        <div
+          class="oj-web-applayout-content oj-flex"
+          style={{ height: "calc(100vh - 120px)", overflow: "hidden" }}
+        >
+          <Sidebar />
+          <main
+            class="oj-flex-item"
+            style={{ overflow: "auto", height: "100%" }}
+          >
+            <Router>
+              <Dashboard path="/" />
+              <Logs path="/logs" />
+              <UserManagement path="/users" />
+              <Applications path="/applications" />
+              <Settings path="/settings" />
+
+              <NotFound default />
+            </Router>
+          </main>
+        </div>
+      </div>
+    );
+  }
 );

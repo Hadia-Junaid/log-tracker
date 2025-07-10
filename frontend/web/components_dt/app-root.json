@@ -12,8 +12,7 @@
       "value": ""
     },
     "userLogin": {
-      "type": "string",
-      "value": "john.hancock@oracle.com"
+      "type": "string"
     }
   },
   "methods": {
