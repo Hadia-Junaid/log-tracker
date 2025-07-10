@@ -69,7 +69,12 @@ export default function AddApplicationDialog({
                 setUserGroups([]);
 
                 axios
-                    .get("/user-groups")
+                    .get("/user-groups", {
+                        params: {
+                            is_active: true, // Only fetch active user groups
+                            allPages: true, // Fetch all pages
+                        },
+                    })
                     .then((res) => {
                         console.log("Fetched user groups:", res.data);
                         setUserGroups(res.data.data);

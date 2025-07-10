@@ -116,7 +116,7 @@ export const userGroupService = {
   async fetchApplications(): Promise<ApplicationOption[]> {
     const response = await axios.get('/applications', {
       params: {
-        pageSize: 1000 // Request a large number to get all applications
+        allPages: true // Request a large number to get all applications
       }
     });
     return response.data.data.map((app: any) => ({
