@@ -253,13 +253,49 @@ export default function Applications({ path }: Props) {
         </div>
 
         {/* Applications List */}
-        <ApplicationsList
-          loading={loading}
-          error={error}
-          applications={applications}
-          onEditClick={handleEditClick}
-          onDeleteClick={handleDeleteClick}
-        />
+        <div
+          class="oj-flex oj-sm-flex-direction-column"
+          style="flex: 1; min-height: 0;"
+        >
+          <div style="flex: 1; min-height: 0;" class="oj-flex-item-auto">
+            <ApplicationsList
+              loading={loading}
+              error={error}
+              applications={applications}
+              onEditClick={handleEditClick}
+              onDeleteClick={handleDeleteClick}
+            />
+          </div>
+
+          {/* Pagination controls */}
+          <div class="pagination-container">
+            <div class="oj-flex oj-sm-justify-content-center oj-sm-align-items-center">
+              <oj-button 
+                disabled={currentPage === 1}
+                onojAction={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+              >
+                Previous
+              </oj-button>
+
+              <div class="pagination-info">
+                Page {currentPage} of {Math.ceil(totalCount / PAGE_SIZE)} • Showing {((currentPage - 1) * PAGE_SIZE) + 1}-
+                {Math.min(currentPage * PAGE_SIZE, totalCount)} of{" "}
+                {totalCount} applications
+              </div>
+
+              <oj-button
+                disabled={currentPage >= Math.ceil(totalCount / PAGE_SIZE)}
+                onojAction={() =>
+                  setCurrentPage((p) =>
+                    p < Math.ceil(totalCount / PAGE_SIZE) ? p + 1 : p
+                  )
+                }
+              >
+                Next
+              </oj-button>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Might need to use state variables rather than oracles opening logic here especially for edit as they sometimes open and close unprompted */}
@@ -281,36 +317,6 @@ export default function Applications({ path }: Props) {
         onClose={() => setDeleteDialogOpen(false)}
         onDeleteSuccess={handleSuccessfulDelete}
       />
-
-      <div class="pagination-footer">
-        {!loading && totalCount > 0 && (
-          <div class="pagination-controls">
-            <oj-button
-              chroming="outlined"
-              onojAction={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-              disabled={currentPage === 1}
-              class="pagination-btn"
-            >
-              ← Previous
-            </oj-button>
-            <span class="pagination-info">
-              Page {currentPage} of {Math.ceil(totalCount / PAGE_SIZE)}
-            </span>
-            <oj-button
-              chroming="outlined"
-              onojAction={() =>
-                setCurrentPage((p) =>
-                  p < Math.ceil(totalCount / PAGE_SIZE) ? p + 1 : p
-                )
-              }
-              disabled={currentPage >= Math.ceil(totalCount / PAGE_SIZE)}
-              class="pagination-btn"
-            >
-              Next →
-            </oj-button>
-          </div>
-        )}
-      </div>
     </div>
   );
 }
