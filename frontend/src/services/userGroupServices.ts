@@ -22,13 +22,20 @@ interface GroupDetailsResponse {
 
 export const userGroupService = {
   // Fetch all user groups with pagination
-  async fetchUserGroups(page: number = 1, pageSize: number = 8, search: string = ""): Promise<{ data: GroupData[], total: number }> {
+  async fetchUserGroups(page: number = 1, pageSize: number = 8, search: string = "", is_active?: boolean): Promise<{ data: GroupData[], total: number }> {
+    const params: any = {
+      page,
+      pageSize,
+      search,
+    };
+    
+    // Only add is_active parameter if it's explicitly true or false (not undefined)
+    if (is_active !== undefined) {
+      params.is_active = is_active;
+    }
+    
     const response = await axios.get('/user-groups', {
-      params: {
-        page,
-        pageSize,
-        search,
-      },
+      params,
     });
 
     //if server returns 500 error, send data as empty array

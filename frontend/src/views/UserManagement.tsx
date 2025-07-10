@@ -1,13 +1,15 @@
 import { h } from "preact";
-import { useState, useEffect, useRef } from "preact/hooks";
+import { useState, useEffect, useRef, useMemo} from "preact/hooks";
 import { GroupData } from "../types/userManagement";
 import { userGroupService } from "../services/userGroupServices";
 import { AddGroupDialog } from "../components/UserManagement/AddGroupDialog";
 import { EditGroupDialog } from "../components/UserManagement/EditGroupDialog";
 import { DeleteGroupDialog } from "../components/UserManagement/DeleteGroupDialog";
+import ArrayDataProvider from "ojs/ojarraydataprovider";
 import UserGroupsList from "../components/UserManagement/UserGroupsList";
 import "ojs/ojinputsearch";
 import "ojs/ojbutton";
+import "ojs/ojselectsingle";
 
 type Props = {
   path?: string; // required by preact-router
@@ -18,6 +20,7 @@ export default function UserManagement(props: Props) {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+  const [statusFilter, setStatusFilter] = useState<string>("all"); // "all", "active", "inactive"
   const [error, setError] = useState("");
 
   // Dialog states
@@ -34,6 +37,17 @@ export default function UserManagement(props: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const prevSearchTermRef = useRef<string>("");
 
+  const statusOptions = [
+    { value: "all", label: "All" },
+    { value: "active", label: "Active" },
+    { value: "inactive", label: "Inactive" },
+  ];
+
+   const statusDataProvider = useMemo(() => {
+      return new ArrayDataProvider(statusOptions, { keyAttributes: "value" });
+    }, []);
+  
+
   useEffect(() => {
     loadGroups(true); // Initial load
   }, []);
@@ -46,7 +60,14 @@ export default function UserManagement(props: Props) {
     setError("");
 
     try {
-      const response = await userGroupService.fetchUserGroups(currentPage, PAGE_SIZE, searchTerm);
+      let status: boolean | undefined;
+      if (statusFilter === "all") {
+        status = undefined; // Show both active and inactive
+      }
+      if (statusFilter === "active") status = true;
+      else if (statusFilter === "inactive") status = false;
+      else status = undefined;
+      const response = await userGroupService.fetchUserGroups(currentPage, PAGE_SIZE, searchTerm, status);
       setGroups(response.data);
       setTotalCount(response.total);
     } catch (err: any) {
@@ -67,7 +88,7 @@ export default function UserManagement(props: Props) {
       prevSearchTermRef.current = searchTerm;
     }, searchTerm ? 300 : 0); // Debounce for search, no delay for pagination
     return () => clearTimeout(delayDebounceFn);
-  }, [currentPage, searchTerm]);
+  }, [currentPage, searchTerm, statusFilter]);
 
   const handleAddGroup = () => {
     setIsAddDialogOpen(true);
@@ -112,63 +133,85 @@ export default function UserManagement(props: Props) {
     }
   };
 
+  const handleResetFilters = () => {
+    setStatusFilter("all");
+    setSearchTerm("");
+    setCurrentPage(1);
+  };
+
   return (
     <div class="oj-hybrid-padding" ref={containerRef}>
-      <div class="oj-flex oj-sm-flex-direction-column">
-        <div class="oj-flex oj-sm-margin-4x-bottom">
-          <h1 class="oj-typography-heading-lg oj-text-color-primary">Groups</h1>
-        </div>
+     <div class="oj-flex oj-sm-flex-direction-column">
 
-        {/* Global Banner */}
-        {error && (
-          <div class="oj-sm-margin-4x-bottom error-banner">{error}</div>
-        )}
+  {/* Title Row: "Groups" and Add Group button */}
+  <div class="oj-flex oj-sm-justify-content-space-between oj-sm-align-items-center oj-sm-margin-1x-bottom">
+    <h1 class="oj-typography-heading-lg oj-text-color-primary">Groups</h1>
+    
+    <div class="oj-flex oj-sm-flex-direction-column oj-sm-align-items-flex-end">
+      <oj-button
+        chroming="solid"
+        class="add-button"
+        onojAction={handleAddGroup}
+      >
+        <span slot="startIcon" class="oj-ux-ico-plus"></span>
+        Add Group
+      </oj-button>
+      <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-1x-top" style="margin-bottom: 0;">
+        Total: {totalCount} groups
+      </span>
+    </div>
+    
+  </div>
+  <p class="oj-typography-body-md oj-text-color-secondary">
+      Manage user groups and their members. Groups are used to control access to application logs.
+    </p>
 
-        {/* Search and Add Group Row */}
-        <div class="oj-flex oj-sm-align-items-center oj-sm-flex-wrap oj-sm-margin-4x-bottom">
-          <div class="oj-flex-item">
-            <oj-input-text
-              class="oj-form-control-full-width"
-              placeholder="Search groups..."
-              value={searchTerm}
-              onrawValueChanged={(e: any) => {
-                setSearchTerm(e.detail.value);
-                setCurrentPage(1); // Reset to first page on new search
-              }}
-            />
-          </div>
+  {/* Error Banner */}
+  {error && (
+    <div class="oj-sm-margin-4x-bottom error-banner">{error}</div>
+  )}
+  
+  {/* Search, Status Filter, Reset Button Row */}
+<div class="oj-flex oj-sm-align-items-center oj-sm-flex-wrap oj-sm-margin-4x-bottom" style="width: 100%;">
+  <div class="oj-flex-item" style="flex: 1 1 auto; min-width: 200px;">
+    <oj-input-text
+      class="oj-form-control-full-width"
+      placeholder="Search groups..."
+      value={searchTerm}
+      onrawValueChanged={(e:any) => {
+        setSearchTerm(e.detail.value);
+        setCurrentPage(1);
+      }}
+    />
+  </div>
 
-          <div class="oj-sm-margin-2x-start">
-            <oj-button
-              chroming="solid"
-              class="add-button"
-              onojAction={handleAddGroup}
-            >
-              <span slot="startIcon" class="oj-ux-ico-plus"></span>
-              Add Group
-            </oj-button>
-          </div>
-        </div>
+  <div class="oj-flex-item oj-sm-margin-2x-start" style="flex-shrink: 0;">
+    <oj-select-single
+      class="oj-form-control"
+      label-hint="Status"
+      data={statusDataProvider}
+      value={statusFilter}
+      onvalueChanged={(e) => {
+        setStatusFilter(e.detail.value);
+        setCurrentPage(1);
+      }}
+    />
+  </div>
 
-        <div class="oj-flex oj-sm-align-items-start oj-sm-margin-4x-bottom">
-          <h2 class="oj-typography-heading-md oj-text-color-primary oj-flex-item">
-            Registered Groups
-          </h2>
+  <div class="oj-flex-item oj-sm-margin-2x-start" style="flex-shrink: 0;">
+    <oj-button
+      chroming="solid"
+      class="add-button"
+      onojAction={handleResetFilters}
+    >
+      <span slot="startIcon" class="oj-ux-ico-refresh"></span>
+      Reset
+    </oj-button>
+  </div>
+</div>
 
-          <div style="display: inline-flex; flex-direction: column; align-items: flex-start; margin-left: 24px;">
-            <span class="oj-typography-body-sm oj-text-color-secondary padding-2x-left">
-              Total: {totalCount} groups
-            </span>
-          </div>
-        </div>
+</div>
 
-        <div class="oj-flex oj-sm-flex-direction-column oj-sm-margin-4x-bottom">
-          <p class="oj-typography-body-md oj-text-color-secondary">
-            Manage user groups and their members. Groups are used to control
-            access to application logs.
-          </p>
-        </div>
-      </div>
 
       {/* Groups List */}
       <div
