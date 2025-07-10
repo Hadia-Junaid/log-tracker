@@ -208,3 +208,10 @@ oj-label {
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.field-error {
+  color: #d93025;
+  font-size: 0.9rem;
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
