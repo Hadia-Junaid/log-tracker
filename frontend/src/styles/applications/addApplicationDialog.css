@@ -215,3 +215,24 @@ oj-label {
   margin-top: 4px;
   margin-bottom: 12px;
 }
+
+.switch-wrapper {
+  display: flex;
+  align-items: center;
+}
+
+.user-group-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-left: 4px;
+}
+
+.user-group-item {
+  font-size: 0.9rem;
+}
+
+.disabled-group {
+  opacity: 0.5;
+  pointer-events: none;
+}

@@ -11,6 +11,9 @@
           "oj-checkbox-set": any;
           "ojselectsingle": any;
           "ojselectcombobox": any;
+          "oj-form-layout": any;
+          "oj-form-item": any;
+          "oj-form-message": any;
         }
       }
 
