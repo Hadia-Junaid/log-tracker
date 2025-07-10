@@ -3,7 +3,7 @@
   padding: 24px 32px;
   max-width: 1400px;
   margin: 0 auto;
-  width: calc(100% - 64px);
+  width: 100%;
   box-sizing: border-box;
   position: relative;
   overflow-x: hidden;
@@ -245,7 +245,7 @@
 @media (min-width: 1400px) {
   .oj-hybrid-padding {
     max-width: 1600px;
-    width: calc(100% - 96px);
+    width: 100%;
     padding: 24px 48px;
   }
 }
@@ -253,7 +253,7 @@
 @media (min-width: 1800px) {
   .oj-hybrid-padding {
     max-width: 1800px;
-    width: calc(100% - 128px);
+    width: 100%;
     padding: 24px 64px;
   }
 }
@@ -261,7 +261,7 @@
 @media (max-width: 480px) {
   .oj-hybrid-padding {
     padding: 16px 20px;
-    width: calc(100% - 40px);
+    width: 100%;
     max-width: none;
     margin: 0;
     position: static;
@@ -282,7 +282,7 @@
 @media (max-width: 600px) {
   .oj-hybrid-padding {
     padding: 20px 24px;
-    width: calc(100% - 48px);
+    width: 100%;
   }
   
   .search-add-row,

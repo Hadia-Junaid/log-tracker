@@ -38,7 +38,7 @@ function checkAuth(): Promise<boolean> {
 export const App = registerCustomElement(
     "app-root",
     ({
-        appName = "Log Tracker",
+        appName = "",
         userLogin = "john.hancock@oracle.com",
     }: Props) => {
         const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(
@@ -97,10 +97,10 @@ export const App = registerCustomElement(
 
                 <div
                     class="oj-web-applayout-content oj-flex"
-                    style={{ minHeight: "calc(100vh - 120px)" }}
+                    style={{ height: "calc(100vh - 120px)", overflow: "hidden" }}
                 >
                     <Sidebar />
-                    <main class="oj-flex-item">
+                    <main class="oj-flex-item" style={{ overflow: "auto", height: "100%" }}>
                         <Router>
                             <Dashboard path="/" />
                             <Logs path="/logs" />

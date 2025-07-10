@@ -216,9 +216,9 @@ export default function UserManagement(props: Props) {
       {/* Groups List */}
       <div
         class="oj-flex oj-sm-flex-direction-column"
-        style="min-height: 70vh;"
+        style="flex: 1; min-height: 0;"
       >
-        <div style="min-height: 50vh;" class="oj-flex-item-auto">
+        <div style="flex: 1; min-height: 0;" class="oj-flex-item-auto">
           <UserGroupsList
             loading={isInitialLoading}
             error={error}
