@@ -22,12 +22,14 @@ export default function DeleteConfirmationDialog({
   const dialogRef = useRef<any>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   useEffect(() => {
     if (dialogRef.current) {
       if (isOpen) {
         dialogRef.current.open();
         setError(null);
+        setSuccessMessage(null);
       } else {
         dialogRef.current.close();
       }
@@ -49,7 +51,11 @@ export default function DeleteConfirmationDialog({
     try {
       await axios.delete(`/applications/${applicationId}`);
       onDeleteSuccess();
-      onClose();
+      setSuccessMessage(
+        `Application "${applicationName}" deleted successfully.`
+      );
+
+      setTimeout(() => onClose(), 1000);
     } catch (err) {
       console.error("Delete failed:", err);
       setError("Failed to delete application.");
@@ -61,13 +67,27 @@ export default function DeleteConfirmationDialog({
   return (
     <oj-dialog
       ref={dialogRef}
-      dialogTitle="Confirm Deletion"
       cancelBehavior="icon"
       onojClose={handleDialogClose}
       id="deleteConfirmationDialog"
     >
+      <div slot="header" class="custom-dialog-title">
+        <h6>Confirm Deletion</h6>
+
+        {error && (
+          <div style="color: red; font-size: 0.9em; margin-top: 4px;">
+            {error}
+          </div>
+        )}
+
+        {successMessage && !error && (
+          <div style="color: green; font-size: 0.9em; margin-top: 4px;">
+            {successMessage}
+          </div>
+        )}
+      </div>
+
       <div class="oj-dialog-body">
-        {error && <p class="error-message">{error}</p>}
         <p>
           Are you sure you want to delete <strong>{applicationName}</strong>?
         </p>
