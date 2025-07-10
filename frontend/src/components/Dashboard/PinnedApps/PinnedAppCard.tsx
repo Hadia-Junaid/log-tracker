@@ -1,7 +1,7 @@
 /** @jsx h */
 import { h } from "preact";
 import { Pin } from "lucide-preact";
-import CardRow from "./CardRow";
+import CardRow from "../utils/CardRow";
 import { PinnedApp } from "../types";
 import "../../../styles/dashboard/pinnedapps.css";
 

@@ -1,0 +1,144 @@
+.risk-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: white;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.risk-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.risk-header-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+.icon {
+  color: red;
+}
+
+.app-count-badge {
+  padding: 4px 8px;
+  background-color: #f3f4f6;
+  color: #4b5563;
+  font-size: 0.875rem;
+  border-radius: 6px;
+}
+
+.risk-list,
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.risk-item {
+  border: 1px solid #e5e7eb;
+  padding: 12px;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.risk-app-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  background-color: red;
+  border-radius: 50%;
+}
+
+.risk-app-name {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.risk-app-time {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+.risk-app-metrics {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.badge {
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 9999px;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.high-risk {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.medium-risk {
+  background-color: #ffedd5;
+  color: #c2410c;
+}
+
+.low-risk {
+  background-color: #fef9c3;
+  color: #a16207;
+}
+
+.risk-more {
+  margin-top: 12px;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 12px;
+}
+
+.risk-empty-state {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  justify-content: center;
+  border: 2px dashed #bdc2cc;
+  padding: 32px;
+  border-radius: 8px;
+  height: 100%;
+  align-items: center;
+  background-color: #f9fafb;
+}
+
+.icon{
+  margin-bottom: 8px;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.risk-dialog .oj-dialog-header-decoration {
+  background-image: none !important;
+}

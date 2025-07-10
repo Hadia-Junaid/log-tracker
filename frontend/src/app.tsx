@@ -105,7 +105,7 @@ export const App = registerCustomElement(
 
                 <div
                     class="oj-web-applayout-content oj-flex"
-                    style={{ height: "100vh", overflow: "hidden" }}
+                    style={{ height: "100vh", overflowY: "scroll" }}
                 >
                     <Sidebar />
                     <main class="oj-flex-item oj-sm-padding-4x-start">

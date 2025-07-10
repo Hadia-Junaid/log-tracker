@@ -1,7 +1,7 @@
 /* === Dashboard Wrapper === */
 .pinned-dashboard {
-  padding: 2rem;
-  background-color: #f9fafb;
+  padding: 1.5rem;
+  background-color: #fff;
   border-radius: 6px;
 }
 
@@ -10,7 +10,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
 }
 
 @media (max-width: 768px) {
@@ -100,7 +99,7 @@
 
 /* === Pinned App Card === */
 .pinned-card {
-  background-color: #ffffff;
+  background-color: #f9fafb;
   border-radius: 8px;
   border: 1px solid #bdc2cc; /* gray-200 */
   padding: 1.5rem;
@@ -180,6 +179,7 @@
 
 .card-row-logs-label {
   font-weight: bold;
+  gap: 8px;
 }
 
 /* === Manage Pins === */
