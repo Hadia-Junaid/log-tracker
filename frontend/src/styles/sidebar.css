@@ -1,7 +1,6 @@
 /* src/components/sidebar.css */
-
 .sidebar {
-  width: 220px;
+  width: clamp(140px, 18vw, 260px);
   background-color: #f8f9fa;
   border-right: 1px solid #e9ecef;
   height: 100vh;
@@ -16,10 +15,11 @@
   margin-left: -16px;
   margin-top: -16px;
   flex-shrink: 0;
+  max-height: 100dvh;
 }
 
 .sidebar.collapsed {
-  width: 70px;
+  width: clamp(48px, 7vw, 90px);
 }
 
 .sidebar-header {

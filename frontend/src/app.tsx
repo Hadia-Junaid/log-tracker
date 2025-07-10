@@ -122,7 +122,6 @@ export const App = registerCustomElement(
                     </main>
                 </div>
 
-                <Footer />
             </div>
         );
     }

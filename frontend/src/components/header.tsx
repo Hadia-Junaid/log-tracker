@@ -56,7 +56,7 @@ export function Header({ appName, userLogin }: Props) {
 
   return (
     <header role="banner" class="oj-web-applayout-header">
-      <div class="oj-web-applayout-max-width oj-flex-bar oj-sm-align-items-center">
+      <div class="oj-flex-bar oj-sm-align-items-center" style="width: 100%; padding: 0 16px;">
         <div class="oj-flex-bar-middle oj-sm-align-items-baseline">
         <img class="oj-icon demo-oracle-icon"
               title="Oracle Logo"
