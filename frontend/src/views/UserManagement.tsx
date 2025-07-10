@@ -231,27 +231,29 @@ export default function UserManagement(props: Props) {
 
         {/* Pagination controls */}
         <div class="pagination-container">
-          <div class="oj-flex oj-sm-justify-content-center oj-sm-align-items-center">
-            <oj-button 
-              disabled={currentPage === 1}
-              onojAction={goToPrevPage}
-            >
-              Previous
-            </oj-button>
+          {!isLoading && totalCount > 0 && (
+            <div class="oj-flex oj-sm-justify-content-center oj-sm-align-items-center">
+              <oj-button 
+                disabled={currentPage === 1}
+                onojAction={goToPrevPage}
+              >
+                Previous
+              </oj-button>
 
-            <div class="pagination-info">
-              Page {currentPage} of {Math.ceil(totalCount / PAGE_SIZE)} • Showing {((currentPage - 1) * PAGE_SIZE) + 1}-
-              {Math.min(currentPage * PAGE_SIZE, totalCount)} of{" "}
-              {totalCount} groups
+              <div class="pagination-info">
+                Page {currentPage} of {Math.ceil(totalCount / PAGE_SIZE)} • Showing {((currentPage - 1) * PAGE_SIZE) + 1}-
+                {Math.min(currentPage * PAGE_SIZE, totalCount)} of{" "}
+                {totalCount} groups
+              </div>
+
+              <oj-button
+                disabled={currentPage >= Math.ceil(totalCount / PAGE_SIZE)}
+                onojAction={goToNextPage}
+              >
+                Next
+              </oj-button>
             </div>
-
-            <oj-button
-              disabled={currentPage >= Math.ceil(totalCount / PAGE_SIZE)}
-              onojAction={goToNextPage}
-            >
-              Next
-            </oj-button>
-          </div>
+          )}
         </div>
       </div>
 

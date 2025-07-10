@@ -21,6 +21,7 @@ type Props = {
 export default function Applications({ path }: Props) {
   const [applications, setApplications] = useState<Application[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -79,7 +80,13 @@ export default function Applications({ path }: Props) {
     return new ArrayDataProvider(sortOptions, { keyAttributes: "value" });
   }, []);
 
-  const fetchApplications = async () => {
+  const fetchApplications = async (showLoading: boolean = true) => {
+    if (showLoading) {
+      setLoading(true);
+      setIsInitialLoading(true);
+    }
+    setError(null); // Clear previous errors
+
     try {
       console.log("Fetching applications with filters:", {
         currentPage,
@@ -88,7 +95,6 @@ export default function Applications({ path }: Props) {
         environmentFilter: environmentFilter ? Array.from(environmentFilter) : [],
         sortOption,
       });
-      // setLoading(true);  //commenting this out because i dont want this every time i search
       const response = await axios.get("/applications", {
         params: {
           page: currentPage,
@@ -104,19 +110,22 @@ export default function Applications({ path }: Props) {
       console.log("Fetched applications:", response);
       setApplications(response.data.data);
       setTotalCount(response.data.total);
-      setError(null); // Clear previous errors
     } catch (err) {
       console.error("Error fetching applications:", err);
       setError("Failed to fetch applications. Please try again.");
     } finally {
-      setLoading(false);
+      if (showLoading) {
+        setLoading(false);
+        setIsInitialLoading(false);
+      }
     }
   };
 
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
-      fetchApplications();
-    }, 300);
+      // Always show loading for both search and pagination
+      fetchApplications(true);
+    }, searchQuery ? 300 : 0); // Debounce for search, no delay for pagination
     return () => clearTimeout(delayDebounceFn);
   }, [currentPage, searchQuery, statusFilter, environmentFilter, sortOption]);
 
@@ -259,7 +268,7 @@ export default function Applications({ path }: Props) {
         >
           <div style="flex: 1; min-height: 0;" class="oj-flex-item-auto">
             <ApplicationsList
-              loading={loading}
+              loading={isInitialLoading}
               error={error}
               applications={applications}
               onEditClick={handleEditClick}
@@ -269,7 +278,8 @@ export default function Applications({ path }: Props) {
 
           {/* Pagination controls */}
           <div class="pagination-container">
-            <div class="oj-flex oj-sm-justify-content-center oj-sm-align-items-center">
+            {!loading && totalCount > 0 && (
+              <div class="oj-flex oj-sm-justify-content-center oj-sm-align-items-center">
               <oj-button 
                 disabled={currentPage === 1}
                 onojAction={() => setCurrentPage((p) => Math.max(p - 1, 1))}
@@ -294,6 +304,7 @@ export default function Applications({ path }: Props) {
                 Next
               </oj-button>
             </div>
+            )}
           </div>
         </div>
       </div>
@@ -302,7 +313,7 @@ export default function Applications({ path }: Props) {
       <AddApplicationDialog
         isOpen={isAddDialogOpen}
         onClose={() => setIsAddDialogOpen(false)}
-        onApplicationAdded={fetchApplications}
+        onApplicationAdded={() => fetchApplications(true)}
       />
       <EditApplicationDialog
         isOpen={isEditDialogOpen}
