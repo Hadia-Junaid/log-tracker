@@ -16,6 +16,9 @@ export const createUserGroupSchema = Joi.object({
       'any.required': 'Group name is required.'
     }),
   is_admin: Joi.boolean(),
+  is_active: Joi.boolean().default(true).messages({
+    'boolean.base': 'Active status must be a boolean value.'
+  }),
   assigned_applications: Joi.array()
     .items(Joi.string().custom((value, helpers) => {
       if (!mongoose.Types.ObjectId.isValid(value)) return helpers.error('any.invalid');
@@ -33,6 +36,7 @@ export const createUserGroupSchema = Joi.object({
 export const updateUserGroupSchema = Joi.object({
   name: Joi.string(),
   is_admin: Joi.boolean(),
+  is_active: Joi.boolean(),
   assigned_applications: Joi.array()
     .items(Joi.string().custom((value, helpers) => {
       if (!mongoose.Types.ObjectId.isValid(value)) return helpers.error('any.invalid');
