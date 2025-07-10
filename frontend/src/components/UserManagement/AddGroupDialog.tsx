@@ -32,6 +32,7 @@ export function AddGroupDialog({
   const [applications, setApplications] = useState<ApplicationOption[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+  const [isActive, setIsActive] = useState(true);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
@@ -115,6 +116,7 @@ export function AddGroupDialog({
         name: groupName,
         members: selectedMembers.map(m => m.email),
         assigned_applications: selectedAppIds,
+        is_active: isActive,
         is_admin: false
       };
 
@@ -227,7 +229,20 @@ export function AddGroupDialog({
       </div>
 
       <div slot="body">
-        <p>Create a new group and manage members using the directory below.</p>
+        <div class="oj-flex oj-sm-align-items-center oj-sm-margin-4x-bottom">
+          <p style={{ margin: 0, flex: 1 }}>Create a new group and manage members using the directory below.</p>
+          <div class="oj-flex oj-sm-align-items-center" style={{ marginLeft: '2rem' }}>
+            <oj-label for="appIsActive" style={{ marginRight: '0.5rem', marginTop: '0.5rem' }}>Status (Active/Inactive)</oj-label>
+            <oj-switch
+              id="appIsActive"
+              value={isActive}
+              onvalueChanged={(e: CustomEvent) => setIsActive(e.detail.value)}
+              disabled={isLoading}
+              aria-label="Status"
+              class="oj-form-control"
+            ></oj-switch>
+          </div>
+        </div>
 
         {(!isDataLoaded || isLoading) ? (
           <div class="oj-flex oj-sm-flex-direction-column">
@@ -393,6 +408,8 @@ export function AddGroupDialog({
                 </div>
               </div>
             </div>
+
+            
 
             {/* Accessible Applications Section */}
             <div class="oj-flex oj-sm-flex-direction-column oj-sm-margin-4x-top">
