@@ -111,20 +111,19 @@ div.page-container {
 }
 
 .application-card {
-  --oj-c-PRIVATE-CHROME-BORDER-RADIUS: 16px;
-  border-radius: 16px;
-  background-color: var(--oj-core-bg-color-default);
-  border: 1px solid #c5d8ff;
-  /* background-image: linear-gradient(145deg, #f3f9ff, #ffffff); */
-  transition:
-    box-shadow 0.3s ease,
-    transform 0.2s ease;
-  box-shadow: var(--oj-core-box-shadow-sm);
+  --oj-c-PRIVATE-CHROME-BORDER-RADIUS: 8px;
+  border-radius: 8px;
+  background: #ffffff;
+  border: 1px solid #e0e4e7;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
 }
 
 .application-card:hover {
-  box-shadow: var(--oj-core-box-shadow-lg);
-  transform: translateY(-2px);
+  border-color: #0572ce;
+  box-shadow: 0 4px 12px rgba(5, 114, 206, 0.15);
+  transform: translateY(-1px);
 }
 
 .card-content {
