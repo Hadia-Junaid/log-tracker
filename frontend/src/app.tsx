@@ -69,17 +69,14 @@ export const App = registerCustomElement(
                 }
 
                 const res = await axios.get("/auth/status");
-                const userId = res.data?.user.id;
-                const userLogin = res.data?.user.email;
                 const isAuthed = res.data?.authenticated === true;
-
-                console.log("Auth status response:", res);
-
-                if (!isAuthed || !userId || !userLogin) {
+                if (!isAuthed || !res.data?.user) {
                     setIsAuthenticated(false);
                     return;
                 }
-
+            
+                const userId = res.data?.user.id;
+                const userLogin = res.data?.user.email;
                 setUserId(userId);
                 setUserLogin(userLogin);
                 setIsAuthenticated(true);
