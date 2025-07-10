@@ -226,6 +226,16 @@ export function AddGroupDialog({
   max-height="80vh">
       <div slot="header">
         <h2 id="add-dialog-title">Add New Group</h2>
+
+        {/* Success Message */}
+            {successMessage && (
+              <div class="oj-sm-margin-4x-bottom success-message-banner">
+                <div class="oj-flex oj-sm-align-items-center">
+                  <span class="oj-ux-ico-status-confirmation oj-text-color-success oj-sm-margin-2x-end"></span>
+                  <span class="oj-text-color-success">{successMessage}</span>
+                </div>
+              </div>
+            )}
         {/* Error Message */}
         {error && (
               <div class="oj-sm-margin-4x-bottom error-message-banner">
@@ -235,6 +245,7 @@ export function AddGroupDialog({
                 </div>
               </div>
             )}
+          
       </div>
 
       <div slot="body">
@@ -273,15 +284,7 @@ export function AddGroupDialog({
           </div>
         ) : (
           <div class="oj-flex oj-sm-flex-direction-column">
-            {/* Success Message */}
-            {successMessage && (
-              <div class="oj-sm-margin-4x-bottom success-message-banner">
-                <div class="oj-flex oj-sm-align-items-center">
-                  <span class="oj-ux-ico-status-confirmation oj-text-color-success oj-sm-margin-2x-end"></span>
-                  <span class="oj-text-color-success">{successMessage}</span>
-                </div>
-              </div>
-            )}
+            
 
             
 
