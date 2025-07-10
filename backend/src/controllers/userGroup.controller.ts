@@ -272,10 +272,7 @@ export const getUserGroups = async (
   logger.info(
     `Fetched ${groups.length} groups (page ${page}) with search "${search}"`
   );
-  //print all groups
-  groups.forEach(group => {
-    logger.info(`Group: ${group.name}, Admin: ${group.is_admin}, Active: ${group.is_active}`);
-  });
+  
   res.json({ data: groups, total });
 };
 
