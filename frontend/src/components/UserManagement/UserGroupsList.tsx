@@ -33,18 +33,22 @@ export default function UserGroupsList({
 }: Props) {
   if (loading) {
     return (
-      <div style={{ textAlign: "center", marginTop: "20px" }}>
-        <oj-progress-circle value={-1} size="lg" />
-        <p>Loading groups...</p>
+      <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center" style="height: 40vh;">
+        <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center oj-sm-flex-direction-column">
+          <oj-progress-circle value={-1} size="lg" />
+          <p class="oj-typography-body-md oj-text-color-secondary" style="margin-top: 16px;">Loading groups...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <p class="oj-text-color-danger" style={{ textAlign: "center", marginTop: "20px" }}>
-        {error}
-      </p>
+      <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center" style="height: 40vh;">
+        <p class="oj-text-color-danger oj-typography-body-md">
+          {error}
+        </p>
+      </div>
     );
   }
 
