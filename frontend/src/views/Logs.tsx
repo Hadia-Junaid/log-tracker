@@ -11,7 +11,6 @@ import "../styles/logs.css";
 import LogsHeader from "../components/logspage/LogsHeader";
 import LogsTable from "../components/logspage/LogsTable";
 import Pagination from "../components/logspage/Pagination";
-import { set } from "mongoose";
 
 type LogEntry = {
   _id: string;
