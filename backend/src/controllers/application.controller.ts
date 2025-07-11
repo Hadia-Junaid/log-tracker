@@ -223,6 +223,7 @@ export const updateApplication = async (
           {
             _id: { $in: toRemove },
             is_admin: false,
+            is_active: true,  // Only remove from active groups
           },
           {
             $pull: { assigned_applications: updated._id },
