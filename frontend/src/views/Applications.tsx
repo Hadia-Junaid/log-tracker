@@ -271,6 +271,7 @@ export default function Applications({ path }: Props) {
               loading={isInitialLoading}
               error={error}
               applications={applications}
+              searchTerm={searchQuery}
               onEditClick={handleEditClick}
               onDeleteClick={handleDeleteClick}
             />

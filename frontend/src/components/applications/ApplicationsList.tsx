@@ -7,28 +7,45 @@ type Props = {
   loading: boolean;
   error: string | null;
   applications: Application[];
+  searchTerm?: string;
   onEditClick: (app: Application) => void;
   onDeleteClick: (id: string, name: string) => void;
 };
 
-export default function ApplicationsList({ loading, error, applications, onEditClick, onDeleteClick }: Props) {
+export default function ApplicationsList({ loading, error, applications, searchTerm, onEditClick, onDeleteClick }: Props) {
 
   if(loading) {
-    //small loading spinner
     return (
-      <div style={{ textAlign: 'center', marginTop: '20px' }}>
-        <oj-progress-circle value={-1} size="lg" />
-        <p>Loading applications...</p>
+      <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center" style="height: 40vh;">
+        <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center oj-sm-flex-direction-column">
+          <oj-progress-circle value={-1} size="lg" />
+          <p class="oj-typography-body-md oj-text-color-secondary" style="margin-top: 16px;">Loading applications...</p>
+        </div>
       </div>
     );
   }
 
   if (error) {
-    return <p class="oj-text-color-danger" style={{ textAlign: 'center', marginTop: '20px' }}>{error}</p>;
+    return (
+      <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center" style="height: 40vh;">
+        <p class="oj-text-color-danger oj-typography-body-md">
+          {error}
+        </p>
+      </div>
+    );
   }
 
   if (applications.length === 0) {
-    return <p style={{ textAlign: 'center', marginTop: '20px' }}>No applications found.</p>;
+    return (
+      <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center" style="height: 40vh;">
+        <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center oj-sm-flex-direction-column">
+          <p class="oj-text-color-secondary" style="font-weight: bold; font-size: 1.25rem; text-align: center;">
+{searchTerm
+              ? "No applications match your search criteria!"
+              : "Create your first application to get started."}          </p>
+        </div>
+      </div>
+    );
   }
 
   return (
