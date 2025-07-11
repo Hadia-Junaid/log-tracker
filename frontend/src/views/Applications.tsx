@@ -32,7 +32,7 @@ export default function Applications({ path }: Props) {
   const [isEditDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedApp, setSelectedApp] = useState<Application | null>(null);
 
-  const PAGE_SIZE = 6;
+  const [pageSize, setPageSize] = useState(6);
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [totalCount, setTotalCount] = useState(0);
@@ -65,6 +65,13 @@ export default function Applications({ path }: Props) {
     // { value: "updatedAt", label: "Last Updated (Oldest First)" },
   ];
 
+  const pageSizeOptions = [
+    { value: 4, label: "4 per page" },
+    { value: 6, label: "6 per page" },
+    { value: 10, label: "10 per page" },
+    { value: 20, label: "20 per page" },
+  ];
+
   const statusDataProvider = useMemo(() => {
     return new ArrayDataProvider(statusOptions, { keyAttributes: "value" });
   }, []);
@@ -78,6 +85,10 @@ export default function Applications({ path }: Props) {
   // Set the default sort option to "name" for initial load
   const sortDataProvider = useMemo(() => {
     return new ArrayDataProvider(sortOptions, { keyAttributes: "value" });
+  }, []);
+
+  const pageSizeDataProvider = useMemo(() => {
+    return new ArrayDataProvider(pageSizeOptions, { keyAttributes: "value" });
   }, []);
 
   const fetchApplications = async (showLoading: boolean = true) => {
@@ -94,11 +105,12 @@ export default function Applications({ path }: Props) {
         statusFilter,
         environmentFilter: environmentFilter ? Array.from(environmentFilter) : [],
         sortOption,
+        pageSize,
       });
       const response = await axios.get("/applications", {
         params: {
           page: currentPage,
-          pageSize: PAGE_SIZE,
+          pageSize: pageSize,
           search: searchQuery,
           status: statusFilter,
           environment: Array.from(environmentFilter),
@@ -127,7 +139,7 @@ export default function Applications({ path }: Props) {
       fetchApplications(true);
     }, searchQuery ? 300 : 0); // Debounce for search, no delay for pagination
     return () => clearTimeout(delayDebounceFn);
-  }, [currentPage, searchQuery, statusFilter, environmentFilter, sortOption]);
+  }, [currentPage, searchQuery, statusFilter, environmentFilter, sortOption, pageSize]);
 
   const updateSelectedApplication = (updatedApp: Application) => {
     setApplications((prevApps) =>
@@ -163,6 +175,7 @@ export default function Applications({ path }: Props) {
     setSortOption("name");
     setSearchQuery("");
     setCurrentPage(1);
+    setPageSize(6);
   };
 
   return (
@@ -281,30 +294,44 @@ export default function Applications({ path }: Props) {
           <div class="pagination-container">
             {!loading && totalCount > 0 && (
               <div class="oj-flex oj-sm-justify-content-center oj-sm-align-items-center">
-              <oj-button 
-                disabled={currentPage === 1}
-                onojAction={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-              >
-                Previous
-              </oj-button>
+                <oj-button 
+                  disabled={currentPage === 1}
+                  onojAction={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                >
+                  Previous
+                </oj-button>
 
-              <div class="pagination-info">
-                Page {currentPage} of {Math.ceil(totalCount / PAGE_SIZE)} • Showing {((currentPage - 1) * PAGE_SIZE) + 1}-
-                {Math.min(currentPage * PAGE_SIZE, totalCount)} of{" "}
-                {totalCount} applications
+                <div class="pagination-info">
+                  Page {currentPage} of {Math.ceil(totalCount / pageSize)} • Showing {((currentPage - 1) * pageSize) + 1}-
+                  {Math.min(currentPage * pageSize, totalCount)} of{" "}
+                  {totalCount} applications
+                </div>
+
+                <oj-button
+                  disabled={currentPage >= Math.ceil(totalCount / pageSize)}
+                  onojAction={() =>
+                    setCurrentPage((p) =>
+                      p < Math.ceil(totalCount / pageSize) ? p + 1 : p
+                    )
+                  }
+                >
+                  Next
+                </oj-button>
+
+                <div class="oj-sm-margin-2x-start">
+                  <oj-select-single
+                    class="oj-form-control"
+                    label-hint="Page Size"
+                    data={pageSizeDataProvider}
+                    value={pageSize}
+                    onvalueChanged={(e: CustomEvent) => {
+                      setPageSize(e.detail.value);
+                      setCurrentPage(1); // Reset to first page when changing page size
+                    }}
+                    style="min-width: 150px; height: 36px;"
+                  />
+                </div>
               </div>
-
-              <oj-button
-                disabled={currentPage >= Math.ceil(totalCount / PAGE_SIZE)}
-                onojAction={() =>
-                  setCurrentPage((p) =>
-                    p < Math.ceil(totalCount / PAGE_SIZE) ? p + 1 : p
-                  )
-                }
-              >
-                Next
-              </oj-button>
-            </div>
             )}
           </div>
         </div>
