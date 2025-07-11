@@ -242,7 +242,7 @@ export default function Applications({ path }: Props) {
                 value={environmentFilter}
                 item-text="label"
                 // Use the event handler to update your state
-                onvalueChanged={(event) => {
+                onvalueChanged={(event:any) => {
                   const newValue = event.detail.value as Set<string> | null;
                   console.log("Environment filter changed:", newValue);
                   setEnvironmentFilter(newValue ?? new Set<string>());
@@ -285,7 +285,6 @@ export default function Applications({ path }: Props) {
               loading={isInitialLoading}
               error={error}
               applications={applications}
-              searchTerm={searchQuery}
               onEditClick={handleEditClick}
               onDeleteClick={handleDeleteClick}
             />
@@ -329,7 +328,6 @@ export default function Applications({ path }: Props) {
                       setPageSize(e.detail.value);
                       setCurrentPage(1); // Reset to first page when changing page size
                     }}
-                    style="min-width: 150px; height: 36px;"
                   />
                 </div>
               </div>

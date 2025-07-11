@@ -16,6 +16,7 @@ import atRiskRuleRoutes from './routes/atRiskRule.routes';
 import dashboardRoutes from "./routes/dashboard.route";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import logsRoutes from "./routes/logs.route";
 
 processErrors(); // Initialize process level error handlers
 
@@ -65,5 +66,8 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 
 app.use('/api/applications', applications);
+
+app.use('/api/logs', logsRoutes);
+
 // ✅ Error handler last
 app.use(errorHandler);

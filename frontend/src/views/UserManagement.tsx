@@ -291,6 +291,7 @@ export default function UserManagement(props: Props) {
           isOpen={isEditDialogOpen}
           groupId={selectedGroup.groupId}
           groupName={selectedGroup.groupName}
+          isAdmin={selectedGroup.is_admin} // Pass isAdmin status
           onClose={() => {
             setIsEditDialogOpen(false);
             setSelectedGroup(null);

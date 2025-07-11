@@ -21,6 +21,7 @@ interface EditGroupDialogProps {
   isOpen: boolean;
   groupId: string;
   groupName: string;
+  isAdmin?: boolean; // Optional prop to indicate if this is the admin group
   onClose: () => void;
   onGroupUpdated: () => void;
 }
@@ -29,6 +30,7 @@ export function EditGroupDialog({
   isOpen,
   groupId,
   groupName,
+  isAdmin = false, // Default to false if not provided
   onClose,
   onGroupUpdated
 }: EditGroupDialogProps) {
@@ -110,6 +112,8 @@ export function EditGroupDialog({
           setSuperAdminEmails(groupDetails.super_admin_emails);
         }
       }
+
+      isAdmin = groupDetails.is_admin || false; // Ensure isAdmin reflects the group details
       
       setIsDataLoaded(true);
     } catch (err: any) {
@@ -155,7 +159,7 @@ export function EditGroupDialog({
 
   const handleRemoveMember = (member: MemberData) => {
     // Prevent removing superadmins from admin group
-    if (groupName.toLowerCase() === 'admin group' && superAdminEmails.includes(member.email)) {
+    if (isAdmin && superAdminEmails.includes(member.email)) {
       setError('Cannot remove superadmin users from admin group');
       setTimeout(() => setError(''), 3000);
       return;
@@ -169,7 +173,7 @@ export function EditGroupDialog({
 
   const handleRemoveAllMembers = () => {
     // Filter out superadmins if this is admin group
-    if (groupName.toLowerCase() === 'admin group') {
+    if (isAdmin) {
       setSelectedMembers(prev => prev.filter(member => superAdminEmails.includes(member.email)));
       return;
     }
@@ -204,7 +208,7 @@ export function EditGroupDialog({
         name: groupName,
         members: selectedMembers.map(m => m.email),
         assigned_applications: selectedAppIds,
-        is_admin: groupName.toLowerCase() === 'admin group',
+        is_admin: isAdmin,
         is_active: isActive
       };
 
@@ -259,7 +263,7 @@ export function EditGroupDialog({
     }
     
     // Check application changes (skip for admin group)
-    if (groupName.toLowerCase() !== 'admin group') {
+    if (!isAdmin) {
       const currentAppIds = Object.keys(checkboxRefs.current).filter(appId => 
         checkboxRefs.current[appId]?.value === true
       ).sort();
@@ -331,7 +335,7 @@ export function EditGroupDialog({
               id="appIsActive"
               value={isActive}
               onvalueChanged={(e: CustomEvent) => setIsActive(e.detail.value)}
-              disabled={isLoading}
+              disabled={isLoading || isAdmin}
               aria-label="Status"
               class="oj-form-control"
             ></oj-switch>
@@ -370,7 +374,7 @@ export function EditGroupDialog({
             applications={applications}
             checkboxRefs={checkboxRefs}
             assignedAppIds={assignedAppIds}
-            disableApplicationSelection={groupName.toLowerCase() === 'admin group'}
+            disableApplicationSelection={isAdmin}
             superAdminEmails={superAdminEmails}
             groupNameKey={groupName}
           />
