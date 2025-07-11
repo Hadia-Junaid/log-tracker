@@ -63,8 +63,6 @@ app.use('/api/user-groups', userGroupRoutes);
 app.use('/api/admin', adminRoutes);
 // Dashboard routes
 app.use('/api/dashboard', dashboardRoutes);
-// Dashboard routes
-app.use('/api/dashboard', dashboardRoutes);
 
 app.use('/api/applications', applications);
 // ✅ Error handler last

@@ -75,7 +75,7 @@ export const App = registerCustomElement(
                     return;
                 }
             
-                const userId = res.data?.user.id;
+                const userId = res.data?.user._id;
                 const userLogin = res.data?.user.email;
                 setUserId(userId);
                 setUserLogin(userLogin);
