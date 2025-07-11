@@ -9,7 +9,7 @@
   "properties": {
     "appName": {
       "type": "string",
-      "value": ""
+      "value": "Log Tracker"
     },
     "userLogin": {
       "type": "string",
