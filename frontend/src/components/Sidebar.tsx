@@ -8,8 +8,8 @@ import logoImage from "../assets/logtracker.png";
 const navItems = [
   { label: "Dashboard", path: "/", icon: "oj-ux-ico-dashboard" },
   { label: "Logs", path: "/logs", icon: "oj-ux-ico-documents" },
-  { label: "User Management", path: "/users", icon: "oj-ux-ico-user-data" },
   { label: "Applications", path: "/applications", icon: "oj-ux-ico-applications" },
+  { label: "User Management", path: "/users", icon: "oj-ux-ico-user-data" },
   { label: "Settings", path: "/settings", icon: "oj-ux-ico-settings" },
 ];
 
