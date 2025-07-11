@@ -117,8 +117,8 @@ export const App = registerCustomElement(
             <Router>
               <Dashboard path="/" userId={userId} />
               <Logs path="/logs" />
-              <UserManagement path="/users" />
               <Applications path="/applications" />
+              <UserManagement path="/users" />
               <Settings path="/settings" />
 
               <NotFound default />
