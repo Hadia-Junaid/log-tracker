@@ -39,7 +39,6 @@ export const getLogs = async (req: Request, res: Response): Promise<void> => {
       res.status(404).json({ error: 'User is not a member of any active group' });
       return;
     }
-    logger.info(`start time ${start_time}`);
     // 2. Collect all assigned application IDs from these groups
     const groupAppIds = userGroups.flatMap(g => g.assigned_applications.map(id => id.toString()));
     // If app_ids is provided, filter further
@@ -226,7 +225,6 @@ export const userdata = async (req: Request, res: Response): Promise<void> => {
       .lean();
     // 4. Get user settings
     const { autoRefresh, autoRefreshTime } = user.settings || {};
-    logger.info(`User settings: autoRefresh=${autoRefresh}, autoRefreshTime=${autoRefreshTime}`);
     // 5. Get TTL index value from Log collection
     const indexes = await Log.collection.indexes();
     const ttlIndex = indexes.find(idx => idx.key && idx.key.timestamp === 1 && idx.expireAfterSeconds);

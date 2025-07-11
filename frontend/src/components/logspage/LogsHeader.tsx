@@ -183,7 +183,8 @@ export default function LogsHeader({
           class="oj-form-control-max-width-md input-filter datetime"
           disabled={selectedTimeRange !== 'custom'}
           max={currentDateTime}
-          min={minDate}
+          // min={minDate}
+          min={customStart ?? minDate}
         ></oj-input-date-time>
 
         <oj-button
