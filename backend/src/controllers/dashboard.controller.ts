@@ -245,15 +245,15 @@ export const getAtRiskApps = async (req: Request, res: Response): Promise<void> 
           timestamp: { $gte: timeThreshold }
         });
 
-        if (operator === 'greater_than' && logs.length > number_of_logs) {
+        if (operator === 'greater' && logs.length > number_of_logs) {
           messages.push(
             `Too many '${type_of_logs}' logs in past ${time} ${unit}(s): ${logs.length} > ${number_of_logs}`
           );
-        } else if (operator === 'less_than' && logs.length < number_of_logs) {
+        } else if (operator === 'less' && logs.length < number_of_logs) {
           messages.push(
             `Too few '${type_of_logs}' logs in past ${time} ${unit}(s): ${logs.length} < ${number_of_logs}`
           );
-        } else if (operator === 'equal_to' && logs.length === number_of_logs) {
+        } else if (operator === 'equal' && logs.length === number_of_logs) {
           messages.push(
             `'${type_of_logs}' logs exactly equal to ${number_of_logs} in past ${time} ${unit}(s)`
           );

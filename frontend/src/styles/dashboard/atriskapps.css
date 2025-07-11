@@ -69,6 +69,18 @@
   color: #111827;
 }
 
+.risk-messages {
+  margin-top: 4px;
+  padding-left: 1rem;
+  list-style-type: disc;
+  font-size: 0.75rem;
+  color: #6b7280; /* Tailwind gray-500 */
+}
+
+.risk-message {
+  margin-bottom: 2px;
+}
+
 .risk-app-time {
   display: flex;
   align-items: center;
@@ -141,4 +153,63 @@
 
 .risk-dialog .oj-dialog-header-decoration {
   background-image: none !important;
+}
+
+
+.risk-app-card {
+  border: 1px solid #e5e7eb;
+  background-color: #ffffff;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  transition: box-shadow 0.2s;
+}
+.risk-app-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+}
+
+.risk-app-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: start;
+  margin-bottom: 0.75rem;
+}
+.risk-app-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.risk-app-name {
+  font-weight: 600;
+  font-size: 0.875rem;
+  color: #111827;
+}
+
+.risk-app-messages {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.risk-app-message {
+  font-size: 0.75rem;
+  color: #4b5563;
+  margin-top: 0.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.risk-app-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(0,0,0,0.1);
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+.risk-label {
+  font-weight: 400;
+}
+.risk-status {
+  font-weight: 500;
 }

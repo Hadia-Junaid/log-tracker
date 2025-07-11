@@ -7,11 +7,9 @@ import axios from "../../../api/axios";
 import "../../../styles/dashboard/atriskapps.css";
 
 interface AtRiskApp {
-  id: string;
+  appId: string;
   name: string;
-  errorCount: number;
-  riskLevel: "high" | "medium" | "low";
-  lastError: string;
+  messages: string[];
 }
 
 const AtRiskAppsListCard = ({ userId }: { userId?: string }) => {
@@ -45,21 +43,18 @@ const AtRiskAppsListCard = ({ userId }: { userId?: string }) => {
   };
 
   const AppItem = (app: AtRiskApp) => (
-    <div class="risk-item">
-      <div class="risk-app-info">
-        <div class="dot" />
-        <div class="risk-meta">
-          <div class="risk-app-name">{app.name}</div>
-          <div class="risk-app-time">
-            <Clock class="icon" />
-            <span>{app.lastError}</span>
-          </div>
+    <div class="risk-app-card">
+      <div class="risk-app-header">
+        <div class="risk-app-title">
+          <div class="dot" />
+          <span class="risk-app-name">{app.name}</span>
         </div>
       </div>
-      <div class="risk-app-metrics">
-        <span class={getRiskLevelClass(app.riskLevel)}>{app.riskLevel.toUpperCase()}</span>
-        <span class={getErrorClass(app.errorCount)}>{app.errorCount} errors</span>
-      </div>
+      <ul class="risk-app-messages">
+        {app.messages.map((msg, idx) => (
+          <li key={idx} class="risk-app-message">{msg}</li>
+        ))}
+      </ul>
     </div>
   );
 
@@ -90,7 +85,7 @@ const AtRiskAppsListCard = ({ userId }: { userId?: string }) => {
         <>
           <div class="risk-list">
             {displayedApps.map((app) => (
-              <AppItem key={app.id} {...app} />
+              <AppItem key={app.appId} {...app} />
             ))}
           </div>
 
@@ -114,7 +109,7 @@ const AtRiskAppsListCard = ({ userId }: { userId?: string }) => {
                   </div>
                   <div slot="body" class="dialog-body">
                     {apps.map((app) => (
-                      <AppItem key={app.id} {...app} />
+                      <AppItem key={app.appId} {...app} />
                     ))}
                   </div>
                 </oj-dialog>
