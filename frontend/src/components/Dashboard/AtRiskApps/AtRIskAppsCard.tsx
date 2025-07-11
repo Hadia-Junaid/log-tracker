@@ -2,7 +2,7 @@
 /** @jsxFrag Fragment */
 import { h, Fragment } from "preact";
 import { useState, useRef, useEffect } from "preact/hooks";
-import { AlertTriangle, Clock } from "lucide-preact";
+import { AlertTriangle } from "lucide-preact";
 import axios from "../../../api/axios";
 import "../../../styles/dashboard/atriskapps.css";
 
@@ -14,7 +14,9 @@ interface AtRiskApp {
 
 const AtRiskAppsListCard = ({ userId }: { userId?: string }) => {
   const [apps, setApps] = useState<AtRiskApp[]>([]);
+  const [selectedApp, setSelectedApp] = useState<AtRiskApp | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isMoreDialogOpen, setIsMoreDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
@@ -34,42 +36,41 @@ const AtRiskAppsListCard = ({ userId }: { userId?: string }) => {
   const displayedApps = apps.slice(0, 3);
   const remainingCount = apps.length - 3;
 
-  const getRiskLevelClass = (level: string) => {
-    return `badge ${level}-risk`;
-  };
-
-  const getErrorClass = (count: number) => {
-    return `badge ${count >= 30 ? "high-risk" : count >= 15 ? "medium-risk" : "low-risk"}`;
-  };
-
-  const AppItem = (app: AtRiskApp) => (
-    <div class="risk-app-card">
-      <div class="risk-app-header">
-        <div class="risk-app-title">
-          <div class="dot" />
-          <span class="risk-app-name">{app.name}</span>
-        </div>
+  const AppRow = (app: AtRiskApp) => (
+    <div class="risk-item" onClick={() => setSelectedApp(app)}>
+      <div class="risk-app-info">
+        <div class="dot"></div>
+        <div class="risk-app-name">{app.name}</div>
       </div>
-      <ul class="risk-app-messages">
-        {app.messages.map((msg, idx) => (
-          <li key={idx} class="risk-app-message">{msg}</li>
-        ))}
-      </ul>
+      <div class="risk-app-rule-preview">
+        {app.messages.length > 1 ? (
+          <div class="risk-multiple-rules">
+            <span class="risk-single-rule">{app.messages[0]}</span>
+            <span class="risk-rule-count oj-badge oj-badge-neutral">+{app.messages.length - 1} rules</span>
+          </div>
+        ) : (
+          <span class="risk-single-rule">{app.messages[0]}</span>
+        )}
+      </div>
     </div>
   );
 
   const dialogRef = useRef(null);
+  const moreDialogRef = useRef(null);
 
   useEffect(() => {
     const dialogEl = dialogRef.current as any;
     if (!dialogEl) return;
+    if (selectedApp && typeof dialogEl.open === "function") dialogEl.open();
+    if (!selectedApp && typeof dialogEl.close === "function") dialogEl.close();
+  }, [selectedApp]);
 
-    if (isDialogOpen && typeof dialogEl.open === "function") {
-      dialogEl.open();
-    } else if (!isDialogOpen && typeof dialogEl.close === "function") {
-      dialogEl.close();
-    }
-  }, [isDialogOpen]);
+  useEffect(() => {
+    const dialogEl = moreDialogRef.current as any;
+    if (!dialogEl) return;
+    if (isMoreDialogOpen && typeof dialogEl.open === "function") dialogEl.open();
+    if (!isMoreDialogOpen && typeof dialogEl.close === "function") dialogEl.close();
+  }, [isMoreDialogOpen]);
 
   return (
     <div class="risk-card">
@@ -85,36 +86,58 @@ const AtRiskAppsListCard = ({ userId }: { userId?: string }) => {
         <>
           <div class="risk-list">
             {displayedApps.map((app) => (
-              <AppItem key={app.appId} {...app} />
+              <AppRow key={app.appId} {...app} />
             ))}
           </div>
 
           {remainingCount > 0 && (
-            <div class="risk-more">
-              <oj-button chroming="outlined" onojAction={() => setIsDialogOpen(true)}>
+            <div class="risk-more-container">
+              <oj-button chroming="outlined" onojAction={() => setIsMoreDialogOpen(true)}>
                 +{remainingCount} more
               </oj-button>
-
-              {isDialogOpen && (
-                <oj-dialog
-                  id="atRiskDialog"
-                  ref={dialogRef}
-                  cancel-behavior="icon"
-                  class="risk-dialog"
-                  onojClose={() => setIsDialogOpen(false)}
-                >
-                  <div slot="header" class="dialog-header">
-                    <AlertTriangle class="icon" />
-                    <span>All At-Risk Applications ({apps.length})</span>
-                  </div>
-                  <div slot="body" class="dialog-body">
-                    {apps.map((app) => (
-                      <AppItem key={app.appId} {...app} />
-                    ))}
-                  </div>
-                </oj-dialog>
-              )}
             </div>
+          )}
+
+          {selectedApp && (
+            <oj-dialog
+              id="appDetailsDialog"
+              ref={dialogRef}
+              cancel-behavior="icon"
+              class="risk-dialog"
+              onojClose={() => setSelectedApp(null)}
+            >
+              <div slot="header" class="dialog-header">
+                <AlertTriangle class="icon" />
+                <span>{selectedApp.name}</span>
+              </div>
+              <div slot="body" class="dialog-body">
+                <ul class="risk-app-messages">
+                  {selectedApp.messages.map((msg, idx) => (
+                    <li key={idx} class="risk-app-message">{msg}</li>
+                  ))}
+                </ul>
+              </div>
+            </oj-dialog>
+          )}
+
+          {isMoreDialogOpen && (
+            <oj-dialog
+              id="atRiskDialog"
+              ref={moreDialogRef}
+              cancel-behavior="icon"
+              class="risk-dialog"
+              onojClose={() => setIsMoreDialogOpen(false)}
+            >
+              <div slot="header" class="dialog-header">
+                <AlertTriangle class="icon" />
+                <span>All At-Risk Applications ({apps.length})</span>
+              </div>
+              <div slot="body" class="dialog-body">
+                {apps.map((app) => (
+                  <AppRow key={app.appId} {...app} />
+                ))}
+              </div>
+            </oj-dialog>
           )}
         </>
       ) : (
