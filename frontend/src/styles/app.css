@@ -60,6 +60,11 @@ html[dir="rtl"] .demo-oracle-icon {
 .demo-appheader-avatar:before {
     content:url("images/avatar_24px.png")
 }
+
+.oj-dialog-header-decoration {
+  background-image: none !important;
+}
+
 @media (-webkit-min-device-pixel-ratio: 1.5), (min-resolution: 144dpi), (min-resolution: 1.5dppx) {
     .demo-appheader-avatar:before {
         content:url("images/avatar_24px_2x.png");

@@ -1,0 +1,206 @@
+import { Request, Response } from "express";
+import User from "../models/User";
+import Application from "../models/Application";
+import UserGroup from "../models/UserGroup";
+import Log from "../models/Log";
+import logger from '../utils/logger';
+
+// Pinned applications endpoints
+
+export const getPinnedApps = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.params.id;
+    logger.info(`Fetching pinned applications for user: ${userId}`);
+
+    if (!userId) {
+        logger.warn("Unauthorized: User ID is required to get pinned apps");
+        res.status(401).json({ error: "User ID is required" });
+        return;
+    }
+    const user = await User.findById(userId).lean();
+
+    if (!user) {
+        logger.warn(`User not found: ${userId}`);
+        res.status(404).json({ error: 'User not found' });
+        return;
+    }
+
+    const pinnedApps = user.pinned_applications;
+
+    const appNames = await Application.find({
+        _id: { $in: pinnedApps.map((app: any) => app._id) }
+    }).select('name').lean();
+
+    if (!pinnedApps || pinnedApps.length === 0) {
+        res.status(200).json({ pinned_applications: [] });
+        return;
+    }
+    const logStats = await Log.aggregate([
+        {
+            $match: {
+                application_id: { $in: pinnedApps.map((app: any) => app._id) }
+            }
+        },
+        {
+            $group: {
+                _id: {
+                    application_id: '$application_id',
+                    log_level: '$log_level'
+                },
+                count: { $sum: 1 }
+            }
+        }
+    ]);
+
+    const logCountsMap: Record<string, Record<string, number>> = {};
+    for (const stat of logStats) {
+        const appId = String(stat._id.application_id); // Ensure key is a string
+        const level = stat._id.log_level.toUpperCase();
+        const count = stat.count;
+
+        if (!logCountsMap[appId]) {
+            logCountsMap[appId] = {};
+        }
+        logCountsMap[appId][level] = count;
+    }
+
+    // Build response array with log counts
+    const response = pinnedApps.map((app: any) => ({
+        _id: app._id.toString(),
+        appName: appNames.find(a => a._id.toString() === app._id.toString())?.name || 'Unknown', 
+        logCounts: logCountsMap[app._id.toString()] || {}
+    }));
+
+    res.status(200).json({ pinned_applications: response });
+    return;
+};
+
+export const updatePinnedApps = async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const { appIds } = req.body;
+
+  if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+    logger.warn(`Invalid userId: ${id}`);
+    res.status(400).json({ error: 'Invalid userId' });
+    return;
+  }
+
+  if (!Array.isArray(appIds)) {
+    res.status(400).json({ error: 'appIds must be an array of application IDs' });
+    return;
+  }
+
+  try {
+    // Validate that all appIds exist
+    const validAppIds = await Application.find({ _id: { $in: appIds } }).distinct("_id");
+
+    if (validAppIds.length !== appIds.length) {
+      res.status(400).json({ error: "One or more applications do not exist" });
+      return;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      id,
+      { pinned_applications: appIds },
+      { new: true }
+    ).populate('pinned_applications', 'name description');
+
+    if (!updatedUser) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    res.status(200).json({
+      message: 'Pinned applications updated successfully',
+      pinned_applications: updatedUser.pinned_applications
+    });
+
+  } catch (error) {
+    logger.error(`Failed to update pinned apps for user ${id}:`, error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+// Fetch Active Applications
+
+export const getActiveApps = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.params.id;
+    logger.info(`Fetching active applications for user: ${userId}`);
+
+    if (!userId) {
+        logger.warn("User ID is required to get active apps");
+        res.status(400).json({ error: "User ID is required" });
+        return;
+    }
+
+    // 1. Get the user
+    const user = await User.findById(userId).lean();
+    if (!user) {
+        logger.warn(`User not found: ${userId}`);
+        res.status(404).json({ error: "User not found" });
+        return;
+    }
+
+    // 2. Find user groups the user belongs to
+    const userGroups = await UserGroup.find({ members: user._id }).lean();
+    if (!userGroups.length) {
+        logger.info(`No user groups found for user: ${userId}`);
+        res.status(200).json({ active_applications: [] });
+        return;
+    }
+
+    // 3. Collect all assigned application IDs from user groups
+    const assignedAppIds = [
+        ...new Set(userGroups.flatMap(group => group.assigned_applications.map(id => id.toString())))
+    ];
+
+    if (!assignedAppIds.length) {
+        logger.info(`No assigned applications for user groups of user: ${userId}`);
+        res.status(200).json({ active_applications: [] });
+        return;
+    }
+
+    // 4. Fetch applications where isActive is true
+    const activeApps = await Application.find({
+        _id: { $in: assignedAppIds },
+        isActive: true
+    }).lean();
+
+    if (!activeApps.length) {
+        logger.info(`No active applications found for user: ${userId}`);
+        res.status(200).json({ active_applications: [] });
+        return;
+    }
+
+    // 5. Count logs for each app in the last 24 hours
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const logs = await Log.aggregate([
+        {
+            $match: {
+                application_id: { $in: activeApps.map(app => app._id) },
+                createdAt: { $gte: since }
+            }
+        },
+        {
+            $group: {
+                _id: "$application_id",
+                totalLogs: { $sum: 1 }
+            }
+        }
+    ]);
+
+    const logCountMap: Record<string, number> = {};
+    logs.forEach(log => {
+        logCountMap[log._id.toString()] = log.totalLogs;
+    });
+
+    // 6. Build response
+    const response = activeApps.map(app => ({
+        _id: app._id,
+        name: app.name,
+        description: app.description,
+        totalLogsLast24h: logCountMap[app._id.toString()] || 0
+    }));
+
+    logger.info(`Active applications fetched for user: ${userId}`);
+    res.status(200).json({ active_applications: response });
+};

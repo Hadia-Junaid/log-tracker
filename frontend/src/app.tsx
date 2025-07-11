@@ -21,8 +21,9 @@ import axios from "./api/axios";
 import LoadingSpinner from "./components/LoadingSpinner";
 
 type Props = {
-  appName?: string;
-  userLogin?: string;
+    appName?: string;
+    userLogin?: string;
+    userId?: string;
 };
 
 function checkAuth(): Promise<{ authenticated: boolean; email?: string }> {
@@ -39,14 +40,13 @@ function checkAuth(): Promise<{ authenticated: boolean; email?: string }> {
 }
 
 export const App = registerCustomElement(
-  "app-root",
-  ({ appName = "" }: Props) => {
-    const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(
-      null
-    );
-
-    const [userLogin, setUserLogin] = useState<string>("");
-
+    "app-root",
+    ({
+        appName = "Log Tracker",
+    }: Props) => {
+        const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+        const [userLogin, setUserLogin] = useState<string>("");
+        const [userId, setUserId] = useState<string>("");
 
     useEffect(() => {
       const checkOrExchangeAuth = async () => {
@@ -72,11 +72,19 @@ export const App = registerCustomElement(
           }
         }
 
-        // After possible exchange, check auth
-        const { authenticated, email } = await checkAuth();
-        setIsAuthenticated(authenticated);
-        setUserLogin(email || "");
-      };
+                const res = await axios.get("/auth/status");
+                const isAuthed = res.data?.authenticated === true;
+                if (!isAuthed || !res.data?.user) {
+                    setIsAuthenticated(false);
+                    return;
+                }
+            
+                const userId = res.data?.user._id;
+                const userLogin = res.data?.user.email;
+                setUserId(userId);
+                setUserLogin(userLogin);
+                setIsAuthenticated(true);
+            };
 
       checkOrExchangeAuth();
     }, []);
@@ -107,7 +115,7 @@ export const App = registerCustomElement(
             style={{ overflow: "auto", height: "100%" }}
           >
             <Router>
-              <Dashboard path="/" />
+              <Dashboard path="/" userId={userId} />
               <Logs path="/logs" />
               <UserManagement path="/users" />
               <Applications path="/applications" />
