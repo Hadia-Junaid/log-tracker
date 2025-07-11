@@ -13,6 +13,7 @@ import userGroupRoutes from './routes/userGroup.route';
 import applications from "./routes/application.routes";
 import cors from "cors";
 import cookieParser from "cookie-parser";
+import logsRoutes from "./routes/logs.route";
 
 processErrors(); // Initialize process level error handlers
 
@@ -57,5 +58,8 @@ app.use('/api/user-groups', userGroupRoutes);
 app.use('/api/admin', adminRoutes);
 
 app.use('/api/applications', applications);
+
+app.use('/api/logs', logsRoutes);
+
 // ✅ Error handler last
 app.use(errorHandler);

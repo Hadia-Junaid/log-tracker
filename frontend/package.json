@@ -6,6 +6,7 @@
     "@oracle/oraclejet": "~18.1.0",
     "@oracle/oraclejet-core-pack": "~18.1.0",
     "axios": "^1.10.0",
+    "mongoose": "^8.16.3",
     "preact-router": "^4.1.2"
   },
   "devDependencies": {

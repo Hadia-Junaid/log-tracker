@@ -26,6 +26,7 @@
     "oj-c-flex": any;
           "ojselectsingle": any;
           "ojselectcombobox": any;
+          "oj-c-select-multiple"?: any;
         }
       }
 
