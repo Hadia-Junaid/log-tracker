@@ -201,10 +201,17 @@ export function EditGroupDialog({
   };
 
   const handleConfirmUpdate = async () => {
-    // Store the selected application IDs immediately after successful validation
-    const selectedAppIds = Object.keys(checkboxRefs.current).filter(appId => 
+    // Get currently selected active applications
+    const selectedActiveAppIds = Object.keys(checkboxRefs.current).filter(appId => 
       checkboxRefs.current[appId]?.value === true
     );
+
+    // Combine selected active apps with originally assigned inactive apps
+    // This preserves inactive apps that were originally assigned
+    const inactiveOriginalAppIds = originalAppIds.filter(appId => 
+      !applications.some(app => app.id === appId && app.isActive)
+    );
+    const finalAssignedAppIds = [...selectedActiveAppIds, ...inactiveOriginalAppIds];
 
     setIsUpdating(true);
     setError('');
@@ -214,7 +221,7 @@ export function EditGroupDialog({
       const payload = {
         name: groupName,
         members: selectedMembers.map(m => m.email),
-        assigned_applications: selectedAppIds,
+        assigned_applications: finalAssignedAppIds,
         is_admin: groupName.toLowerCase() === 'admin group',
         is_active: isActive
       };
@@ -274,10 +281,15 @@ export function EditGroupDialog({
       const currentAppIds = Object.keys(checkboxRefs.current).filter(appId => 
         checkboxRefs.current[appId]?.value === true
       ).sort();
-      const originalAppIdsSorted = [...originalAppIds].sort();
       
-      const addedApps = currentAppIds.filter(id => !originalAppIdsSorted.includes(id));
-      const removedApps = originalAppIdsSorted.filter(id => !currentAppIds.includes(id));
+      // Only consider original apps that are currently active (visible in UI)
+      // This prevents showing "removed" for inactive apps that are simply not visible
+      const activeOriginalAppIds = originalAppIds.filter(appId => 
+        applications.some(app => app.id === appId && app.isActive)
+      ).sort();
+      
+      const addedApps = currentAppIds.filter(id => !activeOriginalAppIds.includes(id));
+      const removedApps = activeOriginalAppIds.filter(id => !currentAppIds.includes(id));
       
       if (addedApps.length > 0) {
         const addedAppNames = addedApps.map(id => applications.find(app => app.id === id)?.name || id);
