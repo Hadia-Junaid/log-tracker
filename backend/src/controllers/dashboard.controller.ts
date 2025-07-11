@@ -4,6 +4,7 @@ import Application from "../models/Application";
 import UserGroup from "../models/UserGroup";
 import Log from "../models/Log";
 import logger from '../utils/logger';
+import AtRiskRule from "../models/AtRiskRule";
 
 // Pinned applications endpoints
 
@@ -203,4 +204,75 @@ export const getActiveApps = async (req: Request, res: Response): Promise<void> 
 
     logger.info(`Active applications fetched for user: ${userId}`);
     res.status(200).json({ active_applications: response });
+};
+
+const unitInMinutes = {
+  Minutes: 1,
+  Hours: 60,
+  Days: 1440
+} as const;
+
+type TimeUnit = keyof typeof unitInMinutes;
+
+function isValidUnit(unit: string): unit is TimeUnit {
+  return unit in unitInMinutes;
+}
+
+export const getAtRiskApps = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const apps = await Application.find({ isActive: true });
+    const rules = await AtRiskRule.find();
+
+    const atRiskResults = [];
+
+    for (const app of apps) {
+      const messages: string[] = [];
+
+      for (const rule of rules) {
+        const { type_of_logs, operator, unit, time, number_of_logs } = rule;
+
+        if (!isValidUnit(unit)) {
+          logger.warn(`Skipping rule with invalid unit: ${unit}`);
+          continue;
+        }
+
+        const minutes = time * unitInMinutes[unit];
+        const timeThreshold = new Date(Date.now() - minutes * 60 * 1000);
+
+        const logs = await Log.find({
+          applicationId: app._id,
+          level: type_of_logs,
+          timestamp: { $gte: timeThreshold }
+        });
+
+        if (operator === 'greater_than' && logs.length > number_of_logs) {
+          messages.push(
+            `Too many '${type_of_logs}' logs in past ${time} ${unit}(s): ${logs.length} > ${number_of_logs}`
+          );
+        } else if (operator === 'less_than' && logs.length < number_of_logs) {
+          messages.push(
+            `Too few '${type_of_logs}' logs in past ${time} ${unit}(s): ${logs.length} < ${number_of_logs}`
+          );
+        } else if (operator === 'equal_to' && logs.length === number_of_logs) {
+          messages.push(
+            `'${type_of_logs}' logs exactly equal to ${number_of_logs} in past ${time} ${unit}(s)`
+          );
+        }
+      }
+
+      if (messages.length > 0) {
+        atRiskResults.push({
+          appId: app._id,
+          name: app.name,
+          messages
+        });
+      }
+    }
+
+    logger.info(`Found ${atRiskResults.length} at-risk applications`);
+    res.status(200).json({ at_risk_applications: atRiskResults });
+  } catch (error) {
+    logger.error("Failed to evaluate at-risk applications", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
 };

@@ -3,7 +3,8 @@ import { authenticate } from '../middleware/auth';
 import {
     getPinnedApps,
     updatePinnedApps,
-    getActiveApps
+    getActiveApps,
+    getAtRiskApps
 } from "../controllers/dashboard.controller";
 
 const router = express.Router();
@@ -17,5 +18,8 @@ router.patch("/pinned/:id/", authenticate, updatePinnedApps);
 
 // GET /api/dashboard/active/:id - Get active applications
 router.get("/active/:id", authenticate, getActiveApps);
+
+// GET /api/dashboard/atrisk/:id - Get at-risk applications
+router.get("/atrisk/:id", authenticate, getAtRiskApps);
 
 export default router;

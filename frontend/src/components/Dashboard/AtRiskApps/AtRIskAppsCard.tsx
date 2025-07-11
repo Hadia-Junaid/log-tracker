@@ -3,6 +3,7 @@
 import { h, Fragment } from "preact";
 import { useState, useRef, useEffect } from "preact/hooks";
 import { AlertTriangle, Clock } from "lucide-preact";
+import axios from "../../../api/axios";
 import "../../../styles/dashboard/atriskapps.css";
 
 interface AtRiskApp {
@@ -20,24 +21,17 @@ const AtRiskAppsListCard = ({ userId }: { userId?: string }) => {
   useEffect(() => {
     if (!userId) return;
 
-    // const fetchAtRiskApps = async () => {
-    //   try {
-    //     const response = await fetch(`/dashboard/atrisk/${userId}`);
-    //     if (!response.ok) {
-    //       throw new Error("Failed to fetch at-risk applications");
-    //     }
-    //     const data = await response.json();
-    //     setApps(data.at_risk_applications);
-    //   } catch (error) {
-    //     console.error("Error fetching at-risk applications:", error);
-    //   }
-    // };
+    const fetchAtRiskApps = async () => {
+      try {
+        const response = await axios.get(`/dashboard/atrisk/${userId}`);
+        setApps(response.data.at_risk_applications);
+      } catch (error) {
+        console.error("Error fetching at-risk applications:", error);
+      }
+    };
 
-    // fetchAtRiskApps();
+    fetchAtRiskApps();
   }, [userId]);
-
-  // setApps([]);
-
 
   const displayedApps = apps.slice(0, 3);
   const remainingCount = apps.length - 3;
