@@ -30,9 +30,9 @@ export default function UserManagement(props: Props) {
   const [selectedGroup, setSelectedGroup] = useState<GroupData | null>(null);
 
   // Pagination
+  const [pageSize, setPageSize] = useState(4);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
-  const PAGE_SIZE = 4;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const prevSearchTermRef = useRef<string>("");
@@ -43,9 +43,20 @@ export default function UserManagement(props: Props) {
     { value: "inactive", label: "Inactive" },
   ];
 
+  const pageSizeOptions = [
+    { value: 4, label: "4 per page" },
+    { value: 6, label: "6 per page" },
+    { value: 10, label: "10 per page" },
+    { value: 20, label: "20 per page" },
+  ];
+
    const statusDataProvider = useMemo(() => {
       return new ArrayDataProvider(statusOptions, { keyAttributes: "value" });
     }, []);
+
+  const pageSizeDataProvider = useMemo(() => {
+    return new ArrayDataProvider(pageSizeOptions, { keyAttributes: "value" });
+  }, []);
   
 
   useEffect(() => {
@@ -63,7 +74,7 @@ export default function UserManagement(props: Props) {
       let status: boolean | undefined;
       status = statusFilter === "all" ? undefined : statusFilter === "active";
 
-      const response = await userGroupService.fetchUserGroups(currentPage, PAGE_SIZE, searchTerm, status);
+      const response = await userGroupService.fetchUserGroups(currentPage, pageSize, searchTerm, status);
       setGroups(response.data);
       setTotalCount(response.total);
     } catch (err: any) {
@@ -84,7 +95,7 @@ export default function UserManagement(props: Props) {
       prevSearchTermRef.current = searchTerm;
     }, searchTerm ? 300 : 0); // Debounce for search, no delay for pagination
     return () => clearTimeout(delayDebounceFn);
-  }, [currentPage, searchTerm, statusFilter]);
+  }, [currentPage, searchTerm, statusFilter, pageSize]);
 
   const handleAddGroup = () => {
     setIsAddDialogOpen(true);
@@ -124,7 +135,7 @@ export default function UserManagement(props: Props) {
   };
 
   const goToNextPage = () => {
-    if (currentPage < Math.ceil(totalCount / PAGE_SIZE)) {
+    if (currentPage < Math.ceil(totalCount / pageSize)) {
       setCurrentPage(currentPage + 1);
     }
   };
@@ -133,6 +144,7 @@ export default function UserManagement(props: Props) {
     setStatusFilter("all");
     setSearchTerm("");
     setCurrentPage(1);
+    setPageSize(4);
   };
 
   return (
@@ -237,17 +249,31 @@ export default function UserManagement(props: Props) {
               </oj-button>
 
               <div class="pagination-info">
-                Page {currentPage} of {Math.ceil(totalCount / PAGE_SIZE)} • Showing {((currentPage - 1) * PAGE_SIZE) + 1}-
-                {Math.min(currentPage * PAGE_SIZE, totalCount)} of{" "}
+                Page {currentPage} of {Math.ceil(totalCount / pageSize)} • Showing {((currentPage - 1) * pageSize) + 1}-
+                {Math.min(currentPage * pageSize, totalCount)} of{" "}
                 {totalCount} groups
               </div>
 
               <oj-button
-                disabled={currentPage >= Math.ceil(totalCount / PAGE_SIZE)}
+                disabled={currentPage >= Math.ceil(totalCount / pageSize)}
                 onojAction={goToNextPage}
               >
                 Next
               </oj-button>
+
+              <div class="oj-sm-margin-2x-start">
+                <oj-select-single
+                  class="oj-form-control"
+                  label-hint="Page Size"
+                  data={pageSizeDataProvider}
+                  value={pageSize}
+                  onvalueChanged={(e: CustomEvent) => {
+                    setPageSize(e.detail.value);
+                    setCurrentPage(1); // Reset to first page when changing page size
+                  }}
+                  style="min-width: 120px; height: 36px;"
+                />
+              </div>
             </div>
           )}
         </div>
