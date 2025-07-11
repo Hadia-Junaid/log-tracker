@@ -61,12 +61,8 @@ export default function UserManagement(props: Props) {
 
     try {
       let status: boolean | undefined;
-      if (statusFilter === "all") {
-        status = undefined; // Show both active and inactive
-      }
-      if (statusFilter === "active") status = true;
-      else if (statusFilter === "inactive") status = false;
-      else status = undefined;
+      status = statusFilter === "all" ? undefined : statusFilter === "active";
+
       const response = await userGroupService.fetchUserGroups(currentPage, PAGE_SIZE, searchTerm, status);
       setGroups(response.data);
       setTotalCount(response.total);

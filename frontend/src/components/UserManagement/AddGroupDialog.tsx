@@ -2,6 +2,7 @@ import { h } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { userGroupService } from '../../services/userGroupServices';
 import { MemberData, ApplicationOption } from '../../types/userManagement';
+import { GroupDialogBase } from './GroupDialogBase';
 import 'ojs/ojinputsearch';
 import 'ojs/ojbutton';
 import 'ojs/ojlistview';
@@ -36,7 +37,6 @@ export function AddGroupDialog({
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
   const [showCancelConfirmation, setShowCancelConfirmation] = useState(false);
-  const [checkedAppIds, setCheckedAppIds] = useState<string[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
@@ -72,7 +72,6 @@ export function AddGroupDialog({
       console.log('Active applications:', allApplications.filter(app => app.isActive));
       
       setApplications(allApplications);
-      setCheckedAppIds([]);
       setAllMembers(members);
       
       setIsDataLoaded(true);
@@ -94,12 +93,6 @@ export function AddGroupDialog({
 
   const handleRemoveAllMembers = () => {
     setSelectedMembers([]);
-  };
-
-  const handleApplicationToggle = (appId: string) => {
-    setCheckedAppIds((prev) =>
-      prev.includes(appId) ? prev.filter((id) => id !== appId) : [...prev, appId]
-    );
   };
 
   const handleCreateGroup = async () => {
@@ -192,15 +185,6 @@ export function AddGroupDialog({
     setShowCancelConfirmation(false);
   };
 
-  const getInitials = (name: string): string => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
   // Available members = allMembers - selectedMembers, filtered by search term
   const availableMembers = allMembers.filter(
     (m) => !selectedMembers.some((sel) => sel.id === m.id) &&
@@ -283,161 +267,23 @@ export function AddGroupDialog({
             </div>
           </div>
         ) : (
-          <div class="oj-flex oj-sm-flex-direction-column">
-            
-
-            
-
-            {/* Group Name Input */}
-            <div class="oj-sm-margin-4x-bottom">
-              <oj-label for="groupNameInput">Group Name</oj-label>
-              <oj-input-text
-                id="groupNameInput"
-                ref={groupNameRef}
-                class="oj-form-control-full-width"
-                placeholder="Enter group name (5-20 characters)"
-              />
-              <div class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
-                5–20 letters, numbers, spaces, hyphens, underscores.
-              </div>
-            </div>
-
-            <div class="member-sections-container">
-              {/* Available Members Section */}
-              <div class="available-members-section">
-                
-                <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-1x-bottom" style={{ marginTop: 0, fontWeight: 'bold' }}>
-                  Available Members
-                </h4>
-
-                {/* Search Input */}
-                <div class="oj-sm-margin-4x-bottom">
-                  <oj-input-text
-                    class="oj-form-control-full-width"
-                    placeholder="Search directory..."
-                    value={searchTerm}
-                    onrawValueChanged={(event: any) => {
-                      setSearchTerm(event.detail.value || '');
-                    }}
-                  />
-                </div>
-
-                {/* Available Members List */}
-                <div class="members-list available-members-list">
-                  {availableMembers.length > 0 ? (
-                    availableMembers.map((member) => (
-                      <div
-                        key={member.id}
-                        class="clickable-member member-list-item"
-                        onClick={() => handleAddMember(member)}
-                      >
-                        <div class="oj-flex oj-sm-align-items-center">
-                          <oj-avatar size="xs" initials={member.initials}></oj-avatar>
-                          <div class="oj-sm-margin-2x-start">
-                            <div class="oj-typography-body-md oj-text-color-primary">
-                              {member.email}
-                            </div>
-                            <div class="oj-typography-body-sm oj-text-color-secondary">
-                              {member.name}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div class="no-members-content">
-                      <p class="oj-text-color-secondary">
-                        {searchTerm ? 'No members found' : 'No available members'}
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Selected Members Section */}
-              <div class="current-members-section">
-                <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-space-between oj-sm-margin-4x-bottom">
-                <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-1x-bottom" style={{ marginTop: 0, fontWeight: 'bold' }}>
-                  Selected Members
-                </h4>
-                  <div class="oj-flex oj-sm-align-items-center">
-                    <span class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-end">
-                      {selectedMembers.length} members
-                    </span>
-                    <oj-button 
-                      class="oj-button-sm" 
-                      chroming="outlined"
-                      on-oj-action={handleRemoveAllMembers} onClick={handleRemoveAllMembers}
-                    >
-                      Remove All
-                    </oj-button>
-                  </div>
-                </div>
-                <div class="members-list current-members-list">
-                  {selectedMembers.length > 0 ? (
-                    selectedMembers.map((member) => (
-                      <div key={member.id} class="member-list-item current-member-item">
-                        <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-space-between" style="width: 100%;">
-                          <div class="oj-flex oj-sm-align-items-center" style="min-width: 0; flex: 1;">
-                            <oj-avatar size="xs" initials={member.initials}></oj-avatar>
-                            <div class="oj-sm-margin-2x-start" style="min-width: 0; flex: 1;">
-                              <div class="oj-typography-body-md oj-text-color-primary" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
-                                {member.email}
-                              </div>
-                              <div class="oj-typography-body-sm oj-text-color-secondary" style="text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">
-                                {member.name}
-                              </div>
-                            </div>
-                          </div>
-                          <div style="flex-shrink: 0; margin-left: 8px;">
-                            <oj-button 
-                              class="member-remove-btn oj-button-sm" 
-                              chroming="borderless"
-                              display="icons"
-                              on-oj-action={() => handleRemoveMember(member)} 
-                              onClick={() => handleRemoveMember(member)}
-                              title="Remove member"
-                            >
-                              <span slot="startIcon" class="oj-ux-ico-close"></span>
-                            </oj-button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div class="no-members-content">
-                      <p class="oj-text-color-secondary">No members selected</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            
-
-            {/* Accessible Applications Section */}
-            <div class="oj-flex oj-sm-flex-direction-column oj-sm-margin-4x-top">
-              <h4 class="oj-typography-heading-sm oj-text-color-primary oj-sm-margin-2x-bottom">
-                Accessible Applications
-              </h4>
-              <div class="applications-checkboxes">
-                {applications.filter(app => app.isActive).map(app => (
-                  <oj-c-checkbox 
-                    key={app.id}
-                    ref={(el: any) => {
-                      if (el) checkboxRefs.current[app.id] = el;
-                    }}
-                    value={false}
-                  >
-                    {app.name}
-                  </oj-c-checkbox>
-                ))}
-              </div>
-              <div class="oj-typography-body-sm oj-text-color-secondary oj-sm-margin-2x-top">
-                At least one application must be selected for the group.
-              </div>
-            </div>
-          </div>
+          <GroupDialogBase
+            isActive={isActive}
+            isLoading={isLoading}
+            searchTerm={searchTerm}
+            setSearchTerm={setSearchTerm}
+            availableMembers={availableMembers}
+            selectedMembers={selectedMembers}
+            handleAddMember={handleAddMember}
+            handleRemoveMember={handleRemoveMember}
+            handleRemoveAllMembers={handleRemoveAllMembers}
+            applications={applications}
+            checkboxRefs={checkboxRefs}
+            groupNameRef={groupNameRef}
+            groupNameLabel="Group Name"
+            disableApplicationSelection={false}
+            groupNameKey=""
+          />
         )}
       </div>
 
