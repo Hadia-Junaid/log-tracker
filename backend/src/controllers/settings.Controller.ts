@@ -3,6 +3,8 @@ import User from '../models/User';
 import AtRiskRule from '../models/AtRiskRule';
 import logger from '../utils/logger';
 import mongoose from "mongoose";
+import DataRetention from '../models/dataRetention'
+import { updateLogTTLIndex } from '../utils/updateLogTTL'
 
 // Get user settings by ID for Auto Refresh and Logs Per Page
 export const getUserSettings = async (
@@ -248,3 +250,66 @@ export const deleteAtRiskRule = async (
   logger.info(`🗑️ Deleted at-risk rule: ${ruleId}`);
   res.status(200).json({ message: 'Rule deleted successfully.' });
 };
+
+// GET /api/log-settings
+export const getDataRetention = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const setting = await DataRetention.findOne({ type: 'logSettings' })
+
+  if (!setting) {
+    res.status(404).json({ message: 'Log retention settings not found' })
+    return
+  }
+
+  res.status(200).json({
+    retentionDays: setting.retentionDays,
+    updatedBy: setting.updatedBy,
+    updatedAt: setting.updatedAt
+  })
+}
+
+// PATCH /api/log-settings
+
+export const updateDataRetention = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  const { retentionDays, updatedBy } = req.body
+
+  if (
+    typeof retentionDays !== 'number' ||
+    retentionDays < 1 ||
+    retentionDays > 365 ||
+    typeof updatedBy !== 'string' ||
+    !updatedBy.includes('@')
+  ) {
+    res.status(400).json({ error: 'Invalid retentionDays or updatedBy format.' })
+    return
+  }
+
+  const updated = await DataRetention.findOneAndUpdate(
+    { type: 'logSettings' },
+    { retentionDays, updatedBy },
+    { new: true, upsert: true }
+  )
+
+  if (!updated) {
+    res.status(500).json({ error: 'Failed to update log retention settings.' })
+    return
+  }
+
+  await updateLogTTLIndex(retentionDays)
+
+  logger.info(`✅ Log retention updated to ${retentionDays} days by ${updatedBy}`)
+
+  res.status(200).json({
+    message: 'Log retention updated successfully',
+    retentionDays: updated.retentionDays,
+    updatedBy: updated.updatedBy,
+    ttlApplied: true
+  })
+}
+
+

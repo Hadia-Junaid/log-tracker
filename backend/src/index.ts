@@ -3,6 +3,7 @@ dotenv.config(); // Load environment variables from .env file
 import express from "express";
 import mongoose from "mongoose";
 import logger, {morganStream} from "./utils/logger";
+import { ensureTTLIndex } from "./utils/initTTLIndex";
 import errorHandler from "./middleware/error";
 import { processErrors } from "./startup/processErrors";
 import config from "config";
@@ -13,6 +14,7 @@ import userGroupRoutes from './routes/userGroup.route';
 import applications from "./routes/application.routes";
 import settingsRoutes from './routes/settings.Routes';    
 import atRiskRuleRoutes from './routes/atRiskRule.routes';
+import dataRetentionRoutes from './routes/dataRetention.Routes'; 
 import cors from "cors";
 import cookieParser from "cookie-parser";
 
@@ -40,8 +42,12 @@ app.use(express.json());
 app.use(morgan('tiny', { stream: morganStream }));
 
 mongoose.connect(mongoUri)
-  .then(() => {
+  .then(async () => {
     logger.info('MongoDB connected');
+    
+    // 🚀 Ensure TTL index exists on logs.createdAt
+    await ensureTTLIndex();
+
     app.listen(PORT, () => {
       logger.info(`Server is running on port ${PORT}`);
     });
@@ -50,6 +56,9 @@ mongoose.connect(mongoUri)
     logger.error('MongoDB connection error:', err);
   });
 
+
+// Data Retention routes
+app.use('/api/data-retention', dataRetentionRoutes);
 // Log settings routes (User Settings)
 app.use('/api/settings', settingsRoutes);
 // At-Risk Rules routes
