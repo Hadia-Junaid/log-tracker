@@ -439,6 +439,63 @@
   position: relative;
 }
 
+/* ===== CARD CHANGES INDICATORS ===== */
+.settings-card-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.card-changes-indicator {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--warning-100);
+  color: var(--warning-700);
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 1px solid var(--warning-200);
+  animation: pulse 2s infinite;
+}
+
+.changes-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--warning-500);
+  border-radius: 50%;
+  animation: blink 1.5s infinite;
+  flex-shrink: 0;
+}
+
+.changes-text {
+  white-space: nowrap;
+}
+
+/* Responsive adjustments for card changes indicators */
+@media (min-width: 640px) {
+  .settings-card-header-right {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+/* ===== CURRENT VALUE DISPLAY ===== */
+.current-value-display {
+  font-size: 12px;
+  color: var(--neutral-500);
+  font-weight: 500;
+  margin-left: 8px;
+  padding: 2px 8px;
+  background: var(--neutral-100);
+  border-radius: 12px;
+  white-space: nowrap;
+}
+
 .settings-card-icon {
   flex-shrink: 0;
   width: 40px;
