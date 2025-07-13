@@ -29,7 +29,11 @@
     "oj-c-flex": any;
           "ojselectsingle": any;
           "ojselectcombobox": any;
-          "oj-c-select-multiple"?: any;
+          "oj-c-select-multiple": any;
+          "oj-c-select-many": any;
+          "oj-c-line-chart": any;
+          "oj-c-line-chart-item": any;
+          "oj-bind-template":any;
         }
       }
 

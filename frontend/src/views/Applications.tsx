@@ -184,15 +184,7 @@ export default function Applications({ path }: Props) {
         <div class="applications-header">
           <h1 class="applications-title">Applications</h1>
           <div class="applications-controls">
-            <oj-input-text
-              placeholder="Search applications"
-              value={searchQuery}
-              onrawValueChanged={(e: any) => {
-                setSearchQuery(e.detail.value);
-                setCurrentPage(1); // Reset to first page on new search
-              }}
-              class="search-input"
-            ></oj-input-text>
+            
             <oj-button
               chroming="solid"
               class="add-button"

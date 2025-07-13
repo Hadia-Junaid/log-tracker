@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getLogs, exportLogs, userdata } from '../controllers/logs.controller';
+import { getLogs, exportLogs, userdata, getLogActivityData } from '../controllers/logs.controller';
 import { authenticate } from '../middleware/auth';
 
 const router = Router();
@@ -7,6 +7,9 @@ const router = Router();
 // GET /apilogs/:userId
 // router.get('/apilogs/:userId', authenticate, getLogs);
 router.get('/', authenticate, getLogs);
+
+// GET /api/logs/activity - Get aggregated log activity data for charts
+router.get('/activity', authenticate, getLogActivityData);
 
 // GET /apilogs/:userId/export
 // router.get('/apilogs/:userId/export', authenticate, exportLogs);
