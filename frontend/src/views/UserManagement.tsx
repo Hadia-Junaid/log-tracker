@@ -10,18 +10,6 @@ import UserGroupsList from "../components/UserManagement/UserGroupsList";
 import "ojs/ojinputsearch";
 import "ojs/ojbutton";
 import "ojs/ojselectsingle";
-import { h } from "preact";
-import { useState, useEffect, useRef, useMemo} from "preact/hooks";
-import { GroupData } from "../types/userManagement";
-import { userGroupService } from "../services/userGroupServices";
-import { AddGroupDialog } from "../components/UserManagement/AddGroupDialog";
-import { EditGroupDialog } from "../components/UserManagement/EditGroupDialog";
-import { DeleteGroupDialog } from "../components/UserManagement/DeleteGroupDialog";
-import ArrayDataProvider from "ojs/ojarraydataprovider";
-import UserGroupsList from "../components/UserManagement/UserGroupsList";
-import "ojs/ojinputsearch";
-import "ojs/ojbutton";
-import "ojs/ojselectsingle";
 
 type Props = {
   path?: string; // required by preact-router
