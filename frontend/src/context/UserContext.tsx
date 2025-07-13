@@ -3,6 +3,7 @@ import { createContext, ComponentChildren } from "preact";
 import { useContext, useState } from "preact/hooks";
 
 export interface User {
+    _id: string;
     name: string;
     email: string;
     is_admin: boolean;

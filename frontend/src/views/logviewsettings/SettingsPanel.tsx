@@ -12,6 +12,8 @@ import "ojs/ojanimation"
 import "../../styles/settings/SettingsPanel.css"
 import type { LogsPerPageValue } from "./LogsPerPage"
 import type { AtRiskRule } from "./AtRiskRules"
+import { useUser } from "../../context/UserContext"
+
 
 type MessageItem = {
   severity: "error" | "confirmation" | "warning" | "info"
@@ -41,21 +43,17 @@ const SettingsPanel = () => {
   const [currentRule, setCurrentRule] = useState<AtRiskRule | null>(null)
   const [editingRuleIndex, setEditingRuleIndex] = useState<number | null>(null)
 
+  //Use the user context to know if the user is an admin
+  const { user } = useUser()
+
+
+
   useEffect(() => {
+    if (!user) return
     setIsLoading(true)
-    axios
-      .get("/auth/status")
-      .then((res) => {
-        console.log("Auth status response:", res.data)
-        const user = res.data.user
-        if (user) {
-          setUserId(user._id)
-          setIsAdmin(user.is_admin === true)
-          return getLogSettings(user._id)
-        } else {
-          throw new Error("User not found in auth status")
-        }
-      })
+    setUserId(user._id)
+    setIsAdmin(user.is_admin === true)
+    getLogSettings(user._id)
       .then((res) => {
         const { autoRefresh, autoRefreshTime, logsPerPage } = res.data
         setAutoRefresh(autoRefresh)
@@ -78,7 +76,7 @@ const SettingsPanel = () => {
       .finally(() => {
         setTimeout(() => setIsLoading(false), 800)
       })
-  }, [])
+  }, [user])
 
   useEffect(() => {
     if (message) {
