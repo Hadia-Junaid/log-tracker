@@ -243,4 +243,135 @@ export const userdata = async (req: Request, res: Response): Promise<void> => {
 // Helper to escape regex special characters
 function escapeRegex(str: string) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-} 
+}
+
+// GET /api/logs/activity - Get aggregated log activity data for charts
+export const getLogActivityData = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = req.user.id;
+    const {
+      app_ids = '',
+      log_levels = '',
+      start_time,
+      end_time,
+      group_by = 'hour' // hour, day, etc.
+    } = req.query;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      res.status(400).json({ error: 'Invalid userId' });
+      return;
+    }
+
+    // Get user
+    const user = await User.findById(userId).lean();
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // 1. Find user groups for the user
+    let userGroups = await UserGroup.find({ members: userId }).lean();
+    // Only keep active groups
+    userGroups = userGroups.filter(g => g.is_active === true);
+    if (!userGroups.length) {
+      res.status(404).json({ error: 'User is not a member of any active group' });
+      return;
+    }
+
+    const groupAppIds = userGroups.flatMap(g => g.assigned_applications.map(id => id.toString()));
+    
+    let filteredAppIds = groupAppIds;
+    if (app_ids) {
+      const requestedAppIds = (app_ids as string).split(',').filter(Boolean);
+      filteredAppIds = groupAppIds.filter(id => requestedAppIds.includes(id));
+    }
+
+    if (!filteredAppIds.length) {
+      res.status(200).json({ 
+        data: [], 
+        groups: [], 
+        series: [],
+        applications: []
+      });
+      return;
+    }
+
+    const assignedApplications = await Application.find({ _id: { $in: groupAppIds } })
+      .select('_id name isActive')
+      .lean();
+
+    // 4. Build log query
+    const logQuery: any = {
+      application_id: { $in: filteredAppIds.map(id => new mongoose.Types.ObjectId(id)) }
+    };
+
+    if (log_levels) {
+      logQuery.log_level = { $in: (log_levels as string).split(',').map(l => l.trim()) };
+    }
+
+    if (start_time || end_time) {
+      logQuery.timestamp = {};
+      if (start_time) logQuery.timestamp.$gte = new Date(start_time as string);
+      if (end_time) logQuery.timestamp.$lte = new Date(end_time as string);
+    }
+
+    const aggregationPipeline: any[] = [
+      { $match: logQuery },
+      {
+        $group: {
+          _id: {
+            hour: { $hour: '$timestamp' },
+            log_level: '$log_level'
+          },
+          count: { $sum: 1 }
+        }
+      },
+      {
+        $project: {
+          _id: 0,
+          groupId: { $concat: [{ $toString: '$_id.hour' }, ':00'] },
+          seriesId: '$_id.log_level',
+          value: '$count'
+        }
+      },
+      { $sort: { groupId: 1, seriesId: 1 } }
+    ];
+
+    const aggregatedData = await Log.aggregate(aggregationPipeline);
+
+
+    const allHours = Array.from({ length: 24 }, (_, i) => 
+      i.toString().padStart(2, '0') + ':00'
+    );
+
+
+    const logLevels = [...new Set(aggregatedData.map(item => item.seriesId))].sort();
+
+
+    const chartData: any[] = [];
+    allHours.forEach(hour => {
+      logLevels.forEach(level => {
+        const existingItem = aggregatedData.find(
+          item => item.groupId === hour && item.seriesId === level
+        );
+        chartData.push({
+          groupId: hour,
+          seriesId: level,
+          value: existingItem ? existingItem.value : 0
+        });
+      });
+    });
+
+ 
+    res.status(200).json({
+      data: chartData,
+      groups: allHours,
+      series: logLevels,
+      applications: assignedApplications
+    });
+
+  } catch (err) {
+    console.error('Failed to fetch log activity data:', err);
+    res.status(500).json({ error: 'Failed to fetch log activity data', details: err });
+  }
+}; 

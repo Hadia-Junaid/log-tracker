@@ -2,6 +2,7 @@ import { h } from 'preact';
 import PinnedAppsDashboard from '../components/Dashboard/PinnedApps/PinnedAppDashboard';
 import ActiveAppsDashboard from '../components/Dashboard/ActiveApps/ActiveAppDashboard';
 import AtRiskAppsCard from '../components/Dashboard/AtRiskApps/AtRIskAppsCard';
+import LogActivityChart from '../components/Dashboard/LogActivity/LogActivityChart'; // adjust path accordingly
 import '../styles/dashboard/dashboard.css';
 
 type Props = {
@@ -24,6 +25,7 @@ export default function Dashboard(props: Props) {
           <ActiveAppsDashboard userId={props.userId} />
           <AtRiskAppsCard userId={props.userId} />
         </div>
+        <LogActivityChart />
       </div>
     </div>
   );
