@@ -3,15 +3,17 @@ import { useState, useEffect } from "preact/hooks"
 import AutoRefresh from "./AutoRefresh"
 import LogsPerPage from "./LogsPerPage"
 import AtRiskRules from "./AtRiskRules"
+import DataRetention from "./dataRetention"
 import { getLogSettings, updateLogSettings, resetLogSettings } from "../../api/logViewSettings"
+import { getRetention, updateRetention } from "../../api/DataRetention"
 import axios from "../../api/axios"
+import type { LogsPerPageValue } from "./LogsPerPage"
+import type { AtRiskRule } from "./AtRiskRules"
 import "ojs/ojbutton"
 import "ojs/ojmessages"
 import "ojs/ojformlayout"
 import "ojs/ojanimation"
 import "../../styles/settings/SettingsPanel.css"
-import type { LogsPerPageValue } from "./LogsPerPage"
-import type { AtRiskRule } from "./AtRiskRules"
 
 type MessageItem = {
   severity: "error" | "confirmation" | "warning" | "info"
@@ -20,59 +22,67 @@ type MessageItem = {
 }
 
 const SettingsPanel = () => {
-  const [userId, setUserId] = useState<string>("")
-  const [isAdmin, setIsAdmin] = useState<boolean>(false)
+  const [userId, setUserId] = useState("")
+  const [userEmail, setUserEmail] = useState("") // ✅ new state for email
+  const [isAdmin, setIsAdmin] = useState(false)
   const [autoRefresh, setAutoRefresh] = useState(false)
-  const [autoRefreshTime, setAutoRefreshTime] = useState<number>(30)
+  const [autoRefreshTime, setAutoRefreshTime] = useState(30)
   const [logsPerPage, setLogsPerPage] = useState<LogsPerPageValue>("25")
-  const [retentionPeriod, setRetentionPeriod] = useState<string>("30")
-  const [isLoading, setIsLoading] = useState(true)
-  const [isSaving, setIsSaving] = useState(false)
+  const [retentionPeriod, setRetentionPeriod] = useState("30")
   const [originalSettings, setOriginalSettings] = useState({
     autoRefresh: false,
     autoRefreshTime: 30,
-    logsPerPage: "50" as LogsPerPageValue,
+    logsPerPage: "25" as LogsPerPageValue,
+    retentionPeriod: "30",
   })
   const [message, setMessage] = useState<MessageItem | null>(null)
-  const [showConfirmation, setShowConfirmation] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [isSavingLogDisplay, setIsSavingLogDisplay] = useState(false)
+  const [isSavingDataRetention, setIsSavingDataRetention] = useState(false)
+  const [showLogDisplayConfirmation, setShowLogDisplayConfirmation] = useState(false)
+  const [showDataRetentionConfirmation, setShowDataRetentionConfirmation] = useState(false)
 
-  // Risk Rules Modal State
+  // Modal state for AtRiskRules
   const [isRuleModalOpen, setIsRuleModalOpen] = useState(false)
   const [currentRule, setCurrentRule] = useState<AtRiskRule | null>(null)
-  const [editingRuleIndex, setEditingRuleIndex] = useState<number | null>(null)
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
 
   useEffect(() => {
     setIsLoading(true)
     axios
       .get("/auth/status")
-      .then((res) => {
-        console.log("Auth status response:", res.data)
+      .then(async (res) => {
         const user = res.data.user
-        if (user) {
-          setUserId(user._id)
-          setIsAdmin(user.is_admin === true)
-          return getLogSettings(user._id)
-        } else {
-          throw new Error("User not found in auth status")
-        }
-      })
-      .then((res) => {
-        const { autoRefresh, autoRefreshTime, logsPerPage } = res.data
+        if (!user) throw new Error("User not found")
+
+        setUserId(user._id)
+        setUserEmail(user.email) // ✅ capture email
+        setIsAdmin(user.is_admin === true)
+
+        const [logRes, retentionRes] = await Promise.all([getLogSettings(user._id), getRetention()])
+
+        const { autoRefresh, autoRefreshTime, logsPerPage } = logRes.data
+        const { retentionDays } = retentionRes.data
+
         setAutoRefresh(autoRefresh)
         setAutoRefreshTime(autoRefreshTime)
         setLogsPerPage(String(logsPerPage) as LogsPerPageValue)
+        setRetentionPeriod(String(retentionDays))
+
         setOriginalSettings({
           autoRefresh,
           autoRefreshTime,
           logsPerPage: String(logsPerPage) as LogsPerPageValue,
+          retentionPeriod: String(retentionDays),
+
         })
       })
       .catch((err) => {
-        console.error("Error loading settings:", err)
+        console.error("Failed to load settings:", err)
         setMessage({
           severity: "error",
           summary: "Error",
-          detail: "Failed to load settings",
+          detail: "Failed to load settings. Please refresh and try again.",
         })
       })
       .finally(() => {
@@ -87,81 +97,172 @@ const SettingsPanel = () => {
     }
   }, [message])
 
-  const hasChanges =
+  // Add body class management for modal state
+  useEffect(() => {
+    if (isRuleModalOpen || showLogDisplayConfirmation || showDataRetentionConfirmation) {
+      document.body.classList.add("modal-open")
+    } else {
+      document.body.classList.remove("modal-open")
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.classList.remove("modal-open")
+    }
+  }, [isRuleModalOpen, showLogDisplayConfirmation, showDataRetentionConfirmation])
+
+  // Check for changes in each section
+  const hasLogDisplayChanges =
     autoRefresh !== originalSettings.autoRefresh ||
     autoRefreshTime !== originalSettings.autoRefreshTime ||
     logsPerPage !== originalSettings.logsPerPage
 
-  const handleSaveInitiate = () => {
-    if (!userId || !hasChanges) return
-    setShowConfirmation(true)
+  const hasDataRetentionChanges = retentionPeriod !== originalSettings.retentionPeriod
+
+  // Log Display Save Functions
+  const handleLogDisplaySaveInitiate = () => {
+    if (!userId || !hasLogDisplayChanges) return
+    setShowLogDisplayConfirmation(true)
   }
 
-  const handleSaveConfirm = async () => {
-    setShowConfirmation(false)
-    setIsSaving(true)
+  const handleLogDisplaySaveConfirm = async () => {
+    setShowLogDisplayConfirmation(false)
+    setIsSavingLogDisplay(true)
     try {
       await updateLogSettings(userId, {
         autoRefresh,
         autoRefreshTime,
-        logsPerPage: Number.parseInt(logsPerPage),
+        logsPerPage: Number(logsPerPage),
       })
+
       setMessage({
         severity: "confirmation",
-        summary: "Success",
-        detail: "Changes Updated Successfully",
+        summary: "Log Display Settings Saved",
+        detail: `Auto-refresh: ${autoRefresh ? "Enabled" : "Disabled"}, Logs per page: ${logsPerPage}`,
       })
-      setOriginalSettings({ autoRefresh, autoRefreshTime, logsPerPage })
+
+      setOriginalSettings((prev) => ({
+        ...prev,
+        autoRefresh,
+        autoRefreshTime,
+        logsPerPage,
+      }))
     } catch (error) {
+      console.error("Log display save failed:", error)
       setMessage({
         severity: "error",
         summary: "Update Failed",
-        detail: "Could not update settings",
+        detail: "Could not save log display settings. Please try again.",
       })
     } finally {
-      setTimeout(() => setIsSaving(false), 500)
+      setTimeout(() => setIsSavingLogDisplay(false), 500)
     }
   }
 
-  const handleSaveCancel = () => {
-    setShowConfirmation(false)
+  const handleLogDisplaySaveCancel = () => {
+    setShowLogDisplayConfirmation(false)
     setMessage({
       severity: "info",
       summary: "Action Cancelled",
-      detail: "Settings changes were not saved.",
+      detail: "Log display changes were not saved.",
+    })
+  }
+
+  // Data Retention Save Functions
+  const handleDataRetentionSaveInitiate = () => {
+    if (!hasDataRetentionChanges) return
+    setShowDataRetentionConfirmation(true)
+  }
+
+  const handleDataRetentionSaveConfirm = async () => {
+    setShowDataRetentionConfirmation(false)
+    setIsSavingDataRetention(true)
+    try {
+      await updateRetention({
+        retentionDays: Number(retentionPeriod),
+        updatedBy: userEmail, // ✅ required field
+      })
+
+      const retentionText =
+        retentionPeriod === "7"
+          ? "7 days (weekly cleanup)"
+          : retentionPeriod === "30"
+            ? "30 days (monthly cleanup)"
+            : retentionPeriod === "60"
+              ? "60 days (bi-monthly cleanup)"
+              : retentionPeriod === "90"
+                ? "90 days (quarterly cleanup)"
+                : retentionPeriod === "180"
+                  ? "180 days (semi-annual cleanup)"
+                  : retentionPeriod === "365"
+                    ? "1 year (annual cleanup)"
+                    : `${retentionPeriod} days`
+
+      setMessage({
+        severity: "confirmation",
+        summary: "Data Retention Updated",
+        detail: `Log retention period set to ${retentionText}`,
+      })
+
+      setOriginalSettings((prev) => ({
+        ...prev,
+        retentionPeriod,
+      }))
+    } catch (error) {
+      console.error("Data retention save failed:", error)
+      setMessage({
+        severity: "error",
+        summary: "Update Failed",
+        detail: "Could not save data retention settings. Please try again.",
+      })
+    } finally {
+      setTimeout(() => setIsSavingDataRetention(false), 500)
+    }
+  }
+
+  const handleDataRetentionSaveCancel = () => {
+    setShowDataRetentionConfirmation(false)
+    setMessage({
+      severity: "info",
+      summary: "Action Cancelled",
+      detail: "Data retention changes were not saved.",
     })
   }
 
   const handleReset = async () => {
     if (!userId) return
-    setIsSaving(true)
+    setIsSavingLogDisplay(true)
     try {
       await resetLogSettings(userId)
       setAutoRefresh(false)
       setAutoRefreshTime(30)
-      setLogsPerPage("10" as LogsPerPageValue)
+      setLogsPerPage("25" as LogsPerPageValue)
+
       setMessage({
         severity: "confirmation",
-        summary: "Reset Successful",
-        detail: "Settings have been reset to defaults.",
+        summary: "Log Display Reset",
+        detail: "Log display settings have been reset to defaults.",
       })
-      setOriginalSettings({
+
+      setOriginalSettings((prev) => ({
+        ...prev,
         autoRefresh: false,
         autoRefreshTime: 30,
-        logsPerPage: "10" as LogsPerPageValue,
-      })
+        logsPerPage: "25" as LogsPerPageValue,
+      }))
     } catch (error) {
+      console.error("Reset failed:", error)
       setMessage({
         severity: "error",
         summary: "Reset Failed",
-        detail: "Could not reset settings.",
+        detail: "Could not reset log display settings. Please try again.",
       })
     } finally {
-      setTimeout(() => setIsSaving(false), 500)
+      setTimeout(() => setIsSavingLogDisplay(false), 500)
     }
   }
 
-  // Risk Rules Modal Functions
+  // Modal functions for AtRiskRules
   const handleAddRule = () => {
     setCurrentRule({
       type_of_logs: "",
@@ -170,20 +271,20 @@ const SettingsPanel = () => {
       time: 1,
       number_of_logs: 1,
     })
-    setEditingRuleIndex(null)
+    setEditingIndex(null)
     setIsRuleModalOpen(true)
   }
 
   const handleEditRule = (rule: AtRiskRule, index: number) => {
     setCurrentRule({ ...rule })
-    setEditingRuleIndex(index)
+    setEditingIndex(index)
     setIsRuleModalOpen(true)
   }
 
   const handleCloseRuleModal = () => {
     setIsRuleModalOpen(false)
     setCurrentRule(null)
-    setEditingRuleIndex(null)
+    setEditingIndex(null)
   }
 
   if (isLoading) {
@@ -242,21 +343,11 @@ const SettingsPanel = () => {
             <p class="settings-main-subtitle">Configure your preferences and system behavior</p>
           </div>
           <div class="settings-header-actions">
-            {hasChanges && (
+            {(hasLogDisplayChanges || hasDataRetentionChanges) && (
               <div class="unsaved-indicator">
                 <div class="unsaved-dot"></div>
                 <span>Unsaved changes</span>
               </div>
-            )}
-            {isAdmin && (
-              <oj-button chroming="outlined" class="quick-add-rule-btn" onojAction={handleAddRule}>
-                <span slot="startIcon">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 5v14m-7-7h14" />
-                  </svg>
-                </span>
-                Quick Add Rule
-              </oj-button>
             )}
           </div>
         </div>
@@ -277,6 +368,12 @@ const SettingsPanel = () => {
                 <h2 class="settings-card-title">Log Display</h2>
                 <p class="settings-card-subtitle">Configure how logs are displayed and refreshed</p>
               </div>
+              {hasLogDisplayChanges && (
+                <div class="card-changes-indicator">
+                  <div class="changes-dot"></div>
+                  <span class="changes-text">Modified</span>
+                </div>
+              )}
             </div>
 
             <div class="settings-card-content">
@@ -301,6 +398,9 @@ const SettingsPanel = () => {
                       </span>
                     )}{" "}
                     seconds
+                    {!autoRefresh && (
+                      <span class="current-value-display">(Currently: {autoRefreshTime} seconds when enabled)</span>
+                    )}
                   </div>
                 </div>
                 <div class="setting-control">
@@ -313,7 +413,10 @@ const SettingsPanel = () => {
                   <div class="setting-label">
                     <span class="label-text">Pagination</span>
                   </div>
-                  <div class="setting-description">Number of log entries displayed per page</div>
+                  <div class="setting-description">
+                    Number of log entries displayed per page
+                    <span class="current-value-display">(Currently: {logsPerPage} entries)</span>
+                  </div>
                 </div>
                 <div class="setting-control">
                   <LogsPerPage value={logsPerPage} onChange={setLogsPerPage} />
@@ -322,7 +425,12 @@ const SettingsPanel = () => {
             </div>
 
             <div class="settings-card-actions">
-              <oj-button chroming="outlined" class="reset-button" disabled={isSaving} onojAction={handleReset}>
+              <oj-button
+                chroming="outlined"
+                class="reset-button"
+                disabled={isSavingLogDisplay}
+                onojAction={handleReset}
+              >
                 <span slot="startIcon">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
@@ -331,15 +439,15 @@ const SettingsPanel = () => {
                     <path d="M3 21v-5h5" />
                   </svg>
                 </span>
-                {isSaving ? "Resetting..." : "Reset Defaults"}
+                {isSavingLogDisplay ? "Resetting..." : "Reset Defaults"}
               </oj-button>
               <oj-button
                 chroming="solid"
-                class={`save-button ${hasChanges ? "save-button-active" : ""}`}
-                disabled={!hasChanges || isSaving}
-                onojAction={handleSaveInitiate}
+                class={`save-button ${hasLogDisplayChanges ? "save-button-active" : ""}`}
+                disabled={!hasLogDisplayChanges || isSavingLogDisplay}
+                onojAction={handleLogDisplaySaveInitiate}
               >
-                {isSaving ? (
+                {isSavingLogDisplay ? (
                   <div class="button-content">
                     <div class="button-spinner"></div>
                     <span>Saving...</span>
@@ -360,47 +468,78 @@ const SettingsPanel = () => {
             </div>
           </div>
 
-          {/* Data Retention Card */}
-          <div class="settings-card card-animate" style="animation-delay: 0.1s">
-            <div class="settings-card-header">
-              <div class="settings-card-icon settings-icon-secondary">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <circle cx="12" cy="12" r="3" />
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
-                </svg>
-              </div>
-              <div class="settings-card-title-section">
-                <h2 class="settings-card-title">Data Retention</h2>
-                <p class="settings-card-subtitle">Manage log storage and cleanup policies</p>
-              </div>
-            </div>
-
-            <div class="settings-card-content">
-              <div class="setting-item">
-                <div class="setting-info">
-                  <div class="setting-label">
-                    <span class="label-text">Retention Period</span>
-                    <span class="label-badge label-badge-info">Auto-cleanup</span>
+          {/* Data Retention Card - Only for Admins */}
+          {isAdmin && (
+            <div class="settings-card card-animate" style="animation-delay: 0.1s">
+              <div class="settings-card-header">
+                <div class="settings-card-icon settings-icon-secondary">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="3" />
+                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                  </svg>
+                </div>
+                <div class="settings-card-title-section">
+                  <h2 class="settings-card-title">Data Retention</h2>
+                  <p class="settings-card-subtitle">Manage log storage and cleanup policies</p>
+                </div>
+                <div class="settings-card-header-right">
+                  <div class="admin-badge">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                      <line x1="12" y1="19" x2="12" y2="23" />
+                      <line x1="8" y1="23" x2="16" y2="23" />
+                    </svg>
+                    Admin Access
                   </div>
-                  <div class="setting-description">Logs older than this period will be automatically removed</div>
-                </div>
-                <div class="setting-control">
-                  <select
-                    class="retention-select"
-                    value={retentionPeriod}
-                    onChange={(e) => setRetentionPeriod(e.currentTarget.value)}
-                  >
-                    <option value="7">7 days</option>
-                    <option value="30">30 days</option>
-                    <option value="60">60 days</option>
-                    <option value="90">90 days</option>
-                    <option value="180">180 days</option>
-                    <option value="365">1 year</option>
-                  </select>
+                  {hasDataRetentionChanges && (
+                    <div class="card-changes-indicator">
+                      <div class="changes-dot"></div>
+                      <span class="changes-text">Modified</span>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              <div class="settings-card-content">
+                <DataRetention value={retentionPeriod} onChange={setRetentionPeriod} />
+              </div>
+
+              <div class="settings-card-actions">
+                <oj-button
+                  chroming="solid"
+                  class={`save-button ${hasDataRetentionChanges ? "save-button-active" : ""}`}
+                  disabled={!hasDataRetentionChanges || isSavingDataRetention}
+                  onojAction={handleDataRetentionSaveInitiate}
+                >
+                  {isSavingDataRetention ? (
+                    <div class="button-content">
+                      <div class="button-spinner"></div>
+                      <span>Saving...</span>
+                    </div>
+                  ) : (
+                    <div class="button-content">
+                      <span slot="startIcon">
+                        <svg
+                          width="16"
+                          height="16"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                        >
+                          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                          <polyline points="17,21 17,13 7,13 7,21" />
+                          <polyline points="7,3 7,8 15,8" />
+                        </svg>
+                      </span>
+                      <span>Save Changes</span>
+                    </div>
+                  )}
+                </oj-button>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* At Risk Rules Card - Only for Admins */}
           {isAdmin && (
@@ -433,7 +572,7 @@ const SettingsPanel = () => {
                   isAdmin={isAdmin}
                   isModalOpen={isRuleModalOpen}
                   currentRule={currentRule}
-                  editingIndex={editingRuleIndex}
+                  editingIndex={editingIndex}
                   onAddRule={handleAddRule}
                   onEditRule={handleEditRule}
                   onCloseModal={handleCloseRuleModal}
@@ -444,8 +583,8 @@ const SettingsPanel = () => {
         </div>
       </div>
 
-      {/* Confirmation Modal */}
-      {showConfirmation && (
+      {/* Log Display Confirmation Modal */}
+      {showLogDisplayConfirmation && (
         <div class="modal-overlay">
           <div class="modal-content confirmation-modal">
             <div class="modal-header">
@@ -454,8 +593,8 @@ const SettingsPanel = () => {
                   <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <h3 class="modal-title">Confirm Changes</h3>
-              <button class="modal-close-btn" onClick={handleSaveCancel}>
+              <h3 class="modal-title">Save Log Display Settings</h3>
+              <button class="modal-close-btn" onClick={handleLogDisplaySaveCancel}>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <line x1="18" y1="6" x2="6" y2="18" />
                   <line x1="6" y1="6" x2="18" y2="18" />
@@ -463,21 +602,82 @@ const SettingsPanel = () => {
               </button>
             </div>
             <div class="modal-body">
-              <p class="modal-message">Are you sure you want to save these changes?</p>
-              <p class="modal-submessage">This will apply your new settings immediately.</p>
+              <p class="modal-message">Are you sure you want to save the log display changes?</p>
+              <p class="modal-submessage">This will update your auto-refresh and pagination settings.</p>
             </div>
             <div class="modal-footer">
-              <oj-button chroming="outlined" class="modal-cancel-btn" onojAction={handleSaveCancel} disabled={isSaving}>
+              <oj-button
+                chroming="outlined"
+                class="modal-cancel-btn"
+                onojAction={handleLogDisplaySaveCancel}
+                disabled={isSavingLogDisplay}
+              >
                 Cancel
               </oj-button>
-              <oj-button chroming="solid" class="modal-confirm-btn" onojAction={handleSaveConfirm} disabled={isSaving}>
-                {isSaving ? (
+              <oj-button
+                chroming="solid"
+                class="modal-confirm-btn"
+                onojAction={handleLogDisplaySaveConfirm}
+                disabled={isSavingLogDisplay}
+              >
+                {isSavingLogDisplay ? (
                   <div class="button-content">
                     <div class="button-spinner"></div>
-                    <span>Confirming...</span>
+                    <span>Saving...</span>
                   </div>
                 ) : (
-                  <span>Confirm</span>
+                  <span>Save Settings</span>
+                )}
+              </oj-button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Data Retention Confirmation Modal */}
+      {showDataRetentionConfirmation && (
+        <div class="modal-overlay">
+          <div class="modal-content confirmation-modal">
+            <div class="modal-header">
+              <div class="modal-icon confirmation-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h3 class="modal-title">Save Data Retention Settings</h3>
+              <button class="modal-close-btn" onClick={handleDataRetentionSaveCancel}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
+            </div>
+            <div class="modal-body">
+              <p class="modal-message">Are you sure you want to update the data retention period?</p>
+              <p class="modal-submessage">Logs will be automatically deleted after {retentionPeriod} days.</p>
+            </div>
+            <div class="modal-footer">
+              <oj-button
+                chroming="outlined"
+                class="modal-cancel-btn"
+                onojAction={handleDataRetentionSaveCancel}
+                disabled={isSavingDataRetention}
+              >
+                Cancel
+              </oj-button>
+              <oj-button
+                chroming="solid"
+                class="modal-confirm-btn"
+                onojAction={handleDataRetentionSaveConfirm}
+                disabled={isSavingDataRetention}
+              >
+                {isSavingDataRetention ? (
+                  <div class="button-content">
+                    <div class="button-spinner"></div>
+                    <span>Updating...</span>
+                  </div>
+                ) : (
+                  <span>Update Retention</span>
                 )}
               </oj-button>
             </div>
