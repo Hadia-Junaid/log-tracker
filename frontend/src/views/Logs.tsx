@@ -19,6 +19,7 @@ type LogEntry = {
   timestamp: string;
   log_level: string;
   message: string;
+  trace_id: string;
 };
 
 type Application = {
@@ -218,6 +219,13 @@ useEffect(() => {
       id: "col_service",
     },
     {
+      headerText: "Trace ID",
+      field: "trace_id",
+      resizable: "enabled" as const,
+      sortable: "disabled",
+      id: "col_trace_id",
+    },
+    {
       headerText: "Message",
       field: "message",
       resizable: "enabled" as const,
@@ -257,19 +265,48 @@ useEffect(() => {
         responseType: format === "csv" ? "blob" : "json",
       });
 
-      const blob = new Blob(
-        [format === "csv" ? res.data : JSON.stringify(res.data.data, null, 2)],
-        { type: format === "csv" ? "text/csv" : "application/json" }
-      );
-
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.setAttribute("download", `logs.${format}`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      setExportStatus({ type: 'success', message: `Exported logs as ${format.toUpperCase()}` });
+      if (format === "csv") {
+        // Check if the blob is actually a JSON with emailSent
+        const text = await res.data.text();
+        try {
+          const json = JSON.parse(text);
+          if (json && json.emailSent) {
+            setExportStatus({ type: 'success', message: 'You will receive an email with the file shortly.' });
+            setTimeout(() => setExportStatus(null), 4000);
+            return;
+          }
+        } catch (e) {
+          // Not JSON, proceed to download as CSV
+        }
+        // If not emailSent, download as CSV
+        const blob = new Blob([text], { type: "text/csv" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `logs.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setExportStatus({ type: 'success', message: `Exported logs as CSV` });
+      } else {
+        // JSON export
+        if (res.data && res.data.emailSent) {
+          setExportStatus({ type: 'success', message: 'You will receive an email with the file shortly.' });
+          setTimeout(() => setExportStatus(null), 4000);
+          return;
+        }
+        const blob = new Blob([
+          JSON.stringify(res.data.data, null, 2)
+        ], { type: "application/json" });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.setAttribute("download", `logs.json`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setExportStatus({ type: 'success', message: `Exported logs as JSON` });
+      }
     } catch (err) {
       console.error("Failed to export logs:", err);
       setExportStatus({ type: 'error', message: 'Failed to export logs.' });
@@ -292,10 +329,10 @@ useEffect(() => {
         onExport={handleExport}
         selectedTimeRange={timeRange}
         setSelectedTimeRange={setTimeRange}
-        customStart={customStart} // ✅
-        setCustomStart={setCustomStart} // ✅
-        customEnd={customEnd} // ✅
-        setCustomEnd={setCustomEnd} // ✅
+        customStart={customStart} 
+        setCustomStart={setCustomStart} 
+        customEnd={customEnd} 
+        setCustomEnd={setCustomEnd} 
         onResetFilters={handleResetFilters}
         exportStatus={exportStatus}
         logTTL={logTTL}
