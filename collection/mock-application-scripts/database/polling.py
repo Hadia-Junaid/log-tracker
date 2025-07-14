@@ -1,13 +1,12 @@
 import psycopg2
 import time
-import json
 import os
 from dotenv import load_dotenv
 from datetime import timezone
 
 load_dotenv()
 
-LOG_FILE = os.path.join(os.path.dirname(__file__), '..', '..','logs','app.log')
+LOG_FILE = os.path.join(os.path.dirname(__file__), '..', '..', 'logs', 'app.log')
 STATE_FILE = "last_timestamp.state"
 POLL_INTERVAL = 2  # seconds
 
@@ -16,7 +15,6 @@ def get_last_timestamp():
         with open(STATE_FILE) as f:
             return f.read().strip()
     else:
-        # Default to 1970 if no state yet
         return "1970-01-01T00:00:00Z"
 
 def save_last_timestamp(timestamp):
@@ -35,10 +33,10 @@ def fetch_new_logs(conn, since_timestamp):
 
 def format_log(row):
     log_id, level, message, timestamp = row
-    ts_str = timestamp.astimezone(timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
-    traceid = "abcd1234"  # hardcoded as requested
-    msg_escaped = json.dumps(message)
-    return f"[{ts_str}] [{level.upper()}] [{traceid}]id={log_id} message={msg_escaped}"
+    # Format: YYYY-MM-DD HH:mm:ss,SSS
+    ts_str = timestamp.astimezone(timezone.utc).strftime('%Y-%m-%d %H:%M:%S,%f')[:-3]
+    traceid = "abcd1234"
+    return f"[{ts_str}] [{level.upper()}] [traceid={traceid}] {message}"
 
 def main():
     conn = psycopg2.connect(
