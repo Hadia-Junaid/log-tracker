@@ -84,6 +84,12 @@ export function AddGroupDialog({
   };
 
   const handleAddMember = (member: MemberData) => {
+    // if prev.length is 10, do not allow adding more members
+    if (selectedMembers.length >= 10) {
+      setError('You can only add up to 10 members to a group in one action.');
+      setTimeout(() => setError(''), 3000);
+      return;
+    }
     setSelectedMembers((prev) => [...prev, member]);
   };
 
@@ -186,12 +192,46 @@ export function AddGroupDialog({
   };
 
   // Available members = allMembers - selectedMembers, filtered by search term
-  const availableMembers = allMembers.filter(
-    (m) => !selectedMembers.some((sel) => sel.id === m.id) &&
-           (searchTerm === '' || 
-            m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            m.email.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
+  const availableMembers = allMembers
+    .filter(
+      (m) => !selectedMembers.some((sel) => sel.id === m.id) &&
+             (searchTerm === '' || 
+              m.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              m.email.toLowerCase().includes(searchTerm.toLowerCase()))
+    )
+    .sort((a, b) => {
+      if (searchTerm === '') return 0;
+      
+      const searchLower = searchTerm.toLowerCase();
+      const aNameLower = a.name.toLowerCase();
+      const bNameLower = b.name.toLowerCase();
+      const aEmailLower = a.email.toLowerCase();
+      const bEmailLower = b.email.toLowerCase();
+      
+      // Check if names start with search term
+      const aNameStartsWith = aNameLower.startsWith(searchLower);
+      const bNameStartsWith = bNameLower.startsWith(searchLower);
+      
+      // Check if emails start with search term
+      const aEmailStartsWith = aEmailLower.startsWith(searchLower);
+      const bEmailStartsWith = bEmailLower.startsWith(searchLower);
+      
+      // Priority order:
+      // 1. Names that start with search term
+      // 2. Emails that start with search term
+      // 3. Names that contain search term
+      // 4. Emails that contain search term
+      // 5. Original order
+      
+      if (aNameStartsWith && !bNameStartsWith) return -1;
+      if (!aNameStartsWith && bNameStartsWith) return 1;
+      
+      if (aEmailStartsWith && !bEmailStartsWith) return -1;
+      if (!aEmailStartsWith && bEmailStartsWith) return 1;
+      
+      // If both have same priority, sort alphabetically by name
+      return aNameLower.localeCompare(bNameLower);
+    });
 
   const restoreBodyScroll = () => {
   document.body.style.overflow = 'auto';
