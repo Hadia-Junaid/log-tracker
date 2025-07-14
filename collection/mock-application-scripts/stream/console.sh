@@ -1,7 +1,6 @@
 #!/bin/bash
 exec > >(tee -a ../../logs/io_logs.log) 2>&1
 
-counter=0
 traceid="abcd1234"
 
 # Sample log messages
@@ -18,11 +17,22 @@ messages=(
   "Unexpected error occurred"
 )
 
-while true
-do
-  timestamp=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")  # UTC ISO timestamp
-  msg=${messages[$RANDOM % ${#messages[@]}]}
-  echo "[$timestamp] [INFO] [$traceid]id=$counter message=\"${msg}\""
-  ((counter++))
-  sleep 5
+# Available log levels
+log_levels=("INFO" "ERROR" "WARN" "DEBUG")
+
+while true; do
+  for i in {1..10}; do
+    # Timestamp in ISO8601 format: yyyy-MM-dd HH:mm:ss,SSS
+    timestamp=$(date -u +"%Y-%m-%d %H:%M:%S,%3N")
+
+    # Random message and log level
+    msg=${messages[$RANDOM % ${#messages[@]}]}
+    level=${log_levels[$RANDOM % ${#log_levels[@]}]}
+
+    # Print log line matching the format: [%d] [%p] [%X{traceid}]%m%n
+    echo "[$timestamp] [$level] [traceid=$traceid] $msg"
+  done
+
+  # Sleep 1 second before generating the next 1000 logs
+  sleep 1
 done

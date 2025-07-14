@@ -15,7 +15,7 @@ const redisConfig = config.get<{
 }>("redisServer");
 
 logger.debug("Redis Config:", redisConfig);
-
+logger.info("mongo uri", mongoUri);
 // Connect to MongoDB
 mongoose
   .connect(mongoUri)
