@@ -1,6 +1,6 @@
 /** @jsxImportSource preact */
 import { h } from "preact";
-import "../../styles/settings/DataRetention.css";
+//import "../../styles/settings/DataRetention.css";
 
 type Props = {
   value: string;                         // e.g. "30"
