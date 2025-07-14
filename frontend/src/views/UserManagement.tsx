@@ -11,7 +11,6 @@ import "ojs/ojinputsearch";
 import "ojs/ojbutton";
 import "ojs/ojselectsingle";
 
-
 type Props = {
   path?: string; // required by preact-router
 };

@@ -368,7 +368,7 @@ export default function EditApplicationDialog({
             </div>
 
             <div class="oj-form-item">
-              <oj-label for="editAppIsActive">Status (Active)</oj-label>
+              <oj-label for="editAppIsActive">Status (Active/Inactive)</oj-label>
               <div class="oj-form-control-wrapper">
                 <oj-switch
                   id="editAppIsActive"

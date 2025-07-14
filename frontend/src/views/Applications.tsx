@@ -14,7 +14,6 @@ import ArrayDataProvider from "ojs/ojarraydataprovider";
 import "oj-c/select-multiple";
 import qs from "qs";
 
-
 type Props = {
   path?: string;
 };
@@ -183,9 +182,16 @@ export default function Applications({ path }: Props) {
     <div class="page-container">
       <div class="applications-page-content">
         <div class="applications-header">
-          <h1 class="applications-title">Applications</h1>
-          <div class="applications-controls">
-            
+          {/* LEFT: Title + description */}
+          <div class="applications-title-block">
+            <h1 class="applications-title">Applications</h1>
+            <p class="applications-description">
+              Manage and monitor all your applications in one place.
+            </p>
+          </div>
+
+          {/* RIGHT: Add Button + Total */}
+          <div class="applications-header-actions">
             <oj-button
               chroming="solid"
               class="add-button"
