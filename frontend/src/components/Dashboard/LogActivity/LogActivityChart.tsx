@@ -1,11 +1,17 @@
 /** @jsx h */
 import { h } from 'preact';
 import { useMemo, useEffect, useState, useRef } from 'preact/hooks';
-import Chart from 'chart.js/auto';
+import ArrayDataProvider from 'ojs/ojarraydataprovider';
+import 'oj-c/line-chart';
 import axios from '../../../api/axios';
 
 type ChartItem = { groupId: string; seriesId: string; value: number };
-type Application = { _id: string; name: string; isActive?: boolean };
+
+type Application = {
+  _id: string;
+  name: string;
+};
+
 type LogActivityData = {
   data: ChartItem[];
   groups: string[];
@@ -21,21 +27,25 @@ const LogActivityChart = () => {
   const [selectedApplications, setSelectedApplications] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [showApplicationDropdown, setShowApplicationDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
-  const chartRef = useRef<HTMLCanvasElement | null>(null);
-  const chartInstanceRef = useRef<Chart | null>(null);
-  const isInitializedRef = useRef(false);
 
+  // Handle clicking outside dropdown to close it
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setShowDropdown(false);
+        setShowApplicationDropdown(false);
       }
     };
-    if (showDropdown) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [showDropdown]);
+
+    if (showApplicationDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showApplicationDropdown]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,35 +53,37 @@ const LogActivityChart = () => {
         setLoading(true);
         setError(null);
 
+        console.log('🔍 Starting to fetch log activity data...');
+
+        // Build query parameters
         const params: any = {
-          start_time: new Date(Date.now() -  24 * 60 * 60 * 1000).toISOString(),
+          start_time: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(), //changed to 1 day
           end_time: new Date().toISOString()
         };
-        if (selectedApplications.length > 0 && !selectedApplications.includes('all')) {
+
+        if (selectedApplications.length > 0) {
           params.app_ids = selectedApplications.join(',');
         }
 
-        console.log('Fetching data with params:', params);
+        console.log('📊 Fetching log activity with params:', params);
+
         const response = await axios.get('/logs/activity', { params });
         const data: LogActivityData = response.data;
-        console.log('Received data:', data);
-        // if data.series is empty, set it to the default series
-        if (data.series.length === 0) {
-          data.series = ['error', 'log', 'warn', 'debug'];
-        }
+
+        console.log('📊 Log activity response:', data);
+        console.log('📊 Chart data:', data.data);
+        console.log('📊 Groups (hours):', data.groups);
+        console.log('📊 Series (log levels):', data.series);
+        console.log('📊 Available applications:', data.applications);
 
         setChartData(data.data);
         setGroups(data.groups);
         setSeries(data.series);
-                  if (data.applications) {
-                    console.log('Applications:', data.applications);
-            // only set applications if they are active
-            const activeApplications = data.applications.filter(app => app.isActive !== false);
-            setApplications(activeApplications);
-          }
-                setLoading(false);
+        setApplications(data.applications);
+        setLoading(false);
+        console.log('✅ Log activity chart data loaded successfully!');
       } catch (err) {
-        console.error('Error fetching data:', err);
+        console.error('❌ Failed to fetch log activity data:', err);
         setError('Failed to load log activity data');
         setLoading(false);
       }
@@ -80,141 +92,128 @@ const LogActivityChart = () => {
     fetchData();
   }, [selectedApplications]);
 
-  // Handle chart creation and updates
-  useEffect(() => {
-    console.log('Chart effect:', { 
-      groups: groups.length, 
-      series: series.length, 
-      chartData: chartData.length, 
-      isInitialized: isInitializedRef.current,
-      hasChart: !!chartInstanceRef.current
-    });
-    
-    if (!chartRef.current || groups.length === 0 || series.length === 0) return;
-
-    // Group data by seriesId
-    const groupedData: { [series: string]: number[] } = {};
-    series.forEach((s) => {
-      groupedData[s] = groups.map((g) => {
-        const item = chartData.find((d) => d.groupId === g && d.seriesId === s);
-        return item ? item.value : 0;
-      });
-    });
-
-    const datasets = series.map((s, idx) => ({
-      label: s,
-      data: groupedData[s],
-      borderColor: `hsl(${(idx * 60) % 360}, 70%, 50%)`,
-      backgroundColor: `hsla(${(idx * 60) % 360}, 70%, 50%, 0.2)`,
-      tension: 0.3,
-      fill: false
-    }));
-
-    if (!chartInstanceRef.current) {
-      // Create new chart
-      console.log('Creating new chart with data:', { groups, series, datasets });
-      chartInstanceRef.current = new Chart(chartRef.current, {
-        type: 'line',
-        data: {
-          labels: groups,
-          datasets
-        },
-        options: {
-          responsive: true,
-          animation: {
-            duration: 750,
-            easing: 'easeInOutQuart'
-          },
-          plugins: {
-            legend: { position: 'top' },
-            title: { display: true, text: 'Log Activity (Last 7 Days)' }
-          },
-          scales: {
-            x: {
-              title: { display: true, text: 'Hour Group' },
-              ticks: { autoSkip: false }
-            },
-            y: {
-              title: { display: true, text: 'Log Count' },
-              beginAtZero: true
-            }
-          }
-        }
-      });
-      isInitializedRef.current = true;
-      console.log('Chart created successfully');
-    } else {
-      // Update existing chart
-      console.log('Updating existing chart with new data:', { groups, series, datasets });
-      chartInstanceRef.current.data.labels = groups;
-      chartInstanceRef.current.data.datasets = datasets;
-      chartInstanceRef.current.update('active');
-      console.log('Chart updated successfully');
-    }
-  }, [chartData, groups, series]);
+  const chartProvider = useMemo(
+    () =>
+      new ArrayDataProvider(chartData, {
+        keyAttributes: ['groupId', 'seriesId'],
+      }),
+    [chartData]
+  );
 
   const handleApplicationChange = (appId: string) => {
-    if (appId === 'all') {
-      // If "All logs" is selected, clear other selections
-      setSelectedApplications(['all']);
-    } else {
-      setSelectedApplications((prev) => {
-        // Remove 'all' if it exists when selecting specific apps
-        const filtered = prev.filter(id => id !== 'all');
-        return filtered.includes(appId) 
-          ? filtered.filter((id) => id !== appId) 
-          : [...filtered, appId];
-      });
-    }
+    setSelectedApplications(prev => {
+      if (prev.includes(appId)) {
+        return prev.filter(id => id !== appId);
+      } else {
+        return [...prev, appId];
+      }
+    });
   };
 
-  const getAppName = (id: string) =>
-    applications.find((app) => app._id === id)?.name || 'Unknown';
+  const getApplicationName = (appId: string) => {
+    return applications.find(app => app._id === appId)?.name || 'Unknown';
+  };
 
-  if (loading && !isInitializedRef.current) return <div>Loading log activity data...</div>;
-  if (error) return <div style={{ color: 'red' }}>{error}</div>;
+
+  const chartSeries = () => {
+  return (
+    <oj-c-line-chart-series
+      markerDisplayed="on"
+      lineType="curved">
+    </oj-c-line-chart-series>
+  );
+};
+
+const chartItem = (item: { data: any }) => {
+  return (
+    <oj-c-line-chart-item
+      value={item.data.value}
+      groupId={[item.data.groupId]}
+      seriesId={item.data.seriesId}>
+    </oj-c-line-chart-item>
+  );
+};
+
+
+  if (loading) {
+    return (
+      <div style={{ width: '100%', maxWidth: '1200px', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div>Loading log activity data...</div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ width: '100%', maxWidth: '1200px', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'red' }}>
+        <div>{error}</div>
+      </div>
+    );
+  }
+
+  if (chartData.length === 0) {
+    return (
+      <div style={{ width: '100%', maxWidth: '1200px', height: '300px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div>No log data available for the last 7 days</div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ width: '100%', maxWidth: '1200px', margin: '0 auto' }}>
-      {/* App Filter Dropdown */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 10, position: 'relative' }}>
-        <button onClick={() => setShowDropdown(!showDropdown)} style={{
-          padding: '8px 16px',
-          borderRadius: 4,
-          border: '1px solid #ccc',
-          backgroundColor: '#fff',
-          cursor: 'pointer'
-        }}>
-          {selectedApplications.length === 0 || (selectedApplications.length === 1 && selectedApplications[0] === 'all')
-            ? 'All Applications'
-            : selectedApplications.length === 1
-              ? getAppName(selectedApplications[0])
-              : `${selectedApplications.length} Applications Selected`} ▼
+    <div style={{ width: '100%', maxWidth: '1200px' }}>
+      {/* Application Filter */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'flex-end', 
+        marginBottom: '10px',
+        position: 'relative'
+      }}>
+        <button
+          onClick={() => setShowApplicationDropdown(!showApplicationDropdown)}
+          style={{
+            padding: '8px 16px',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            backgroundColor: 'white',
+            cursor: 'pointer',
+            fontSize: '14px'
+          }}
+        >
+          {selectedApplications.length === 0 
+            ? 'All Applications' 
+            : selectedApplications.length === 1 
+              ? getApplicationName(selectedApplications[0])
+              : `${selectedApplications.length} Applications Selected`
+          }
+          <span style={{ marginLeft: '8px' }}>▼</span>
         </button>
-        {showDropdown && (
+
+        {showApplicationDropdown && (
           <div ref={dropdownRef} style={{
-            position: 'absolute', top: '100%', right: 0,
-            border: '1px solid #ccc', borderRadius: 4,
-            backgroundColor: '#fff', boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-            zIndex: 1000, minWidth: 200, maxHeight: 300, overflowY: 'auto'
+            position: 'absolute',
+            top: '100%',
+            right: '0',
+            backgroundColor: 'white',
+            border: '1px solid #ccc',
+            borderRadius: '4px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            zIndex: 1000,
+            minWidth: '200px',
+            maxHeight: '300px',
+            overflowY: 'auto'
           }}>
-            {/* All logs option */}
-            <label style={{ display: 'block', padding: '8px 12px', borderBottom: '1px solid #eee', fontWeight: 'bold' }}>
-              <input
-                type="checkbox"
-                checked={selectedApplications.includes('all') || selectedApplications.length === 0}
-                onChange={() => handleApplicationChange('all')}
-                style={{ marginRight: 8 }}
-              />
-              All logs
-            </label>
             {applications.map(app => (
-              <label key={app._id} style={{ display: 'block', padding: '8px 12px', borderBottom: '1px solid #eee' }}>
+              <label key={app._id} style={{
+                display: 'block',
+                padding: '8px 12px',
+                cursor: 'pointer',
+                borderBottom: '1px solid #eee'
+              }}>
                 <input
                   type="checkbox"
                   checked={selectedApplications.includes(app._id)}
                   onChange={() => handleApplicationChange(app._id)}
-                  style={{ marginRight: 8 }}
+                  style={{ marginRight: '8px' }}
                 />
                 {app.name}
               </label>
@@ -224,11 +223,22 @@ const LogActivityChart = () => {
       </div>
 
       {/* Chart */}
-      <canvas ref={chartRef} height={300} style={{ width: '100%', minWidth: '1200px' }} />
-
-      {/* Debug Info */}
-      <div style={{ marginTop: 10, fontSize: 12, color: '#666' }}>
-        Debug: Groups: {groups.length}, Series: {series.length}, Data points: {chartData.length}
+      <div style={{ width: '100%', overflowX: 'auto' }}>
+        <oj-c-line-chart
+      id="volumeLineChart"
+      data={chartProvider}
+      groups={groups}
+      series={series}
+      orientation="vertical"
+      track-resize="off"
+      animation-on-display="none"
+      animation-on-data-change="none"
+      style="height: 300px; min-width: 1200px;"
+      group-label-style="transform: rotate(-45deg); text-anchor: end; font-size: 12px;"
+    >
+      <template slot="seriesTemplate" render={chartSeries}></template>
+      <template slot="itemTemplate" render={chartItem}></template>
+    </oj-c-line-chart>
       </div>
     </div>
   );

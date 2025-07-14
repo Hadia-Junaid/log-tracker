@@ -33,6 +33,7 @@
           "oj-c-line-chart": any;
           "oj-c-line-chart-item": any;
           "oj-bind-template":any;
+          "oj-c-line-chart-group": any;
         }
       }
 
