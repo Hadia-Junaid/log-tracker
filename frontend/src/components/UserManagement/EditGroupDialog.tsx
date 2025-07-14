@@ -209,6 +209,12 @@ export function EditGroupDialog({
     setIsUpdating(true);
     setError('');
     setShowUpdateConfirmation(false);
+    //if assigned_applications is empty, show error
+    if (selectedActiveAppIds.length === 0) {
+      setError('Please select at least one application for the group.');
+      setIsUpdating(false);
+      return;
+    }
 
     try {
       const payload = {
