@@ -270,7 +270,7 @@ useEffect(() => {
         try {
           const json = JSON.parse(text);
           if (json && json.emailSent) {
-            setExportStatus({ type: 'success', message: 'You will receive an email with the file shortly.' });
+            setExportStatus({ type: 'success', message: 'You will receive an email.' });
             setTimeout(() => setExportStatus(null), 4000);
             return;
           }
@@ -290,7 +290,7 @@ useEffect(() => {
       } else {
         // JSON export
         if (res.data && res.data.emailSent) {
-          setExportStatus({ type: 'success', message: 'You will receive an email with the file shortly.' });
+          setExportStatus({ type: 'success', message: 'You will receive an email.' });
           setTimeout(() => setExportStatus(null), 4000);
           return;
         }
@@ -315,7 +315,7 @@ useEffect(() => {
   };
 
   return (
-  <div class="oj-sm-padding-6x logs-page logs-page-root" style="display: flex; flex-direction: column; height: 100vh;">
+  <div class="oj-sm-padding-2x logs-page logs-page-root" style="display: flex; flex-direction: column; height: 100vh;">
     <LogsHeader
       search={search}
       setSearch={setSearch}

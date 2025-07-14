@@ -166,11 +166,11 @@
   min-width: 160px;
   outline: none;
 }
-/* .export-btn:hover, .export-btn:focus {
-  background: #d0e6ff; 
-  color: #1976d2;
-  border-color: #1976d2;
-} */
+.export-btn:hover, .export-btn:focus {
+  background: #f5f5f5;
+  color: #222;
+  border-color: #bbb;
+}
 
 .export-menu {
   position: absolute;
@@ -197,10 +197,10 @@
   border-radius: 0;
   transition: background 0.15s, color 0.15s;
 }
-/* .export-menu-item:hover, .export-menu-item:focus {
-  background: #e3f0ff; 
-  color: #1976d2;
-} */
+.export-menu-item:hover, .export-menu-item:focus {
+  background: #f5f5f5;
+  color: #222;
+}
 
 .time-range-label {
   font-weight: bold;
@@ -237,5 +237,12 @@
   background: #ffe3e3;
   color: #b00020;
   border: 1.5px solid #b00020;
+}
+
+.logs-description {
+  font-size: 1rem;
+  color: var(--oj-core-text-color-secondary);
+  margin-top: 0px;
+  margin-bottom: 0.5rem;
 }
 
