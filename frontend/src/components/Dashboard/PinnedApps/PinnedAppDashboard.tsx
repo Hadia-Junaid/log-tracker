@@ -36,7 +36,7 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
     } finally {
       setLoading(false);
     }
-  }, [userId, pinnedApps.length]);
+  }, [userId]);
 
   useEffect(() => {
     fetchPinnedApps();
