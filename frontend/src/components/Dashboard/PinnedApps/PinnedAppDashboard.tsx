@@ -13,6 +13,7 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [isManageDialogOpen, setManageDialogOpen] = useState(false);
+  const [showCleanupNotification, setShowCleanupNotification] = useState(false);
 
   const fetchPinnedApps = useCallback(async () => {
     if (!userId) return;
@@ -20,14 +21,23 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
       setLoading(true);
       setError(false);
       const res = await axios.get(`/dashboard/pinned/${userId}`);
-      setPinnedApps(res.data.pinned_applications || []);
+      const newPinnedApps = res.data.pinned_applications || [];
+      
+      // Check if any pinned apps were removed (this would happen if they're no longer active)
+      if (newPinnedApps.length < pinnedApps.length && pinnedApps.length > 0) {
+        setShowCleanupNotification(true);
+        // Hide notification after 5 seconds
+        setTimeout(() => setShowCleanupNotification(false), 5000);
+      }
+      
+      setPinnedApps(newPinnedApps);
     } catch (err) {
       console.error("Failed to fetch pinned applications:", err);
       setError(true);
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, pinnedApps.length]);
 
   useEffect(() => {
     fetchPinnedApps();
@@ -35,6 +45,19 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
 
   return (
     <div class="pinned-dashboard oj-panel">
+      {showCleanupNotification && (
+        <div class="cleanup-notification" style={{
+          backgroundColor: '#fff3cd',
+          border: '1px solid #ffeaa7',
+          borderRadius: '4px',
+          padding: '8px 12px',
+          marginBottom: '12px',
+          fontSize: '14px',
+          color: '#856404'
+        }}>
+          Some pinned applications were automatically removed as they are no longer available to you.
+        </div>
+      )}
       <div class="pinned-dashboard-header">
         <div class="pinned-dashboard-heading">
           <Pin class="oj-icon-size-sm oj-text-color-brand" aria-label="Pinned Icon" />
