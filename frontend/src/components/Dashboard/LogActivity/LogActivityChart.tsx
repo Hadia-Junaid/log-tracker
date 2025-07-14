@@ -68,12 +68,17 @@ const LogActivityChart = () => {
         console.log("🔍 Starting to fetch log activity data...");
 
         // Build query parameters
+
+        const localEnd = new Date(); // Now in local time
+        const localStart = new Date(localEnd); // Clone
+        localStart.setHours(localStart.getHours() - 24); // Subtract 24 *local* hours
+
         const params: any = {
-          start_time: new Date(
-            Date.now() - 1 * 24 * 60 * 60 * 1000
-          ).toISOString(), //changed to 1 day
-          end_time: new Date().toISOString(),
+          start_time: localStart.toISOString(), // will be in UTC
+          end_time: localEnd.toISOString(), // will be in UTC
         };
+
+        console.log("📊 Query parameters:", params);
 
         if (selectedApplications.length > 0) {
           params.app_ids = selectedApplications.join(",");
@@ -91,7 +96,15 @@ const LogActivityChart = () => {
         console.log("📊 Available applications:", data.applications);
 
         setChartData(data.data);
-        setGroups(data.groups);
+        setGroups(
+          data.groups.map(
+            (g) =>
+              new Date(g).toLocaleTimeString([], {
+                hour: "2-digit",
+                hour12: false,
+              }) + ":00"
+          )
+        );
         setSeries(data.series);
         setApplications(data.applications);
         setLoading(false);
@@ -110,13 +123,22 @@ const LogActivityChart = () => {
     return chartData.filter((item) => visibleLogLevels.includes(item.seriesId));
   }, [chartData, visibleLogLevels]);
 
-  const chartProvider = useMemo(
-    () =>
-      new ArrayDataProvider(filteredChartData, {
-        keyAttributes: ["groupId", "seriesId"],
-      }),
-    [filteredChartData]
-  );
+  const chartProvider = useMemo(() => {
+    const refinedData = filteredChartData.map((item) => ({
+      ...item,
+      groupId:
+        new Date(item.groupId).toLocaleTimeString([], {
+          hour: "2-digit",
+          hour12: false,
+        }) + ":00",
+
+      seriesId: item.seriesId,
+    }));
+
+    return new ArrayDataProvider(refinedData, {
+      keyAttributes: ["groupId", "seriesId"],
+    });
+  }, [filteredChartData]);
 
   const visibleSeries = useMemo(() => {
     return series.filter((s) => visibleLogLevels.includes(s));
@@ -287,32 +309,38 @@ const LogActivityChart = () => {
             flexWrap: "wrap",
           }}
         >
-        {series.map((level) => {
-  const isLastChecked = visibleLogLevels.length === 1 && visibleLogLevels.includes(level);
+          {series.map((level) => {
+            const isLastChecked =
+              visibleLogLevels.length === 1 && visibleLogLevels.includes(level);
 
-  return (
-    <label
-      key={level}
-      style={{ display: "flex", alignItems: "center", gap: "6px", opacity: isLastChecked ? 0.6 : 1 }}
-    >
-      <input
-        type="checkbox"
-        checked={visibleLogLevels.includes(level)}
-        disabled={isLastChecked}
-        onChange={() => {
-          setVisibleLogLevels((prev) =>
-            prev.includes(level)
-              ? prev.length > 1 // Only allow unchecking if more than one is checked
-                ? prev.filter((l) => l !== level)
-                : prev
-              : [...prev, level]
-          );
-        }}
-      />
-      {level}
-    </label>
-  );
-})}
+            return (
+              <label
+                key={level}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  opacity: isLastChecked ? 0.6 : 1,
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={visibleLogLevels.includes(level)}
+                  disabled={isLastChecked}
+                  onChange={() => {
+                    setVisibleLogLevels((prev) =>
+                      prev.includes(level)
+                        ? prev.length > 1 // Only allow unchecking if more than one is checked
+                          ? prev.filter((l) => l !== level)
+                          : prev
+                        : [...prev, level]
+                    );
+                  }}
+                />
+                {level}
+              </label>
+            );
+          })}
         </div>
 
         <oj-c-line-chart
