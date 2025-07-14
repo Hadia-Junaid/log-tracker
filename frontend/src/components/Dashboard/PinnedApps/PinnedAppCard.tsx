@@ -16,7 +16,8 @@ const PinnedAppCard = ({ app, userId, onUnpin: onUnpin }: Props) => {
   const totalLogs =
     (app.logCounts.INFO ?? 0) +
     (app.logCounts.WARN ?? 0) +
-    (app.logCounts.ERROR ?? 0);
+    (app.logCounts.ERROR ?? 0) +
+    (app.logCounts.DEBUG ?? 0);
 
   const handleUnpin = async () => {
     if (!userId || !app._id) return;
@@ -50,6 +51,7 @@ const PinnedAppCard = ({ app, userId, onUnpin: onUnpin }: Props) => {
         <CardRow label="Info" value={(app.logCounts.INFO ?? 0).toLocaleString()} badge="INFO" />
         <CardRow label="Warn" value={(app.logCounts.WARN ?? 0).toLocaleString()} badge="WARN" />
         <CardRow label="Error" value={(app.logCounts.ERROR ?? 0).toLocaleString()} badge="ERROR" />
+        <CardRow label="Debug" value={(app.logCounts.DEBUG ?? 0).toLocaleString()} badge="DEBUG" />
       </div>
     </div>
   );
