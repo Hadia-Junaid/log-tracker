@@ -5,12 +5,6 @@ import mongoose from "mongoose";
 import logger from "../utils/logger";
 import UserGroup from "../models/UserGroup";
 import { escapeRegex } from "../utils/escapeRegex";
-import { Request, Response } from "express";
-import Application from "../models/Application";
-import mongoose from "mongoose";
-import logger from "../utils/logger";
-import UserGroup from "../models/UserGroup";
-import { escapeRegex } from "../utils/escapeRegex";
 
 // Creates a new application
 // Expects req.body to contain application data
