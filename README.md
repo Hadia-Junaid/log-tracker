@@ -6,6 +6,9 @@ A **backend service** built with Node.js + TypeScript for user management and in
 A **frontend** using Oracle JET (MVVM + Knockout.js)
 Google Directory integration using a **service account key**
 Containerized using Docker and Docker Compose
+A **log collection system** using mock log generators and Fluent Bit to collect and forward logs to Redis
+A **Transport service** (Redis with a Node.js bridge) for buffering and batching logs between collection and ingestion
+A **log ingestion service** (Node.js + TypeScript) that pulls log batches from Redis/BullMQ and stores them in MongoDB Atlas
 
 ---
 
@@ -16,6 +19,9 @@ Containerized using Docker and Docker Compose
 **Database**: MongoDB (optional, not included in docker-compose.yml)
 **Authentication**: Google Admin SDK (Service Account)
 **Containerization**: Docker, Docker Compose
+**Log Collection**: Node.js, Python, Bash (simulating log sources) and Fluent Bit
+**Log Transport**: Redis, Node.js 
+**Ingestion**: Node.js, Typescript
 
 ---
 
@@ -36,8 +42,30 @@ Containerized using Docker and Docker Compose
 │   ├── Dockerfile
 │   └── package.json
 │
+│── collection/
+│   ├── logs/                        # Collected log files
+│   ├── fluent-bit.conf              # Fluent Bit config for log shipping
+│   ├── fluentbit.template.conf      # Template for dynamic config
+│   ├── generate-conf.sh             # Script to generate config from template
+│   ├── mock-application-scripts/    # Scripts to generate mock logs 
+│   └── README.md
+│
+├── ingestion/
+│   ├── src/                         # TypeScript source for ingestion agent
+│   ├── config/                      # Config files for environments
+│   ├── Dockerfile
+│   ├── docker-compose.yml
+│   └── README.md
+│
+├── redis-server/
+│   ├── redis/                       # Redis config and data
+│   ├── bridge/                      # Node.js service to batch logs from Redis to BullMQ
+│   ├── docker-compose.yml
+│   └── README.md
+│
 ├── docker-compose.yml
 └── README.md
+└── .env
 
 ---
 
@@ -47,7 +75,7 @@ Containerized using Docker and Docker Compose
 ```bash
 git clone https://github.com/hadia-junaid/log-tracker.git
 cd log-tracker
-git switch develop
+git switch feature/dashboard-activity-graph
 git pull
 ```
 
@@ -61,6 +89,8 @@ Populate .env sent offline
 
 Make sure your credentials/service-account-key.json is also present. (also sent offline)
 
+Create another .env in the root directory based on .env.example:
+Populate .env sent offline
 
 ### 2. Docker Build & Run (Production Mode)
 
@@ -93,6 +123,16 @@ docker rmi $(docker images -q)
 docker builder prune -f
 
 ---
+
+### 4. Generate sample logs (Optional)
+cd mock-application-scripts/stream
+./console.sh
+
+OR
+
+cd mock-application-scripts/file
+npm i
+node generateLogs.js
 
 ## 🛠 Notes
 
