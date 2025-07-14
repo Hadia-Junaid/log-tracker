@@ -212,7 +212,7 @@ useEffect(() => {
       id: "col_level",
     },
     {
-      headerText: "Service",
+      headerText: "Application",
       field: "application_name",
       resizable: "enabled" as const,
       sortable: "disabled",
@@ -245,7 +245,7 @@ useEffect(() => {
   setPage(1);
   const now = new Date();
   let start: Date | null = null;
-  start = new Date(now.getTime() - 60 * 60 * 1000);
+  start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
   setStartTime(start.toISOString());
   setEndTime(now.toISOString());
 

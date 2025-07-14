@@ -139,7 +139,7 @@ export default function LogsHeader({
         <oj-c-select-multiple
           id="applicationsDropdown"
           label-edge="none"
-          placeholder="Services"
+          placeholder="Applications"
           class="oj-form-control-max-width-md input-filter dropdown"
           data={appDataProvider}
           value={selectedAppIds}
