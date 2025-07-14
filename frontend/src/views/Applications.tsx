@@ -13,21 +13,7 @@ import "ojs/ojselectsingle";
 import ArrayDataProvider from "ojs/ojarraydataprovider";
 import "oj-c/select-multiple";
 import qs from "qs";
-// src/views/Applications.tsx
-import { h } from "preact";
-import { useState, useEffect, useMemo } from "preact/hooks";
-import "../styles/applications.css";
-import axios from "../api/axios";
-import AddApplicationDialog from "../components/applications/AddApplicationDialog";
-import { Application } from "src/types/applications";
-import DeleteConfirmationDialog from "../components/applications/DeleteConfirmationDialog";
-import EditApplicationDialog from "../components/applications/EditApplicationDialog";
-import ApplicationsList from "../components/applications/ApplicationsList"; // Import the new component
-import "ojs/ojselectcombobox";
-import "ojs/ojselectsingle";
-import ArrayDataProvider from "ojs/ojarraydataprovider";
-import "oj-c/select-multiple";
-import qs from "qs";
+
 
 type Props = {
   path?: string;
