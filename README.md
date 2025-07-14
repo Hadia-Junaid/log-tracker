@@ -42,12 +42,12 @@ A **log ingestion service** (Node.js + TypeScript) that pulls log batches from R
 │   ├── Dockerfile
 │   └── package.json
 │
-│── collection/
+├── collection/
 │   ├── logs/                        # Collected log files
 │   ├── fluent-bit.conf              # Fluent Bit config for log shipping
 │   ├── fluentbit.template.conf      # Template for dynamic config
 │   ├── generate-conf.sh             # Script to generate config from template
-│   ├── mock-application-scripts/    # Scripts to generate mock logs 
+│   ├── mock-application-scripts/    # Scripts to generate mock logs
 │   └── README.md
 │
 ├── ingestion/
@@ -64,7 +64,7 @@ A **log ingestion service** (Node.js + TypeScript) that pulls log batches from R
 │   └── README.md
 │
 ├── docker-compose.yml
-└── README.md
+├── README.md
 └── .env
 
 ---
