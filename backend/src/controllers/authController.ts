@@ -233,7 +233,7 @@ class AuthController {
             res.status(200).json({
                 authenticated: true,
                 user: {
-                     _id: user._id,
+                     id: user._id,
                     email: user.email,
                     name: user.name,
                     settings: user.settings,

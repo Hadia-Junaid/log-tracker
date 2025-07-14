@@ -78,7 +78,7 @@ export const AuthenticatedApp = ({ appName }: { appName: string }) => {
                     style={{ overflow: "auto", height: "100%" }}
                 >
                     <Router>
-                        <Dashboard path="/" />
+                        <Dashboard path="/" userId={user?.id} />
                         <Logs path="/logs" />
                         <UserManagement path="/users" />
                         <Applications path="/applications" />

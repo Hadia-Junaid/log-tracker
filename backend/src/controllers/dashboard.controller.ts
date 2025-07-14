@@ -26,19 +26,21 @@ export const getPinnedApps = async (req: Request, res: Response): Promise<void> 
     }
 
     const pinnedApps = user.pinned_applications;
-
-    const appNames = await Application.find({
-        _id: { $in: pinnedApps.map((app: any) => app._id) }
-    }).select('name').lean();
+    logger.info(`User ${userId} has ${pinnedApps?.length || 0} pinned applications`);
 
     if (!pinnedApps || pinnedApps.length === 0) {
         res.status(200).json({ pinned_applications: [] });
         return;
     }
+
+    const appNames = await Application.find({
+        _id: { $in: pinnedApps }
+    }).select('name').lean();
+
     const logStats = await Log.aggregate([
         {
             $match: {
-                application_id: { $in: pinnedApps.map((app: any) => app._id) }
+                application_id: { $in: pinnedApps }
             }
         },
         {
@@ -65,10 +67,10 @@ export const getPinnedApps = async (req: Request, res: Response): Promise<void> 
     }
 
     // Build response array with log counts
-    const response = pinnedApps.map((app: any) => ({
-        _id: app._id.toString(),
-        appName: appNames.find(a => a._id.toString() === app._id.toString())?.name || 'Unknown', 
-        logCounts: logCountsMap[app._id.toString()] || {}
+    const response = pinnedApps.map((appId: any) => ({
+        _id: appId.toString(),
+        appName: appNames.find(a => a._id.toString() === appId.toString())?.name || 'Unknown', 
+        logCounts: logCountsMap[appId.toString()] || {}
     }));
 
     res.status(200).json({ pinned_applications: response });
@@ -164,6 +166,7 @@ export const getActiveApps = async (req: Request, res: Response): Promise<void> 
 
     // 2. Find user groups the user belongs to
     const userGroups = await UserGroup.find({ members: user._id }).lean();
+    logger.info(`Found ${userGroups.length} user groups for user: ${userId}`);
     if (!userGroups.length) {
         logger.info(`No user groups found for user: ${userId}`);
         res.status(200).json({ active_applications: [] });
@@ -174,6 +177,7 @@ export const getActiveApps = async (req: Request, res: Response): Promise<void> 
     const assignedAppIds = [
         ...new Set(userGroups.flatMap(group => group.assigned_applications.map(id => id.toString())))
     ];
+    logger.info(`Found ${assignedAppIds.length} assigned applications for user: ${userId}`);
 
     if (!assignedAppIds.length) {
         logger.info(`No assigned applications for user groups of user: ${userId}`);
@@ -186,6 +190,7 @@ export const getActiveApps = async (req: Request, res: Response): Promise<void> 
         _id: { $in: assignedAppIds },
         isActive: true
     }).lean();
+    logger.info(`Found ${activeApps.length} active applications for user: ${userId}`);
 
     if (!activeApps.length) {
         logger.info(`No active applications found for user: ${userId}`);
@@ -199,7 +204,7 @@ export const getActiveApps = async (req: Request, res: Response): Promise<void> 
         {
             $match: {
                 application_id: { $in: activeApps.map(app => app._id) },
-                createdAt: { $gte: since }
+                timestamp: { $gte: since }
             }
         },
         {
@@ -261,8 +266,8 @@ export const getAtRiskApps = async (req: Request, res: Response): Promise<void> 
         const timeThreshold = new Date(Date.now() - minutes * 60 * 1000);
 
         const logs = await Log.find({
-          applicationId: app._id,
-          level: type_of_logs,
+          application_id: app._id,
+          log_level: type_of_logs,
           timestamp: { $gte: timeThreshold }
         });
 
