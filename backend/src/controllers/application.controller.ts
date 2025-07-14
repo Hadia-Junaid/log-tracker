@@ -223,6 +223,7 @@ export const updateApplication = async (
           {
             _id: { $in: toRemove },
             is_admin: false,
+            is_active: true,
           },
           {
             $pull: { assigned_applications: updated._id },
