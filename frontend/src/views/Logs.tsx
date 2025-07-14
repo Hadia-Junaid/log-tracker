@@ -316,29 +316,36 @@ useEffect(() => {
   };
 
   return (
-    <div class="oj-sm-padding-6x logs-page logs-page-root">
-      <LogsHeader
-        search={search}
-        setSearch={setSearch}
-        applications={applications}
-        selectedAppIds={selectedAppIds}
-        setSelectedAppIds={setSelectedAppIds}
-        logLevels={logLevels}
-        setLogLevels={setLogLevels}
-        setPage={setPage}
-        onExport={handleExport}
-        selectedTimeRange={timeRange}
-        setSelectedTimeRange={setTimeRange}
-        customStart={customStart} 
-        setCustomStart={setCustomStart} 
-        customEnd={customEnd} 
-        setCustomEnd={setCustomEnd} 
-        onResetFilters={handleResetFilters}
-        exportStatus={exportStatus}
-        logTTL={logTTL}
-      />
+  <div class="oj-sm-padding-6x logs-page logs-page-root" style="display: flex; flex-direction: column; height: 100vh;">
+    <LogsHeader
+      search={search}
+      setSearch={setSearch}
+      applications={applications}
+      selectedAppIds={selectedAppIds}
+      setSelectedAppIds={setSelectedAppIds}
+      logLevels={logLevels}
+      setLogLevels={setLogLevels}
+      setPage={setPage}
+      onExport={handleExport}
+      selectedTimeRange={timeRange}
+      setSelectedTimeRange={setTimeRange}
+      customStart={customStart}
+      setCustomStart={setCustomStart}
+      customEnd={customEnd}
+      setCustomEnd={setCustomEnd}
+      onResetFilters={handleResetFilters}
+      exportStatus={exportStatus}
+      logTTL={logTTL}
+    />
+
+    <div style="flex: 1; overflow: auto;">
       <LogsTable loading={loading} error={error} dataProvider={dataProvider} columns={columns} />
+    </div>
+
+    <div style="padding-top: 1px;">
       <Pagination page={page} totalPages={totalPages} setPage={setPage} />
     </div>
-  );
+  </div>
+);
+
 }
