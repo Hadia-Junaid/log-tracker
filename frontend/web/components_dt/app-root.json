@@ -9,12 +9,9 @@
   "properties": {
     "appName": {
       "type": "string",
-      "value": "Log Tracker"
+      "value": ""
     },
     "userLogin": {
-      "type": "string"
-    },
-    "userId": {
       "type": "string"
     }
   },
