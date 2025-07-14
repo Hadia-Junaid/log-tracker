@@ -26,12 +26,18 @@
   color: red;
 }
 
-.app-count-badge {
+.risk-multiple-rules {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.risk-single-rule {
+  background-color: #fadddd;
   padding: 4px 8px;
-  background-color: #f3f4f6;
-  color: #4b5563;
-  font-size: 0.875rem;
   border-radius: 6px;
+  font-size: 0.8rem;
+  color: red;
 }
 
 .risk-list,
@@ -42,12 +48,14 @@
 }
 
 .risk-item {
-  border: 1px solid #e5e7eb;
-  padding: 12px;
-  border-radius: 6px;
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding: 12px 16px;
+  background-color: #f9fafb;
+  border: 1px solid #bdc2cc;
+  border-radius: 6px;
+  transition: box-shadow 0.2s ease-in-out;
 }
 
 .risk-app-info {
@@ -64,8 +72,6 @@
 }
 
 .risk-app-name {
-  font-size: 0.9rem;
-  font-weight: 500;
   color: #111827;
 }
 
@@ -74,56 +80,21 @@
   padding-left: 1rem;
   list-style-type: disc;
   font-size: 0.75rem;
-  color: #6b7280; /* Tailwind gray-500 */
+  color: #6b7280;
 }
 
 .risk-message {
   margin-bottom: 2px;
 }
 
-.risk-app-time {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  font-size: 0.75rem;
-  color: #6b7280;
-  margin-top: 4px;
+.risk-more-container {
+  text-align: center;
+  width: 100%;
 }
 
-.risk-app-metrics {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 4px;
-}
-
-.badge {
-  font-size: 0.7rem;
-  padding: 4px 8px;
-  border-radius: 9999px;
-  font-weight: 600;
-  text-transform: uppercase;
-}
-
-.high-risk {
-  background-color: #fee2e2;
-  color: #b91c1c;
-}
-
-.medium-risk {
-  background-color: #ffedd5;
-  color: #c2410c;
-}
-
-.low-risk {
-  background-color: #fef9c3;
-  color: #a16207;
-}
-
-.risk-more {
-  margin-top: 12px;
-  border-top: 1px solid #f3f4f6;
-  padding-top: 12px;
+.risk-more-container > oj-button {
+  width: 100%;
+  max-width: 200px;
 }
 
 .risk-empty-state {
@@ -157,8 +128,8 @@
 
 
 .risk-app-card {
-  border: 1px solid #e5e7eb;
-  background-color: #ffffff;
+  border: 1px solid #bdc2cc;
+  background-color: #f9fafb;
   border-radius: 0.5rem;
   padding: 1rem;
   transition: box-shadow 0.2s;
@@ -177,11 +148,6 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-.risk-app-name {
-  font-weight: 600;
-  font-size: 0.875rem;
-  color: #111827;
 }
 
 .risk-app-messages {

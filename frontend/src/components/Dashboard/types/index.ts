@@ -5,7 +5,8 @@ export interface PinnedApp {
     INFO: number;
     WARN: number;
     ERROR: number;
+    DEBUG: number;
   };
 }
 
-export type LogLevel = "INFO" | "WARN" | "ERROR" | string;
+export type LogLevel = "INFO" | "WARN" | "ERROR" | "DEBUG" | string;
