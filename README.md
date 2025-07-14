@@ -125,13 +125,19 @@ docker builder prune -f
 ---
 
 ### 4. Generate sample logs (Optional)
+
 cd mock-application-scripts/stream
+
 ./console.sh
+
 
 OR
 
+
 cd mock-application-scripts/file
+
 npm i
+
 node generateLogs.js
 
 ## 🛠 Notes
