@@ -4,7 +4,6 @@
         interface IntrinsicElements {
           'oj-input-text': any;
           'oj-input-search': any;
-          'oj-checkboxset': any;
           'oj-c-checkbox': any;
           'oj-button': any;
           'oj-avatar': any;
