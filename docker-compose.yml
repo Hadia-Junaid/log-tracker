@@ -102,4 +102,6 @@ services:
     depends_on:
       - redis
 
-
+networks:
+  default:
+    name: logtracker-network
