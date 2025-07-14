@@ -168,11 +168,11 @@ export function EditGroupDialog({
   };
 
   const handleAddMember = (member: MemberData) => {
-    // if (selectedMembers.length >= 10) {
-    //   setError('You can only add up to 10 members to a group in one action.');
-    //   setTimeout(() => setError(''), 3000);
-    //   return;
-    // };
+    if (selectedMembers.length >= 10) {
+      setError('You can only add up to 10 members to a group in one action.');
+      setTimeout(() => setError(''), 3000);
+      return;
+    };
     setSelectedMembers((prev) => [...prev, member]);
   };
 
