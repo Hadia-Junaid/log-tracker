@@ -55,11 +55,11 @@ const SettingsPanel = () => {
         const user = res.data.user
         if (!user) throw new Error("User not found")
 
-        setUserId(user._id)
+        setUserId(user.id)
         setUserEmail(user.email) // ✅ capture email
         setIsAdmin(user.is_admin === true)
 
-        const [logRes, retentionRes] = await Promise.all([getLogSettings(user._id), getRetention()])
+        const [logRes, retentionRes] = await Promise.all([getLogSettings(user.id), getRetention()])
 
         const { autoRefresh, autoRefreshTime, logsPerPage } = logRes.data
         const { retentionDays } = retentionRes.data
