@@ -317,17 +317,17 @@ export default function Applications({ path }: Props) {
                   Next
                 </oj-button>
 
-                <div class="oj-sm-margin-2x-start">
-                  <oj-select-single
-                    class="oj-form-control"
-                    label-hint="Page Size"
-                    data={pageSizeDataProvider}
-                    value={pageSize}
-                    onvalueChanged={(e: CustomEvent) => {
-                      setPageSize(e.detail.value);
-                      setCurrentPage(1); // Reset to first page when changing page size
-                    }}
-                  />
+                  <div style="margin-left: auto;">
+                <oj-select-single
+                  class="oj-form-control"
+                  data={pageSizeDataProvider}
+                  value={pageSize}
+                  onvalueChanged={(e: CustomEvent) => {
+                  setPageSize(e.detail.value);
+                  setCurrentPage(1); // Reset to first page when changing page size
+                  }}
+                  style="padding:0px 0; min-width: 150px; height: 45px;"
+                />
                 </div>
               </div>
             )}

@@ -261,19 +261,18 @@ export default function UserManagement(props: Props) {
                 Next
               </oj-button>
 
-              <div class="oj-sm-margin-2x-start">
+                <div style="margin-left: auto;">
                 <oj-select-single
                   class="oj-form-control"
-                  label-hint="Page Size"
                   data={pageSizeDataProvider}
                   value={pageSize}
                   onvalueChanged={(e: CustomEvent) => {
-                    setPageSize(e.detail.value);
-                    setCurrentPage(1); // Reset to first page when changing page size
+                  setPageSize(e.detail.value);
+                  setCurrentPage(1); // Reset to first page when changing page size
                   }}
-                  style="min-width: 120px; height: 36px;"
+                  style="padding:0px 0;min-width: 150px; height: 45px;"
                 />
-              </div>
+                </div>
             </div>
           )}
         </div>
