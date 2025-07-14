@@ -144,6 +144,7 @@
 .export-wrapper {
   position: relative;
   margin-right: 2.5rem;
+  min-height: 3rem;
 }
 
 .export-btn {
@@ -215,6 +216,7 @@
 .export-status-message {
   margin-top: 0.5em;
   padding: 0.5em 1em;
+  top: 3rem;
   border-radius: 4px;
   font-size: 1em;
   font-weight: 500;

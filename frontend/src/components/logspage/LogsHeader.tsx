@@ -165,7 +165,13 @@ export default function LogsHeader({
           label-edge="none"
           placeholder="Start Time"
           value={customStart ?? undefined}
-          onvalueChanged={(event) => setCustomStart(event.detail.value)}
+          onvalueChanged={(event) => {
+            const newStart = event.detail.value;
+            setCustomStart(newStart);
+            if (customEnd && newStart && new Date(newStart) > new Date(customEnd)) {
+              setCustomEnd(null);
+            }
+          }}
           class="oj-form-control-max-width-md input-filter datetime"
           disabled={selectedTimeRange !== 'custom'}
           max={currentDateTime}
@@ -183,7 +189,6 @@ export default function LogsHeader({
           class="oj-form-control-max-width-md input-filter datetime"
           disabled={selectedTimeRange !== 'custom'}
           max={currentDateTime}
-          // min={minDate}
           min={customStart ?? minDate}
         ></oj-input-date-time>
 

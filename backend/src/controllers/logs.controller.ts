@@ -8,6 +8,10 @@ import logger from '../utils/logger';
 // @ts-ignore
 import { Parser as Json2csvParser } from 'json2csv';
 // GET /api/logs/:userId
+import nodemailer from 'nodemailer';
+import fs from 'fs';
+import path from 'path';
+// GET /api/logs/:userId
 export const getLogs = async (req: Request, res: Response): Promise<void> => {
   try {
     const userId = req.user.id;
@@ -165,10 +169,19 @@ export const exportLogs = async (req: Request, res: Response): Promise<void> => 
       logQuery.message = { $regex: safeSearch, $options: 'i' };
     }
 
-    // 4. Query all logs (no pagination)
+    // 4. Count logs first
+    const logCount = await Log.countDocuments(logQuery);
+    if (logCount > 1000) {
+      // Trigger async email send (placeholder)
+      sendLogsByEmail(user, logQuery, is_csv === 'true');
+      res.status(200).json({ emailSent: true });
+      return;
+    }
+
+    // 5. Query all logs (no pagination)
     const logs = await Log.find(logQuery).sort({ timestamp: -1 }).lean();
 
-    // 5. Return as CSV or JSON
+    // 6. Return as CSV or JSON
     if (is_csv === 'true') {
       // Convert logs to CSV
       const fields = ['_id', 'application_id', 'timestamp', 'log_level', 'trace_id', 'message'];
@@ -196,6 +209,64 @@ export const exportLogs = async (req: Request, res: Response): Promise<void> => 
     res.status(500).json({ error: 'Failed to export logs', details: err });
   }
 };
+
+// Placeholder for async email sending
+async function sendLogsByEmail(user: any, logQuery: any, isCsv: boolean) {
+  try {
+    // Query all logs
+    const logs = await Log.find(logQuery).sort({ timestamp: -1 }).lean();
+    let fileBuffer: Buffer;
+    let filename: string;
+    let mimetype: string;
+    if (isCsv) {
+      const fields = ['_id', 'application_id', 'timestamp', 'log_level', 'trace_id', 'message'];
+      const opts = { fields };
+      const parser = new Json2csvParser(opts);
+      const csv = parser.parse(logs);
+      fileBuffer = Buffer.from(csv, 'utf-8');
+      filename = 'logs.csv';
+      mimetype = 'text/csv';
+    } else {
+      const allowedFields = ['_id', 'application_id', 'timestamp', 'log_level', 'trace_id', 'message'];
+      const filteredLogs = logs.map(log => {
+        const filtered: any = {};
+        const logObj = log as Record<string, any>;
+        allowedFields.forEach(field => { if (logObj[field] !== undefined) filtered[field] = logObj[field]; });
+        return filtered;
+      });
+      fileBuffer = Buffer.from(JSON.stringify(filteredLogs, null, 2), 'utf-8');
+      filename = 'logs.json';
+      mimetype = 'application/json';
+    }
+    // Setup nodemailer transport
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT || '587', 10),
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+    // Send email
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM,
+      to: user.email,
+      subject: 'Your log export is ready',
+      text: 'Attached is your requested log export.',
+      attachments: [
+        {
+          filename,
+          content: fileBuffer,
+          contentType: mimetype,
+        },
+      ],
+    });
+    logger.info(`Sent logs export to ${user.email}`);
+  } catch (err) {
+    logger.error(`Failed to send logs export to ${user?.email}: ${err}`);
+  }
+}
 
 export const userdata = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -243,7 +314,7 @@ export const userdata = async (req: Request, res: Response): Promise<void> => {
 // Helper to escape regex special characters
 function escapeRegex(str: string) {
   return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-}
+} 
 
 // GET /api/logs/activity - Get aggregated log activity data for charts
 export const getLogActivityData = async (req: Request, res: Response): Promise<void> => {
