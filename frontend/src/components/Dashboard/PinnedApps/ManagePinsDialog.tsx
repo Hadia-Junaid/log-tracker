@@ -33,6 +33,10 @@ const ManagePinsDialog = ({ userId, open, onClose, onRefresh }: Props) => {
   useEffect(() => {
     if (pinnedIds.length > 0) {
       setSelectedAppIds(pinnedIds);
+      if (!loading && pinnedIds.length === 4) {
+        setMessage("You can only pin up to 4 applications.");
+        setAutoClose(false);
+      }
     }
   }, [pinnedIds]);
 
@@ -57,10 +61,16 @@ const ManagePinsDialog = ({ userId, open, onClose, onRefresh }: Props) => {
         if (autoClose) {
           onClose();
         }
-      },1500);
+      }, 750);
       return () => clearTimeout(timer);
     }
   }, [message, autoClose, onClose]);
+
+  useEffect(() => {
+    if (open) {
+      refresh();
+    }
+  }, [open, refresh]);
 
   const handleCheckboxChange = (event: CustomEvent) => {
     const value = event.detail.value as string[];
@@ -108,7 +118,7 @@ const ManagePinsDialog = ({ userId, open, onClose, onRefresh }: Props) => {
         <div class="manage-pins-header-subtitle">Select applications to pin</div>
       </div>
       <div slot="body" class="manage-pins-container">
-        {loading && <div class="loading-spinner">Loading...</div>}
+        {loading && <div class="loading-spinner"></div>}
         {error && <div class="error-message">Failed to load applications.</div>}
 
         <div class={`pin-message ${getMessageClass()}`}>{message}</div>

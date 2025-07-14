@@ -76,22 +76,43 @@ export const getPinnedApps = async (req: Request, res: Response): Promise<void> 
 };
 
 export const updatePinnedApps = async (req: Request, res: Response): Promise<void> => {
-  const { id } = req.params;
-  const { appIds } = req.body;
+  const { id, appId: singleAppId } = req.params;
 
   if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
     logger.warn(`Invalid userId: ${id}`);
-    res.status(400).json({ error: 'Invalid userId' });
-    return;
-  }
-
-  if (!Array.isArray(appIds)) {
-    res.status(400).json({ error: 'appIds must be an array of application IDs' });
+    res.status(400).json({ error: "Invalid userId" });
     return;
   }
 
   try {
-    // Validate that all appIds exist
+    // If appId is passed → handle single unpin
+    if (singleAppId) {
+      const updatedUser = await User.findByIdAndUpdate(
+        id,
+        { $pull: { pinned_applications: singleAppId } },
+        { new: true }
+      ).populate('pinned_applications', 'name description');
+
+      if (!updatedUser) {
+        res.status(404).json({ error: "User not found" });
+        return;
+      }
+
+      res.status(200).json({
+        message: "Pinned application removed successfully",
+        pinned_applications: updatedUser.pinned_applications,
+      });
+      return;
+    }
+
+    const { appIds } = req.body;
+
+    // Bulk update logic
+    if (!Array.isArray(appIds)) {
+      res.status(400).json({ error: "appIds must be an array" });
+      return;
+    }
+
     const validAppIds = await Application.find({ _id: { $in: appIds } }).distinct("_id");
 
     if (validAppIds.length !== appIds.length) {

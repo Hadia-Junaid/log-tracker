@@ -1,21 +1,44 @@
 /** @jsx h */
 import { h } from "preact";
-import { Pin } from "lucide-preact";
+import { PinOff } from "lucide-preact";
 import CardRow from "../utils/CardRow";
 import { PinnedApp } from "../types";
 import "../../../styles/dashboard/pinnedapps.css";
+import axios from "../../../api/axios";
+interface Props {
+  app: PinnedApp;
+  userId: string | undefined;
+  onUnpin?: () => void;
+}
 
-const PinnedAppCard = ({ app }: { app: PinnedApp }) => {
+
+const PinnedAppCard = ({ app, userId, onUnpin }: Props) => {
   const totalLogs =
     (app.logCounts.INFO ?? 0) +
     (app.logCounts.WARN ?? 0) +
     (app.logCounts.ERROR ?? 0);
 
+  const handleUnpin = async () => {
+    try {
+      await axios.patch(`/dashboard/pinned/${userId}/${app._id}`);
+      onUnpin?.(); 
+    } catch (error) {
+      console.error("Failed to unpin app", error);
+    }
+  };
+
   return (
     <div class="pinned-card oj-panel" role="button" tabindex={0}>
       <div class="pinned-card-header">
         <span class="pinned-card-title">{app.appName}</span>
-        <Pin class="oj-icon-size-sm oj-text-color-secondary padding-right-sm" aria-hidden="true" />
+        <PinOff
+          class="oj-icon-size-sm oj-text-color-secondary padding-right-sm unpin-icon"
+          aria-hidden="true"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleUnpin();
+          }}
+        />
       </div>
 
       <div class="pinned-card-body">

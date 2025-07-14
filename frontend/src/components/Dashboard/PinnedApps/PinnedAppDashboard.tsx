@@ -55,7 +55,7 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
         <div class="pinned-cards-wrapper">
           {pinnedApps.map((app) => (
             <div key={app._id} class="pinned-card-col">
-              <PinnedAppCard app={app} />
+              <PinnedAppCard app={app} userId={userId} onUnpin={fetchPinnedApps} />
             </div>
           ))}
         </div>
