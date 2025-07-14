@@ -364,7 +364,7 @@ export default function AddApplicationDialog({
             </div>
 
             <div class="oj-form-item">
-              <oj-label for="appIsActive">Status (Active)</oj-label>
+              <oj-label for="appIsActive">Status (Active/Inactive)</oj-label>
               <div class="switch-wrapper">
                 <oj-switch
                   id="appIsActive"
