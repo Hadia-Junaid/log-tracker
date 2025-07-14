@@ -8,23 +8,27 @@ import axios from "../../../api/axios";
 interface Props {
   app: PinnedApp;
   userId: string | undefined;
-  onUnpin?: () => void;
+  onUnpin?: (id: string) => () => void;
 }
 
 
-const PinnedAppCard = ({ app, userId, onUnpin }: Props) => {
+const PinnedAppCard = ({ app, userId, onUnpin: onUnpin }: Props) => {
   const totalLogs =
     (app.logCounts.INFO ?? 0) +
     (app.logCounts.WARN ?? 0) +
     (app.logCounts.ERROR ?? 0);
 
   const handleUnpin = async () => {
-    try {
-      await axios.patch(`/dashboard/pinned/${userId}/${app._id}`);
-      onUnpin?.(); 
-    } catch (error) {
-      console.error("Failed to unpin app", error);
-    }
+    if (!userId || !app._id) return;
+
+  const rollback = onUnpin?.(app._id);
+
+  try {
+    await axios.patch(`/dashboard/pinned/${userId}/${app._id}`);
+  } catch (err) {
+    console.error("Failed to unpin app", err);
+    rollback?.(); // Restore UI if API call fails
+  }
   };
 
   return (

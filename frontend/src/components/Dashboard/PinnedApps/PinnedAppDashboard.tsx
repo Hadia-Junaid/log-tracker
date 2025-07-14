@@ -10,17 +10,26 @@ import "../../../styles/dashboard/pinnedapps.css";
 
 const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
   const [pinnedApps, setPinnedApps] = useState<PinnedApp[]>([]);
+  const [pinnedIds, setPinnedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [isManageDialogOpen, setManageDialogOpen] = useState(false);
+  const [allApps, setAllApps] = useState<{ _id: string; name: string }[]>([]);
 
   const fetchPinnedApps = useCallback(async () => {
     if (!userId) return;
     try {
       setLoading(true);
       setError(false);
-      const res = await axios.get(`/dashboard/pinned/${userId}`);
-      setPinnedApps(res.data.pinned_applications || []);
+      const [pinnedRes, activeRes] = await Promise.all([
+        axios.get(`/dashboard/pinned/${userId}`),
+        axios.get(`/dashboard/active/${userId}`),
+      ]);
+      const pinned = pinnedRes.data.pinned_applications || [];
+      const active = activeRes.data.active_applications || [];
+      setPinnedApps(pinned);
+      setPinnedIds(pinned.map((a: PinnedApp) => a._id));
+    setAllApps(active.map((a: any) => ({ _id: a._id, name: a.name })));
     } catch (err) {
       console.error("Failed to fetch pinned applications:", err);
       setError(true);
@@ -55,7 +64,17 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
         <div class="pinned-cards-wrapper">
           {pinnedApps.map((app) => (
             <div key={app._id} class="pinned-card-col">
-              <PinnedAppCard app={app} userId={userId} onUnpin={fetchPinnedApps} />
+              <PinnedAppCard
+                app={app}
+                userId={userId}
+                onUnpin={(id) => {
+                  setPinnedApps((prev) => prev.filter((a) => a._id !== id));
+                  setPinnedIds((prev) => prev.filter((a) => a !== id));
+                  return () => {
+                    setPinnedApps((prev) => [...prev, app]);
+                    setPinnedIds((prev) => [...prev, app._id]);
+                  };
+                }} />
             </div>
           ))}
         </div>
@@ -63,8 +82,13 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
       <ManagePinsDialog
         userId={userId}
         open={isManageDialogOpen}
+        pinnedIds={pinnedIds}
+        setPinnedIds={setPinnedIds}
         onClose={() => setManageDialogOpen(false)}
-        onRefresh={fetchPinnedApps} 
+        onRefresh={fetchPinnedApps}
+        allApps={allApps}
+        loading={loading}
+        error={error}
       />
     </div>
   );

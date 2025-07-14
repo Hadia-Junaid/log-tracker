@@ -1,7 +1,6 @@
 /** @jsx h */
 import { h } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { usePinnedApp } from "./usePinnedApp";
 import axios from "../../../api/axios";
 import "../../../styles/dashboard/pinnedapps.css";
 import "ojs/ojdialog";
@@ -14,31 +13,30 @@ interface Props {
   open: boolean;
   onClose: () => void;
   onRefresh?: () => Promise<void>;
+  pinnedIds: string[];
+  setPinnedIds: (ids: string[]) => void;
+  allApps: { _id: string; name: string }[];
+  loading: boolean;
+  error: boolean;
 }
 
-const ManagePinsDialog = ({ userId, open, onClose, onRefresh }: Props) => {
+const ManagePinsDialog = ({ userId, open, onClose, onRefresh, pinnedIds, setPinnedIds, allApps, loading,
+  error, }: Props) => {
   const dialogRef = useRef<HTMLElement | null>(null);
-  const {
-    loading,
-    error,
-    refresh,
-    pinnedIds,
-    allApps,
-  } = usePinnedApp(userId);
 
   const [selectedAppIds, setSelectedAppIds] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [autoClose, setAutoClose] = useState(false);
 
   useEffect(() => {
-    if (pinnedIds.length > 0) {
+    if (!loading) {
       setSelectedAppIds(pinnedIds);
-      if (!loading && pinnedIds.length === 4) {
+      if (pinnedIds.length === 4) {
         setMessage("You can only pin up to 4 applications.");
         setAutoClose(false);
       }
     }
-  }, [pinnedIds]);
+  }, [pinnedIds, loading]);
 
   useEffect(() => {
     const dialogEl = dialogRef.current as any;
@@ -66,12 +64,6 @@ const ManagePinsDialog = ({ userId, open, onClose, onRefresh }: Props) => {
     }
   }, [message, autoClose, onClose]);
 
-  useEffect(() => {
-    if (open) {
-      refresh();
-    }
-  }, [open, refresh]);
-
   const handleCheckboxChange = (event: CustomEvent) => {
     const value = event.detail.value as string[];
     if (value.length === 4) {
@@ -85,10 +77,18 @@ const ManagePinsDialog = ({ userId, open, onClose, onRefresh }: Props) => {
 
   const handleDone = async () => {
     if (!userId) return;
+
+    const hasChanged = JSON.stringify(selectedAppIds) !== JSON.stringify(pinnedIds);
+    if (!hasChanged) {
+      onClose();
+      return;
+    }
+
     try {
       setAutoClose(true);
       await axios.patch(`/dashboard/pinned/${userId}`, { appIds: selectedAppIds });
       setMessage("Pins updated successfully.");
+      setPinnedIds(selectedAppIds);
       await onRefresh?.();
     } catch (err) {
       console.error("Failed to update pins", err);
