@@ -36,7 +36,7 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [userId, pinnedApps.length]);
 
   useEffect(() => {
     fetchPinnedApps();
@@ -44,6 +44,7 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
 
   return (
     <div class="pinned-dashboard oj-panel">
+      
       <div class="pinned-dashboard-header">
         <div class="pinned-dashboard-heading">
           <Pin class="oj-icon-size-sm oj-text-color-brand" aria-label="Pinned Icon" />

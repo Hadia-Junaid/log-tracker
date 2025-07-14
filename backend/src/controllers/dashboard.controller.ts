@@ -33,14 +33,48 @@ export const getPinnedApps = async (req: Request, res: Response): Promise<void> 
         return;
     }
 
+    // Get user's active applications to validate pinned apps
+    const userGroups = await UserGroup.find({ members: user._id }).lean();
+    const assignedAppIds = userGroups.length > 0 ? [
+        ...new Set(userGroups.flatMap(group => group.assigned_applications.map(id => id.toString())))
+    ] : [];
+
+    const activeApps = await Application.find({
+        _id: { $in: assignedAppIds },
+        isActive: true
+    }).lean();
+
+    const activeAppIds = activeApps.map(app => app._id.toString());
+    logger.info(`User ${userId} has ${activeAppIds.length} active applications`);
+
+    // Filter out pinned apps that are no longer active
+    const validPinnedApps = pinnedApps.filter(appId => 
+        activeAppIds.includes(appId.toString())
+    );
+
+    // If any pinned apps were removed, update the user's pinned_applications
+    if (validPinnedApps.length !== pinnedApps.length) {
+        const removedCount = pinnedApps.length - validPinnedApps.length;
+        logger.info(`Removing ${removedCount} invalid pinned applications for user ${userId}`);
+        
+        await User.findByIdAndUpdate(userId, {
+            pinned_applications: validPinnedApps
+        });
+    }
+
+    if (validPinnedApps.length === 0) {
+        res.status(200).json({ pinned_applications: [] });
+        return;
+    }
+
     const appNames = await Application.find({
-        _id: { $in: pinnedApps }
+        _id: { $in: validPinnedApps }
     }).select('name').lean();
 
     const logStats = await Log.aggregate([
         {
             $match: {
-                application_id: { $in: pinnedApps }
+                application_id: { $in: validPinnedApps }
             }
         },
         {
@@ -67,7 +101,7 @@ export const getPinnedApps = async (req: Request, res: Response): Promise<void> 
     }
 
     // Build response array with log counts
-    const response = pinnedApps.map((appId: any) => ({
+    const response = validPinnedApps.map((appId: any) => ({
         _id: appId.toString(),
         appName: appNames.find(a => a._id.toString() === appId.toString())?.name || 'Unknown', 
         logCounts: logCountsMap[appId.toString()] || {}
@@ -142,6 +176,69 @@ export const updatePinnedApps = async (req: Request, res: Response): Promise<voi
     logger.error(`Failed to update pinned apps for user ${id}:`, error);
     res.status(500).json({ error: 'Internal server error' });
   }
+};
+
+export const cleanupPinnedApps = async (req: Request, res: Response): Promise<void> => {
+  const userId = req.params.id;
+  logger.info(`Cleaning up pinned applications for user: ${userId}`);
+
+  if (!userId) {
+    logger.warn("User ID is required to cleanup pinned apps");
+    res.status(400).json({ error: "User ID is required" });
+    return;
+  }
+
+  const user = await User.findById(userId).lean();
+  if (!user) {
+    logger.warn(`User not found: ${userId}`);
+    res.status(404).json({ error: 'User not found' });
+    return;
+  }
+
+  const pinnedApps = user.pinned_applications;
+  if (!pinnedApps || pinnedApps.length === 0) {
+    res.status(200).json({ 
+      message: 'No pinned applications to cleanup',
+      removed_count: 0,
+      remaining_count: 0
+    });
+    return;
+  }
+
+  // Get user's active applications
+  const userGroups = await UserGroup.find({ members: user._id }).lean();
+  const assignedAppIds = userGroups.length > 0 ? [
+    ...new Set(userGroups.flatMap(group => group.assigned_applications.map(id => id.toString())))
+  ] : [];
+
+  const activeApps = await Application.find({
+    _id: { $in: assignedAppIds },
+    isActive: true
+  }).lean();
+
+  const activeAppIds = activeApps.map(app => app._id.toString());
+
+  // Filter out pinned apps that are no longer active
+  const validPinnedApps = pinnedApps.filter(appId => 
+    activeAppIds.includes(appId.toString())
+  );
+
+  const removedCount = pinnedApps.length - validPinnedApps.length;
+
+  if (removedCount > 0) {
+    logger.info(`Removing ${removedCount} invalid pinned applications for user ${userId}`);
+    
+    await User.findByIdAndUpdate(userId, {
+      pinned_applications: validPinnedApps
+    });
+  }
+
+  res.status(200).json({
+    message: `Cleaned up ${removedCount} invalid pinned applications`,
+    removed_count: removedCount,
+    remaining_count: validPinnedApps.length,
+    pinned_applications: validPinnedApps
+  });
 };
 
 // Fetch Active Applications
