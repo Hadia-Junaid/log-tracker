@@ -239,3 +239,10 @@
   border: 1.5px solid #b00020;
 }
 
+.logs-description {
+  font-size: 1rem;
+  color: var(--oj-core-text-color-secondary);
+  margin-top: 0px;
+  margin-bottom: 0.5rem;
+}
+
