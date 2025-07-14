@@ -271,7 +271,7 @@ useEffect(() => {
         try {
           const json = JSON.parse(text);
           if (json && json.emailSent) {
-            setExportStatus({ type: 'success', message: 'You will receive an email with the file shortly.' });
+            setExportStatus({ type: 'success', message: 'You will receive an email.' });
             setTimeout(() => setExportStatus(null), 4000);
             return;
           }
@@ -291,7 +291,7 @@ useEffect(() => {
       } else {
         // JSON export
         if (res.data && res.data.emailSent) {
-          setExportStatus({ type: 'success', message: 'You will receive an email with the file shortly.' });
+          setExportStatus({ type: 'success', message: 'You will receive an email.' });
           setTimeout(() => setExportStatus(null), 4000);
           return;
         }

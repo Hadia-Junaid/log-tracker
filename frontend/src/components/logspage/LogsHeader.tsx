@@ -5,6 +5,7 @@ import 'oj-c/select-multiple';
 import 'oj-c/select-single';
 import 'ojs/ojdatetimepicker';
 import { useEffect, useState } from "preact/hooks";
+import { useRef } from "preact/hooks";
 
 interface Application {
   _id: string;
@@ -58,6 +59,7 @@ export default function LogsHeader({
   logTTL
 }: LogsHeaderProps) {
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportWrapperRef = useRef<HTMLDivElement>(null);
   const appDataProvider = new ArrayDataProvider(applications, { keyAttributes: "_id" });
   const toggleLogLevel = (level: string) => {
     setLogLevels((prev: string[]) =>
@@ -89,13 +91,28 @@ export default function LogsHeader({
     return () => clearInterval(interval);
   }, []);
 
+  // Close export menu on outside click
+  useEffect(() => {
+    if (!showExportMenu) return;
+    const handleClick = (event: MouseEvent) => {
+      if (
+        exportWrapperRef.current &&
+        !exportWrapperRef.current.contains(event.target as Node)
+      ) {
+        setShowExportMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showExportMenu]);
+
   const minDate = logTTL ? new Date(Date.now() - logTTL * 1000).toISOString() : undefined;
 
   return (
     <>
       <div class="oj-flex oj-sm-margin-4x-bottom" style="justify-content: space-between; align-items: center;">
         <h2 class="oj-typography-heading-lg">Logs</h2>
-        <div class="export-wrapper">
+        <div class="export-wrapper" ref={exportWrapperRef}>
           <button
             class="export-btn"
             onClick={() => setShowExportMenu(prev => !prev)}
