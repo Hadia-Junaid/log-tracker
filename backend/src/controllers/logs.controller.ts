@@ -444,6 +444,7 @@ export const getLogActivityData = async (
 
     const assignedApplications = await Application.find({
       _id: { $in: groupAppIds },
+      isActive: true,
     })
       .select("_id name isActive")
       .lean();
@@ -469,7 +470,7 @@ export const getLogActivityData = async (
 
     console.log("Log activity query:", logQuery);
 
-    const aggregationPipeline: any[] = [
+     const aggregationPipeline: any[] = [
       { $match: logQuery },
       {
         $group: {
@@ -490,7 +491,7 @@ export const getLogActivityData = async (
           _id: 0,
           groupId: {
             $dateToString: {
-              format: "%Y-%m-%dT%H:00:00Z", // ISO UTC string
+              format: "%Y-%m-%dT%H:00:00Z", // Matches generated UTC hours
               date: "$_id.hour",
               timezone: "UTC",
             },
@@ -506,11 +507,14 @@ export const getLogActivityData = async (
 
     console.log("Aggregated log activity data:", aggregatedData);
 
-    // ✅ Generate hourly group labels between start_time and end_time
+    const knownLogLevels = ["DEBUG", "INFO", "WARN", "ERROR"]; // fallback if no data
+
+
+    // Generate hourly UTC group labels
     function generateHourlyGroups(start: Date, end: Date): string[] {
       const groups: string[] = [];
       const current = new Date(start.getTime());
-      current.setUTCMinutes(0, 0, 0); // Truncate to UTC hour
+      current.setUTCMinutes(0, 0, 0); // Truncate to UTC top of hour
 
       while (current <= end) {
         const isoHour = current.toISOString().slice(0, 13); // '2025-07-14T11'
@@ -524,15 +528,15 @@ export const getLogActivityData = async (
 
     const startDate = new Date(start_time as string);
     const endDate = new Date(end_time as string);
-
     const allHours = generateHourlyGroups(startDate, endDate);
 
-    // ✅ Extract unique log levels from aggregation result
-    const logLevels = [
-      ...new Set(aggregatedData.map((item) => item.seriesId)),
-    ].sort();
+    // Use known levels if aggregation returned none (no log activity)
+    const logLevels =
+      aggregatedData.length > 0
+        ? [...new Set(aggregatedData.map((item) => item.seriesId))].sort()
+        : knownLogLevels;
 
-    // ✅ Normalize data: fill in 0 for missing hour+log_level combinations
+    // Normalize chart data
     const chartData: any[] = [];
     allHours.forEach((hour) => {
       logLevels.forEach((level) => {
@@ -547,7 +551,6 @@ export const getLogActivityData = async (
       });
     });
 
-    // ✅ Send final response
     res.status(200).json({
       data: chartData,
       groups: allHours,
