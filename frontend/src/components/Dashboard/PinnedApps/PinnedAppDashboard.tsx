@@ -10,34 +10,33 @@ import "../../../styles/dashboard/pinnedapps.css";
 
 const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
   const [pinnedApps, setPinnedApps] = useState<PinnedApp[]>([]);
+  const [pinnedIds, setPinnedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [isManageDialogOpen, setManageDialogOpen] = useState(false);
-  const [showCleanupNotification, setShowCleanupNotification] = useState(false);
+  const [allApps, setAllApps] = useState<{ _id: string; name: string }[]>([]);
 
   const fetchPinnedApps = useCallback(async () => {
     if (!userId) return;
     try {
       setLoading(true);
       setError(false);
-      const res = await axios.get(`/dashboard/pinned/${userId}`);
-      const newPinnedApps = res.data.pinned_applications || [];
-      
-      // Check if any pinned apps were removed (this would happen if they're no longer active)
-      if (newPinnedApps.length < pinnedApps.length && pinnedApps.length > 0) {
-        setShowCleanupNotification(true);
-        // Hide notification after 5 seconds
-        setTimeout(() => setShowCleanupNotification(false), 5000);
-      }
-      
-      setPinnedApps(newPinnedApps);
+      const [pinnedRes, activeRes] = await Promise.all([
+        axios.get(`/dashboard/pinned/${userId}`),
+        axios.get(`/dashboard/active/${userId}`),
+      ]);
+      const pinned = pinnedRes.data.pinned_applications || [];
+      const active = activeRes.data.active_applications || [];
+      setPinnedApps(pinned);
+      setPinnedIds(pinned.map((a: PinnedApp) => a._id));
+    setAllApps(active.map((a: any) => ({ _id: a._id, name: a.name })));
     } catch (err) {
       console.error("Failed to fetch pinned applications:", err);
       setError(true);
     } finally {
       setLoading(false);
     }
-  }, [userId, pinnedApps.length]);
+  }, [userId]);
 
   useEffect(() => {
     fetchPinnedApps();
@@ -45,19 +44,7 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
 
   return (
     <div class="pinned-dashboard oj-panel">
-      {showCleanupNotification && (
-        <div class="cleanup-notification" style={{
-          backgroundColor: '#fff3cd',
-          border: '1px solid #ffeaa7',
-          borderRadius: '4px',
-          padding: '8px 12px',
-          marginBottom: '12px',
-          fontSize: '14px',
-          color: '#856404'
-        }}>
-          Some pinned applications were automatically removed as they are no longer available to you.
-        </div>
-      )}
+      
       <div class="pinned-dashboard-header">
         <div class="pinned-dashboard-heading">
           <Pin class="oj-icon-size-sm oj-text-color-brand" aria-label="Pinned Icon" />
@@ -78,7 +65,17 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
         <div class="pinned-cards-wrapper">
           {pinnedApps.map((app) => (
             <div key={app._id} class="pinned-card-col">
-              <PinnedAppCard app={app} />
+              <PinnedAppCard
+                app={app}
+                userId={userId}
+                onUnpin={(id) => {
+                  setPinnedApps((prev) => prev.filter((a) => a._id !== id));
+                  setPinnedIds((prev) => prev.filter((a) => a !== id));
+                  return () => {
+                    setPinnedApps((prev) => [...prev, app]);
+                    setPinnedIds((prev) => [...prev, app._id]);
+                  };
+                }} />
             </div>
           ))}
         </div>
@@ -86,8 +83,13 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
       <ManagePinsDialog
         userId={userId}
         open={isManageDialogOpen}
+        pinnedIds={pinnedIds}
+        setPinnedIds={setPinnedIds}
         onClose={() => setManageDialogOpen(false)}
-        onRefresh={fetchPinnedApps} 
+        onRefresh={fetchPinnedApps}
+        allApps={allApps}
+        loading={loading}
+        error={error}
       />
     </div>
   );

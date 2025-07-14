@@ -114,7 +114,7 @@
 .pinned-card-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 1rem;
 }
 
@@ -129,6 +129,18 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.unpin-icon {
+  cursor: pointer;
+  border: solid 1px #474747; /* gray-300 */
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.unpin-icon:hover {
+  background-color: #f3f4f6; /* gray-100 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* === Card Row === */
