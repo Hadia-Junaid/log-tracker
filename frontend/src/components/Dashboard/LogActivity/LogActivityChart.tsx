@@ -323,7 +323,9 @@ const LogActivityChart = () => {
           <oj-c-line-chart
             id="volumeLineChart"
             data={chartProvider}
-            ref={chartRef}
+            ref={(el: HTMLElement | null) => {
+              chartRef.current = el;
+            }}
             groups={groups}
             series={visibleSeries}
             orientation="vertical"
