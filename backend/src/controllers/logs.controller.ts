@@ -471,8 +471,6 @@ export const getLogActivityData = async (
       if (end_time) logQuery.timestamp.$lte = new Date(end_time as string);
     }
 
-    console.log("Log activity query:", logQuery);
-
      const aggregationPipeline: any[] = [
       { $match: logQuery },
       {
@@ -508,10 +506,7 @@ export const getLogActivityData = async (
 
     const aggregatedData = await Log.aggregate(aggregationPipeline);
 
-    console.log("Aggregated log activity data:", aggregatedData);
-
     const knownLogLevels = ["DEBUG", "INFO", "WARN", "ERROR"]; // fallback if no data
-
 
     // Generate hourly UTC group labels
     function generateHourlyGroups(start: Date, end: Date): string[] {

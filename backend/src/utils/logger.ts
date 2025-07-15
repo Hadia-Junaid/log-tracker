@@ -24,12 +24,5 @@ const logger = winston.createLogger({
   ],
 });
 
-
-export const morganStream = {
-  write: (message: string) => {
-    logger.info(message.trim());
-  },
-};
-
 // Export the logger instance
 export default logger;
