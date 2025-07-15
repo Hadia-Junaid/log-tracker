@@ -13,7 +13,6 @@ export const fetchUserFromDirectory = async (
 
   const domain = config.get<string>("google.admin.domain");
 
-  try {
     const res = await admin.users.get({ userKey: email });
     const user = res.data;
 
@@ -27,13 +26,4 @@ export const fetchUserFromDirectory = async (
       name: user.name?.fullName || "",
       email: user.primaryEmail,
     };
-  } catch (err: any) {
-    // treat "user not found" as a soft fail
-    if (err.code === 404 || err?.response?.status === 404) {
-      return null;
-    }
-
-    // Other errors are considered hard failures so we just return 500 for those
-    throw err;
-  }
 };

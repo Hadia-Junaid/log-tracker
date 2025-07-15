@@ -27,7 +27,6 @@ export const getAdminDirectoryService = async () => {
         return adminDirectoryService; // Return existing instance if already initialized
     }
 
-    try {
         // Load the service account credentials from the JSON file
         const auth = new GoogleAuth({
             keyFile: SERVICE_ACCOUNT_KEY_PATH,
@@ -46,10 +45,4 @@ export const getAdminDirectoryService = async () => {
 
         logger.info('Google Admin SDK Directory Service initialized successfully.');
         return adminDirectoryService;
-
-    } catch (error) {
-        logger.error('Error initializing Google Admin SDK Directory Service:', error);
-        // In a real application, you might want to throw the error or handle it more gracefully
-        throw new Error('Failed to initialize Google Admin SDK Directory Service.');
-    }
 };

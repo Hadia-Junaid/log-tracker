@@ -6,4 +6,3 @@ export function isMongoDuplicateKeyError(error: unknown): error is { code: numbe
     (error as any).code === 11000
   );
 }
-
