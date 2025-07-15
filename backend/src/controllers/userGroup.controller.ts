@@ -1,12 +1,13 @@
 import { Request, Response } from "express";
 import UserGroup from "../models/UserGroup";
-import User from "../models/User";
+import User, { IUser } from "../models/User";
 import Application from "../models/Application";
 import logger from "../utils/logger";
 import mongoose from "mongoose";
 import { fetchUserFromDirectory } from "../utils/fetchUserFromDirectory";
 import { getSuperAdminEmails } from "../utils/getSuperAdminEmails";
 import { createUserGroupSchema, updateUserGroupSchema } from "../validators/userGroup.validator";
+import { any } from "joi";
 
 export const createUserGroup = async (
   req: Request,
@@ -51,38 +52,88 @@ export const createUserGroup = async (
 
   const verifiedMemberIds: mongoose.Types.ObjectId[] = [];
 
-  // Only process members if the array is not empty
-  if (members.length > 0) {
-    for (const email of members) {
-      let user = await User.findOne({ email });
+  // // Only process members if the array is not empty
+  // if (members.length > 0) {
+  //   for (const email of members) {
+  //     let user = await User.findOne({ email });
 
-      if (!user) {
-        const userData = await fetchUserFromDirectory(email);
-        if (!userData) {
-          res
-            .status(404)
-            .json({ error: `User ${email} not found in directory API.` });
-          return;
-        }
+  //     if (!user) {
+  //       const userData = await fetchUserFromDirectory(email);
+  //       if (!userData) {
+  //         res
+  //           .status(404)
+  //           .json({ error: `User ${email} not found in directory API.` });
+  //         return;
+  //       }
 
-        user = new User({
-          email: userData.email,
-          name: userData.name,
-          pinned_applications: [],
-          settings: {
-            autoRefresh: false,
-            autoRefreshTime: 30,
-            logsPerPage: 50,
-          },
-        });
+  //       user = new User({
+  //         email: userData.email,
+  //         name: userData.name,
+  //         pinned_applications: [],
+  //         settings: {
+  //           autoRefresh: false,
+  //           autoRefreshTime: 30,
+  //           logsPerPage: 50,
+  //         },
+  //       });
 
-        await user.save();
-        logger.info(` Created new user from directory API: ${email}`);
-      }
+  //       await user.save();
+  //       logger.info(` Created new user from directory API: ${email}`);
+  //     }
 
-      verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
+  //     verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
+  //   }
+  // }
+
+  // Get all existing users
+  //Get array of emails from members
+  const memberEmails = members.map((m: { email: string }) => m.email);
+  const existingUsers = await User.find({ email: { $in: memberEmails } });
+  // If any members NOT in existingUsers, add them to Users 
+  console.log("Existing users",existingUsers)
+  // new Members
+  const newMembers = members.filter(
+  (member: { email: string }) =>
+    !existingUsers.some(user => user.email === member.email)
+);
+  console.log("New members to be added:", newMembers);
+
+
+  // Add newMembers to the User db
+
+  // Build new user documents
+  const newUserDocs = newMembers.map((member: { name: string; email: string }) => ({
+    email: member.email,
+    name: member.name,
+    is_active: true,
+    pinned_applications: [],
+    settings: {
+      autoRefresh: false,
+      autoRefreshTime: 30,
+      logsPerPage: 50,
+    },
+  }));
+
+  // Insert all new users
+  let insertedUsers: any[] = [];
+  if (newUserDocs.length > 0) {
+    try {
+      insertedUsers = await User.insertMany(newUserDocs, { ordered: false });
+    } catch (err) {
+      console.error("Error inserting new users:", err);
+      // Optionally handle duplicate key errors or others here
     }
   }
+  // Combine existing and inserted users
+const allUsers = [...existingUsers, ...insertedUsers];
+
+// Add their ObjectIds to verifiedMemberIds
+allUsers.forEach(user => {
+  if (user._id) {
+    verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
+  }
+});
+   
 
   const userGroup = new UserGroup({
     name,
@@ -111,6 +162,7 @@ export const updateUserGroup = async (
     return;
   }
 
+
   const group = await UserGroup.findById(id);
   if (!group) {
     res.status(404).json({ error: "User group not found" });
@@ -137,37 +189,63 @@ export const updateUserGroup = async (
 
   const superAdminEmails = getSuperAdminEmails();
   const verifiedMemberIds: mongoose.Types.ObjectId[] = [];
+  console.log("Members array", members);
 
-  for (const email of members) {
-    let user = await User.findOne({ email }).select("_id");
+  // Get all existing users
+  //Get array of emails from members
+  const memberEmails = members.map((m: { email: string }) => m.email);
+  const existingUsers = await User.find({ email: { $in: memberEmails } });
+  // If any members NOT in existingUsers, add them to Users 
+  console.log("Existing users",existingUsers)
+  // new Members
+  const newMembers = members.filter(
+  (member: { email: string }) =>
+    !existingUsers.some(user => user.email === member.email)
+);
+  console.log("New members to be added:", newMembers);
 
-    if (!user) {
-      const userData = await fetchUserFromDirectory(email);
-      if (!userData) {
-        res
-          .status(404)
-          .json({ error: `User ${email} not found in directory API.` });
-        return;
-      }
 
-      user = await User.create({
-        email: userData.email,
-        name: userData.name,
-        pinned_applications: [],
-        settings: {
-          autoRefresh: false,
-          autoRefreshTime: 30,
-          logsPerPage: 50,
-        },
-      });
+  // Add newMembers to the User db
 
-      logger.info(`Created user ${email} during group update.`);
+  // Build new user documents
+  const newUserDocs = newMembers.map((member: { name: string; email: string }) => ({
+    email: member.email,
+    name: member.name,
+    is_active: true,
+    is_super_admin: superAdminEmails.includes(member.email),
+    pinned_applications: [],
+    settings: {
+      autoRefresh: false,
+      autoRefreshTime: 30,
+      logsPerPage: 50,
+    },
+  }));
+
+  // Insert all new users
+  let insertedUsers: any[] = [];
+  if (newUserDocs.length > 0) {
+    try {
+      insertedUsers = await User.insertMany(newUserDocs, { ordered: false });
+    } catch (err) {
+      console.error("Error inserting new users:", err);
+      // Optionally handle duplicate key errors or others here
     }
+  }
+  // Combine existing and inserted users
+const allUsers = [...existingUsers, ...insertedUsers];
 
+// Add their ObjectIds to verifiedMemberIds
+allUsers.forEach(user => {
+  if (user._id) {
     verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
   }
+});
+   
+  //   verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
+  // }
 
   // Prevent removal of super admins from admin group
+  
   if (finalIsAdmin) {
     const allSuperAdminUsers = (await User.find({
       email: { $in: superAdminEmails },
@@ -197,20 +275,29 @@ export const updateUserGroup = async (
 
   logger.info(`✅ User group '${id}' updated successfully.`);
 
-  //change the response to include members emails and application names in the members and assigned_applications fields
-  const populatedGroup = await UserGroup.findById(id)
-    .populate('assigned_applications', 'name')
-    .populate('members', 'email');
+
+
+  res.status(200).json({ message: "User group updated successfully", group });
   
-  if (!populatedGroup) {
-    res.status(404).json({ error: 'User group not found after update' });
-    return;
-  }
 
-  logger.info(`✅ User group '${id}' updated successfully.`);
-
-  res.status(200).json(populatedGroup);
 };
+
+
+
+//   //change the response to include members emails and application names in the members and assigned_applications fields
+//   const populatedGroup = await UserGroup.findById(id)
+//     .populate('assigned_applications', 'name')
+//     .populate('members', 'email');
+  
+//   if (!populatedGroup) {
+//     res.status(404).json({ error: 'User group not found after update' });
+//     return;
+//   }
+
+//   logger.info(`✅ User group '${id}' updated successfully.`);
+
+//   res.status(200).json(populatedGroup);
+// };
 
 
 
