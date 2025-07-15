@@ -1,5 +1,6 @@
 /** @jsx h */
-import { h } from "preact";
+/** @jsxFrag Fragment */
+import { h, Fragment } from "preact";
 import { useMemo, useEffect, useState, useRef } from "preact/hooks";
 import { ChartLine } from "lucide-preact";
 import ArrayDataProvider from "ojs/ojarraydataprovider";
@@ -319,58 +320,42 @@ const LogActivityChart = () => {
 
       {/* Chart */}
       <div class="log-chart-box">
-        {chartProvider && groups.length > 0 && visibleSeries.length > 0 ? (
-          <oj-c-line-chart
-            id="volumeLineChart"
-            data={chartProvider}
-            ref={(el: HTMLElement | null) => {
-              chartRef.current = el;
-            }}
-            groups={groups}
-            series={visibleSeries}
-            orientation="vertical"
-            trackResize={false}
-            animation-on-display="auto"
-            animation-on-data-change="auto"
-            class="log-chart"
-            group-label-style="transform: rotate(-45deg); text-anchor: end; font-size: 12px;"
-            hover-behavior="dim"
-            tooltip-renderer={tooltipRenderer}
-          >
-            <template slot="seriesTemplate" render={chartSeries}></template>
-            <template slot="itemTemplate" render={chartItem}></template>
-          </oj-c-line-chart>
-        ) : (
-          <oj-progress-circle size="md" />
-        )}
+        <oj-c-line-chart
+          id="volumeLineChart"
+          // ① callback ref to avoid compat ref‑mismatch
+          ref={(el: HTMLElement | null) => { chartRef.current = el; }}
+          data={chartProvider}
+          groups={groups}
+          series={visibleSeries}
+          orientation="vertical"
+          // ② use a string attribute to turn off resize tracking
+          track-resize="off"
+          animation-on-display="auto"
+          animation-on-data-change="auto"
+          class="log-chart"
+          group-label-style="transform: rotate(-45deg); text-anchor: end; font-size: 12px;"
+          hover-behavior="dim"
+          tooltip-renderer={tooltipRenderer}
+        >
+          {/**
+      If you have no data yet, render a `progress-circle` in a named slot
+      so the chart element remains mounted, but shows a spinner.
+    */}
+          {(!chartProvider || !groups.length || !visibleSeries.length) && (
+            <oj-progress-circle slot="placeholder" size="md" />
+          )}
 
-        <div class="log-chart-summary">
-          {series.map((level) => {
-            const total = chartData
-              .filter((item) => item.seriesId === level)
-              .reduce((sum, item) => sum + item.value, 0);
-            const avg = Math.round(
-              total / groups.length || 0
-            );
-
-            return (
-              <div key={level} class="log-chart-summary-box">
-                <div class="log-chart-label">
-                  <div
-                    class="log-chart-color-dot"
-                    style={{ backgroundColor: colorMap[level] }}
-                  />
-                  {level}
-                </div>
-                <div class="log-chart-total">{total.toLocaleString()}</div>
-                <div class="log-chart-avg">Average Logs per Hour: {avg}</div>
-              </div>
-            );
-          })}
-        </div>
-
+          {/* only render these templates when you have data */}
+          {chartProvider && groups.length && visibleSeries.length && (
+            <>
+              <template slot="seriesTemplate" render={chartSeries} />
+              <template slot="itemTemplate" render={chartItem} />
+            </>
+          )}
+        </oj-c-line-chart>
       </div>
-    </div>
+
+    </div >
   );
 };
 
