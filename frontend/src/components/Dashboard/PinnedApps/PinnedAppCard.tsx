@@ -5,27 +5,29 @@ import CardRow from "../utils/CardRow";
 import { PinnedApp } from "../types";
 import "../../../styles/dashboard/pinnedapps.css";
 import axios from "../../../api/axios";
+import { useUser } from "../../../context/UserContext";
 interface Props {
   app: PinnedApp;
-  userId: string | undefined;
   onUnpin?: (id: string) => () => void;
 }
 
 
-const PinnedAppCard = ({ app, userId, onUnpin: onUnpin }: Props) => {
+const PinnedAppCard = ({ app, onUnpin: onUnpin }: Props) => {
   const totalLogs =
     (app.logCounts.INFO ?? 0) +
     (app.logCounts.WARN ?? 0) +
     (app.logCounts.ERROR ?? 0) +
     (app.logCounts.DEBUG ?? 0);
 
+  const { user }= useUser();
+
   const handleUnpin = async () => {
-    if (!userId || !app._id) return;
+    if (!user?.id || !app._id) return;
 
   const rollback = onUnpin?.(app._id);
 
   try {
-    await axios.patch(`/dashboard/pinned/${userId}/${app._id}`);
+    await axios.patch(`/dashboard/pinned/${user.id}/${app._id}`);
   } catch (err) {
     console.error("Failed to unpin app", err);
     rollback?.(); // Restore UI if API call fails

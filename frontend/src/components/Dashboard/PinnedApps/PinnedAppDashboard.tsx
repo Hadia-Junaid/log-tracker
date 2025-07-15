@@ -6,9 +6,10 @@ import { Pin } from "lucide-preact";
 import PinnedAppCard from "./PinnedAppCard";
 import { PinnedApp } from "../types";
 import ManagePinsDialog from "./ManagePinsDialog";
+import { useUser } from "../../../context/UserContext";
 import "../../../styles/dashboard/pinnedapps.css";
 
-const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
+const PinnedAppsDashboard = () => {
   const [pinnedApps, setPinnedApps] = useState<PinnedApp[]>([]);
   const [pinnedIds, setPinnedIds] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,14 +17,16 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
   const [isManageDialogOpen, setManageDialogOpen] = useState(false);
   const [allApps, setAllApps] = useState<{ _id: string; name: string }[]>([]);
 
+  const { user } = useUser();
+
   const fetchPinnedApps = useCallback(async () => {
-    if (!userId) return;
+    if (!user?.id) return;
     try {
       setLoading(true);
       setError(false);
       const [pinnedRes, activeRes] = await Promise.all([
-        axios.get(`/dashboard/pinned/${userId}`),
-        axios.get(`/dashboard/active/${userId}`),
+        axios.get(`/dashboard/pinned/${user.id}`),
+        axios.get(`/dashboard/active/${user.id}`),
       ]);
       const pinned = pinnedRes.data.pinned_applications || [];
       const active = activeRes.data.active_applications || [];
@@ -36,7 +39,7 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
     } finally {
       setLoading(false);
     }
-  }, [userId]);
+  }, [user?.id]);
 
   useEffect(() => {
     fetchPinnedApps();
@@ -67,7 +70,6 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
             <div key={app._id} class="pinned-card-col">
               <PinnedAppCard
                 app={app}
-                userId={userId}
                 onUnpin={(id) => {
                   setPinnedApps((prev) => prev.filter((a) => a._id !== id));
                   setPinnedIds((prev) => prev.filter((a) => a !== id));
@@ -81,7 +83,6 @@ const PinnedAppsDashboard = ({ userId }: { userId?: string }) => {
         </div>
       )}
       <ManagePinsDialog
-        userId={userId}
         open={isManageDialogOpen}
         pinnedIds={pinnedIds}
         setPinnedIds={setPinnedIds}
