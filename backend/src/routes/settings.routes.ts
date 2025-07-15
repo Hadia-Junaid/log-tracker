@@ -4,7 +4,7 @@ import {
   getUserSettings,
   updateUserSettings,
   resetUserSettings,
-} from '../controllers/settings.Controller';
+} from '../controllers/settings.controller';
 
 import validate from '../middleware/validate';
 import { updateSettingsSchema } from '../validators/settingsSchema';

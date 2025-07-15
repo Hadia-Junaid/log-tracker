@@ -5,7 +5,7 @@ import {
   createAtRiskRule,
   updateAtRiskRule,
   deleteAtRiskRule
-} from '../controllers/settings.Controller';
+} from '../controllers/settings.controller';
 
 import validate from '../middleware/validate';
 import { atRiskRuleSchema } from '../validators/settingsSchema';
