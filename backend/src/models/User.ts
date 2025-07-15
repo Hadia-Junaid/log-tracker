@@ -10,15 +10,14 @@ export interface IUser extends Document {
     logsPerPage: number;
   };
 }
-
 const UserSchema: Schema = new Schema({
   email: { type: String, required: true },
   name: { type: String, required: true },
   pinned_applications: [{ type: Schema.Types.ObjectId, ref: 'Application' }],
   settings: {
-    autoRefresh: Boolean,
-    autoRefreshTime: Number,
-    logsPerPage: Number,
+    autoRefresh: { type: Boolean, default: false },
+    autoRefreshTime: { type: Number, default: 30 },
+    logsPerPage: { type: Number, default: 25 },
   }
 }, { timestamps: true });
 

@@ -92,7 +92,7 @@ export const resetUserSettings = async (
     res.status(400).json({ error: 'Invalid or missing user ID.' });
     return;
   }
-
+  // Find user
   // Reset settings to default
   const updatedUser = await User.findByIdAndUpdate(
     userId,
@@ -100,12 +100,11 @@ export const resetUserSettings = async (
       $set: {
         'settings.autoRefresh': false,
         'settings.autoRefreshTime': 30,
-        'settings.logsPerPage': 10
+        'settings.logsPerPage': 25
       }
     },
     { new: true }
   );
-
   if (!updatedUser) {
     res.status(404).json({ error: 'User not found.' });
     return;

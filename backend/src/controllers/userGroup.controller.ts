@@ -52,38 +52,6 @@ export const createUserGroup = async (
 
   const verifiedMemberIds: mongoose.Types.ObjectId[] = [];
 
-  // // Only process members if the array is not empty
-  // if (members.length > 0) {
-  //   for (const email of members) {
-  //     let user = await User.findOne({ email });
-
-  //     if (!user) {
-  //       const userData = await fetchUserFromDirectory(email);
-  //       if (!userData) {
-  //         res
-  //           .status(404)
-  //           .json({ error: `User ${email} not found in directory API.` });
-  //         return;
-  //       }
-
-  //       user = new User({
-  //         email: userData.email,
-  //         name: userData.name,
-  //         pinned_applications: [],
-  //         settings: {
-  //           autoRefresh: false,
-  //           autoRefreshTime: 30,
-  //           logsPerPage: 50,
-  //         },
-  //       });
-
-  //       await user.save();
-  //       logger.info(` Created new user from directory API: ${email}`);
-  //     }
-
-  //     verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
-  //   }
-  // }
 
   // Get all existing users
   //Get array of emails from members
@@ -107,11 +75,7 @@ export const createUserGroup = async (
     name: member.name,
     is_active: true,
     pinned_applications: [],
-    settings: {
-      autoRefresh: false,
-      autoRefreshTime: 30,
-      logsPerPage: 50,
-    },
+    
   }));
 
   // Insert all new users
@@ -214,11 +178,7 @@ export const updateUserGroup = async (
     is_active: true,
     is_super_admin: superAdminEmails.includes(member.email),
     pinned_applications: [],
-    settings: {
-      autoRefresh: false,
-      autoRefreshTime: 30,
-      logsPerPage: 50,
-    },
+   
   }));
 
   // Insert all new users
