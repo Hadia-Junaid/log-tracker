@@ -1,7 +1,8 @@
 //export a function that acts as an error handler middleware, logs the error and sends a response
 import { Request, Response, NextFunction } from "express";
-import logger from "../utils/logger";
 import { isMongoDuplicateKeyError } from "../utils/checkErrors";
+import logger from '../utils/logger';
+import config from 'config';
 
 const errorHandler = (
   err: Error,
@@ -21,6 +22,17 @@ const errorHandler = (
   }
 
   res.status(500).json({ error: err.message || "Internal Server Error" });
+  const frontendBase = config.get<string>("frontend.baseUrl");
+
+  if (req.originalUrl.includes("/google/callback")) {
+    return res.redirect(
+      `${frontendBase}/#login?error=auth_failed&message=${encodeURIComponent(
+        err.message || "Authentication failed. Please try again."
+      )}`
+    );
+  }
+  
+  res.status(500).json({ error: err.message || 'Internal Server Error' });
 };
 
 export default errorHandler;
