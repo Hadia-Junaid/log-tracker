@@ -7,7 +7,6 @@ export const updateLogTTLIndex = async (days: number) => {
   const collection = mongoose.connection.collection('logs')
   const ttlInSeconds = days * 86400
 
-  try {
     // Drop existing TTL index if it exists
     const indexes = await collection.indexes()
     const ttlIndex = indexes.find((i) => i.name === 'createdAt_1' && i.expireAfterSeconds)
@@ -24,8 +23,5 @@ export const updateLogTTLIndex = async (days: number) => {
     )
 
     logger.info(`New TTL index created with retention: ${ttlInSeconds} seconds (${days} days)`)
-  } catch (err) {
-    logger.error('Failed to update TTL index for logs collection', err)
-    throw err
-  }
+
 }

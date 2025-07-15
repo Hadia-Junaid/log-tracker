@@ -34,24 +34,18 @@ class JWTService {
   }
 
   verifyToken(token: string): JWTPayload {
-    try {
       const decoded = jwt.verify(token, this.secret, {
         issuer: 'log-tracker-api',
         audience: 'log-tracker-client',
       }) as JWTPayload;
 
       return decoded;
-    } catch (error) {
-      throw new Error('Invalid or expired token');
-    }
+    
   }
 
   decodeToken(token: string): JWTPayload | null {
-    try {
       return jwt.decode(token) as JWTPayload;
-    } catch (error) {
-      return null;
-    }
+    
   }
 }
 

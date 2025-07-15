@@ -8,7 +8,6 @@ import logger from './logger';
  * @returns Promise<boolean> - True if user is admin, false otherwise
  */
 export const checkUserAdminStatus = async (userEmail: string): Promise<boolean> => {
-  try {
     // Find the user by email to get their ObjectId
     const user = await User.findOne({ email: userEmail });
     
@@ -33,8 +32,5 @@ export const checkUserAdminStatus = async (userEmail: string): Promise<boolean> 
     logger.info(`User ${userEmail} is not a member of any admin group`);
     return false;
 
-  } catch (error) {
-    logger.error(`Error checking admin status for user ${userEmail}:`, error);
-    return false;
-  }
+    
 }; 
