@@ -1,6 +1,6 @@
 // Defines the routes for managing applications
 import express from 'express';
-import { createApplication, getApplications, updateApplication, deleteApplication,getAssignedGroups, updateAssignedGroups } from '../controllers/application.controller';
+import { createApplication, getApplications, updateApplication, deleteApplication,getAssignedGroups } from '../controllers/application.controller';
 import validate from './../middleware/validate';
 import { applicationSchema } from '../validators/application';
 import { authenticate } from '../middleware/auth';
@@ -19,7 +19,5 @@ router.delete('/:id', authenticate, requireAdmin, deleteApplication);
 // GET /api/applications/:id/assigned-groups - Get groups assigned to an application
 router.get('/:id/assigned-groups', authenticate, requireAdmin, getAssignedGroups);     
 
-// PATCH /api/applications/:id/assigned-groups - Update groups assigned to an application
-router.patch('/:id/assigned-groups', authenticate, requireAdmin, updateAssignedGroups);
 
 export default router;
