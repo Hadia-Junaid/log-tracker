@@ -308,6 +308,8 @@ export const getActiveApps = async (req: Request, res: Response): Promise<void> 
         }
     ]);
 
+    
+
     const logCountMap: Record<string, number> = {};
     logs.forEach(log => {
         logCountMap[log._id.toString()] = log.totalLogs;
@@ -322,6 +324,7 @@ export const getActiveApps = async (req: Request, res: Response): Promise<void> 
     }));
 
     logger.info(`Active applications fetched for user: ${userId}`);
+    response.sort((a, b) => b.totalLogsLast24h - a.totalLogsLast24h);
     res.status(200).json({ active_applications: response });
 };
 
@@ -390,5 +393,5 @@ export const getAtRiskApps = async (req: Request, res: Response): Promise<void> 
     logger.info(`Found ${atRiskResults.length} at-risk applications`);
     res.status(200).json({ at_risk_applications: atRiskResults });
     
-    
+
 };
