@@ -126,7 +126,7 @@ docker builder prune -f
 
 ### 4. Generate sample logs (Optional)
 
-cd mock-application-scripts/stream
+cd collection/mock-application-scripts/stream
 
 ./console.sh
 
@@ -134,7 +134,7 @@ cd mock-application-scripts/stream
 OR
 
 
-cd mock-application-scripts/file
+cd collection/mock-application-scripts/file
 
 npm i
 
