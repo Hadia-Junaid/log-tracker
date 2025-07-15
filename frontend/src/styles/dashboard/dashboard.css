@@ -1,7 +1,8 @@
 .dashboard-container {
-  min-height: 100vh;
+  height: 100%;
   background-color: #f9fafb; /* Light gray background */
   padding: 1.5rem; /* Equivalent to Tailwind p-6 */
+  padding-top: 0rem;
   box-sizing: border-box;
 }
 
