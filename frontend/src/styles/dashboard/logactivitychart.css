@@ -100,7 +100,7 @@
 .log-chart {
   height: 400px;
   width: 100%;
-  /* min-width: unset !important; */
+  min-width: 100%;
 }
 
 .log-chart-loading,
@@ -278,5 +278,44 @@
   .log-chart {
     width: 100%;
     min-width: 100%;
+  }
+}
+
+/* 1440px to 1616px */
+@media (min-width: 1440px) and (max-width: 1616px) {
+  .log-chart-container {
+    max-width: 1350px;
+  }
+
+  .log-chart-box,
+  .log-chart {
+    width: 100%;
+    min-width: 1200px;
+  }
+}
+
+/* 1024px to 1289px */
+@media (min-width: 1024px) and (max-width: 1289px) {
+  .log-chart-container {
+    max-width: 960px;
+  }
+
+  .log-chart-box,
+  .log-chart {
+    width: 100%;
+    min-width: 900px;
+  }
+}
+
+/* 769px to 947px */
+@media (min-width: 769px) and (max-width: 947px) {
+  .log-chart-container {
+    max-width: 750px;
+  }
+
+  .log-chart-box,
+  .log-chart {
+    width: 100%;
+    min-width: 700px;
   }
 }
