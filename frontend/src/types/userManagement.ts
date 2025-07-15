@@ -32,7 +32,7 @@ export interface ApplicationOption {
 
 export interface CreateGroupPayload {
   name: string;
-  members: string[];
+  members?: { name: string; email: string }[];
   assigned_applications: string[];
   is_admin?: boolean;
 }

@@ -85,11 +85,11 @@ export function AddGroupDialog({
 
   const handleAddMember = (member: MemberData) => {
     // if prev.length is 10, do not allow adding more members
-    if (selectedMembers.length >= 10) {
-      setError('You can only add up to 10 members to a group in one action.');
-      setTimeout(() => setError(''), 3000);
-      return;
-    }
+    // if (selectedMembers.length >= 10) {
+    //   setError('You can only add up to 10 members to a group in one action.');
+    //   setTimeout(() => setError(''), 3000);
+    //   return;
+    // }
     setSelectedMembers((prev) => [...prev, member]);
   };
 
@@ -113,7 +113,7 @@ export function AddGroupDialog({
     try {
       const payload = {
         name: groupName,
-        members: selectedMembers.map(m => m.email),
+        members: selectedMembers.map(m => ({ name: m.name, email: m.email })),
         assigned_applications: selectedAppIds,
         is_active: isActive,
         is_admin: false

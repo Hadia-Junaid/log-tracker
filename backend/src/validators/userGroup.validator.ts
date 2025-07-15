@@ -30,7 +30,11 @@ export const createUserGroupSchema = Joi.object({
       'array.min': 'Please select at least one accessible application.',
       'any.required': 'Please select at least one accessible application.'
     }),
-  members: Joi.array().items(Joi.string().email())
+  members: Joi.array().items(Joi.object({
+        name: Joi.string().min(2).max(100).required()
+,
+    email: Joi.string().email().required(),
+  })).required()
 });
 
 export const updateUserGroupSchema = Joi.object({
@@ -46,5 +50,9 @@ export const updateUserGroupSchema = Joi.object({
     .messages({
       'array.min': 'Please select at least one accessible application.'
     }),
-  members: Joi.array(),
+  members: Joi.array().items(Joi.object({
+        name: Joi.string().min(2).max(100).required()
+,
+    email: Joi.string().email().required(),
+  })).required()
 });
