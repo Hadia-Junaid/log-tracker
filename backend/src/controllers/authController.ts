@@ -138,20 +138,20 @@ class AuthController {
         const userEmail = user?.email;
         const userId = user?.id;
 
-        logger.info(`Logout initiated for user: ${userEmail} (ID: ${userId})`);
-
-        try {
-            await googleAuthService.revokeTokens();
-            logger.info(
-                `Google tokens revoked successfully for user: ${userEmail}`
-            );
-        } catch (revokeError) {
-            logger.warn(
-                `Failed to revoke Google tokens for user ${userEmail}:`,
-                revokeError
-            );
+        if(!user){
+            res.status(404).json({
+                message: "No user information found",
+            });
+            return;
         }
 
+        logger.info(`Logout initiated for user: ${userEmail} (ID: ${userId})`);
+
+        await googleAuthService.revokeTokens(); // Errors here will be passed to errorHandler
+
+        
+
+  logger.info(`Google tokens revoked successfully for user: ${userEmail}`);
         logger.info(`User logged out successfully: ${userEmail}`);
 
         res.clearCookie("jwt", {
@@ -210,39 +210,32 @@ class AuthController {
     async getAuthStatus(req: Request, res: Response): Promise<void> {
         const token = req.cookies?.jwt;
 
-        if (!token) {
-            res.status(200).json({ authenticated: false });
-            return;
-        }
+  if (!token) {
+    res.status(401).json({ authenticated: false });
+    return;
+  }
 
-        try {
-            const decoded = jwtService.verifyToken(token);
-            const user = await User.findById(decoded.userId);
+  const decoded = jwtService.verifyToken(token); // throws if invalid
+  const user = await User.findById(decoded.userId);
 
-            if (!user) {
-                res.status(200).json({ authenticated: false });
-                return;
-            }
+  if (!user) {
+    res.status(404).json({ authenticated: false });
+    return;
+  }
 
-            // Check current admin status
-            const isAdmin = await checkUserAdminStatus(user.email);
+  const isAdmin = await checkUserAdminStatus(user.email);
 
-            res.status(200).json({
-                authenticated: true,
-                user: {
-                     id: user._id,
-                    email: user.email,
-                    name: user.name,
-                    settings: user.settings,
-                    pinned_applications: user.pinned_applications,
-                    is_admin: isAdmin,
-                },
-            });
-        } catch (err) {
-            logger.error("Token verification error:", err);
-            res.status(200).json({ authenticated: false });
-        }
-    }
+  res.status(200).json({
+    authenticated: true,
+    user: {
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      settings: user.settings,
+      pinned_applications: user.pinned_applications,
+      is_admin: isAdmin,
+    },
+  });    }
 }
 
 export default new AuthController();

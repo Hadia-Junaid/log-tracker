@@ -3,6 +3,7 @@ import { Request, Response, NextFunction } from "express";
 import { isMongoDuplicateKeyError } from "../utils/checkErrors";
 import logger from '../utils/logger';
 import config from 'config';
+import { error } from "console";
 
 const errorHandler = (
   err: Error,
@@ -21,7 +22,6 @@ const errorHandler = (
     return;
   }
 
-  res.status(500).json({ error: err.message || "Internal Server Error" });
   const frontendBase = config.get<string>("frontend.baseUrl");
 
   if (req.originalUrl.includes("/google/callback")) {
@@ -31,8 +31,22 @@ const errorHandler = (
       )}`
     );
   }
-  
+
+
+  if (req.originalUrl.includes("/status") || req.originalUrl.includes("/verify")) {
+    res.status(401).json({ error: "Invalid or expired token" });
+    return;
+  }
+
+  if (req.originalUrl.includes("/logout")) {
+    res.status(500).json({
+      error: "Logout failed. Unable to revoke tokens. Please try again.",
+    });
+    return;
+  }
+
   res.status(500).json({ error: err.message || 'Internal Server Error' });
 };
 
 export default errorHandler;
+
