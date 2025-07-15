@@ -6,7 +6,10 @@ import logger from "../utils/logger";
 import mongoose from "mongoose";
 import { fetchUserFromDirectory } from "../utils/fetchUserFromDirectory";
 import { getSuperAdminEmails } from "../utils/getSuperAdminEmails";
-import { createUserGroupSchema, updateUserGroupSchema } from "../validators/userGroup.validator";
+import {
+  createUserGroupSchema,
+  updateUserGroupSchema,
+} from "../validators/userGroup.validator";
 import { any } from "joi";
 
 export const createUserGroup = async (
@@ -89,30 +92,30 @@ export const createUserGroup = async (
   //Get array of emails from members
   const memberEmails = members.map((m: { email: string }) => m.email);
   const existingUsers = await User.find({ email: { $in: memberEmails } });
-  // If any members NOT in existingUsers, add them to Users 
-  console.log("Existing users",existingUsers)
+  // If any members NOT in existingUsers, add them to Users
   // new Members
   const newMembers = members.filter(
-  (member: { email: string }) =>
-    !existingUsers.some(user => user.email === member.email)
-);
-  console.log("New members to be added:", newMembers);
-
+    (member: { email: string }) =>
+      !existingUsers.some((user) => user.email === member.email)
+  );
+  logger.debug("New members to be added:" + JSON.stringify(newMembers));
 
   // Add newMembers to the User db
 
   // Build new user documents
-  const newUserDocs = newMembers.map((member: { name: string; email: string }) => ({
-    email: member.email,
-    name: member.name,
-    is_active: true,
-    pinned_applications: [],
-    settings: {
-      autoRefresh: false,
-      autoRefreshTime: 30,
-      logsPerPage: 50,
-    },
-  }));
+  const newUserDocs = newMembers.map(
+    (member: { name: string; email: string }) => ({
+      email: member.email,
+      name: member.name,
+      is_active: true,
+      pinned_applications: [],
+      settings: {
+        autoRefresh: false,
+        autoRefreshTime: 30,
+        logsPerPage: 50,
+      },
+    })
+  );
 
   // Insert all new users
   let insertedUsers: any[] = [];
@@ -125,15 +128,14 @@ export const createUserGroup = async (
     }
   }
   // Combine existing and inserted users
-const allUsers = [...existingUsers, ...insertedUsers];
+  const allUsers = [...existingUsers, ...insertedUsers];
 
-// Add their ObjectIds to verifiedMemberIds
-allUsers.forEach(user => {
-  if (user._id) {
-    verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
-  }
-});
-   
+  // Add their ObjectIds to verifiedMemberIds
+  allUsers.forEach((user) => {
+    if (user._id) {
+      verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
+    }
+  });
 
   const userGroup = new UserGroup({
     name,
@@ -155,13 +157,18 @@ export const updateUserGroup = async (
   res: Response
 ): Promise<void> => {
   const { id } = req.params;
-  const { name, is_admin, is_active, assigned_applications = [], members = [] } = req.body;
+  const {
+    name,
+    is_admin,
+    is_active,
+    assigned_applications = [],
+    members = [],
+  } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     res.status(400).json({ error: "Invalid group ID." });
     return;
   }
-
 
   const group = await UserGroup.findById(id);
   if (!group) {
@@ -185,41 +192,42 @@ export const updateUserGroup = async (
   // For admin groups, override applications with all available apps
   const validAppIds = finalIsAdmin
     ? await Application.find().distinct("_id")
-    : await Application.find({ _id: { $in: assigned_applications } }).distinct("_id");
+    : await Application.find({ _id: { $in: assigned_applications } }).distinct(
+        "_id"
+      );
 
   const superAdminEmails = getSuperAdminEmails();
   const verifiedMemberIds: mongoose.Types.ObjectId[] = [];
-  console.log("Members array", members);
+  logger.debug("Members array" + JSON.stringify(members));
 
   // Get all existing users
   //Get array of emails from members
   const memberEmails = members.map((m: { email: string }) => m.email);
   const existingUsers = await User.find({ email: { $in: memberEmails } });
-  // If any members NOT in existingUsers, add them to Users 
-  console.log("Existing users",existingUsers)
+  // If any members NOT in existingUsers, add them to Users
   // new Members
   const newMembers = members.filter(
-  (member: { email: string }) =>
-    !existingUsers.some(user => user.email === member.email)
-);
-  console.log("New members to be added:", newMembers);
-
+    (member: { email: string }) =>
+      !existingUsers.some((user) => user.email === member.email)
+  );
 
   // Add newMembers to the User db
 
   // Build new user documents
-  const newUserDocs = newMembers.map((member: { name: string; email: string }) => ({
-    email: member.email,
-    name: member.name,
-    is_active: true,
-    is_super_admin: superAdminEmails.includes(member.email),
-    pinned_applications: [],
-    settings: {
-      autoRefresh: false,
-      autoRefreshTime: 30,
-      logsPerPage: 50,
-    },
-  }));
+  const newUserDocs = newMembers.map(
+    (member: { name: string; email: string }) => ({
+      email: member.email,
+      name: member.name,
+      is_active: true,
+      is_super_admin: superAdminEmails.includes(member.email),
+      pinned_applications: [],
+      settings: {
+        autoRefresh: false,
+        autoRefreshTime: 30,
+        logsPerPage: 50,
+      },
+    })
+  );
 
   // Insert all new users
   let insertedUsers: any[] = [];
@@ -232,20 +240,20 @@ export const updateUserGroup = async (
     }
   }
   // Combine existing and inserted users
-const allUsers = [...existingUsers, ...insertedUsers];
+  const allUsers = [...existingUsers, ...insertedUsers];
 
-// Add their ObjectIds to verifiedMemberIds
-allUsers.forEach(user => {
-  if (user._id) {
-    verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
-  }
-});
-   
+  // Add their ObjectIds to verifiedMemberIds
+  allUsers.forEach((user) => {
+    if (user._id) {
+      verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
+    }
+  });
+
   //   verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
   // }
 
   // Prevent removal of super admins from admin group
-  
+
   if (finalIsAdmin) {
     const allSuperAdminUsers = (await User.find({
       email: { $in: superAdminEmails },
@@ -275,20 +283,14 @@ allUsers.forEach(user => {
 
   logger.info(`✅ User group '${id}' updated successfully.`);
 
-
-
   res.status(200).json({ message: "User group updated successfully", group });
-  
-
 };
-
-
 
 //   //change the response to include members emails and application names in the members and assigned_applications fields
 //   const populatedGroup = await UserGroup.findById(id)
 //     .populate('assigned_applications', 'name')
 //     .populate('members', 'email');
-  
+
 //   if (!populatedGroup) {
 //     res.status(404).json({ error: 'User group not found after update' });
 //     return;
@@ -298,10 +300,6 @@ allUsers.forEach(user => {
 
 //   res.status(200).json(populatedGroup);
 // };
-
-
-
-
 
 export const deleteUserGroup = async (
   req: Request,
@@ -352,7 +350,9 @@ export const getUserGroups = async (
   const [total, groups] = await Promise.all([
     UserGroup.countDocuments(filter),
     UserGroup.find(filter)
-      .select('name is_admin is_active assigned_applications members createdAt updatedAt')
+      .select(
+        "name is_admin is_active assigned_applications members createdAt updatedAt"
+      )
       .populate("assigned_applications")
       .populate("members")
       .skip(allPages ? 0 : (page - 1) * pageSize)
@@ -363,7 +363,7 @@ export const getUserGroups = async (
   logger.info(
     `Fetched ${groups.length} groups (page ${page}) with search "${search}"`
   );
-  
+
   res.json({ data: groups, total });
 };
 
