@@ -300,7 +300,7 @@ const LogActivityChart = () => {
       </div>
 
       {/* Chart */}
-      <div style={{ width: "100%", overflowX: "auto" }}>
+      <div style={{ width: "100%", overflowX: "auto", backgroundColor: "white" }}>
         <div
           style={{
             marginBottom: "12px",
@@ -349,7 +349,7 @@ const LogActivityChart = () => {
           groups={groups}
           series={visibleSeries}
           orientation="vertical"
-          track-resize="off"
+          track-resize="on"
           animation-on-display="auto"
           animation-on-data-change="auto"
           style="height: 300px; min-width: 1200px;"
