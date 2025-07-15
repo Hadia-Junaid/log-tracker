@@ -26,5 +26,12 @@
       "domain": ""
     }
   },
-  "adminEmails": []
+  "adminEmails": [],
+  "email": {
+    "smtpHost": "",
+    "smtpPort": 587,
+    "smtpUser": "",
+    "smtpPass": "",
+    "from": ""
+  }
 }

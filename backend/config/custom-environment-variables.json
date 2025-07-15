@@ -22,5 +22,12 @@
     "baseUrl": "FRONTEND_URL"
   },
 
-  "adminEmails": "PRIMARY_ADMIN_EMAILS"
+  "adminEmails": "PRIMARY_ADMIN_EMAILS",
+  "email": {
+    "smtpHost": "SMTP_HOST",
+    "smtpPort": "SMTP_PORT",
+    "smtpUser": "SMTP_USER",
+    "smtpPass": "SMTP_PASS",
+    "from": "SMTP_USER"
+  }
 }
