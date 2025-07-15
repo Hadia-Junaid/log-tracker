@@ -5,6 +5,7 @@ import UserGroup from "../models/UserGroup";
 import Application from "../models/Application";
 import User from "../models/User";
 import logger from "../utils/logger";
+import datatRetention from "../models/dataRetention";
 // @ts-ignore
 import { Parser as Json2csvParser } from "json2csv";
 // GET /api/logs/:userId
@@ -363,11 +364,13 @@ export const userdata = async (req: Request, res: Response): Promise<void> => {
     // 4. Get user settings
     const { autoRefresh, autoRefreshTime } = user.settings || {};
     // 5. Get TTL index value from Log collection
-    const indexes = await Log.collection.indexes();
-    const ttlIndex = indexes.find(
-      (idx) => idx.key && idx.key.timestamp === 1 && idx.expireAfterSeconds
-    );
-    const logTTL = ttlIndex ? ttlIndex.expireAfterSeconds : null;
+    // const indexes = await Log.collection.indexes();
+    // const ttlIndex = indexes.find(
+    //   (idx) => idx.key && idx.key.timestamp === 1 && idx.expireAfterSeconds
+    // );
+    // const logTTL = ttlIndex ? ttlIndex.expireAfterSeconds : null;
+    const mdataRetention = await datatRetention.findOne().lean();
+    const logTTL = mdataRetention ? mdataRetention.retentionDays * 86400 : null;
     res.status(200).json({
       assigned_applications: assignedApplications,
       autoRefresh,
