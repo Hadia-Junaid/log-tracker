@@ -4,6 +4,7 @@ import { useMemo, useEffect, useState, useRef } from "preact/hooks";
 import ArrayDataProvider from "ojs/ojarraydataprovider";
 import "oj-c/line-chart";
 import axios from "../../../api/axios";
+import "../../../styles/dashboard/logactivitychart.css"; 
 
 type ChartItem = { groupId: string; seriesId: string; value: number };
 
@@ -179,16 +180,7 @@ const LogActivityChart = () => {
 
   if (loading) {
     return (
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "1200px",
-          height: "300px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <div class="log-chart-loading">
         <div>Loading log activity data...</div>
       </div>
     );
@@ -196,17 +188,7 @@ const LogActivityChart = () => {
 
   if (error) {
     return (
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "1200px",
-          height: "300px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "red",
-        }}
-      >
+      <div class="log-chart-error">
         <div>{error}</div>
       </div>
     );
@@ -214,42 +196,19 @@ const LogActivityChart = () => {
 
   if (chartData.length === 0) {
     return (
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "1200px",
-          height: "300px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
+      <div class="log-chart-empty">
         <div>No log data available for the last 7 days</div>
       </div>
     );
   }
 
   return (
-    <div style={{ width: "100%", maxWidth: "1200px" }}>
+    <div class="oj-panel log-chart-container">
       {/* Application Filter */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          marginBottom: "10px",
-          position: "relative",
-        }}
-      >
+      <div class="log-chart-filter-bar">
         <button
           onClick={() => setShowApplicationDropdown(!showApplicationDropdown)}
-          style={{
-            padding: "8px 16px",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            backgroundColor: "white",
-            cursor: "pointer",
-            fontSize: "14px",
-          }}
+          class="log-chart-app-dropdown-btn"
         >
           {selectedApplications.length === 0
             ? "All Applications"
@@ -262,29 +221,12 @@ const LogActivityChart = () => {
         {showApplicationDropdown && (
           <div
             ref={dropdownRef}
-            style={{
-              position: "absolute",
-              top: "100%",
-              right: "0",
-              backgroundColor: "white",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              zIndex: 1000,
-              minWidth: "200px",
-              maxHeight: "300px",
-              overflowY: "auto",
-            }}
+            class="log-chart-dropdown"
           >
             {applications.map((app) => (
               <label
                 key={app._id}
-                style={{
-                  display: "block",
-                  padding: "8px 12px",
-                  cursor: "pointer",
-                  borderBottom: "1px solid #eee",
-                }}
+                class="log-chart-dropdown-item"
               >
                 <input
                   type="checkbox"
@@ -300,15 +242,8 @@ const LogActivityChart = () => {
       </div>
 
       {/* Chart */}
-      <div style={{ width: "100%", overflowX: "auto" }}>
-        <div
-          style={{
-            marginBottom: "12px",
-            display: "flex",
-            gap: "16px",
-            flexWrap: "wrap",
-          }}
-        >
+      <div class="log-chart-box">
+        <div class="log-chart-controls">
           {series.map((level) => {
             const isLastChecked =
               visibleLogLevels.length === 1 && visibleLogLevels.includes(level);
@@ -316,10 +251,8 @@ const LogActivityChart = () => {
             return (
               <label
                 key={level}
+                class="log-chart-checkbox"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
                   opacity: isLastChecked ? 0.6 : 1,
                 }}
               >
@@ -349,10 +282,10 @@ const LogActivityChart = () => {
           groups={groups}
           series={visibleSeries}
           orientation="vertical"
-          track-resize="off"
+          track-resize="on"
           animation-on-display="auto"
           animation-on-data-change="auto"
-          style="height: 300px; min-width: 1200px;"
+          class="log-chart"
           group-label-style="transform: rotate(-45deg); text-anchor: end; font-size: 12px;"
           hover-behavior="dim"
         >

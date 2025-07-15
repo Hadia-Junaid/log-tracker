@@ -4,6 +4,7 @@
   padding: 1.5rem; /* Equivalent to Tailwind p-6 */
   padding-top: 0rem;
   box-sizing: border-box;
+  overflow-y: scroll;
 }
 
 /* Inner wrapper with max width */
