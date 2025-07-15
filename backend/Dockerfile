@@ -5,7 +5,7 @@ WORKDIR /app
 
 # Copy package files and install all dependencies (including dev)
 COPY package*.json ./
-COPY credentials/service-account-key.json ./credentials/service-account-key.json
+# COPY credentials/service-account-key.json ./credentials/service-account-key.json
 RUN npm install
 
 # Copy source code and build
