@@ -17,7 +17,6 @@ class AuthController {
     }
 
     async googleCallback(req: Request, res: Response): Promise<void> {
-        try {
             const { code } = req.query;
 
             if (!code || typeof code !== "string") {
@@ -64,12 +63,10 @@ class AuthController {
             res.redirect(
                 `${config.get<string>("frontend.baseUrl")}/#login?auth_code=${tempCode}`
             );
-        } catch (error) {
-            logger.error("Google OAuth callback error:", error);
-            res.redirect(
-                `${config.get<string>("frontend.baseUrl")}/#login?error=auth_failed&message=Authentication failed. Please try again.`
+            
+            logger.info(
+                `Redirecting to frontend with temporary code for user: ${existingUser.email}`
             );
-        }
     }
 
     async exchangeAuthCode(req: Request, res: Response): Promise<void> {
