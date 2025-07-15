@@ -339,7 +339,7 @@ const SettingsPanel = () => {
         {/* Header */}
         <div class="settings-header">
           <div class="settings-header-content">
-            <h1 class="settings-main-title">Application Settings</h1>
+            <h1 class="settings-main-title">Settings</h1>
             <p class="settings-main-subtitle">Configure your preferences and system behavior</p>
           </div>
           <div class="settings-header-actions">
