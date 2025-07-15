@@ -308,7 +308,7 @@ export default function AddApplicationDialog({
               <oj-input-text
                 id="appName"
                 value={name}
-                onvalueChanged={(e: CustomEvent) => setName(e.detail.value)}
+                onrawValueChanged={(e: CustomEvent) => setName(e.detail.value)}
                 required
                 disabled={loading}
               />
@@ -319,7 +319,7 @@ export default function AddApplicationDialog({
               <oj-input-text
                 id="appHostname"
                 value={hostname}
-                onvalueChanged={(e: CustomEvent) => setHostname(e.detail.value)}
+                onrawValueChanged={(e: CustomEvent) => setHostname(e.detail.value)}
                 required
                 disabled={loading}
               ></oj-input-text>
@@ -352,7 +352,7 @@ export default function AddApplicationDialog({
               <oj-input-text
                 id="appDescription"
                 value={description}
-                onvalueChanged={(e: CustomEvent) =>
+                onrawValueChanged={(e: CustomEvent) =>
                   setDescription(e.detail.value)
                 }
                 disabled={loading}

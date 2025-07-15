@@ -81,7 +81,7 @@ export default function EditApplicationDialog({
         dialogRef.current.close();
       }
     }
-  }, [isOpen, application]);
+  }, [isOpen]);
 
   useEffect(() => {
     const hasAnyError =
@@ -141,6 +141,8 @@ export default function EditApplicationDialog({
   const validate = () => {
     let valid = true;
 
+    console.log("Description:", description);
+
     const nameTrimmed = name.trim();
     const hostnameTrimmed = hostname.trim();
     const descriptionTrimmed = description?.trim() ?? "";
@@ -178,6 +180,7 @@ export default function EditApplicationDialog({
 
     // Description
     if (descriptionTrimmed.length < 10 || descriptionTrimmed.length > 100) {
+
       setDescriptionError("Description must be between 10 and 100 characters.");
       valid = false;
     } else if (!/^[a-zA-Z0-9 _\-\.,:;()[\]'""]*$/.test(descriptionTrimmed)) {
@@ -192,6 +195,8 @@ export default function EditApplicationDialog({
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
+
+    console.log("Validating form data...");
 
     const isValid = validate();
     if (!isValid) {
@@ -311,7 +316,7 @@ export default function EditApplicationDialog({
               <oj-input-text
                 id="editAppName"
                 value={name}
-                onvalueChanged={(e: CustomEvent) => setName(e.detail.value)}
+                onrawValueChanged={(e: CustomEvent) => setName(e.detail.value)}
                 required
                 disabled={loading}
               ></oj-input-text>
@@ -323,7 +328,7 @@ export default function EditApplicationDialog({
               <oj-input-text
                 id="editAppHostname"
                 value={hostname}
-                onvalueChanged={(e: CustomEvent) => setHostname(e.detail.value)}
+                onrawValueChanged={(e: CustomEvent) => setHostname(e.detail.value)}
                 required
                 disabled={loading}
               ></oj-input-text>
@@ -356,9 +361,10 @@ export default function EditApplicationDialog({
               <oj-input-text
                 id="editAppDescription"
                 value={description}
-                onvalueChanged={(e: CustomEvent) =>
+                onrawValueChanged={(e: CustomEvent) =>{
+                  console.log("Description in the form:", e.detail)
                   setDescription(e.detail.value)
-                }
+                }}
                 disabled={loading}
                 required
               ></oj-input-text>
