@@ -170,89 +170,75 @@ export const updateApplication = async (
     description: req.body.description || "",
   };
 
-  try {
-    const updated = await Application.findByIdAndUpdate(id, newApp, {
-      new: true,
-      runValidators: true,
-    });
+  const updated = await Application.findByIdAndUpdate(id, newApp, {
+    new: true,
+    runValidators: true,
+  });
 
-    if (!updated) {
-      logger.warn(`Update failed: Application not found (ID: ${id})`);
-      res.status(404).send({ error: "Application not found" });
-      return;
-    }
-
-    // continue with user group updates...
-
-    if (req.body.userGroups && Array.isArray(req.body.userGroups)) {
-      const incomingGroupIds = req.body.userGroups;
-
-      // Get currently assigned groups
-      const currentlyAssignedGroups = await UserGroup.find(
-        { assigned_applications: updated._id },
-        "_id"
-      ).lean();
-
-      const currentGroupIds = currentlyAssignedGroups.map((g) =>
-        g._id.toString()
-      );
-
-      // Compute differences in user groups
-      const toAdd = incomingGroupIds.filter(
-        (id: string) => !currentGroupIds.includes(id)
-      );
-      const toRemove = currentGroupIds.filter(
-        (id: string) => !incomingGroupIds.includes(id)
-      );
-
-      const updates = [];
-
-      if (toAdd.length > 0) {
-        updates.push(
-          UserGroup.updateMany(
-            {
-              $or: [{ _id: { $in: toAdd } }, { is_admin: true }],
-            },
-            {
-              $addToSet: { assigned_applications: updated._id },
-            }
-          )
-        );
-      }
-
-      if (toRemove.length > 0) {
-        updates.push(
-          UserGroup.updateMany(
-            {
-              _id: { $in: toRemove },
-              is_admin: false,
-              is_active: true,
-            },
-            {
-              $pull: { assigned_applications: updated._id },
-            }
-          )
-        );
-      }
-
-      await Promise.all(updates);
-    }
-
-    logger.info(
-      `Application updated (PATCH): ${updated.name} (${updated._id})`
-    );
-    res.send(updated);
-  } catch (err: any) {
-    // Check for duplicate key error
-    if (err.code === 11000 && err.keyPattern?.name) {
-      logger.warn(`Duplicate application name: ${newApp.name}`);
-      res.status(409).send({ error: "Application name must be unique" });
-      return;
-    }
-
-    // Let the global error handler catch the rest
-    throw err;
+  if (!updated) {
+    logger.warn(`Update failed: Application not found (ID: ${id})`);
+    res.status(404).send({ error: "Application not found" });
+    return;
   }
+
+  // continue with user group updates...
+
+  if (req.body.userGroups && Array.isArray(req.body.userGroups)) {
+    const incomingGroupIds = req.body.userGroups;
+
+    // Get currently assigned groups
+    const currentlyAssignedGroups = await UserGroup.find(
+      { assigned_applications: updated._id },
+      "_id"
+    ).lean();
+
+    const currentGroupIds = currentlyAssignedGroups.map((g) =>
+      g._id.toString()
+    );
+
+    // Compute differences in user groups
+    const toAdd = incomingGroupIds.filter(
+      (id: string) => !currentGroupIds.includes(id)
+    );
+    const toRemove = currentGroupIds.filter(
+      (id: string) => !incomingGroupIds.includes(id)
+    );
+
+    const updates = [];
+
+    if (toAdd.length > 0) {
+      updates.push(
+        UserGroup.updateMany(
+          {
+            $or: [{ _id: { $in: toAdd } }, { is_admin: true }],
+          },
+          {
+            $addToSet: { assigned_applications: updated._id },
+          }
+        )
+      );
+    }
+
+    if (toRemove.length > 0) {
+      updates.push(
+        UserGroup.updateMany(
+          {
+            _id: { $in: toRemove },
+            is_admin: false,
+            is_active: true,
+          },
+          {
+            $pull: { assigned_applications: updated._id },
+          }
+        )
+      );
+    }
+
+    await Promise.all(updates);
+  }
+
+  logger.info(`Application updated (PATCH): ${updated.name} (${updated._id})`);
+  res.send(updated);
 };
 
 // Deletes an application by ID
