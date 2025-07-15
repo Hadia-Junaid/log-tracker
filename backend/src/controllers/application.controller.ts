@@ -93,8 +93,6 @@ export const getApplications = async (
     filter.isActive = status === "active" ? true : false;
   }
 
-  logger.info("Filter State:" + filter);
-
   logger.debug("Environment filter before processing:" + environment);
 
   // environment is now an array of strings already
