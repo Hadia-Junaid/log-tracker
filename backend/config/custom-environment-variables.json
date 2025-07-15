@@ -12,6 +12,17 @@
 
   "google": {
     "admin": {
+      "type": "GCP_TYPE",
+      "projectId": "GCP_PROJECT_ID",
+      "privateKeyId": "GCP_PRIVATE_KEY_ID",
+      "privateKey": "GCP_PRIVATE_KEY",
+      "clientEmail": "GCP_CLIENT_EMAIL",
+      "clientId": "GCP_CLIENT_ID",
+      "authUri": "GCP_AUTH_URI",
+      "tokenUri": "GCP_TOKEN_URI",
+      "authProviderX509CertUrl": "GCP_AUTH_PROVIDER",
+      "clientX509CertUrl": "GCP_CLIENT_CERT",
+      "universeDomain": "GCP_UNIVERSE_DOMAIN",
       "serviceAccountKeyPath": "GOOGLE_SERVICE_ACCOUNT_KEY_PATH",
       "adminImpersonationEmail": "GOOGLE_ADMIN_IMPERSONATION_EMAIL",
       "adminScopes": "GOOGLE_ADMIN_SCOPES",

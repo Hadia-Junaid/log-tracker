@@ -27,11 +27,24 @@ export const getAdminDirectoryService = async () => {
         return adminDirectoryService; // Return existing instance if already initialized
     }
 
-        // Load the service account credentials from the JSON file
-        const auth = new GoogleAuth({
-            keyFile: SERVICE_ACCOUNT_KEY_PATH,
-            scopes: ADMIN_SCOPES,
-        });
+        
+const auth = new GoogleAuth({
+  credentials: {
+    type: config.get<string>('google.admin.type'),
+    project_id: config.get<string>('google.admin.projectId'),
+    private_key_id: config.get<string>('google.admin.privateKeyId'),
+    private_key: config.get<string>('google.admin.privateKey').replace(/\\n/g, '\n'),
+    client_email: config.get<string>('google.admin.clientEmail'),
+    client_id: config.get<string>('google.admin.clientId'),
+    //auth_uri: config.get<string>('google.admin.authUri'),
+    //token_uri: config.get<string>('google.admin.tokenUri'),
+    //auth_provider_x509_cert_url: config.get<string>('google.admin.authProviderX509CertUrl'),
+    //client_x509_cert_url: config.get<string>('google.admin.clientX509CertUrl'),
+    universe_domain: config.get<string>('google.admin.universeDomain'),
+  },
+  scopes: ADMIN_SCOPES,
+});
+
 
         // Delegate authority to the specified Google Workspace Super Admin
         const client = await auth.getClient() as JWT;
