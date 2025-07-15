@@ -198,6 +198,16 @@ const LogActivityChart = () => {
   };
 
 
+  const chartRef = useRef<HTMLElement>(null);
+
+  // 3) whenever data, groups, or visibleSeries change, force a refresh
+  useEffect(() => {
+    if (chartRef.current && typeof (chartRef.current as any).refresh === "function") {
+      (chartRef.current as any).refresh();
+    }
+  }, [chartProvider, groups, visibleSeries]);
+
+
   if (loading) {
     return (
       <div class="log-chart-loading">
@@ -309,23 +319,28 @@ const LogActivityChart = () => {
 
       {/* Chart */}
       <div class="log-chart-box">
-        <oj-c-line-chart
-          id="volumeLineChart"
-          data={chartProvider}
-          groups={groups}
-          series={visibleSeries}
-          orientation="vertical"
-          track-resize="on"
-          animation-on-display="auto"
-          animation-on-data-change="auto"
-          class="log-chart"
-          group-label-style="transform: rotate(-45deg); text-anchor: end; font-size: 12px;"
-          hover-behavior="dim"
-          tooltip-renderer={tooltipRenderer}
-        >
-          <template slot="seriesTemplate" render={chartSeries}></template>
-          <template slot="itemTemplate" render={chartItem}></template>
-        </oj-c-line-chart>
+        {chartProvider && groups.length > 0 && visibleSeries.length > 0 ? (
+          <oj-c-line-chart
+            id="volumeLineChart"
+            data={chartProvider}
+            ref={chartRef}
+            groups={groups}
+            series={visibleSeries}
+            orientation="vertical"
+            track-resize="on"
+            animation-on-display="auto"
+            animation-on-data-change="auto"
+            class="log-chart"
+            group-label-style="transform: rotate(-45deg); text-anchor: end; font-size: 12px;"
+            hover-behavior="dim"
+            tooltip-renderer={tooltipRenderer}
+          >
+            <template slot="seriesTemplate" render={chartSeries}></template>
+            <template slot="itemTemplate" render={chartItem}></template>
+          </oj-c-line-chart>
+        ) : (
+          <oj-progress-circle size="md" />
+        )}
 
         <div class="log-chart-summary">
           {series.map((level) => {
@@ -346,7 +361,7 @@ const LogActivityChart = () => {
                   {level}
                 </div>
                 <div class="log-chart-total">{total.toLocaleString()}</div>
-                <div class="log-chart-avg">Avg: {avg}</div>
+                <div class="log-chart-avg">Average Logs per Hour: {avg}</div>
               </div>
             );
           })}
