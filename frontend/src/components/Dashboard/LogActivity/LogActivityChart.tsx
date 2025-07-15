@@ -1,10 +1,11 @@
 /** @jsx h */
 import { h } from "preact";
 import { useMemo, useEffect, useState, useRef } from "preact/hooks";
+import { ChartLine } from "lucide-preact";
 import ArrayDataProvider from "ojs/ojarraydataprovider";
 import "oj-c/line-chart";
 import axios from "../../../api/axios";
-import "../../../styles/dashboard/logactivitychart.css"; 
+import "../../../styles/dashboard/logactivitychart.css";
 
 type ChartItem = { groupId: string; seriesId: string; value: number };
 
@@ -178,6 +179,25 @@ const LogActivityChart = () => {
     );
   };
 
+  const tooltipRenderer = (context: any) => {
+    const { group, series, value } = context;
+    return {
+      insert: `<div class="oj-sm-padding-2x">
+      <div><strong>${series}</strong></div>
+      <div>Time: ${group}</div>
+      <div>Logs: ${value}</div>
+    </div>`,
+    };
+  };
+
+  const colorMap: Record<string, string> = {
+    DEBUG: "#64748b",
+    INFO: "#06b6d4",
+    WARN: "#f59e0b",
+    ERROR: "#ef4444",
+  };
+
+
   if (loading) {
     return (
       <div class="log-chart-loading">
@@ -204,8 +224,54 @@ const LogActivityChart = () => {
 
   return (
     <div class="oj-panel log-chart-container">
+
+      <div class="log-chart-header">
+        <div class="log-chart-title">
+          <ChartLine class="log-chart-icon" />
+          Log Level Analytics
+        </div>
+        <div class="log-chart-total">
+          <span class="oj-badge oj-badge-outline">
+            {chartData.reduce((sum, item) => sum + item.value, 0).toLocaleString()} Total Logs
+          </span>
+        </div>
+      </div>
+
       {/* Application Filter */}
       <div class="log-chart-filter-bar">
+        <div class="log-chart-controls">
+          {series.map((level) => {
+            const isLastChecked =
+              visibleLogLevels.length === 1 && visibleLogLevels.includes(level);
+
+            return (
+              <label
+                key={level}
+                class="log-chart-checkbox"
+                style={{
+                  opacity: isLastChecked ? 0.6 : 1,
+                  color: colorMap[level],
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={visibleLogLevels.includes(level)}
+                  disabled={isLastChecked}
+                  onChange={() => {
+                    setVisibleLogLevels((prev) =>
+                      prev.includes(level)
+                        ? prev.length > 1 // Only allow unchecking if more than one is checked
+                          ? prev.filter((l) => l !== level)
+                          : prev
+                        : [...prev, level]
+                    );
+                  }}
+                />
+                {level}
+              </label>
+            );
+          })}
+        </div>
         <button
           onClick={() => setShowApplicationDropdown(!showApplicationDropdown)}
           class="log-chart-app-dropdown-btn"
@@ -243,39 +309,6 @@ const LogActivityChart = () => {
 
       {/* Chart */}
       <div class="log-chart-box">
-        <div class="log-chart-controls">
-          {series.map((level) => {
-            const isLastChecked =
-              visibleLogLevels.length === 1 && visibleLogLevels.includes(level);
-
-            return (
-              <label
-                key={level}
-                class="log-chart-checkbox"
-                style={{
-                  opacity: isLastChecked ? 0.6 : 1,
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={visibleLogLevels.includes(level)}
-                  disabled={isLastChecked}
-                  onChange={() => {
-                    setVisibleLogLevels((prev) =>
-                      prev.includes(level)
-                        ? prev.length > 1 // Only allow unchecking if more than one is checked
-                          ? prev.filter((l) => l !== level)
-                          : prev
-                        : [...prev, level]
-                    );
-                  }}
-                />
-                {level}
-              </label>
-            );
-          })}
-        </div>
-
         <oj-c-line-chart
           id="volumeLineChart"
           data={chartProvider}
@@ -288,10 +321,37 @@ const LogActivityChart = () => {
           class="log-chart"
           group-label-style="transform: rotate(-45deg); text-anchor: end; font-size: 12px;"
           hover-behavior="dim"
+          tooltip-renderer={tooltipRenderer}
         >
           <template slot="seriesTemplate" render={chartSeries}></template>
           <template slot="itemTemplate" render={chartItem}></template>
         </oj-c-line-chart>
+
+        <div class="log-chart-summary">
+          {series.map((level) => {
+            const total = chartData
+              .filter((item) => item.seriesId === level)
+              .reduce((sum, item) => sum + item.value, 0);
+            const avg = Math.round(
+              total / groups.length || 0
+            );
+
+            return (
+              <div key={level} class="log-chart-summary-box">
+                <div class="log-chart-label">
+                  <div
+                    class="log-chart-color-dot"
+                    style={{ backgroundColor: colorMap[level] }}
+                  />
+                  {level}
+                </div>
+                <div class="log-chart-total">{total.toLocaleString()}</div>
+                <div class="log-chart-avg">Avg: {avg}</div>
+              </div>
+            );
+          })}
+        </div>
+
       </div>
     </div>
   );
