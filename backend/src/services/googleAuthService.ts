@@ -20,9 +20,7 @@ class GoogleAuthService {
     this.oauth2Client = new OAuth2Client(clientId, clientSecret, redirectUri);
   }
 
-  /**
-   * Generate Google OAuth URL for user authorization
-   */
+ 
   generateAuthUrl(): string {
     const scopes = [
       'openid',
@@ -40,11 +38,8 @@ class GoogleAuthService {
     return authUrl;
   }
 
-  /**
-   * Exchange authorization code for tokens and get user info
-   */
+ 
   async authenticateUser(code: string): Promise<GoogleUserInfo> {
-    try {
       // Exchange authorization code for access token
       const { tokens } = await this.oauth2Client.getToken(code);
       this.oauth2Client.setCredentials(tokens);
@@ -75,49 +70,21 @@ class GoogleAuthService {
       logger.info(`User authenticated: ${userInfo.email}`);
       return userInfo;
 
-    } catch (error) {
-      logger.error('Google authentication error:', error);
-      throw new Error('Failed to authenticate with Google');
-    }
+    
   }
 
   async revokeTokens(): Promise<void> {
-    try {
       // Check if there are any credentials to revoke
       const credentials = this.oauth2Client.credentials;
       
       if (!credentials || (!credentials.access_token && !credentials.refresh_token)) {
         logger.warn('No Google credentials available to revoke - this is expected in stateless architecture');
-        return; // Don't throw an error, just log a warning
+        return; 
       }
 
       await this.oauth2Client.revokeCredentials();
       logger.info('Google tokens revoked successfully');
-    } catch (error) {
-      logger.error('Error revoking Google tokens:', error);
-      // Don't throw error - log it but allow logout to continue
-      throw new Error('Failed to revoke Google tokens');
-    }
-  }
-
-  
-  async revokeSpecificTokens(refreshToken: string): Promise<void> {
-    try {
-      // Create a temporary OAuth2Client instance with the specific refresh token
-      const tempClient = new OAuth2Client(
-        config.get<string>('auth.google.clientId'),
-        config.get<string>('auth.google.clientSecret'),
-        config.get<string>('auth.google.redirectUri')
-      );
-      
-      tempClient.setCredentials({ refresh_token: refreshToken });
-      await tempClient.revokeCredentials();
-      
-      logger.info('Specific Google tokens revoked successfully');
-    } catch (error) {
-      logger.error('Error revoking specific Google tokens:', error);
-      throw new Error('Failed to revoke specific Google tokens');
-    }
+    
   }
 }
 

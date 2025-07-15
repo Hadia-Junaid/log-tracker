@@ -120,12 +120,8 @@ export const createUserGroup = async (
   // Insert all new users
   let insertedUsers: any[] = [];
   if (newUserDocs.length > 0) {
-    try {
       insertedUsers = await User.insertMany(newUserDocs, { ordered: false });
-    } catch (err) {
-      console.error("Error inserting new users:", err);
-      // Optionally handle duplicate key errors or others here
-    }
+    
   }
   // Combine existing and inserted users
   const allUsers = [...existingUsers, ...insertedUsers];
@@ -232,12 +228,8 @@ export const updateUserGroup = async (
   // Insert all new users
   let insertedUsers: any[] = [];
   if (newUserDocs.length > 0) {
-    try {
       insertedUsers = await User.insertMany(newUserDocs, { ordered: false });
-    } catch (err) {
-      console.error("Error inserting new users:", err);
-      // Optionally handle duplicate key errors or others here
-    }
+    
   }
   // Combine existing and inserted users
   const allUsers = [...existingUsers, ...insertedUsers];

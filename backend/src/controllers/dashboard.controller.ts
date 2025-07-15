@@ -120,7 +120,6 @@ export const updatePinnedApps = async (req: Request, res: Response): Promise<voi
     return;
   }
 
-  try {
     // If appId is passed → handle single unpin
     if (singleAppId) {
       const updatedUser = await User.findByIdAndUpdate(
@@ -172,10 +171,7 @@ export const updatePinnedApps = async (req: Request, res: Response): Promise<voi
       pinned_applications: updatedUser.pinned_applications
     });
 
-  } catch (error) {
-    logger.error(`Failed to update pinned apps for user ${id}:`, error);
-    res.status(500).json({ error: 'Internal server error' });
-  }
+  
 };
 
 export const cleanupPinnedApps = async (req: Request, res: Response): Promise<void> => {
@@ -342,7 +338,6 @@ function isValidUnit(unit: string): unit is TimeUnit {
 }
 
 export const getAtRiskApps = async (req: Request, res: Response): Promise<void> => {
-  try {
     const apps = await Application.find({ isActive: true });
     const rules = await AtRiskRule.find();
 
@@ -394,8 +389,6 @@ export const getAtRiskApps = async (req: Request, res: Response): Promise<void> 
 
     logger.info(`Found ${atRiskResults.length} at-risk applications`);
     res.status(200).json({ at_risk_applications: atRiskResults });
-  } catch (error) {
-    logger.error("Failed to evaluate at-risk applications", error);
-    res.status(500).json({ error: "Internal Server Error" });
-  }
+    
+    
 };
