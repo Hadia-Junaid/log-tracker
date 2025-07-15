@@ -329,7 +329,7 @@ const LogActivityChart = () => {
             groups={groups}
             series={visibleSeries}
             orientation="vertical"
-            track-resize="on"
+            trackResize={false}
             animation-on-display="auto"
             animation-on-data-change="auto"
             class="log-chart"
