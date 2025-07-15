@@ -148,6 +148,7 @@ const LogActivityChart = () => {
   }, [series, visibleLogLevels]);
 
   const handleApplicationChange = (appId: string) => {
+    setTimeout(() => {
     setSelectedApplications((prev) => {
       if (prev.includes(appId)) {
         return prev.filter((id) => id !== appId);
@@ -155,6 +156,7 @@ const LogActivityChart = () => {
         return [...prev, appId];
       }
     });
+    }, 100); // Delay to ensure dropdown closes before state update
   };
 
   const getApplicationName = (appId: string) => {
