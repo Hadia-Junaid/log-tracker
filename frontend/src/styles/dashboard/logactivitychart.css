@@ -1,6 +1,6 @@
 .log-chart-container {
   width: 100%;
-  max-width: 1300px;
+  max-width: 1200px;
   padding: 1.5rem;
   background-color: #fff;
   border-radius: 12px;
@@ -92,16 +92,15 @@
   cursor: pointer;
 }
 
-
-
 .log-chart-box {
   width: 100%;
   overflow-x: auto;
 }
 
 .log-chart {
-  min-height: 400px;
-  min-width: 1200px;
+  height: 400px;
+  width: 100%;
+  /* min-width: unset !important; */
 }
 
 .log-chart-loading,
@@ -159,4 +158,125 @@
   width: 10px;
   height: 10px;
   border-radius: 2px;
+}
+
+/* Smaller screens: stack header and filters vertically */
+@media (max-width: 768px) {
+  .log-chart-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .log-chart-filter-bar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .log-chart-controls {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+
+  .log-chart-summary {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 0.75rem;
+  }
+
+  .log-chart-container {
+    padding: 1rem;
+  }
+
+  .log-chart {
+    min-width: 100%;
+  }
+}
+
+/* Very small screens (phones) */
+@media (max-width: 480px) {
+  .log-chart-title {
+    font-size: 1.1rem;
+  }
+
+  .log-chart-checkbox {
+    font-size: 14px;
+  }
+
+  .log-chart-summary-box {
+    padding: 0.5rem;
+  }
+
+  .log-chart-summary-box .log-chart-total {
+    font-size: 1.1rem;
+  }
+
+  .log-chart-app-dropdown-btn {
+    width: 100%;
+    font-size: 13px;
+  }
+
+  .log-chart-dropdown {
+    min-width: 100%;
+    max-height: 200px;
+  }
+}
+
+/* Default: full width for all screens */
+.log-chart-container,
+.log-chart-box,
+.log-chart {
+  width: 100%;
+  min-width: 100%;
+}
+
+/* For large screens: constrain max width */
+@media (min-width: 1440px) {
+  .log-chart-container {
+    max-width: 1300px;
+  }
+
+  .log-chart-box,
+  .log-chart {
+    width: 100%;
+  }
+}
+
+/* Medium screens (1024px to 1439px) */
+@media (max-width: 1439px) and (min-width: 1024px) {
+  .log-chart-container {
+    max-width: 1000px;
+  }
+
+  .log-chart-box,
+  .log-chart {
+    width: 100%;
+  }
+}
+
+/* Small laptops/tablets (768px to 1023px) */
+@media (max-width: 1023px) and (min-width: 768px) {
+  .log-chart-container {
+    max-width: 720px;
+  }
+
+  .log-chart-box,
+  .log-chart {
+    width: 100%;
+  }
+}
+
+/* Mobile screens (below 768px) */
+@media (max-width: 767px) {
+  .log-chart-container {
+    max-width: 100%;
+    padding: 1rem;
+  }
+
+  .log-chart-box,
+  .log-chart {
+    width: 100%;
+    min-width: 100%;
+  }
 }
