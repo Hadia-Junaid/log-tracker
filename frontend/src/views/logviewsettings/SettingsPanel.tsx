@@ -41,6 +41,7 @@ const SettingsPanel = () => {
   const [isSavingDataRetention, setIsSavingDataRetention] = useState(false)
   const [showLogDisplayConfirmation, setShowLogDisplayConfirmation] = useState(false)
   const [showDataRetentionConfirmation, setShowDataRetentionConfirmation] = useState(false)
+  const [autoRefreshTimeError, setAutoRefreshTimeError] = useState<string | null>(null)
 
   // Modal state for AtRiskRules
   const [isRuleModalOpen, setIsRuleModalOpen] = useState(false)
@@ -299,6 +300,9 @@ const SettingsPanel = () => {
     )
   }
 
+  const isLogDisplaySaveDisabled =
+    !hasLogDisplayChanges || isSavingLogDisplay || !!autoRefreshTimeError
+
   return (
     <div class="settings-page">
       {/* Toast Notifications */}
@@ -391,7 +395,15 @@ const SettingsPanel = () => {
                           type="number"
                           class="time-input"
                           value={autoRefreshTime}
-                          onChange={(e) => setAutoRefreshTime(Number(e.currentTarget.value))}
+                          onChange={(e) => {
+                            const value = Number(e.currentTarget.value)
+                            setAutoRefreshTime(value)
+                            if (value < 15 || value > 120) {
+                              setAutoRefreshTimeError("Auto-refresh time must be between 15 and 120 seconds.")
+                            } else {
+                              setAutoRefreshTimeError(null)
+                            }
+                          }}
                           min="5"
                           max="300"
                         />
@@ -402,6 +414,11 @@ const SettingsPanel = () => {
                       <span class="current-value-display">(Currently: {autoRefreshTime} seconds when enabled)</span>
                     )}
                   </div>
+                  {autoRefreshTimeError && (
+                    <div style={{ color: 'var(--error-600)', fontSize: '13px', marginTop: '4px' }}>
+                      {autoRefreshTimeError}
+                    </div>
+                  )}
                 </div>
                 <div class="setting-control">
                   <AutoRefresh value={autoRefresh} onChange={setAutoRefresh} />
@@ -444,7 +461,7 @@ const SettingsPanel = () => {
               <oj-button
                 chroming="solid"
                 class={`save-button ${hasLogDisplayChanges ? "save-button-active" : ""}`}
-                disabled={!hasLogDisplayChanges || isSavingLogDisplay}
+                disabled={isLogDisplaySaveDisabled}
                 onojAction={handleLogDisplaySaveInitiate}
               >
                 {isSavingLogDisplay ? (
