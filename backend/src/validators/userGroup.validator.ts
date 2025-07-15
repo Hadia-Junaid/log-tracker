@@ -46,5 +46,5 @@ export const updateUserGroupSchema = Joi.object({
     .messages({
       'array.min': 'Please select at least one accessible application.'
     }),
-  members: Joi.array().items(Joi.string().email())
+  members: Joi.array(),
 });

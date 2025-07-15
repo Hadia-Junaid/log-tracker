@@ -39,7 +39,7 @@ export interface CreateGroupPayload {
 
 export interface UpdateGroupPayload {
   name?: string;
-  members?: string[];
+  members?: { name: string; email: string }[];
   assigned_applications?: string[];
   is_admin?: boolean;
 }
