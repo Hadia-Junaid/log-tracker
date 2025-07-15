@@ -300,7 +300,9 @@ const LogActivityChart = () => {
       </div>
 
       {/* Chart */}
-      <div style={{ width: "100%", overflowX: "auto", backgroundColor: "white" }}>
+      <div
+        style={{ width: "100%", overflowX: "auto", backgroundColor: "white" }}
+      >
         <div
           style={{
             marginBottom: "12px",
@@ -343,22 +345,30 @@ const LogActivityChart = () => {
           })}
         </div>
 
-        <oj-c-line-chart
-          id="volumeLineChart"
-          data={chartProvider}
-          groups={groups}
-          series={visibleSeries}
-          orientation="vertical"
-          track-resize="on"
-          animation-on-display="auto"
-          animation-on-data-change="auto"
-          style="height: 300px; min-width: 1200px;"
-          group-label-style="transform: rotate(-45deg); text-anchor: end; font-size: 12px;"
-          hover-behavior="dim"
+        <div
+          style={{ minHeight: "300px", minWidth: "1200px", overflow: "hidden" }}
         >
-          <template slot="seriesTemplate" render={chartSeries}></template>
-          <template slot="itemTemplate" render={chartItem}></template>
-        </oj-c-line-chart>
+          {chartProvider && groups?.length && visibleSeries?.length ? (
+            <oj-c-line-chart
+              id="volumeLineChart"
+              data={chartProvider}
+              groups={groups}
+              series={visibleSeries}
+              orientation="vertical"
+              track-resize="off"
+              animation-on-display="auto"
+              animation-on-data-change="auto"
+              style="height: 300px; min-width: 1200px;"
+              group-label-style="transform: rotate(-45deg); text-anchor: end; font-size: 12px;"
+              hover-behavior="dim"
+            >
+              <template slot="seriesTemplate" render={chartSeries}></template>
+              <template slot="itemTemplate" render={chartItem}></template>
+            </oj-c-line-chart>
+          ) : (
+            <oj-progress-circle size="md" />
+          )}
+        </div>
       </div>
     </div>
   );
