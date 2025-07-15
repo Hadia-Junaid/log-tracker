@@ -3,7 +3,16 @@ import Joi from 'joi';
 export const updateSettingsSchema = Joi.object({
   autoRefresh: Joi.boolean().required(),
   logsPerPage: Joi.number().required(),
-  autoRefreshTime: Joi.number().required() 
+  autoRefreshTime: Joi.number()
+    .required()
+    .min(15)
+    .max(120)
+    .messages({
+      'number.base': '"autoRefreshTime" must be a number',
+      'number.min': '"autoRefreshTime" must be at least {#limit} seconds',
+      'number.max': '"autoRefreshTime" must not exceed {#limit} seconds',
+      'any.required': '"autoRefreshTime" is required',
+    }),
 });
 
 export const atRiskRuleSchema = Joi.object({
