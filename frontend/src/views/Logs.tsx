@@ -51,7 +51,6 @@ export default function Logs(props: Props) {
   const [startTime, setStartTime] = useState<string | null>(initialStartTime);
   const [endTime, setEndTime] = useState<string | null>(initialEndTime);
 
-  // ✅ Custom start/end for manual inputs
   const [customStart, setCustomStart] = useState<string | null>(null);
   const [customEnd, setCustomEnd] = useState<string | null>(null);
 
@@ -69,59 +68,62 @@ export default function Logs(props: Props) {
     return () => clearTimeout(handler);
   }, [search]);
 
-  useEffect(() => {
-  const now = new Date();
-  let start: Date | null = null;
+  const updateStartEndTimesFromTimeRange = () => {
+    const now = new Date();
+    let start: Date | null = null;
 
-  if (timeRange === "custom") {
-    // Don’t update start/endTime unless both are selected
-    if (customStart && customEnd) {
+    if (timeRange === "custom") {
+      if (customStart && customEnd) {
+        setStartTime(customStart);
+        setEndTime(customEnd);
+      }
+    } else {
+      switch (timeRange) {
+        case "Last hour":
+          start = new Date(now.getTime() - 60 * 60 * 1000);
+          setStartTime(start.toISOString());
+          setEndTime(now.toISOString());
+          break;
+        case "Last 24 hours":
+          start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+          setStartTime(start.toISOString());
+          setEndTime(now.toISOString());
+          break;
+        case "7 days":
+          start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          setStartTime(start.toISOString());
+          setEndTime(now.toISOString());
+          break;
+        case "All":
+          setStartTime(null);
+          setEndTime(null);
+          break;
+        default:
+          setStartTime(null);
+          setEndTime(null);
+      }
+    }
+  };
+
+  useEffect(() => {
+    updateStartEndTimesFromTimeRange();
+    setPage(1);
+  }, [timeRange]);
+
+  // NEW: Separate effect for when both customStart and customEnd are filled
+  useEffect(() => {
+    if (timeRange === "custom" && customStart && customEnd) {
       setStartTime(customStart);
       setEndTime(customEnd);
+      setPage(1);
     }
-  } else {
-    switch (timeRange) {
-      case "Last hour":
-        start = new Date(now.getTime() - 60 * 60 * 1000);
-        setStartTime(start.toISOString());
-        setEndTime(now.toISOString());
-        break;
-      case "Last 24 hours":
-        start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-        setStartTime(start.toISOString());
-        setEndTime(now.toISOString());
-        break;
-      case "7 days":
-        start = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-        setStartTime(start.toISOString());
-        setEndTime(now.toISOString());
-        break;
-      case "All":
-        setStartTime(null);
-        setEndTime(null);
-        break;
-      default:
-        setStartTime(null);
-        setEndTime(null);
-    }
-  }
-
-  setPage(1);
-}, [timeRange]);
-
-// NEW: Separate effect for when both customStart and customEnd are filled
-useEffect(() => {
-  if (timeRange === "custom" && customStart && customEnd) {
-    setStartTime(customStart);
-    setEndTime(customEnd);
-    setPage(1);
-  }
-}, [customStart, customEnd]);
+  }, [customStart, customEnd]);
 
 
   // Refactor fetchLogs so it can be called from anywhere
   const fetchLogs = async () => {
     setLoading(true);
+    // updateStartEndTimesFromTimeRange(); 
     try {
       const res = await axios.get(`/logs`, {
         params: {
@@ -156,7 +158,11 @@ useEffect(() => {
     const interval = setInterval(() => {
       const now = Date.now();
       if (now - lastFetchTimeRef.current >= autoRefreshTime * 1000) {
-        fetchLogs();
+        updateStartEndTimesFromTimeRange();
+        if(timeRange === "custom" && customStart && customEnd) {
+          fetchLogs();
+        }
+        // fetchLogs();
       }
     }, 1000); // Check every second
     return () => clearInterval(interval);
@@ -191,8 +197,6 @@ useEffect(() => {
     }));
     return new ArrayDataProvider(enrichedLogs, { keyAttributes: "_id" });
   }, [logs, appMap]);
-
-  
 
   const columns = [
     {
@@ -252,6 +256,7 @@ useEffect(() => {
   
   const handleExport = async (format: "csv" | "json") => {
     try {
+      // updateStartEndTimesFromTimeRange();
       const res = await axios.get(`/logs/export`, {
         params: {
           search: debouncedSearch,
