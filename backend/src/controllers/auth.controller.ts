@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from "express";
 import googleAuthService from "../services/googleAuthService";
 import jwtService from "../services/jwtService";
 import User from "../models/User";
+import UserGroup from "../models/UserGroup";
 import logger from "../utils/logger";
 import config from "config";
 import tempCodeManager from "../utils/tempCodeManager";
@@ -30,26 +31,53 @@ class AuthController {
                 await googleAuthService.authenticateUser(code);
             logger.info(`Google user info: ${JSON.stringify(googleUserInfo)}`);
 
-            // Check if user exists in MongoDB
+            // 1. Find the user in your database
             const existingUser = await User.findOne({
                 email: googleUserInfo.email,
             });
 
+            // If the user doesn't even exist in the Users collection, deny access.
             if (!existingUser) {
                 logger.warn(
                     `Access denied for user: ${googleUserInfo.email} - User not found in database`
                 );
+                const message = encodeURIComponent('Access Denied. Please contact your administrator.');
                 res.redirect(
-                    `${config.get<string>("frontend.baseUrl")}/#login?error=access_denied&message=Access denied. Please contact your administrator.`
+                    `${config.get<string>("frontend.baseUrl")}/#login?error=access_denied&message=${message}`
                 );
                 return;
             }
 
+            // Update user name if it changed
             if (existingUser.name !== googleUserInfo.name) {
                 existingUser.name = googleUserInfo.name;
                 await existingUser.save();
             }
 
+            // 2. Check if the user is a member of ANY UserGroup
+            const groupMembership = await UserGroup.findOne({ 
+                members: existingUser._id,
+                is_active: true 
+            });
+
+            // 3. If they are NOT in any group, they are an "orphaned" user.
+            if (!groupMembership) {
+                logger.warn(
+                    `Orphaned user detected: ${existingUser.email} - User not in any active group, deleting user`
+                );
+                
+                // As per your requirement, delete the user from the User collection
+                await User.findByIdAndDelete(existingUser._id);
+
+                // Redirect back to the login page with an access denied message
+                const message = encodeURIComponent('Access Denied. Please contact your administrator.');
+                res.redirect(
+                    `${config.get<string>("frontend.baseUrl")}/#login?error=access_denied&message=${message}`
+                );
+                return;
+            }
+
+            // 4. If they ARE in a group, proceed with normal login.
             const tempCode = tempCodeManager.generateTempCode({
                 userId: (existingUser._id as any).toString(),
                 email: existingUser.email,
@@ -67,6 +95,8 @@ class AuthController {
             logger.info(
                 `Redirecting to frontend with temporary code for user: ${existingUser.email}`
             );
+            
+        
     }
 
     async exchangeAuthCode(req: Request, res: Response): Promise<void> {
