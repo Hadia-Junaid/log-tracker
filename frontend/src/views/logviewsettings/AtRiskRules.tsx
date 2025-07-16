@@ -271,7 +271,7 @@ const AtRiskRules = ({
                   <span class="summary-value"> {r.type_of_logs} logs</span>
                   within the last
                   <span class="summary-value"> {r.time}</span>
-                  <span class="summary-value"> {r.unit}</span>, mark it as at-risk.
+                  <span class="summary-value"> {r.time === 1 ? r.unit.slice(0, -1) : r.unit}</span>, mark it as at-risk.
                 </div>
                 <div class="rule-action">
                   <div class="action-icon">
