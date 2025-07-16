@@ -3,13 +3,13 @@ import { h } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import axios from "../../../api/axios";
 import "../../../styles/dashboard/pinnedapps.css";
+import { useUser } from "../../../context/UserContext";
 import "ojs/ojdialog";
 import "ojs/ojcheckboxset";
 import "ojs/ojformlayout";
 import "ojs/ojinputtext";
 
 interface Props {
-  userId?: string;
   open: boolean;
   onClose: () => void;
   onRefresh?: () => Promise<void>;
@@ -20,13 +20,15 @@ interface Props {
   error: boolean;
 }
 
-const ManagePinsDialog = ({ userId, open, onClose, onRefresh, pinnedIds, setPinnedIds, allApps, loading,
+const ManagePinsDialog = ({ open, onClose, onRefresh, pinnedIds, setPinnedIds, allApps, loading,
   error, }: Props) => {
   const dialogRef = useRef<HTMLElement | null>(null);
 
   const [selectedAppIds, setSelectedAppIds] = useState<string[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [autoClose, setAutoClose] = useState(false);
+
+  const { user } = useUser();
 
   useEffect(() => {
     if (!loading) {
@@ -76,7 +78,7 @@ const ManagePinsDialog = ({ userId, open, onClose, onRefresh, pinnedIds, setPinn
   };
 
   const handleDone = async () => {
-    if (!userId) return;
+    if (!user?.id) return;
 
     const hasChanged = JSON.stringify(selectedAppIds) !== JSON.stringify(pinnedIds);
     if (!hasChanged) {
@@ -86,7 +88,7 @@ const ManagePinsDialog = ({ userId, open, onClose, onRefresh, pinnedIds, setPinn
 
     try {
       setAutoClose(true);
-      await axios.patch(`/dashboard/pinned/${userId}`, { appIds: selectedAppIds });
+      await axios.patch(`/dashboard/pinned/${user.id}`, { appIds: selectedAppIds });
       setMessage("Pins updated successfully.");
       setPinnedIds(selectedAppIds);
       await onRefresh?.();

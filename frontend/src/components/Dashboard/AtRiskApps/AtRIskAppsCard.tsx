@@ -4,6 +4,7 @@ import { h, Fragment } from "preact";
 import { useState, useRef, useEffect } from "preact/hooks";
 import { AlertTriangle } from "lucide-preact";
 import axios from "../../../api/axios";
+import { useUser } from "../../../context/UserContext";
 import "../../../styles/dashboard/atriskapps.css";
 
 interface AtRiskApp {
@@ -12,18 +13,20 @@ interface AtRiskApp {
   messages: string[];
 }
 
-const AtRiskAppsListCard = ({ userId }: { userId?: string }) => {
+const AtRiskAppsListCard = () => {
   const [apps, setApps] = useState<AtRiskApp[]>([]);
   const [selectedApp, setSelectedApp] = useState<AtRiskApp | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isMoreDialogOpen, setIsMoreDialogOpen] = useState(false);
 
+  const { user } = useUser();
+
   useEffect(() => {
-    if (!userId) return;
+    if (!user?.id) return;
 
     const fetchAtRiskApps = async () => {
       try {
-        const response = await axios.get(`/dashboard/atrisk/${userId}`);
+        const response = await axios.get(`/dashboard/atrisk/${user.id}`);
         setApps(response.data.at_risk_applications);
       } catch (error) {
         console.error("Error fetching at-risk applications:", error);
@@ -31,10 +34,24 @@ const AtRiskAppsListCard = ({ userId }: { userId?: string }) => {
     };
 
     fetchAtRiskApps();
-  }, [userId]);
+  }, [user?.id]);
 
   const displayedApps = apps.slice(0, 3);
   const remainingCount = apps.length - 3;
+
+  const [showOnlyBadge, setShowOnlyBadge] = useState(false);
+
+  useEffect(() => {
+    const checkWidth = () => {
+      const width = window.innerWidth;
+      setShowOnlyBadge(width >= 1025 && width <= 1300);
+    };
+
+    checkWidth(); // run once on mount
+
+    window.addEventListener("resize", checkWidth);
+    return () => window.removeEventListener("resize", checkWidth);
+  }, []);
 
   const AppRow = (app: AtRiskApp) => (
     <div class="risk-item" onClick={() => setSelectedApp(app)}>
@@ -43,13 +60,15 @@ const AtRiskAppsListCard = ({ userId }: { userId?: string }) => {
         <div class="risk-app-name">{app.name}</div>
       </div>
       <div class="risk-app-rule-preview">
-        {app.messages.length > 1 ? (
+        {showOnlyBadge ? (
+          <span class="risk-rule-count oj-badge oj-badge-neutral">{app.messages.length} rule{app.messages.length > 1 ? "s" : ""}</span>
+        ) : app.messages.length > 1 ? (
           <div class="risk-multiple-rules">
-            <span class="risk-single-rule">{app.messages[0]}</span>
+            <span class="risk-single-rule" title={app.messages[0]}>{app.messages[0]}</span>
             <span class="risk-rule-count oj-badge oj-badge-neutral">+{app.messages.length - 1} rules</span>
           </div>
         ) : (
-          <span class="risk-single-rule">{app.messages[0]}</span>
+          <span class="risk-single-rule" title={app.messages[0]}>{app.messages[0]}</span>
         )}
       </div>
     </div>
@@ -73,7 +92,7 @@ const AtRiskAppsListCard = ({ userId }: { userId?: string }) => {
   }, [isMoreDialogOpen]);
 
   return (
-    <div class="risk-card">
+    <div class="risk-card oj-panel">
       <div class="risk-header">
         <div class="risk-header-title">
           <AlertTriangle class="icon" />
@@ -88,57 +107,58 @@ const AtRiskAppsListCard = ({ userId }: { userId?: string }) => {
             {displayedApps.map((app) => (
               <AppRow key={app.appId} {...app} />
             ))}
-          </div>
+            {/* </div> */}
 
-          {remainingCount > 0 && (
-            <div class="risk-more-container">
-              <oj-button chroming="outlined" onojAction={() => setIsMoreDialogOpen(true)}>
-                +{remainingCount} more
-              </oj-button>
-            </div>
-          )}
-
-          {selectedApp && (
-            <oj-dialog
-              id="appDetailsDialog"
-              ref={dialogRef}
-              cancel-behavior="icon"
-              class="risk-dialog"
-              onojClose={() => setSelectedApp(null)}
-            >
-              <div slot="header" class="dialog-header">
-                <AlertTriangle class="icon" />
-                <span>{selectedApp.name}</span>
+            {remainingCount > 0 && (
+              <div class="risk-more-container">
+                <oj-button chroming="outlined" onojAction={() => setIsMoreDialogOpen(true)}>
+                  +{remainingCount} more
+                </oj-button>
               </div>
-              <div slot="body" class="dialog-body">
-                <ul class="risk-app-messages">
-                  {selectedApp.messages.map((msg, idx) => (
-                    <li key={idx} class="risk-app-message">{msg}</li>
+            )}
+
+            {selectedApp && (
+              <oj-dialog
+                id="appDetailsDialog"
+                ref={dialogRef}
+                cancel-behavior="icon"
+                class="risk-dialog"
+                onojClose={() => setSelectedApp(null)}
+              >
+                <div slot="header" class="dialog-header">
+                  <AlertTriangle class="icon" />
+                  <span>{selectedApp.name}</span>
+                </div>
+                <div slot="body" class="dialog-body">
+                  <ul class="risk-app-messages">
+                    {selectedApp.messages.map((msg, idx) => (
+                      <li key={idx} class="risk-app-message">{msg}</li>
+                    ))}
+                  </ul>
+                </div>
+              </oj-dialog>
+            )}
+
+            {isMoreDialogOpen && (
+              <oj-dialog
+                id="atRiskDialog"
+                ref={moreDialogRef}
+                cancel-behavior="icon"
+                class="risk-dialog"
+                onojClose={() => setIsMoreDialogOpen(false)}
+              >
+                <div slot="header" class="dialog-header">
+                  <AlertTriangle class="icon" />
+                  <span>All At-Risk Applications ({apps.length})</span>
+                </div>
+                <div slot="body" class="dialog-body">
+                  {apps.map((app) => (
+                    <AppRow key={app.appId} {...app} />
                   ))}
-                </ul>
-              </div>
-            </oj-dialog>
-          )}
-
-          {isMoreDialogOpen && (
-            <oj-dialog
-              id="atRiskDialog"
-              ref={moreDialogRef}
-              cancel-behavior="icon"
-              class="risk-dialog"
-              onojClose={() => setIsMoreDialogOpen(false)}
-            >
-              <div slot="header" class="dialog-header">
-                <AlertTriangle class="icon" />
-                <span>All At-Risk Applications ({apps.length})</span>
-              </div>
-              <div slot="body" class="dialog-body">
-                {apps.map((app) => (
-                  <AppRow key={app.appId} {...app} />
-                ))}
-              </div>
-            </oj-dialog>
-          )}
+                </div>
+              </oj-dialog>
+            )}
+          </div>
         </>
       ) : (
         <div class="risk-empty-state">

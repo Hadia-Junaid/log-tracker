@@ -2,6 +2,7 @@
 import { h } from "preact";
 import { useEffect, useState, useRef } from "preact/hooks";
 import axios from "../../../api/axios";
+import { useUser } from "../../../context/UserContext";
 import "ojs/ojdialog";
 import "ojs/ojbutton";
 import "ojs/ojformlayout";
@@ -19,19 +20,21 @@ interface ActiveApp {
   totalLogsLast24h: number;
 }
 
-const ActiveAppsDashboard = ({ userId }: { userId?: string }) => {
+const ActiveAppsDashboard = () => {
   const [apps, setApps] = useState<ActiveApp[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
 
+  const { user } = useUser();
+
 
   useEffect(() => {
-    if (!userId) return;
+    if (!user?.id) return;
 
     const fetchActiveApps = async () => {
       try {
-        const res = await axios.get(`/dashboard/active/${userId}`);
+        const res = await axios.get(`/dashboard/active/${user.id}`);
         setApps(res.data.active_applications);
         setError(null);
       } catch (err) {
@@ -43,7 +46,7 @@ const ActiveAppsDashboard = ({ userId }: { userId?: string }) => {
     };
 
     fetchActiveApps();
-  }, [userId]);
+  }, [user?.id]);
 
   const dialogRef = useRef(null);
 
@@ -67,7 +70,7 @@ const ActiveAppsDashboard = ({ userId }: { userId?: string }) => {
       <div class="active-apps-header">
         <span class="active-apps-title-container">
           <Activity class="icon-green" />
-          <h2 class="active-apps-title">Active Applications - Logs (24hrs)</h2>
+          <h2 class="active-apps-title">Active Applications</h2>
         </span>
         <span class="app-count-badge">{apps.length} Apps</span>
       </div>

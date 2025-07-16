@@ -1,9 +1,12 @@
 /** @jsx h */
-import { h } from "preact";
+/** @jsxFrag Fragment */
+import { h, Fragment } from "preact";
 import { useMemo, useEffect, useState, useRef } from "preact/hooks";
+import { ChartLine } from "lucide-preact";
 import ArrayDataProvider from "ojs/ojarraydataprovider";
 import "oj-c/line-chart";
 import axios from "../../../api/axios";
+import "../../../styles/dashboard/logactivitychart.css";
 
 type ChartItem = { groupId: string; seriesId: string; value: number };
 
@@ -24,9 +27,7 @@ const LogActivityChart = () => {
   const [groups, setGroups] = useState<string[]>([]);
   const [series, setSeries] = useState<string[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
-  const [selectedApplications, setSelectedApplications] = useState<string[]>(
-    []
-  );
+  const [selectedApplication, setSelectedApplication] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showApplicationDropdown, setShowApplicationDropdown] = useState(false);
@@ -62,7 +63,7 @@ const LogActivityChart = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // setLoading(true);
+        setLoading(true);
         setError(null);
 
         console.log("🔍 Starting to fetch log activity data...");
@@ -71,7 +72,7 @@ const LogActivityChart = () => {
 
         const localEnd = new Date(); // Now in local time
         const localStart = new Date(localEnd); // Clone
-        localStart.setHours(localStart.getHours() - 24); // Subtract 24 *local* hours
+        localStart.setHours(localStart.getHours() - 23); // Subtract 24 *local* hours
 
         const params: any = {
           start_time: localStart.toISOString(), // will be in UTC
@@ -80,8 +81,8 @@ const LogActivityChart = () => {
 
         console.log("📊 Query parameters:", params);
 
-        if (selectedApplications.length > 0) {
-          params.app_ids = selectedApplications.join(",");
+        if (selectedApplication && selectedApplication !== "") {
+          params.app_ids = selectedApplication;
         }
 
         console.log("📊 Fetching log activity with params:", params);
@@ -90,10 +91,6 @@ const LogActivityChart = () => {
         const data: LogActivityData = response.data;
 
         console.log("📊 Log activity response:", data);
-        console.log("📊 Chart data:", data.data);
-        console.log("📊 Groups (hours):", data.groups);
-        console.log("📊 Series (log levels):", data.series);
-        console.log("📊 Available applications:", data.applications);
 
         setChartData(data.data);
         setGroups(
@@ -117,7 +114,7 @@ const LogActivityChart = () => {
     };
 
     fetchData();
-  }, [selectedApplications]);
+  }, [selectedApplication]);
 
   const filteredChartData = useMemo(() => {
     return chartData.filter((item) => visibleLogLevels.includes(item.seriesId));
@@ -144,20 +141,6 @@ const LogActivityChart = () => {
     return series.filter((s) => visibleLogLevels.includes(s));
   }, [series, visibleLogLevels]);
 
-  const handleApplicationChange = (appId: string) => {
-    setSelectedApplications((prev) => {
-      if (prev.includes(appId)) {
-        return prev.filter((id) => id !== appId);
-      } else {
-        return [...prev, appId];
-      }
-    });
-  };
-
-  const getApplicationName = (appId: string) => {
-    return applications.find((app) => app._id === appId)?.name || "Unknown";
-  };
-
   const chartSeries = () => {
     return (
       <oj-c-line-chart-series
@@ -177,140 +160,51 @@ const LogActivityChart = () => {
     );
   };
 
-  if (loading) {
-    return (
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "1200px",
-          height: "300px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div>Loading log activity data...</div>
-      </div>
-    );
-  }
+  const tooltipRenderer = (context: any) => {
+    const { group, series, value } = context;
+    return {
+      insert: `<div class="oj-sm-padding-2x">
+      <div><strong>${series}</strong></div>
+      <div>Time: ${group}</div>
+      <div>Logs: ${value}</div>
+    </div>`,
+    };
+  };
+
+  const colorMap: Record<string, string> = {
+    DEBUG: "#64748b",
+    INFO: "#06b6d4",
+    WARN: "#f59e0b",
+    ERROR: "#ef4444",
+  };
 
   if (error) {
     return (
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "1200px",
-          height: "300px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          color: "red",
-        }}
-      >
+      <div class="log-chart-error">
         <div>{error}</div>
       </div>
     );
   }
 
-  if (chartData.length === 0) {
-    return (
-      <div
-        style={{
-          width: "100%",
-          maxWidth: "1200px",
-          height: "300px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <div>No log data available for the last 7 days</div>
-      </div>
-    );
-  }
-
   return (
-    <div style={{ width: "100%", maxWidth: "1200px" }}>
-      {/* Application Filter */}
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "flex-end",
-          marginBottom: "10px",
-          position: "relative",
-        }}
-      >
-        <button
-          onClick={() => setShowApplicationDropdown(!showApplicationDropdown)}
-          style={{
-            padding: "8px 16px",
-            border: "1px solid #ccc",
-            borderRadius: "4px",
-            backgroundColor: "white",
-            cursor: "pointer",
-            fontSize: "14px",
-          }}
-        >
-          {selectedApplications.length === 0
-            ? "All Applications"
-            : selectedApplications.length === 1
-              ? getApplicationName(selectedApplications[0])
-              : `${selectedApplications.length} Applications Selected`}
-          <span style={{ marginLeft: "8px" }}>▼</span>
-        </button>
-
-        {showApplicationDropdown && (
-          <div
-            ref={dropdownRef}
-            style={{
-              position: "absolute",
-              top: "100%",
-              right: "0",
-              backgroundColor: "white",
-              border: "1px solid #ccc",
-              borderRadius: "4px",
-              boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-              zIndex: 1000,
-              minWidth: "200px",
-              maxHeight: "300px",
-              overflowY: "auto",
-            }}
-          >
-            {applications.map((app) => (
-              <label
-                key={app._id}
-                style={{
-                  display: "block",
-                  padding: "8px 12px",
-                  cursor: "pointer",
-                  borderBottom: "1px solid #eee",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedApplications.includes(app._id)}
-                  onChange={() => handleApplicationChange(app._id)}
-                  style={{ marginRight: "8px" }}
-                />
-                {app.name}
-              </label>
-            ))}
-          </div>
-        )}
+    <div class="oj-panel log-chart-container">
+      <div class="log-chart-header">
+        <div class="log-chart-title">
+          <ChartLine class="log-chart-icon" />
+          Log Level Analytics
+        </div>
+        <div class="log-chart-total">
+          <span class="oj-badge oj-badge-outline">
+            {chartData
+              .reduce((sum, item) => sum + item.value, 0)
+              .toLocaleString()}{" "}
+            Total Logs
+          </span>
+        </div>
       </div>
 
-      {/* Chart */}
-      <div
-        style={{ width: "100%", overflowX: "auto", backgroundColor: "white" }}
-      >
-        <div
-          style={{
-            marginBottom: "12px",
-            display: "flex",
-            gap: "16px",
-            flexWrap: "wrap",
-          }}
-        >
+      <div class="log-chart-filter-bar">
+        <div class="log-chart-controls">
           {series.map((level) => {
             const isLastChecked =
               visibleLogLevels.length === 1 && visibleLogLevels.includes(level);
@@ -318,11 +212,10 @@ const LogActivityChart = () => {
             return (
               <label
                 key={level}
+                class="log-chart-checkbox"
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "6px",
                   opacity: isLastChecked ? 0.6 : 1,
+                  color: colorMap[level],
                 }}
               >
                 <input
@@ -332,7 +225,7 @@ const LogActivityChart = () => {
                   onChange={() => {
                     setVisibleLogLevels((prev) =>
                       prev.includes(level)
-                        ? prev.length > 1 // Only allow unchecking if more than one is checked
+                        ? prev.length > 1
                           ? prev.filter((l) => l !== level)
                           : prev
                         : [...prev, level]
@@ -345,30 +238,57 @@ const LogActivityChart = () => {
           })}
         </div>
 
-        <div
-          style={{ minHeight: "300px", minWidth: "1200px", overflow: "hidden" }}
-        >
-          {chartProvider && groups?.length && visibleSeries?.length ? (
-            <oj-c-line-chart
-              id="volumeLineChart"
-              data={chartProvider}
-              groups={groups}
-              series={visibleSeries}
-              orientation="vertical"
-              track-resize="off"
-              animation-on-display="auto"
-              animation-on-data-change="auto"
-              style="height: 300px; min-width: 1200px;"
-              group-label-style="transform: rotate(-45deg); text-anchor: end; font-size: 12px;"
-              hover-behavior="dim"
-            >
-              <template slot="seriesTemplate" render={chartSeries}></template>
-              <template slot="itemTemplate" render={chartItem}></template>
-            </oj-c-line-chart>
-          ) : (
-            <oj-progress-circle size="md" />
-          )}
-        </div>
+        {/* Single select dropdown */}
+        <oj-select-single
+          style={{ maxWidth: "240px" }}
+          value={selectedApplication}
+          onvalueChanged={(e) => {
+            setSelectedApplication(e.detail.value as string);
+          }}
+          data={
+            new ArrayDataProvider(
+              [
+                { value: "", label: "All Applications" },
+                ...applications.map((app) => ({
+                  value: app._id,
+                  label: app.name,
+                })),
+              ],
+              { keyAttributes: "value" }
+            )
+          }
+        ></oj-select-single>
+      </div>
+
+      {/* Chart */}
+      <div class="log-chart-box">
+        {/* Conditionally render overlay or chart */}
+        {loading ? (
+          <div class="chart-overlay">
+            <span>Loading Log Activity...</span>
+          </div>
+        ) : error ? (
+          <div class="chart-overlay chart-overlay-error">
+            <span>{error}</span>
+          </div>
+        ) : chartData.length === 0 ? (
+          <div class="chart-overlay">
+            <span>No log data available for the last 24 hours.</span>
+          </div>
+        ) : (
+          <oj-c-line-chart
+            data={chartProvider}
+            groups={groups.length ? groups : ["00:00"]}
+            series={visibleSeries.length ? visibleSeries : ["INFO"]}
+            orientation="vertical"
+            tooltip-renderer={tooltipRenderer}
+            style={{ width: "100%", height: "100%" }}
+            legend={{ position: "bottom", rendered: "on", maxSize: "50px" }}
+          >
+            <template slot="seriesTemplate" render={chartSeries} />
+            <template slot="itemTemplate" render={chartItem} />
+          </oj-c-line-chart>
+        )}
       </div>
     </div>
   );

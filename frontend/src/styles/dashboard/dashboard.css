@@ -1,8 +1,10 @@
 .dashboard-container {
-  min-height: 100vh;
+  height: 100%;
   background-color: #f9fafb; /* Light gray background */
   padding: 1.5rem; /* Equivalent to Tailwind p-6 */
+  padding-top: 0rem;
   box-sizing: border-box;
+  overflow-y: scroll;
 }
 
 /* Inner wrapper with max width */
@@ -15,9 +17,7 @@
 }
 
 /* === Header Section === */
-/* .dashboard-header {
-  margin-bottom: 0 rem;
-} */
+
 
 .dashboard-title {
   font-size: 1.875rem; /* text-3xl */
@@ -36,6 +36,30 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 24px;
+}
+
+/* Tablet / small desktop */
+@media (max-width: 1024px) {
+  .dashboard-cards-grid {
+    grid-template-columns: 1fr; /* One column */
+    gap: 16px;
+  }
+}
+
+/* Smaller tablets / phones */
+@media (max-width: 830px) {
+  .dashboard-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* Mobile devices */
+@media (max-width: 400px) {
+  .dashboard-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
 }
 
 .equal-height {
