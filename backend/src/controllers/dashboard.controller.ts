@@ -341,14 +341,65 @@ function isValidUnit(unit: string): unit is TimeUnit {
 }
 export const getAtRiskApps = async (req: Request, res: Response): Promise<void> => {
   const rules = await AtRiskRule.find();
-  const apps = await Application.find({ isActive: true }).select("_id name").lean();
 
-  if (!rules.length || !apps.length) {
+  const userId = req.params.id;
+    logger.info(`Fetching at-risk applications for user: ${userId}`);
+
+    if (!userId) {
+        logger.warn("User ID is required to get at-risk apps");
+        res.status(400).json({ error: "User ID is required" });
+        return;
+    }
+
+    // 1. Get the user
+    const user = await User.findById(userId).lean();
+    if (!user) {
+        logger.warn(`User not found: ${userId}`);
+        res.status(404).json({ error: "User not found" });
+        return;
+    }
+
+    // 2. Find user groups the user belongs to
+    const userGroups = await UserGroup.find({ members: user._id }).lean();
+    logger.info(`Found ${userGroups.length} user groups for user: ${userId}`);
+    if (!userGroups.length) {
+        logger.info(`No user groups found for user: ${userId}`);
+        res.status(200).json({ active_applications: [] });
+        return;
+    }
+
+    // 3. Collect all assigned application IDs from user groups
+    const assignedAppIds = [
+        ...new Set(userGroups.flatMap(group => group.assigned_applications.map(id => id.toString())))
+    ];
+    logger.info(`Found ${assignedAppIds.length} assigned applications for user: ${userId}`);
+
+    if (!assignedAppIds.length) {
+        logger.info(`No assigned applications for user groups of user: ${userId}`);
+        res.status(200).json({ active_applications: [] });
+        return;
+    }
+
+    // 4. Fetch applications where isActive is true
+    const activeApps = await Application.find({
+        _id: { $in: assignedAppIds },
+        isActive: true
+    }).lean();
+    logger.info(`Found ${activeApps.length} active applications for user: ${userId}`);
+
+    if (!activeApps.length) {
+        logger.info(`No active applications found for user: ${userId}`);
+        res.status(200).json({ active_applications: [] });
+        return;
+    }
+
+
+  if (!rules.length || !activeApps.length) {
     res.status(200).json({ at_risk_applications: [] });
     return;
   }
 
-  const appIdSet = new Set(apps.map(app => app._id.toString()));
+  const appIdSet = new Set(activeApps.map(app => app._id.toString()));
 
   // Build match stages from all rules
   const orConditions = rules
@@ -373,7 +424,7 @@ export const getAtRiskApps = async (req: Request, res: Response): Promise<void> 
     {
       $match: {
         $or: orConditions,
-        application_id: { $in: apps.map(app => app._id) }
+        application_id: { $in: activeApps.map(app => app._id) }
       }
     },
     {
@@ -401,7 +452,7 @@ export const getAtRiskApps = async (req: Request, res: Response): Promise<void> 
   // Evaluate apps against rules
   const atRiskResults = [];
 
-  for (const app of apps) {
+  for (const app of activeApps) {
     const appLogs = logCountMap[app._id.toString()] || {};
     const messages: string[] = [];
 
