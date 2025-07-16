@@ -10,7 +10,7 @@ import {
   createUserGroupSchema,
   updateUserGroupSchema,
 } from "../validators/userGroup.validator";
-import { any } from "joi";
+import { escapeRegex } from "../utils/escapeRegex";
 
 export const createUserGroup = async (
   req: Request,
@@ -54,39 +54,6 @@ export const createUserGroup = async (
   const validAppIds = validApps.map((app) => app._id);
 
   const verifiedMemberIds: mongoose.Types.ObjectId[] = [];
-
-  // // Only process members if the array is not empty
-  // if (members.length > 0) {
-  //   for (const email of members) {
-  //     let user = await User.findOne({ email });
-
-  //     if (!user) {
-  //       const userData = await fetchUserFromDirectory(email);
-  //       if (!userData) {
-  //         res
-  //           .status(404)
-  //           .json({ error: `User ${email} not found in directory API.` });
-  //         return;
-  //       }
-
-  //       user = new User({
-  //         email: userData.email,
-  //         name: userData.name,
-  //         pinned_applications: [],
-  //         settings: {
-  //           autoRefresh: false,
-  //           autoRefreshTime: 30,
-  //           logsPerPage: 50,
-  //         },
-  //       });
-
-  //       await user.save();
-  //       logger.info(` Created new user from directory API: ${email}`);
-  //     }
-
-  //     verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
-  //   }
-  // }
 
   // Get all existing users
   //Get array of emails from members
@@ -335,7 +302,12 @@ export const getUserGroups = async (
 
   const filter: any = {};
 
-  if (search) filter.name = { $regex: search, $options: "i" };
+  if (search) {
+    const escapedSearch = escapeRegex(search);
+    logger.info(`Escaped search term: ${escapedSearch}`);
+    logger.debug(`Search regex: /${escapedSearch}/i`);
+    filter.name = { $regex: escapedSearch, $options: "i" };
+  }
   if (is_admin !== undefined) filter.is_admin = is_admin === "true";
   if (is_active !== undefined) filter.is_active = is_active === "true";
 

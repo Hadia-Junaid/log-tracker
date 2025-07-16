@@ -47,7 +47,6 @@ const errorHandler = (
     });
     return;
   }
-
   res.status(500).json({ error: err.message || 'Internal Server Error' });
 };
 
