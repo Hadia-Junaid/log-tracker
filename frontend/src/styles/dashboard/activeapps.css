@@ -38,6 +38,11 @@
   height: 20px;
 }
 
+.active-apps-title-container p{
+  margin-bottom: 0px;
+  font-size:medium; 
+}
+
 .app-count-badge {
   padding: 4px 8px;
   background-color: #f3f4f6;
