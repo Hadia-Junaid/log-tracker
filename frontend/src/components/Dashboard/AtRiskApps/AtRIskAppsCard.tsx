@@ -27,7 +27,7 @@ const AtRiskAppsListCard = () => {
     const fetchAtRiskApps = async () => {
       try {
         const response = await axios.get(`/dashboard/atrisk/${user.id}`);
-        setApps(response.data.at_risk_applications);
+        setApps(response.data.at_risk_applications ?? []);
       } catch (error) {
         console.error("Error fetching at-risk applications:", error);
       }
@@ -36,8 +36,8 @@ const AtRiskAppsListCard = () => {
     fetchAtRiskApps();
   }, [user?.id]);
 
-  const displayedApps = apps.slice(0, 3);
-  const remainingCount = apps.length - 3;
+  const displayedApps = apps?.slice?.(0, 3) || [];
+  const remainingCount = (apps?.length || 0) - 3;
 
   const [showOnlyBadge, setShowOnlyBadge] = useState(false);
 
