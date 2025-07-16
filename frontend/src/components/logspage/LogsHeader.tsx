@@ -6,6 +6,7 @@ import 'oj-c/select-single';
 import 'ojs/ojdatetimepicker';
 import { useEffect, useState } from "preact/hooks";
 import { useRef } from "preact/hooks";
+import { useMemo } from "preact/hooks";
 
 interface Application {
   _id: string;
@@ -60,7 +61,11 @@ export default function LogsHeader({
 }: LogsHeaderProps) {
   const [showExportMenu, setShowExportMenu] = useState(false);
   const exportWrapperRef = useRef<HTMLDivElement>(null);
-  const appDataProvider = new ArrayDataProvider(applications, { keyAttributes: "_id" });
+
+  const appDataProvider = useMemo(() => {
+  return new ArrayDataProvider(applications, { keyAttributes: "_id" });
+}, [applications]);
+
   const toggleLogLevel = (level: string) => {
     setLogLevels((prev: string[]) =>
       prev.includes(level) ? prev.filter((l: string) => l !== level) : [...prev, level]
@@ -159,7 +164,7 @@ export default function LogsHeader({
         <oj-c-select-multiple
           id="applicationsDropdown"
           label-edge="none"
-          placeholder="Applications"
+          placeholder={selectedAppIds.length === 0 ? 'Applications' : ''}
           class="oj-form-control-max-width-md input-filter dropdown"
           data={appDataProvider}
           value={selectedAppIds}
