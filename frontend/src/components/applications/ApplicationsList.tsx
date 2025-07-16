@@ -7,12 +7,12 @@ type Props = {
   loading: boolean;
   error: string | null;
   applications: Application[];
-  searchTerm?: string;
+  searchQuery?: string;
   onEditClick: (app: Application) => void;
   onDeleteClick: (id: string, name: string) => void;
 };
 
-export default function ApplicationsList({ loading, error, applications, searchTerm, onEditClick, onDeleteClick }: Props) {
+export default function ApplicationsList({ loading, error, applications, searchQuery, onEditClick, onDeleteClick }: Props) {
 
   if(loading) {
     return (
@@ -40,7 +40,7 @@ export default function ApplicationsList({ loading, error, applications, searchT
       <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center" style="height: 40vh;">
         <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center oj-sm-flex-direction-column">
           <p class="oj-text-color-secondary" style="font-weight: bold; font-size: 1.25rem; text-align: center;">
-{searchTerm
+{searchQuery
               ? "No applications match your search criteria!"
               : "Create your first application to get started."}          </p>
         </div>

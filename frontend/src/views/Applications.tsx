@@ -284,8 +284,10 @@ export default function Applications({ path }: Props) {
               loading={isInitialLoading}
               error={error}
               applications={applications}
+              searchQuery={searchQuery}
               onEditClick={handleEditClick}
               onDeleteClick={handleDeleteClick}
+
             />
           </div>
 
