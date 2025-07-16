@@ -7,6 +7,7 @@ import "ojs/ojinputtext";
 import "ojs/ojdatetimepicker"; // ✅ Add datetime picker component
 import ArrayDataProvider = require("ojs/ojarraydataprovider");
 import axios from "../api/axios";
+import { AxiosError } from 'axios';
 import "../styles/logs.css";
 import LogsHeader from "../components/logspage/LogsHeader";
 import LogsTable from "../components/logspage/LogsTable";
@@ -121,31 +122,39 @@ export default function Logs(props: Props) {
 
 
   // Refactor fetchLogs so it can be called from anywhere
-  const fetchLogs = async () => {
-    setLoading(true);
-    // updateStartEndTimesFromTimeRange(); 
-    try {
-      const res = await axios.get(`/logs`, {
-        params: {
-          search: debouncedSearch,
-          app_ids: Array.from(selectedAppIds).join(','),
-          log_levels: logLevels.join(','),
-          page,
-          start_time: startTime ?? undefined,
-          end_time: endTime ?? undefined,
-        },
-      });
-      setLogs(res.data.data);
-      setTotalPages(res.data.total_pages || 1);
-      setError(null);
-    } catch (err) {
-      console.error("Failed to fetch logs:", err);
-      setError("Could not load logs.");
-    } finally {
-      setLoading(false);
-      lastFetchTimeRef.current = Date.now(); // Update last fetch time
-    }
-  };
+const fetchLogs = async () => {
+  setLoading(true);
+  try {
+    const res = await axios.get(`/logs`, {
+      params: {
+        search: debouncedSearch,
+        app_ids: Array.from(selectedAppIds).join(','),
+        log_levels: logLevels.join(','),
+        page,
+        start_time: startTime ?? undefined,
+        end_time: endTime ?? undefined,
+      },
+    });
+    setLogs(res.data.data);
+    setTotalPages(res.data.total_pages || 1);
+    setError(null);
+  } catch (error) {
+  const err = error as unknown as AxiosError<any>;
+
+  console.error("Failed to fetch logs:", err);
+
+  const message =
+    err.response?.data?.message ||      // Prefer "message" if it exists
+    err.response?.data?.error ||        // Fallback to "error"
+    err.message ||                      // Fallback to generic Axios error
+    "Could not load logs.";             // Final fallback
+
+  setError(message);
+} finally {
+    setLoading(false);
+    lastFetchTimeRef.current = Date.now(); // Update last fetch time
+  }
+};
 
   // Manual fetch: run when filters, page, etc. change
   useEffect(() => {

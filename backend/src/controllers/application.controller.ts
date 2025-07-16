@@ -71,6 +71,7 @@ export const getApplications = async (
   req: Request,
   res: Response
 ): Promise<void> => {
+  const userId = req.user?.id;
   const page = Math.max(1, parseInt(req.query.page as string) || 1);
   const pageSize = Math.max(1, parseInt(req.query.pageSize as string) || 8);
   const search = (req.query.search as string)?.trim() || "";
@@ -79,8 +80,41 @@ export const getApplications = async (
   const sort = req.query.sort as string;
   const allPages = req.query.allPages === "true" ? true : false;
 
+  if (!userId) {
+    logger.warn("Unauthorized access attempt to get applications");
+    res.status(401).send({ error: "Unauthorized" });
+    return;
+  }
+
+  const userGroups = await UserGroup.find({
+    members: userId,
+    is_active: true,
+  })
+    .select("assigned_applications")
+    .lean();
+
+  if (!userGroups.length) {
+    res.json({ data: [], total: 0 });
+    return;
+  }
+
+  const allowedAppIds = [
+    ...new Set(
+      userGroups.flatMap((group) =>
+        group.assigned_applications.map((id) => id.toString())
+      )
+    ),
+  ];
+
+  if (!allowedAppIds.length) {
+    res.json({ data: [], total: 0 });
+    return;
+  }
+
   // Build filter object
-  const filter: Record<string, any> = {};
+  const filter: Record<string, any> = {
+    _id: { $in: allowedAppIds }, //Enforcing access control here
+  };
 
   if (search) {
     const escapedSearch = escapeRegex(search);
@@ -304,4 +338,3 @@ export const getAssignedGroups = async (
     assignedGroupIds,
   });
 };
-

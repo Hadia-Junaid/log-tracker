@@ -8,7 +8,7 @@ type SettingsProps = {
 
 const Settings = (_props: SettingsProps) => {
   return (
-    <div class="oj-hybrid-padding">
+    <div class="oj-hybrid-padding" style={{ width: '100%', maxWidth: '100%', overflow: 'hidden' }}>
       <SettingsPanel />
     </div>
   );

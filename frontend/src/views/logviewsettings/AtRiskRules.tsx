@@ -416,7 +416,7 @@ const AtRiskRules = ({
               <oj-button chroming="outlined" class="modal-cancel-btn" onojAction={handleModalCancel} disabled={saving}>
                 Cancel
               </oj-button>
-              <oj-button chroming="solid" class="modal-confirm-btn" onojAction={handleModalSave} disabled={saving}>
+              <oj-button chroming="solid" onojAction={handleModalSave} disabled={saving}>
                 {saving ? (
                   <div class="button-content">
                     <div class="save-spinner"></div>
