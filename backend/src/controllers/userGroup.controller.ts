@@ -55,6 +55,7 @@ export const createUserGroup = async (
 
   const verifiedMemberIds: mongoose.Types.ObjectId[] = [];
 
+
   // Get all existing users
   //Get array of emails from members
   const memberEmails = members.map((m: { email: string }) => m.email);
@@ -70,19 +71,13 @@ export const createUserGroup = async (
   // Add newMembers to the User db
 
   // Build new user documents
-  const newUserDocs = newMembers.map(
-    (member: { name: string; email: string }) => ({
-      email: member.email,
-      name: member.name,
-      is_active: true,
-      pinned_applications: [],
-      settings: {
-        autoRefresh: false,
-        autoRefreshTime: 30,
-        logsPerPage: 50,
-      },
-    })
-  );
+  const newUserDocs = newMembers.map((member: { name: string; email: string }) => ({
+    email: member.email,
+    name: member.name,
+    is_active: true,
+    pinned_applications: [],
+    
+  }));
 
   // Insert all new users
   let insertedUsers: any[] = [];
@@ -177,20 +172,14 @@ export const updateUserGroup = async (
   // Add newMembers to the User db
 
   // Build new user documents
-  const newUserDocs = newMembers.map(
-    (member: { name: string; email: string }) => ({
-      email: member.email,
-      name: member.name,
-      is_active: true,
-      is_super_admin: superAdminEmails.includes(member.email),
-      pinned_applications: [],
-      settings: {
-        autoRefresh: false,
-        autoRefreshTime: 30,
-        logsPerPage: 50,
-      },
-    })
-  );
+  const newUserDocs = newMembers.map((member: { name: string; email: string }) => ({
+    email: member.email,
+    name: member.name,
+    is_active: true,
+    is_super_admin: superAdminEmails.includes(member.email),
+    pinned_applications: [],
+   
+  }));
 
   // Insert all new users
   let insertedUsers: any[] = [];
