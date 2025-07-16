@@ -1,31 +1,29 @@
+/* ===== LOGS PER PAGE COMPONENT STYLES (Black & White) ===== */
 .logs-per-page-container {
   width: 100%;
   position: relative;
   display: flex;
   justify-content: center;
 }
-
 /* Mobile-first approach */
 .logs-dropdown {
   width: 100%;
   min-height: 48px;
   max-width: 300px;
 }
-
 /* Enhanced mobile touch targets */
 .logs-dropdown .oj-select-single {
   width: 100% !important;
   min-height: 48px !important;
   height: 48px !important;
-  border: 2px solid #d4d4d4 !important;
+  border: 2px solid var(--gray-300) !important;
   border-radius: 8px !important;
-  background: white !important;
+  background: var(--white) !important;
   font-size: 16px !important;
   font-weight: 500 !important;
-  color: #404040 !important;
-  touch-action: manipulation !important;
+  color: var(--gray-800) !important;
+  transition: all 0.2s ease !important;
 }
-
 .logs-dropdown .oj-select-single .oj-select-single-choice {
   height: 44px !important;
   line-height: 44px !important;
@@ -33,18 +31,17 @@
   border: none !important;
   background: transparent !important;
   font-size: 16px !important;
-  color: #404040 !important;
+  color: var(--gray-800) !important;
   display: flex !important;
   align-items: center !important;
 }
-
 /* Enhanced dropdown for mobile */
 .logs-dropdown .oj-listbox-drop {
   z-index: 9999 !important;
-  border: 2px solid #d4d4d4 !important;
+  border: 2px solid var(--gray-300) !important;
   border-radius: 12px !important;
-  background: white !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+  background: var(--white) !important;
+  box-shadow: var(--shadow-lg) !important;
   margin-top: 8px !important;
   min-width: 100% !important;
   max-height: 300px !important;
@@ -55,15 +52,14 @@
   padding: 16px 20px !important;
   font-size: 16px !important;
   font-weight: 500 !important;
-  color: #404040 !important;
-  background: white !important;
+  color: var(--gray-700) !important;
+  background: var(--white) !important;
   border: none !important;
   cursor: pointer !important;
   transition: background-color 0.2s ease !important;
   min-height: 56px !important;
   display: flex !important;
   align-items: center !important;
-  touch-action: manipulation !important;
 }
 
 /* Remove any default styling that might interfere */
@@ -75,13 +71,11 @@
 .oj-listbox-drop-layer {
   z-index: 10000 !important;
 }
-
 /* Loading and disabled states */
 .logs-dropdown.oj-loading {
   opacity: 0.7;
   pointer-events: none;
 }
-
 .logs-dropdown:disabled,
 .logs-dropdown.oj-disabled {
   opacity: 0.5;
@@ -98,11 +92,11 @@
 /* High contrast mode */
 @media (prefers-contrast: high) {
   .logs-dropdown .oj-select-single {
-    border-color: #000000 !important;
+    border-color: var(--black) !important;
   }
 
   .logs-dropdown .oj-select-single:focus {
-    border-color: #0000ff !important;
+    border-color: var(--black) !important;
   }
 }
 

@@ -420,9 +420,12 @@ const SettingsPanel = () => {
                     </div>
                   )}
                 </div>
-                <div class="setting-control">
-                  <AutoRefresh value={autoRefresh} onChange={setAutoRefresh} />
-                </div>
+                  <div class="setting-control flex items-center gap-2 justify-end">
+                    <AutoRefresh value={autoRefresh} onChange={setAutoRefresh} />
+                    {hasLogDisplayChanges && (
+                      <div class="unsaved-dot w-2 h-2 bg-red-500 rounded-full"></div>
+                    )}
+                  </div>
               </div>
 
               <div class="setting-item">
