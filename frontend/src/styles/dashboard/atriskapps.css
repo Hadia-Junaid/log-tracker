@@ -21,7 +21,7 @@
   align-items: center;
   gap: 8px;
   font-weight: 600;
-  font-size: 1.5rem;
+  font-size: 1.45rem;
 }
 
 .icon {
@@ -59,6 +59,7 @@
   border: 1px solid #bdc2cc;
   border-radius: 6px;
   transition: box-shadow 0.2s ease-in-out;
+  line-height: 24px;
 }
 
 .risk-app-info {
