@@ -94,7 +94,9 @@ export const getApplications = async (
     .lean();
 
   if (!userGroups.length) {
-    res.json({ data: [], total: 0 });
+    res
+      .status(404)
+      .json({ error: "User is not a member of any active group!" });
     return;
   }
 

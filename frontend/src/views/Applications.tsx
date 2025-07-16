@@ -2,7 +2,7 @@
 import { h } from "preact";
 import { useState, useEffect, useMemo } from "preact/hooks";
 import "../styles/applications.css";
-import axios from "../api/axios";
+import axios, { isAxiosError } from "../api/axios";
 import AddApplicationDialog from "../components/applications/AddApplicationDialog";
 import { Application } from "src/types/applications";
 import DeleteConfirmationDialog from "../components/applications/DeleteConfirmationDialog";
@@ -106,7 +106,9 @@ export default function Applications({ path }: Props) {
         currentPage,
         searchQuery,
         statusFilter,
-        environmentFilter: environmentFilter ? Array.from(environmentFilter) : [],
+        environmentFilter: environmentFilter
+          ? Array.from(environmentFilter)
+          : [],
         sortOption,
         pageSize,
       });
@@ -127,6 +129,9 @@ export default function Applications({ path }: Props) {
       setTotalCount(response.data.total);
     } catch (err) {
       console.error("Error fetching applications:", err);
+      if (isAxiosError(err) && err.response) {
+        setError(err.response.data.error || "Failed to fetch applications.");
+      }
       setError("Failed to fetch applications. Please try again.");
     } finally {
       if (showLoading) {
@@ -137,12 +142,22 @@ export default function Applications({ path }: Props) {
   };
 
   useEffect(() => {
-    const delayDebounceFn = setTimeout(() => {
-      // Always show loading for both search and pagination
-      fetchApplications(true);
-    }, searchQuery ? 300 : 0); // Debounce for search, no delay for pagination
+    const delayDebounceFn = setTimeout(
+      () => {
+        // Always show loading for both search and pagination
+        fetchApplications(true);
+      },
+      searchQuery ? 300 : 0
+    ); // Debounce for search, no delay for pagination
     return () => clearTimeout(delayDebounceFn);
-  }, [currentPage, searchQuery, statusFilter, environmentFilter, sortOption, pageSize]);
+  }, [
+    currentPage,
+    searchQuery,
+    statusFilter,
+    environmentFilter,
+    sortOption,
+    pageSize,
+  ]);
 
   const updateSelectedApplication = (updatedApp: Application) => {
     setApplications((prevApps) =>
@@ -195,14 +210,16 @@ export default function Applications({ path }: Props) {
 
           {/* RIGHT: Add Button + Total */}
           <div class="applications-header-actions">
-            {user?.is_admin && <oj-button
-              chroming="solid"
-              class="add-button"
-              onojAction={() => setIsAddDialogOpen(true)}
-            >
-              <span slot="startIcon" class="oj-ux-ico-plus"></span>
-              Add Application
-            </oj-button>}
+            {user?.is_admin && (
+              <oj-button
+                chroming="solid"
+                class="add-button"
+                onojAction={() => setIsAddDialogOpen(true)}
+              >
+                <span slot="startIcon" class="oj-ux-ico-plus"></span>
+                Add Application
+              </oj-button>
+            )}
             <div class="applications-total">
               Total Applications: {totalCount}
             </div>
@@ -214,7 +231,7 @@ export default function Applications({ path }: Props) {
               <oj-input-text
                 placeholder="Search applications"
                 value={searchQuery}
-                onrawValueChanged={(e:CustomEvent) => {
+                onrawValueChanged={(e: CustomEvent) => {
                   setSearchQuery(e.detail.value);
                   setCurrentPage(1);
                 }}
@@ -244,7 +261,7 @@ export default function Applications({ path }: Props) {
                 value={environmentFilter}
                 item-text="label"
                 // Use the event handler to update your state
-                onvalueChanged={(event:any) => {
+                onvalueChanged={(event: any) => {
                   const newValue = event.detail.value as Set<string> | null;
                   console.log("Environment filter changed:", newValue);
                   setEnvironmentFilter(newValue ?? new Set<string>());
@@ -290,7 +307,6 @@ export default function Applications({ path }: Props) {
               searchQuery={searchQuery}
               onEditClick={handleEditClick}
               onDeleteClick={handleDeleteClick}
-
             />
           </div>
 
@@ -298,7 +314,7 @@ export default function Applications({ path }: Props) {
           <div class="pagination-container">
             {!loading && totalCount > 0 && (
               <div class="oj-flex oj-sm-justify-content-center oj-sm-align-items-center">
-                <oj-button 
+                <oj-button
                   disabled={currentPage === 1}
                   onojAction={() => setCurrentPage((p) => Math.max(p - 1, 1))}
                 >
@@ -306,9 +322,10 @@ export default function Applications({ path }: Props) {
                 </oj-button>
 
                 <div class="pagination-info">
-                  Page {currentPage} of {Math.ceil(totalCount / pageSize)} • Showing {((currentPage - 1) * pageSize) + 1}-
-                  {Math.min(currentPage * pageSize, totalCount)} of{" "}
-                  {totalCount} applications
+                  Page {currentPage} of {Math.ceil(totalCount / pageSize)} •
+                  Showing {(currentPage - 1) * pageSize + 1}-
+                  {Math.min(currentPage * pageSize, totalCount)} of {totalCount}{" "}
+                  applications
                 </div>
 
                 <oj-button
@@ -322,17 +339,17 @@ export default function Applications({ path }: Props) {
                   Next
                 </oj-button>
 
-                  <div style="margin-left: auto;">
-                <oj-select-single
-                  class="oj-form-control"
-                  data={pageSizeDataProvider}
-                  value={pageSize}
-                  onvalueChanged={(e: CustomEvent) => {
-                  setPageSize(e.detail.value);
-                  setCurrentPage(1); // Reset to first page when changing page size
-                  }}
-                  style="padding:0px 0; min-width: 150px; height: 45px;"
-                />
+                <div style="margin-left: auto;">
+                  <oj-select-single
+                    class="oj-form-control"
+                    data={pageSizeDataProvider}
+                    value={pageSize}
+                    onvalueChanged={(e: CustomEvent) => {
+                      setPageSize(e.detail.value);
+                      setCurrentPage(1); // Reset to first page when changing page size
+                    }}
+                    style="padding:0px 0; min-width: 150px; height: 45px;"
+                  />
                 </div>
               </div>
             )}
