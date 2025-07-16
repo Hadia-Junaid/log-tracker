@@ -140,27 +140,6 @@ export const userGroupService = {
     }));
   },
 
-  // New: Paginated user search for better performance
-  async searchUsersPaginated(query: string, page: number = 1, pageSize: number = 50): Promise<{ users: MemberData[], hasMore: boolean }> {
-    const searchParam = query === '' ? 'searchString=""' : `searchString=${encodeURIComponent(query)}`;
-    const response = await axios.get(`/admin/users/search?${searchParam}&page=${page}&pageSize=${pageSize}`);
-    
-    return {
-      users: response.data.users?.map((user: any) => ({
-        id: user.id || user.email,
-        email: user.email,
-        name: user.name,
-        initials: getInitials(user.name)
-      })) || response.data.map((user: any) => ({
-        id: user.id || user.email,
-        email: user.email,
-        name: user.name,
-        initials: getInitials(user.name)
-      })),
-      hasMore: response.data.hasMore || false
-    };
-  },
-
   // Assign application to user group
   async assignApplication(groupId: string, applicationId: string): Promise<void> {
     await axios.patch(`/user-groups/${groupId}/assign-application`, {

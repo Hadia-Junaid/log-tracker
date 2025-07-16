@@ -62,10 +62,9 @@ export function AddGroupDialog({
     setError('');
 
     try {
-      const [allApplications, members, currentGroups] = await Promise.all([
+      const [allApplications, members] = await Promise.all([
         userGroupService.fetchApplications(),
         userGroupService.searchUsers(''),
-        userGroupService.fetchUserGroups(1, 1000, '')
       ]);
 
       console.log('Fetched applications:', allApplications);
@@ -332,11 +331,10 @@ export function AddGroupDialog({
       </div>
 
       <div slot="footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>        
-        <oj-button on-oj-action={handleCancelClick} onClick={handleCancelClick}>Cancel</oj-button>
+        <oj-button onojAction={handleCancelClick}>Cancel</oj-button>
         <oj-button 
           chroming="callToAction" 
-          on-oj-action={handleCreateGroup} 
-          onClick={handleCreateGroup} 
+          onojAction={handleCreateGroup} 
           disabled={isCreating || !isDataLoaded}
         >
           {isCreating ? 'Creating...' : 'Create Group'}
@@ -364,8 +362,8 @@ export function AddGroupDialog({
             </div>
 
             <div slot="footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0' }}>
-            <oj-button on-oj-action={handleAbortCancel} onClick={handleAbortCancel}>Cancel</oj-button>
-            <oj-button chroming="danger" on-oj-action={handleConfirmCancel} onClick={handleConfirmCancel}>
+            <oj-button  onojAction={handleAbortCancel}>Cancel</oj-button>
+            <oj-button chroming="danger" onojAction={handleConfirmCancel}>
               Confirm
             </oj-button>
             </div>

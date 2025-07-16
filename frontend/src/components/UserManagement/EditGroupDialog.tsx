@@ -149,17 +149,32 @@ export function EditGroupDialog({
   };
 
   const handleCancelClick = () => {
-    setShowCancelConfirmation(true);
+    // Check if there's  NEW data entered that would be lost
+
+    const hasChanges = 
+      selectedMembers.length !== originalMembers.length ||
+      !selectedMembers.every(m => originalMembers.some(om => om.email === m.email)) ||
+      assignedAppIds.length !== originalAppIds.length ||
+      !assignedAppIds.every(id => originalAppIds.includes(id)) ||
+      isActive !== originalIsActive;
+    
+    
+
+    if (hasChanges) {
+      setShowCancelConfirmation(true);
+    } else {
+      handleClose();
+    }
   };
 
   const handleConfirmCancel = () => {
+    restoreBodyScroll();
     handleClose();
   };
 
   const handleAbortCancel = () => {
     setShowCancelConfirmation(false);
   };
-
   const handleRemoveMember = (member: MemberData) => {
     // Prevent removing superadmins from admin group
     if (isAdmin && superAdminEmails.includes(member.email)) {
@@ -187,7 +202,9 @@ export function EditGroupDialog({
     }
     setSelectedMembers([]);
   };
-
+const restoreBodyScroll = () => {
+  document.body.style.overflow = 'auto';
+};
   // Available members = allMembers - selectedMembers, filtered by search term
   const availableMembers = allMembers
     .filter(
@@ -351,14 +368,7 @@ export function EditGroupDialog({
     return changes;
   };
 
-  const getInitials = (name: string): string => {
-    return name
-      .split(' ')
-      .map(word => word.charAt(0))
-      .join('')
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  
 
   // Don't render the dialog until opened
   if (!isOpen) return null;
@@ -394,7 +404,7 @@ export function EditGroupDialog({
             )}
 
       </div>
-
+        
       <div slot="body">
         <div class="oj-flex oj-sm-align-items-center oj-sm-margin-4x-bottom">
           <p style={{ margin: 0, flex: 1 }}>Edit group members and accessible applications.</p>
@@ -451,11 +461,10 @@ export function EditGroupDialog({
       </div>
 
       <div slot="footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-        <oj-button on-oj-action={handleClose} onClick={handleClose}>Cancel</oj-button>
+        <oj-button onojAction={handleCancelClick}>Cancel</oj-button>
         <oj-button 
           chroming="callToAction" 
-          on-oj-action={handleUpdateGroup} 
-          onClick={handleUpdateGroup} 
+          onojAction={handleUpdateGroup} 
           disabled={isUpdating || !isDataLoaded}
         >
           {isUpdating ? 'Updating...' : 'Update Group'}
@@ -505,11 +514,40 @@ export function EditGroupDialog({
           </div>
 
           <div slot="footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem' }}>
-            <oj-button on-oj-action={handleAbortUpdate} onClick={handleAbortUpdate}>Cancel</oj-button>
-            <oj-button chroming="callToAction" on-oj-action={handleConfirmUpdate} onClick={handleConfirmUpdate}>
+            <oj-button  onojAction={handleAbortUpdate}>Cancel</oj-button>
+            <oj-button chroming="callToAction" onojAction={handleConfirmUpdate}>
               Confirm
             </oj-button>
           </div>
+        </oj-c-dialog>
+      )}
+
+      {/* Cancel Confirmation Dialog */}
+      {showCancelConfirmation && (
+        <oj-c-dialog 
+          opened={showCancelConfirmation} 
+          on-oj-close={handleAbortCancel}
+          width="500px"
+          height="275px"
+          min-width="300px"
+          max-width="90vw"
+          min-height="150px"
+          max-height="80vh"
+        >
+          <div slot="header">
+            <h3 id="cancel-confirmation-title">Discard Changes?</h3>
+          </div>
+
+            <div slot="body" style={{ marginBottom: '-8px' }}>
+            <p style={{ marginBottom: '-8px' }}>You have unsaved changes. Are you sure you want to discard them?</p>
+            </div>
+
+            <div slot="footer" style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.5rem', marginTop: '0' }}>
+            <oj-button onojAction={handleAbortCancel}>Cancel</oj-button>
+            <oj-button chroming="danger" onojAction={handleConfirmCancel}>
+              Confirm
+            </oj-button>
+            </div>
         </oj-c-dialog>
       )}
     </oj-c-dialog>
