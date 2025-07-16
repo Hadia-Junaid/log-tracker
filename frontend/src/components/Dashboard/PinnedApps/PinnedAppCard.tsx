@@ -49,7 +49,7 @@ const PinnedAppCard = ({ app, onUnpin: onUnpin }: Props) => {
       </div>
 
       <div class="pinned-card-body">
-        <CardRow labelClass="card-row-logs-label" label="Logs" value={totalLogs.toLocaleString()} badge="NEUTRAL" />
+        <CardRow labelClass="card-row-logs-label" label="Total Logs" value={totalLogs.toLocaleString()} badge="NEUTRAL" />
         <CardRow label="Info" value={(app.logCounts.INFO ?? 0).toLocaleString()} badge="INFO" />
         <CardRow label="Warn" value={(app.logCounts.WARN ?? 0).toLocaleString()} badge="WARN" />
         <CardRow label="Error" value={(app.logCounts.ERROR ?? 0).toLocaleString()} badge="ERROR" />

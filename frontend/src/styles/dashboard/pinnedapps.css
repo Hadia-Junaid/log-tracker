@@ -185,6 +185,11 @@
   color: #991b1b;
 }
 
+.card-row-badge.DEBUG {
+  background-color: #fee2e2;
+  color: #b45309;
+}
+
 .card-row-badge.NEUTRAL {
   background-color: #f3f4f6;
   /* color: #4b5563; */

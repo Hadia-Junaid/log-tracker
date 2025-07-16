@@ -467,8 +467,13 @@ export const getAtRiskApps = async (req: Request, res: Response): Promise<void> 
         (rule.operator === "less" && actualCount < rule.number_of_logs) ||
         (rule.operator === "equal" && actualCount === rule.number_of_logs)
       ) {
+        const operatorText = rule.operator === "greater" ? "more than" : 
+                           rule.operator === "less" ? "less than" : 
+                           "exactly";
+        const timeText = rule.time === 1 ? rule.unit.slice(0, -1) : rule.unit;
+        
         messages.push(
-          `Log level '${rule.type_of_logs}' has ${actualCount} logs in past ${rule.time} ${rule.unit}(s) — rule requires '${rule.operator}' ${rule.number_of_logs}`
+          `${actualCount} ${rule.type_of_logs} logs in the past ${rule.time} ${timeText} — rule triggers when logs are ${operatorText} ${rule.number_of_logs}`
         );
       }
     }

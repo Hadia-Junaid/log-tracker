@@ -8,6 +8,8 @@ export const getLogLevelBadgeClass = (log_level: LogLevel): string => {
       return "oj-badge oj-badge-warning";
     case "ERROR":
       return "oj-badge oj-badge-danger";
+    case "DEBUG":
+      return "oj-badge oj-badge-warning oj-badge-subtle"; // Assuming you have a specific class for
     default:
       return "oj-badge oj-badge-neutral";
   }

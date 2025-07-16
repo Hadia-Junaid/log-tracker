@@ -61,14 +61,14 @@ const AtRiskAppsListCard = () => {
       </div>
       <div class="risk-app-rule-preview">
         {showOnlyBadge ? (
-          <span class="risk-rule-count oj-badge oj-badge-neutral">{app.messages.length} rule{app.messages.length > 1 ? "s" : ""}</span>
+          <span class="risk-rule-count oj-badge oj-badge-neutral oj-badge-subtle">{app.messages.length} rule{app.messages.length > 1 ? "s" : ""}</span>
         ) : app.messages.length > 1 ? (
           <div class="risk-multiple-rules">
             <span class="risk-single-rule" title={app.messages[0]}>{app.messages[0]}</span>
             <span class="risk-rule-count oj-badge oj-badge-neutral">+{app.messages.length - 1} rules</span>
           </div>
         ) : (
-          <span class="risk-single-rule" title={app.messages[0]}>{app.messages[0]}</span>
+          <span class="risk-single-rule oj-badge oj-badge-neutral" title={app.messages[0]}>{app.messages[0]}</span>
         )}
       </div>
     </div>
