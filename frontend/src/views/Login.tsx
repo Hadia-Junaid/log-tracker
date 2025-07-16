@@ -1,6 +1,6 @@
 import { h } from "preact";
 import { useState, useEffect } from "preact/hooks";
-import axios from "../api/axios";
+import axios, { isAxiosError } from "../api/axios";
 import "ojs/ojbutton";
 import "ojs/ojinputtext";
 import "ojs/ojlabel";
@@ -12,16 +12,33 @@ import "../styles/login.css";
 import logoImage from "../assets/logtracker.png";
 
 interface LoginProps {
-  serverUnavailable?: boolean;
+  serverUnavailable: boolean;
+  setServerUnavailable: (value: boolean) => void;
 }
 
-export default function Login({ serverUnavailable }: LoginProps) {
+export default function Login({
+  serverUnavailable,
+  setServerUnavailable,
+}: LoginProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   const handleLogin = async () => {
-    const response = await axios.get(`/auth/google`);
-    window.location.href = response.data.authUrl;
+    try {
+      const response = await axios.get(`/auth/google`);
+      window.location.href = response.data.authUrl;
+    } catch (err) {
+      console.error("Login redirect failed", err);
+
+      // If server is unavailable again, show the message for 4 seconds
+      if (isAxiosError(err) && !err.response) {
+        setServerUnavailable(true);
+
+        setTimeout(() => {
+          setServerUnavailable(false);
+        }, 4000);
+      }
+    }
   };
 
   useEffect(() => {
@@ -64,9 +81,7 @@ export default function Login({ serverUnavailable }: LoginProps) {
           onojAction={handleLogin}
           disabled={loading || serverUnavailable}
         >
-          {loading
-            ? "Redirecting..."
-              : "Login with Google"}
+          {loading ? "Redirecting..." : "Login with Google"}
         </oj-button>
 
         {loading && (

@@ -14,7 +14,6 @@ import Applications from "./views/Applications";
 import UserManagement from "./views/UserManagement";
 import Login from "./views/Login";
 
-
 export const AuthenticatedApp = ({ appName }: { appName: string }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
   const [serverUnavailable, setServerUnavailable] = useState<boolean>(false);
@@ -49,6 +48,9 @@ export const AuthenticatedApp = ({ appName }: { appName: string }) => {
         console.error("Auth check or exchange failed", err);
         if (isAxiosError(err) && !err.response) {
           setServerUnavailable(true);
+          setTimeout(() => {
+            setServerUnavailable(false);
+          }, 4000);
         }
         setIsAuthenticated(false);
       }
@@ -65,7 +67,7 @@ export const AuthenticatedApp = ({ appName }: { appName: string }) => {
   }, [isAuthenticated]);
 
   if (isAuthenticated === null) return <LoadingSpinner />;
-  if (!isAuthenticated) return <Login serverUnavailable={serverUnavailable} />;
+  if (!isAuthenticated) return <Login serverUnavailable={serverUnavailable} setServerUnavailable={setServerUnavailable} />;
 
   return (
     <div id="appContainer" class="oj-web-applayout-page">
