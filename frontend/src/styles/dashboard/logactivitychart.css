@@ -98,9 +98,9 @@
 }
 
 .log-chart {
-  height: 400px;
   width: 100%;
-  min-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
 }
 
 .log-chart-loading,
