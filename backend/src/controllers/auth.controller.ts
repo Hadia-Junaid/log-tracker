@@ -7,6 +7,7 @@ import logger from "../utils/logger";
 import config from "config";
 import tempCodeManager from "../utils/tempCodeManager";
 import { checkUserAdminStatus } from "../utils/checkAdminStatus";
+import { getUserGroups } from "../utils/getUserGroups";
 
 class AuthController {
     async googleLogin(req: Request, res: Response): Promise<void> {
@@ -18,85 +19,86 @@ class AuthController {
     }
 
     async googleCallback(req: Request, res: Response): Promise<void> {
-            const { code } = req.query;
+        const { code } = req.query;
 
-            if (!code || typeof code !== "string") {
-                res.redirect(
-                    `${config.get<string>("frontend.baseUrl")}/#login?error=missing_code&message=Authorization code is required. Please try again.`
-                );
-                return;
-            }
-
-            const googleUserInfo =
-                await googleAuthService.authenticateUser(code);
-            logger.info(`Google user info: ${JSON.stringify(googleUserInfo)}`);
-
-            // 1. Find the user in your database
-            const existingUser = await User.findOne({
-                email: googleUserInfo.email,
-            });
-
-            // If the user doesn't even exist in the Users collection, deny access.
-            if (!existingUser) {
-                logger.warn(
-                    `Access denied for user: ${googleUserInfo.email} - User not found in database`
-                );
-                const message = encodeURIComponent('Access Denied. Please contact your administrator.');
-                res.redirect(
-                    `${config.get<string>("frontend.baseUrl")}/#login?error=access_denied&message=${message}`
-                );
-                return;
-            }
-
-            // Update user name if it changed
-            if (existingUser.name !== googleUserInfo.name) {
-                existingUser.name = googleUserInfo.name;
-                await existingUser.save();
-            }
-
-            // 2. Check if the user is a member of ANY UserGroup
-            const groupMembership = await UserGroup.findOne({ 
-                members: existingUser._id,
-                is_active: true 
-            });
-
-            // 3. If they are NOT in any group, they are an "orphaned" user.
-            if (!groupMembership) {
-                logger.warn(
-                    `Orphaned user detected: ${existingUser.email} - User not in any active group, deleting user`
-                );
-                
-                // As per your requirement, delete the user from the User collection
-                await User.findByIdAndDelete(existingUser._id);
-
-                // Redirect back to the login page with an access denied message
-                const message = encodeURIComponent('Access Denied. Please contact your administrator.');
-                res.redirect(
-                    `${config.get<string>("frontend.baseUrl")}/#login?error=access_denied&message=${message}`
-                );
-                return;
-            }
-
-            // 4. If they ARE in a group, proceed with normal login.
-            const tempCode = tempCodeManager.generateTempCode({
-                userId: (existingUser._id as any).toString(),
-                email: existingUser.email,
-                name: existingUser.name,
-            });
-
-            logger.info(
-                `User successfully authenticated: ${existingUser.email}, temporary code generated`
-            );
-
+        if (!code || typeof code !== "string") {
             res.redirect(
-                `${config.get<string>("frontend.baseUrl")}/#login?auth_code=${tempCode}`
+                `${config.get<string>("frontend.baseUrl")}/#login?error=missing_code&message=Authorization code is required. Please try again.`
             );
-            
-            logger.info(
-                `Redirecting to frontend with temporary code for user: ${existingUser.email}`
+            return;
+        }
+
+        const googleUserInfo = await googleAuthService.authenticateUser(code);
+        logger.info(`Google user info: ${JSON.stringify(googleUserInfo)}`);
+
+        // 1. Find the user in your database
+        const existingUser = await User.findOne({
+            email: googleUserInfo.email,
+        });
+
+        // If the user doesn't even exist in the Users collection, deny access.
+        if (!existingUser) {
+            logger.warn(
+                `Access denied for user: ${googleUserInfo.email} - User not found in database`
             );
-            
-        
+            const message = encodeURIComponent(
+                "Access Denied. Please contact your administrator."
+            );
+            res.redirect(
+                `${config.get<string>("frontend.baseUrl")}/#login?error=access_denied&message=${message}`
+            );
+            return;
+        }
+
+        // Update user name if it changed
+        if (existingUser.name !== googleUserInfo.name) {
+            existingUser.name = googleUserInfo.name;
+            await existingUser.save();
+        }
+
+        // 2. Check if the user is a member of ANY UserGroup
+        const groupMembership = await UserGroup.findOne({
+            members: existingUser._id,
+            is_active: true,
+        });
+
+        // 3. If they are NOT in any group, they are an "orphaned" user.
+        if (!groupMembership) {
+            logger.warn(
+                `Orphaned user detected: ${existingUser.email} - User not in any active group, deleting user`
+            );
+
+            // As per your requirement, delete the user from the User collection
+            await User.findByIdAndDelete(existingUser._id);
+
+            // Redirect back to the login page with an access denied message
+            const message = encodeURIComponent(
+                "Access Denied. Please contact your administrator."
+            );
+            res.redirect(
+                `${config.get<string>("frontend.baseUrl")}/#login?error=access_denied&message=${message}`
+            );
+            return;
+        }
+
+        // 4. If they ARE in a group, proceed with normal login.
+        const tempCode = tempCodeManager.generateTempCode({
+            userId: (existingUser._id as any).toString(),
+            email: existingUser.email,
+            name: existingUser.name,
+        });
+
+        logger.info(
+            `User successfully authenticated: ${existingUser.email}, temporary code generated`
+        );
+
+        res.redirect(
+            `${config.get<string>("frontend.baseUrl")}/#login?auth_code=${tempCode}`
+        );
+
+        logger.info(
+            `Redirecting to frontend with temporary code for user: ${existingUser.email}`
+        );
     }
 
     async exchangeAuthCode(req: Request, res: Response): Promise<void> {
@@ -131,7 +133,8 @@ class AuthController {
         }
 
         // Check if user is admin by checking membership in admin groups
-        const isAdmin = await checkUserAdminStatus(user.email);
+        const userGroups = await getUserGroups(user.id.toString());
+        const isAdmin = userGroups.some((group) => group.is_admin);
 
         const token = jwtService.generateToken(user, isAdmin);
         tempCodeManager.deleteTempCode(auth_code);
@@ -159,6 +162,11 @@ class AuthController {
                 settings: user.settings,
                 pinned_applications: user.pinned_applications,
                 is_admin: isAdmin,
+                groups: userGroups.map((group) => ({
+                    id: group._id,
+                    name: group.name,
+                    is_admin: group.is_admin,
+                })),
             },
         });
     }
@@ -168,7 +176,7 @@ class AuthController {
         const userEmail = user?.email;
         const userId = user?.id;
 
-        if(!user){
+        if (!user) {
             res.status(404).json({
                 message: "No user information found",
             });
@@ -179,9 +187,9 @@ class AuthController {
 
         await googleAuthService.revokeTokens(); // Errors here will be passed to errorHandler
 
-        
-
-  logger.info(`Google tokens revoked successfully for user: ${userEmail}`);
+        logger.info(
+            `Google tokens revoked successfully for user: ${userEmail}`
+        );
         logger.info(`User logged out successfully: ${userEmail}`);
 
         res.clearCookie("jwt", {
@@ -240,32 +248,40 @@ class AuthController {
     async getAuthStatus(req: Request, res: Response): Promise<void> {
         const token = req.cookies?.jwt;
 
-  if (!token) {
-    res.status(401).json({ authenticated: false });
-    return;
-  }
+        if (!token) {
+            res.status(401).json({ authenticated: false });
+            return;
+        }
 
-  const decoded = jwtService.verifyToken(token); // throws if invalid
-  const user = await User.findById(decoded.userId);
+        const decoded = jwtService.verifyToken(token); // throws if invalid
+        const user = await User.findById(decoded.userId);
 
-  if (!user) {
-    res.status(404).json({ authenticated: false });
-    return;
-  }
+        if (!user) {
+            res.status(404).json({ authenticated: false });
+            return;
+        }
 
-  const isAdmin = await checkUserAdminStatus(user.email);
+        const userGroups = await getUserGroups(user.id.toString());
 
-  res.status(200).json({
-    authenticated: true,
-    user: {
-      id: user._id,
-      email: user.email,
-      name: user.name,
-      settings: user.settings,
-      pinned_applications: user.pinned_applications,
-      is_admin: isAdmin,
-    },
-  });    }
+        const isAdmin = userGroups.some((group) => group.is_admin);
+
+        res.status(200).json({
+            authenticated: true,
+            user: {
+                id: user._id,
+                email: user.email,
+                name: user.name,
+                settings: user.settings,
+                pinned_applications: user.pinned_applications,
+                is_admin: isAdmin,
+                groups: userGroups.map((group) => ({
+                    id: group._id,
+                    name: group.name,
+                    is_admin: group.is_admin,
+                })),
+            },
+        });
+    }
 }
 
 export default new AuthController();

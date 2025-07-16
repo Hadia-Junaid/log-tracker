@@ -7,7 +7,11 @@ export interface User {
     name: string;
     email: string;
     is_admin: boolean;
-    // Add more fields as needed
+    groups?: {
+        id: string;
+        name: string;
+        is_admin: boolean;
+    }[];
 }
 
 type UserContextType = {
