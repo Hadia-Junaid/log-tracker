@@ -27,9 +27,7 @@ const LogActivityChart = () => {
   const [groups, setGroups] = useState<string[]>([]);
   const [series, setSeries] = useState<string[]>([]);
   const [applications, setApplications] = useState<Application[]>([]);
-  const [selectedApplications, setSelectedApplications] = useState<string[]>(
-    []
-  );
+  const [selectedApplication, setSelectedApplication] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showApplicationDropdown, setShowApplicationDropdown] = useState(false);
@@ -65,7 +63,7 @@ const LogActivityChart = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // setLoading(true);
+        setLoading(true);
         setError(null);
 
         console.log("🔍 Starting to fetch log activity data...");
@@ -83,8 +81,8 @@ const LogActivityChart = () => {
 
         console.log("📊 Query parameters:", params);
 
-        if (selectedApplications.length > 0) {
-          params.app_ids = selectedApplications.join(",");
+        if (selectedApplication && selectedApplication !== "") {
+          params.app_ids = selectedApplication;
         }
 
         console.log("📊 Fetching log activity with params:", params);
@@ -93,10 +91,6 @@ const LogActivityChart = () => {
         const data: LogActivityData = response.data;
 
         console.log("📊 Log activity response:", data);
-        console.log("📊 Chart data:", data.data);
-        console.log("📊 Groups (hours):", data.groups);
-        console.log("📊 Series (log levels):", data.series);
-        console.log("📊 Available applications:", data.applications);
 
         setChartData(data.data);
         setGroups(
@@ -120,7 +114,7 @@ const LogActivityChart = () => {
     };
 
     fetchData();
-  }, [selectedApplications]);
+  }, [selectedApplication]);
 
   const filteredChartData = useMemo(() => {
     return chartData.filter((item) => visibleLogLevels.includes(item.seriesId));
@@ -146,22 +140,6 @@ const LogActivityChart = () => {
   const visibleSeries = useMemo(() => {
     return series.filter((s) => visibleLogLevels.includes(s));
   }, [series, visibleLogLevels]);
-
-  const handleApplicationChange = (appId: string) => {
-    setTimeout(() => {
-    setSelectedApplications((prev) => {
-      if (prev.includes(appId)) {
-        return prev.filter((id) => id !== appId);
-      } else {
-        return [...prev, appId];
-      }
-    });
-    }, 50); // Debounce delay to prevent rapid resizing due to rapid toggling
-  };
-
-  const getApplicationName = (appId: string) => {
-    return applications.find((app) => app._id === appId)?.name || "Unknown";
-  };
 
   const chartSeries = () => {
     return (
@@ -200,25 +178,6 @@ const LogActivityChart = () => {
     ERROR: "#ef4444",
   };
 
-
-  const chartRef = useRef<HTMLElement>(null);
-
-  //whenever data, groups, or visibleSeries change, force a refresh
-  useEffect(() => {
-    if (chartRef.current && typeof (chartRef.current as any).refresh === "function") {
-      (chartRef.current as any).refresh();
-    }
-  }, [chartProvider, groups, visibleSeries]);
-
-
-  if (loading) {
-    return (
-      <div class="log-chart-loading">
-        <div>Loading log activity data...</div>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div class="log-chart-error">
@@ -227,17 +186,8 @@ const LogActivityChart = () => {
     );
   }
 
-  if (chartData.length === 0) {
-    return (
-      <div class="log-chart-empty">
-        <div>No log data available for the last 7 days</div>
-      </div>
-    );
-  }
-
   return (
     <div class="oj-panel log-chart-container">
-
       <div class="log-chart-header">
         <div class="log-chart-title">
           <ChartLine class="log-chart-icon" />
@@ -245,12 +195,14 @@ const LogActivityChart = () => {
         </div>
         <div class="log-chart-total">
           <span class="oj-badge oj-badge-outline">
-            {chartData.reduce((sum, item) => sum + item.value, 0).toLocaleString()} Total Logs
+            {chartData
+              .reduce((sum, item) => sum + item.value, 0)
+              .toLocaleString()}{" "}
+            Total Logs
           </span>
         </div>
       </div>
 
-      {/* Application Filter */}
       <div class="log-chart-filter-bar">
         <div class="log-chart-controls">
           {series.map((level) => {
@@ -273,7 +225,7 @@ const LogActivityChart = () => {
                   onChange={() => {
                     setVisibleLogLevels((prev) =>
                       prev.includes(level)
-                        ? prev.length > 1 // Only allow unchecking if more than one is checked
+                        ? prev.length > 1
                           ? prev.filter((l) => l !== level)
                           : prev
                         : [...prev, level]
@@ -285,79 +237,60 @@ const LogActivityChart = () => {
             );
           })}
         </div>
-        <button
-          onClick={() => setShowApplicationDropdown(!showApplicationDropdown)}
-          class="log-chart-app-dropdown-btn"
-        >
-          {selectedApplications.length === 0
-            ? "All Applications"
-            : selectedApplications.length === 1
-              ? getApplicationName(selectedApplications[0])
-              : `${selectedApplications.length} Applications Selected`}
-          <span style={{ marginLeft: "8px" }}>▼</span>
-        </button>
 
-        {showApplicationDropdown && (
-          <div
-            ref={dropdownRef}
-            class="log-chart-dropdown"
-          >
-            {applications.map((app) => (
-              <label
-                key={app._id}
-                class="log-chart-dropdown-item"
-              >
-                <input
-                  type="checkbox"
-                  checked={selectedApplications.includes(app._id)}
-                  onChange={() => handleApplicationChange(app._id)}
-                  style={{ marginRight: "8px" }}
-                />
-                {app.name}
-              </label>
-            ))}
-          </div>
-        )}
+        {/* Single select dropdown */}
+        <oj-select-single
+          style={{ maxWidth: "240px" }}
+          value={selectedApplication}
+          onvalueChanged={(e) => {
+            setSelectedApplication(e.detail.value as string);
+          }}
+          data={
+            new ArrayDataProvider(
+              [
+                { value: "", label: "All Applications" },
+                ...applications.map((app) => ({
+                  value: app._id,
+                  label: app.name,
+                })),
+              ],
+              { keyAttributes: "value" }
+            )
+          }
+        ></oj-select-single>
       </div>
 
       {/* Chart */}
       <div class="log-chart-box">
-        <oj-c-line-chart
-          id="volumeLineChart"
-          // ① callback ref to avoid compat ref‑mismatch
-          ref={(el: HTMLElement | null) => { chartRef.current = el; }}
-          data={chartProvider}
-          groups={groups}
-          series={visibleSeries}
-          orientation="vertical"
-          // ② use a string attribute to turn off resize tracking
-          track-resize="off"
-          animation-on-display="auto"
-          animation-on-data-change="auto"
-          class="log-chart"
-          group-label-style="transform: rotate(-45deg); text-anchor: end; font-size: 12px;"
-          hover-behavior="dim"
-          tooltip-renderer={tooltipRenderer}
-        >
-          {/**
-      If you have no data yet, render a `progress-circle` in a named slot
-      so the chart element remains mounted, but shows a spinner.
-    */}
-          {(!chartProvider || !groups.length || !visibleSeries.length) && (
-            <oj-progress-circle slot="placeholder" size="md" />
-          )}
-
-          {/* only render these templates when you have data */}
-          {chartProvider && groups.length && visibleSeries.length && (
-            <>
-              <template slot="seriesTemplate" render={chartSeries} />
-              <template slot="itemTemplate" render={chartItem} />
-            </>
-          )}
-        </oj-c-line-chart>
+        {/* Conditionally render overlay or chart */}
+        {loading ? (
+          <div class="chart-overlay">
+            <span>Loading Log Activity...</span>
+          </div>
+        ) : error ? (
+          <div class="chart-overlay chart-overlay-error">
+            <span>{error}</span>
+          </div>
+        ) : chartData.length === 0 ? (
+          <div class="chart-overlay">
+            <span>No log data available for the last 24 hours.</span>
+          </div>
+        ) : (
+          <oj-c-line-chart
+            data={chartProvider}
+            groups={groups.length ? groups : ["00:00"]}
+            series={visibleSeries.length ? visibleSeries : ["INFO"]}
+            orientation="vertical"
+            tooltip-renderer={tooltipRenderer}
+            style={{ width: "100%", height: "100%" }}
+            legend={{ position: "bottom", rendered: "on", maxSize: "50px" }}
+          >
+            <template slot="seriesTemplate" render={chartSeries} />
+            <template slot="itemTemplate" render={chartItem} />
+          </oj-c-line-chart>
+        )}
       </div>
-
-    </div >
+    </div>
   );
 };
 
