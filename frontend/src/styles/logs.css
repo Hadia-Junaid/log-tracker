@@ -1,8 +1,8 @@
 /* .logs-page-root {
-  width: 100%;
-  min-height: 100vh;
+  width: 100%; 
+  max-height: 99%;  
   display: flex;
-  flex-direction: column;
+ flex-direction: column;
 } */
 
 .logs-pagination-container {
@@ -16,7 +16,6 @@
   z-index: 10;
   padding: 1rem 0 0.5rem 0;
   gap: 12px;
-  /* background: #fff; */
 }
 
 .logs-pagination-btn {
@@ -48,19 +47,17 @@
 
 .demo-table-container {
   width: 98%;
-  height: 43rem;
-  line-height: 1.2 !important
+  height: 98%;
+  line-height: 1.2 !important;
 }
 
 .input-filter {
   height: 40px !important;
   box-sizing: border-box;
   width: 20px
-  /* max-width: 100%; */
 }
 
 .search{
-  /* min-width: 280px; */
   flex: 2 1 200px;
   min-width: 10px  !important;
   max-width: 340px  !important;
@@ -78,21 +75,12 @@
   max-width: 300px  !important;
 }
 
-/* .reset{
-  flex: 1 1 100px;
-  min-width: 10px  !important;
-  max-width: 200px  !important;
-  background: #f0f0f0;
-} */
  .resetbutton{
   flex: 1 1 100px;
   min-width: 10px  !important;
   max-width: 110px  !important;
   height: 40px !important;
  }
-/* .oj-form-control-max-width-md {
-  max-width: none !important;
-} */
 
 /* Log Level Button Styles */
 .log-level-btn {
