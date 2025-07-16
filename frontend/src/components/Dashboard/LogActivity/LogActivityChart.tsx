@@ -267,7 +267,15 @@ const LogActivityChart = () => {
         {/* Conditionally render overlay or chart */}
         {loading ? (
           <div class="chart-overlay">
-            <span>Loading Log Activity...</span>
+            <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center oj-sm-flex-direction-column">
+          <oj-progress-circle value={-1} size="lg" />
+          <p
+            class="oj-typography-body-md oj-text-color-secondary"
+            style="margin-top: 16px;"
+          >
+            Loading log activity...
+          </p>
+        </div>
           </div>
         ) : error ? (
           <div class="chart-overlay chart-overlay-error">
