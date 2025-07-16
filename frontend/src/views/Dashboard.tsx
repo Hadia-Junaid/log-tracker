@@ -15,7 +15,7 @@ export default function Dashboard(props: Props) {
       <div class="dashboard-inner">
         {/* Header */}
         <div class="dashboard-header">
-          <h1 class="dashboard-title">Log Tracking Dashboard</h1>
+          <h1 class="dashboard-title">Dashboard</h1>
           <p class="dashboard-subtitle">Monitor your applications and track critical logs</p>
         </div>
 

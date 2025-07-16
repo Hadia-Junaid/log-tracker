@@ -1,17 +1,43 @@
-/* ===== BLACK AND WHITE COLOR PALETTE ===== */
+/* ===== PROFESSIONAL COLOR VARIABLES ===== */
 :root {
-  --black: #000000;
-  --white: #ffffff;
-  --gray-50: #f9f9f9;
-  --gray-100: #f0f0f0;
-  --gray-200: #e0e0e0;
-  --gray-300: #d0d0d0;
-  --gray-400: #c0c0c0;
-  --gray-500: #a0a0a0;
-  --gray-600: #808080;
-  --gray-700: #606060;
-  --gray-800: #404040;
-  --gray-900: #202020;
+  --primary-50: #eff6ff;
+  --primary-100: #dbeafe;
+  --primary-500: #3b82f6;
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+
+  --secondary-50: #f0fdfa;
+  --secondary-100: #ccfbf1;
+  --secondary-500: #14b8a6;
+  --secondary-600: #0d9488;
+  --secondary-700: #0f766e;
+
+  --warning-50: #fffbeb;
+  --warning-100: #fef3c7;
+  --warning-500: #f59e0b;
+  --warning-600: #d97706;
+  --warning-700: #b45309;
+
+  --success-50: #ecfdf5;
+  --success-100: #d1fae5;
+  --success-500: #10b981;
+  --success-600: #059669;
+
+  --error-50: #fef2f2;
+  --error-100: #fee2e2;
+  --error-500: #ef4444;
+  --error-600: #dc2626;
+
+  --neutral-50: #fafafa;
+  --neutral-100: #f5f5f5;
+  --neutral-200: #e5e5e5;
+  --neutral-300: #d4d4d4;
+  --neutral-400: #a3a3a3;
+  --neutral-500: #737373;
+  --neutral-600: #525252;
+  --neutral-700: #404040;
+  --neutral-800: #262626;
+  --neutral-900: #171717;
 
   /* Responsive Breakpoints */
   --breakpoint-xs: 320px;
@@ -21,6 +47,7 @@
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1536px;
 }
+
 /* ===== LOADING STATE ===== */
 .atrisk-loading {
   display: flex;
@@ -28,26 +55,38 @@
   justify-content: center;
   padding: 32px 16px;
 }
+
 .loading-content {
   text-align: center;
   width: 100%;
   max-width: 300px;
 }
+
 .loading-spinner {
   width: 28px;
   height: 28px;
-  border: 2px solid var(--gray-200);
-  border-top: 2px solid var(--gray-700);
+  border: 2px solid var(--neutral-200);
+  border-top: 2px solid var(--primary-500);
   border-radius: 50%;
+  animation: spin 1s linear infinite;
   margin: 0 auto 12px;
 }
 
 .loading-text {
-  color: var(--gray-600);
+  color: var(--neutral-600);
   font-size: 14px;
   font-weight: 500;
   margin: 0;
   line-height: 1.4;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 /* ===== CONTAINER ===== */
@@ -58,83 +97,86 @@
 .atrisk-rules-list {
   margin-bottom: 20px;
 }
+
 /* ===== EMPTY STATE ===== */
 .atrisk-empty-state {
   text-align: center;
   padding: 32px 20px;
-  background: var(--gray-50);
-  border: 2px dashed var(--gray-300);
+  background: linear-gradient(135deg, var(--neutral-50) 0%, var(--primary-50) 100%);
+  border: 2px dashed var(--neutral-300);
   border-radius: 12px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .atrisk-empty-state:hover {
-  border-color: var(--gray-700);
-  background: var(--gray-100);
+  border-color: var(--primary-500);
+  background: linear-gradient(135deg, var(--primary-50) 0%, var(--primary-100) 100%);
 }
 
 .empty-state-icon {
-  color: var(--gray-400);
+  color: var(--neutral-400);
   margin-bottom: 16px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .atrisk-empty-state:hover .empty-state-icon {
-  color: var(--gray-700);
+  color: var(--primary-500);
+  transform: scale(1.05);
 }
 
 .empty-state-title {
   font-size: 16px;
   font-weight: 600;
-  color: var(--gray-900);
+  color: var(--neutral-900);
   margin: 0 0 8px 0;
   line-height: 1.3;
 }
 
 .empty-state-description {
   font-size: 13px;
-  color: var(--gray-600);
+  color: var(--neutral-600);
   margin: 0 0 20px 0;
   line-height: 1.5;
   max-width: 100%;
 }
 
 .empty-state-button {
-  background: var(--gray-100); /* Changed to light gray */
-  border: 1px solid var(--gray-300); /* Consistent border */
-  color: var(--gray-900); /* Changed to black text */
+  --oj-button-solid-bg-color: var(--primary-500);
+  --oj-button-solid-border-color: var(--primary-500);
   border-radius: 8px;
   padding: 0 20px;
   height: 44px;
   font-weight: 600;
   font-size: 14px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   width: 100%;
   max-width: 200px;
+  touch-action: manipulation;
 }
 
 .empty-state-button:hover {
-  background: var(--gray-200); /* Slightly darker gray on hover */
-  border-color: var(--gray-400); /* Darker border on hover */
-}
-
-.empty-state-button:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--gray-200); /* Clean focus ring */
+  --oj-button-solid-bg-color: var(--primary-600);
+  --oj-button-solid-border-color: var(--primary-600);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
 }
 
 /* ===== RULE CARDS ===== */
 .atrisk-rule-card {
-  background: var(--white); /* Changed to light gray */
-  border: 1px solid var(--gray-300); /* Consistent border */
+  background: white;
+  border: 1px solid var(--neutral-200);
   border-radius: 12px;
   padding: 16px;
   margin-bottom: 12px;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   overflow: hidden;
+  animation: slideInUp 0.6s ease-out forwards;
+  opacity: 0;
   cursor: pointer;
+  touch-action: manipulation;
 }
+
 .atrisk-rule-card::before {
   content: "";
   position: absolute;
@@ -142,20 +184,38 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: var(--gray-700); /* Solid gray line */
+  background: linear-gradient(90deg, var(--primary-500) 0%, var(--secondary-500) 100%);
   transform: scaleX(0);
-  transition: transform 0.2s ease;
+  transition: transform 0.3s ease;
 }
 
 .atrisk-rule-card:hover::before {
   transform: scaleX(1);
 }
+
 .atrisk-rule-card.deleting {
-  opacity: 0;
-  transform: translateX(100%);
-  transition: all 0.3s ease-in;
+  animation: slideOutRight 0.3s ease-in forwards;
   pointer-events: none;
 }
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideOutRight {
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
 /* ===== RULE HEADER ===== */
 .atrisk-rule-header {
   display: flex;
@@ -164,6 +224,7 @@
   margin-bottom: 16px;
   gap: 12px;
 }
+
 .rule-badge-container {
   display: flex;
   align-items: center;
@@ -173,8 +234,8 @@
 }
 
 .rule-number {
-  background: var(--gray-100);
-  color: var(--gray-700);
+  background: var(--primary-100);
+  color: var(--primary-700);
   padding: 4px 10px;
   border-radius: 12px;
   font-size: 11px;
@@ -185,8 +246,8 @@
 }
 
 .rule-status {
-  background: var(--gray-100);
-  color: var(--gray-700);
+  background: var(--success-100);
+  color: var(--success-700);
   padding: 4px 8px;
   border-radius: 10px;
   font-size: 10px;
@@ -197,9 +258,9 @@
 }
 
 .atrisk-delete-btn {
-  background: var(--gray-100);
-  border: 1px solid var(--gray-300); /* Consistent border */
-  color: var(--gray-600);
+  background: var(--error-50);
+  border: 1px solid var(--error-200);
+  color: var(--error-600);
   cursor: pointer;
   padding: 6px;
   border-radius: 8px;
@@ -210,17 +271,14 @@
   width: 32px;
   height: 32px;
   flex-shrink: 0;
+  touch-action: manipulation;
 }
 
 .atrisk-delete-btn:hover:not(:disabled) {
-  background: var(--red-500);
-  color: var(--white);
-  border-color: var(--red-500);
-}
-
-.atrisk-delete-btn:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--gray-200); /* Clean focus ring */
+  background: var(--error-500);
+  color: white;
+  border-color: var(--error-500);
+  transform: scale(1.05);
 }
 
 .atrisk-delete-btn:disabled {
@@ -231,9 +289,10 @@
 .delete-spinner {
   width: 12px;
   height: 12px;
-  border: 2px solid var(--gray-200);
-  border-top: 2px solid var(--gray-700);
+  border: 2px solid var(--error-200);
+  border-top: 2px solid var(--error-500);
   border-radius: 50%;
+  animation: spin 1s linear infinite;
 }
 
 /* ===== RULE CONTENT ===== */
@@ -243,41 +302,44 @@
 
 .rule-summary {
   font-size: 13px;
-  color: var(--gray-900); /* Changed to black text */
+  color: var(--neutral-700);
   line-height: 1.5;
   margin-bottom: 12px;
   padding: 12px;
-  background: var(--gray-50);
-  border: 1px solid var(--gray-300); /* Consistent border */
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
   border-radius: 8px;
   word-wrap: break-word;
 }
+
 .rule-summary .summary-value {
   font-weight: 600;
-  color: var(--gray-800);
+  color: var(--primary-600);
 }
+
 /* ===== RULE ACTION ===== */
 .rule-action {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 12px 16px;
-  background: var(--gray-100);
-  border: 1px solid var(--gray-300); /* Consistent border */
+  background: var(--warning-50);
+  border: 1px solid var(--warning-200);
   border-radius: 10px;
 }
 
 .action-icon {
-  color: var(--gray-600);
+  color: var(--warning-600);
   flex-shrink: 0;
 }
 
 .action-text {
   font-size: 13px;
   font-weight: 600;
-  color: var(--gray-900); /* Changed to black text */
+  color: var(--warning-700);
   line-height: 1.3;
 }
+
 /* ===== EDIT HINT ===== */
 .rule-edit-hint {
   display: flex;
@@ -286,17 +348,19 @@
   gap: 6px;
   margin-top: 10px;
   padding: 6px;
-  background: var(--gray-50);
-  border: 1px solid var(--gray-300); /* Consistent border */
+  background: var(--primary-50);
+  border: 1px solid var(--primary-200);
   border-radius: 6px;
   font-size: 11px;
-  color: var(--gray-600);
+  color: var(--primary-600);
   opacity: 0;
   transition: all 0.2s ease;
 }
+
 .atrisk-rule-card:hover .rule-edit-hint {
   opacity: 1;
 }
+
 /* ===== ACTIONS ===== */
 .atrisk-actions {
   display: flex;
@@ -304,30 +368,28 @@
   align-items: center;
   justify-content: flex-start;
   padding: 20px 0;
-  border-top: 1px solid var(--gray-200);
+  border-top: 1px solid var(--neutral-200);
 }
 
 .atrisk-add-btn {
-  border: 1px solid var(--white); /* Consistent border */
-  color: var(--gray-900); /* Changed to black text */
-  background: var(--white);
+  --oj-button-outlined-border-color: var(--primary-500);
+  --oj-button-outlined-text-color: var(--primary-600);
+  --oj-button-outlined-bg-color: white;
   border-radius: 8px;
   padding: 0 16px;
   height: 44px;
   font-weight: 600;
   font-size: 14px;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   width: 100%;
+  touch-action: manipulation;
 }
 
 .atrisk-add-btn:hover {
-  background: var(--white);
-  border-color: var(--white);
-}
-
-.atrisk-add-btn:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--gray-200); /* Clean focus ring */
+  --oj-button-outlined-bg-color: var(--primary-50);
+  --oj-button-outlined-border-color: var(--primary-600);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
 }
 
 /* ===== BUTTON CONTENT ALIGNMENT ===== */
@@ -346,6 +408,8 @@
   border: 2px solid rgba(255, 255, 255, 0.3);
   border-top: 2px solid white;
   border-radius: 50%;
+  animation: spin 1s linear infinite;
+  flex-shrink: 0;
 }
 
 /* Ensure proper button structure */
@@ -354,6 +418,7 @@
   align-items: center !important;
   justify-content: center !important;
 }
+
 .atrisk-add-btn .button-content {
   display: flex;
   align-items: center;
@@ -361,6 +426,7 @@
   gap: 8px;
   white-space: nowrap;
 }
+
 .atrisk-add-btn [slot="startIcon"] {
   display: flex;
   align-items: center;
@@ -370,7 +436,20 @@
 
 .atrisk-messages {
   margin-top: 16px;
+  animation: fadeIn 0.3s ease-out;
 }
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* ===== MODAL SPECIFIC STYLES ===== */
 .modal-overlay {
   position: fixed;
@@ -378,26 +457,28 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.1);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 9999;
+  animation: fadeIn 0.3s ease-out forwards;
+  backdrop-filter: blur(8px);
   padding: 16px;
 }
 
 .modal-content {
-  background: var(--white);
+  background: white;
   border-radius: 16px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.1);
   width: 100%;
   max-width: 95vw;
   max-height: calc(100vh - 32px);
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  animation: slideInScale 0.3s ease-out forwards;
   margin: 0;
-  border: 1px solid var(--gray-300); /* Consistent border */
 }
 
 .rule-modal {
@@ -408,17 +489,19 @@
   position: fixed !important;
   z-index: 10000 !important;
 }
+
 .rule-sentence-modal {
   display: flex;
   flex-direction: column;
   gap: 16px;
   align-items: stretch;
   padding: 16px;
-  background: var(--white); /* Consistent background */
-  border: 1px solid var(--gray-300); /* Consistent border */
+  background: var(--neutral-50);
+  border: 1px solid var(--neutral-200);
   border-radius: 10px;
   min-height: auto;
 }
+
 /* ===== MODAL ERROR WITH TIMER ===== */
 .modal-error-message {
   position: relative;
@@ -426,35 +509,47 @@
   display: flex;
   align-items: flex-start;
   gap: 8px;
-  background: var(--gray-100);
-  border: 1px solid var(--gray-200);
+  background: var(--error-50);
+  border: 1px solid var(--error-200);
   border-radius: 8px;
   padding: 12px 16px;
   margin-bottom: 16px;
+  animation: slideInDown 0.3s ease-out;
 }
+
 .error-timer {
   position: absolute;
   bottom: 0;
   left: 0;
   right: 0;
   height: 3px;
-  background: var(--gray-200);
+  background: var(--error-100);
 }
 
 .timer-bar {
   height: 100%;
-  background: var(--gray-700);
+  background: var(--error-500);
   width: 100%;
+  animation: shrinkTimer 3s linear forwards;
+}
+
+@keyframes shrinkTimer {
+  from {
+    width: 100%;
+  }
+  to {
+    width: 0%;
+  }
 }
 
 .error-icon {
-  color: var(--gray-700);
+  color: var(--error-500);
   flex-shrink: 0;
   margin-top: 2px;
 }
 
 .error-text {
-  color: var(--gray-700);
+  color: var(--error-700);
   font-size: 14px;
   font-weight: 500;
   line-height: 1.4;
@@ -462,14 +557,26 @@
   flex: 1;
 }
 
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 .sentence-part {
   font-size: 14px;
   font-weight: 500;
-  color: var(--gray-700);
+  color: var(--neutral-700);
   text-align: center;
   padding: 8px 0;
   line-height: 1.4;
 }
+
 .input-group {
   display: flex;
   align-items: center;
@@ -479,27 +586,31 @@
 
 .professional-select,
 .professional-input {
-  border: 1px solid var(--gray-300); /* Consistent border */
+  border: 1px solid var(--neutral-300);
   border-radius: 6px;
   padding: 12px 14px;
   font-size: 14px;
   font-weight: 500;
-  background: var(--white); /* Consistent background */
+  background: white;
   transition: all 0.2s ease;
   width: 100%;
-  min-height: 44px; /* Match button height */
+  min-height: 44px;
+  touch-action: manipulation;
 }
+
 .professional-select {
   cursor: pointer;
 }
+
 .professional-select:focus,
 .professional-input:focus {
   outline: none;
-  border-color: var(--gray-700);
-  box-shadow: 0 0 0 3px var(--gray-200); /* Clean focus ring */
+  border-color: var(--primary-500);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* ===== RESPONSIVE BREAKPOINTS ===== */
+
 /* Small devices (landscape phones, 640px and up) */
 @media (min-width: 640px) {
   .atrisk-rule-card {
@@ -561,6 +672,7 @@
     padding: 24px 0;
     gap: 16px;
   }
+
   .atrisk-add-btn {
     width: auto;
     min-width: 160px;
@@ -579,6 +691,7 @@
     margin-left: auto;
     margin-right: auto;
   }
+
   .empty-state-button {
     width: auto;
     max-width: 220px;
@@ -602,6 +715,7 @@
   .rule-modal {
     max-width: 900px;
   }
+
   .rule-sentence-modal {
     flex-direction: row;
     flex-wrap: wrap;
@@ -610,19 +724,21 @@
     padding: 20px;
     gap: 12px;
   }
+
   .sentence-part {
     width: auto;
     padding: 0;
     text-align: left;
   }
+
   .input-group {
     width: auto;
     flex: 0 0 auto;
   }
+
   .professional-select,
   .professional-input {
     width: auto;
-    min-height: 44px; /* Match button height */
   }
 
   .professional-select {
@@ -655,8 +771,9 @@
   }
 
   .atrisk-rule-card:hover {
-    background: var(--gray-50); /* Lighter gray on hover */
-    border-color: var(--gray-300);
+    border-color: var(--primary-300);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+    transform: translateY(-2px);
   }
 
   .modal-content {
@@ -666,6 +783,7 @@
   .rule-modal {
     max-width: 1000px;
   }
+
   .rule-sentence-modal {
     flex-wrap: nowrap;
     padding: 24px;
@@ -735,7 +853,6 @@
   .professional-input {
     padding: 12px 16px;
     font-size: 15px;
-    min-height: 48px; /* Match button height */
   }
 
   .professional-select {
@@ -763,34 +880,40 @@
 /* ===== TOUCH DEVICE OPTIMIZATIONS ===== */
 @media (hover: none) and (pointer: coarse) {
   .atrisk-rule-card:hover {
-    background: var(--gray-100); /* Revert to default light gray on touch hover */
-    border-color: var(--gray-200);
+    transform: none;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+    border-color: var(--neutral-200);
   }
 
   .atrisk-rule-card:hover::before {
     transform: scaleX(0);
   }
+
   .atrisk-rule-card:hover .rule-edit-hint {
     opacity: 0;
   }
 
   .atrisk-delete-btn:hover:not(:disabled) {
-    background: var(--gray-100);
-    color: var(--gray-600);
-    border-color: var(--gray-200);
+    transform: none;
+    background: var(--error-50);
+    color: var(--error-600);
+    border-color: var(--error-200);
   }
+
   .atrisk-add-btn:hover,
   .empty-state-button:hover {
+    transform: none;
     box-shadow: none;
   }
 
   .atrisk-empty-state:hover {
-    border-color: var(--gray-300);
-    background: var(--gray-50);
+    border-color: var(--neutral-300);
+    background: linear-gradient(135deg, var(--neutral-50) 0%, var(--primary-50) 100%);
   }
 
   .atrisk-empty-state:hover .empty-state-icon {
-    color: var(--gray-400);
+    transform: none;
+    color: var(--neutral-400);
   }
 }
 
@@ -804,9 +927,10 @@
 }
 
 .atrisk-delete-btn:focus {
-  outline: none;
-  box-shadow: 0 0 0 3px var(--gray-200); /* Clean focus ring */
+  outline: 2px solid var(--primary-500);
+  outline-offset: 2px;
 }
+
 .professional-select:focus,
 .professional-input:focus {
   outline: none;
@@ -815,21 +939,21 @@
 /* ===== HIGH CONTRAST MODE ===== */
 @media (prefers-contrast: high) {
   .atrisk-rule-card {
-    border-color: var(--black);
+    border-color: #000000;
   }
 
   .modal-content {
-    border: 2px solid var(--black);
+    border: 2px solid #000000;
   }
 
   .professional-select,
   .professional-input {
-    border-color: var(--black);
+    border-color: #000000;
   }
 
   .professional-select:focus,
   .professional-input:focus {
-    border-color: var(--black);
+    border-color: #0000ff;
   }
 }
 
@@ -837,18 +961,22 @@
 @media print {
   .atrisk-rule-card {
     box-shadow: none;
-    border: 1px solid var(--gray-300);
+    border: 1px solid var(--neutral-300);
     break-inside: avoid;
   }
+
   .atrisk-delete-btn {
     display: none;
   }
+
   .atrisk-actions {
     display: none;
   }
+
   .rule-edit-hint {
     display: none;
   }
+
   .modal-overlay {
     display: none;
   }
@@ -869,22 +997,10 @@
   .professional-input {
     padding: 8px 12px;
     font-size: 13px;
-    min-height: 40px; /* Match button height */
   }
 }
-.modal-confirm-btn {
-  background: var(--gray-100);
-  border: 1px solid var(--gray-300);
-  color: var(--gray-900); /* Changed to black text */
-  border-radius: 8px;
-  padding: 0 24px;
-  height: 44px;
-  font-weight: 600;
-  font-size: 14px;
-  transition: all 0.2s ease;
-  width: 100%;
-}
-.modal-confirm-btn:hover:not(:disabled) {
-  background: var(--gray-50);
-  border-color: var(--gray-400);
+
+/* ===== DARK MODE SUPPORT (if needed in future) ===== */
+@media (prefers-color-scheme: dark) {
+  /* Dark mode styles can be added here if needed */
 }
