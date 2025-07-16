@@ -48,31 +48,12 @@ const DataRetention = ({ value, onChange }: Props) => {
               </option>
             ))}
           </select>
-
-          {/* Info box below dropdown */}
-          <div class="retention-info">
-            <div class="retention-icon">
-              <svg
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <circle cx="12" cy="12" r="10" />
-                <polyline points="12,6 12,12 16,14" />
-              </svg>
-            </div>
-                <span class="retention-text">
-                {value === "1"   && "Daily cleanup"}
-                {value === "7"   && "Weekly cleanup"}
-                {value === "14"  && "Bi-weekly cleanup"}
-                {value === "30"  && "Monthly cleanup"}
-                </span>
-          </div>
+          
         </div>
+        
       </div>
+                <div style={{ height: "200px" }} />
+
     </div>
   );
 };
