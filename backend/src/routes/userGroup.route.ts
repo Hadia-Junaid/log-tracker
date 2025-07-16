@@ -15,7 +15,7 @@ const router = Router();
 
 // GET routes - accessible to all authenticated users
 router.get('/', authenticate, requireAdmin, getUserGroups);
-router.get('/:id', authenticate, requireAdmin, getUserGroupById);
+router.get('/:id', authenticate,requireAdmin, getUserGroupById);
 
 // Admin-only routes - require both authentication and admin privilege
 router.post('/', authenticate, requireAdmin, createUserGroup);
