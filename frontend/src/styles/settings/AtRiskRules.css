@@ -125,7 +125,7 @@
 
 /* ===== RULE CARDS ===== */
 .atrisk-rule-card {
-  background: var(--gray-100); /* Changed to light gray */
+  background: var(--white); /* Changed to light gray */
   border: 1px solid var(--gray-300); /* Consistent border */
   border-radius: 12px;
   padding: 16px;

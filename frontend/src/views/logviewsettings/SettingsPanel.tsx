@@ -13,7 +13,10 @@ import "ojs/ojbutton"
 import "ojs/ojmessages"
 import "ojs/ojformlayout"
 import "ojs/ojanimation"
+import "ojs/ojprogress-circle";
 import "../../styles/settings/SettingsPanel.css"
+import LoadingSpinner from "../../components/LoadingSpinner"
+
 
 type MessageItem = {
   severity: "error" | "confirmation" | "warning" | "info"
@@ -288,17 +291,16 @@ const SettingsPanel = () => {
     setEditingIndex(null)
   }
 
-  if (isLoading) {
-    return (
-      <div class="settings-loading-container">
-        <div class="settings-loading-content">
-          <div class="loading-spinner"></div>
-          <h3 class="loading-title">Loading Settings</h3>
-          <p class="loading-subtitle">Please wait while we prepare your configuration...</p>
-        </div>
+if (isLoading) {
+  return (
+    <div class="settings-loading-outer">
+      <div class="settings-loading-inner">
+        <oj-progress-circle value={-1} size="lg" />
+        <p class="loading-spinner-message">Loading Settings...</p>
       </div>
-    )
-  }
+    </div>
+  );
+}
 
   const isLogDisplaySaveDisabled =
     !hasLogDisplayChanges || isSavingLogDisplay || !!autoRefreshTimeError

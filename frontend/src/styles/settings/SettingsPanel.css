@@ -1,3 +1,31 @@
+.settings-loading-outer {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--oj-surface-neutral-0);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.settings-loading-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.loading-spinner-message {
+  font-size: 1.2rem;
+  color: var(--oj-core-text-color-primary);
+  text-align: center;
+}
+
+
+
 /* ===== BLACK AND WHITE COLOR PALETTE ===== */
 :root {
   --black: #000000;
@@ -31,54 +59,10 @@
   --breakpoint-xl: 1280px;
   --breakpoint-2xl: 1536px;
 }
-/* ===== LOADING STATES ===== */
-.settings-loading-container {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background: var(--gray-50); /* Simplified background */
-  padding: 16px;
-}
-.settings-loading-content {
-  text-align: center;
-  padding: 32px 24px;
-  background: var(--white);
-  border-radius: 16px;
-  box-shadow: var(--shadow-xl);
-  border: 1px solid var(--gray-300); /* Consistent border */
-  width: 100%;
-  max-width: 400px;
-}
-
-.loading-spinner {
-  width: 40px;
-  height: 40px;
-  border: 3px solid var(--gray-200);
-  border-top: 3px solid var(--gray-700); /* Darker gray for spinner */
-  border-radius: 50%;
-  margin: 0 auto 20px;
-}
-
-.loading-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--gray-900);
-  margin: 0 0 8px 0;
-  letter-spacing: -0.025em;
-  line-height: 1.2;
-}
-
-.loading-subtitle {
-  font-size: 14px;
-  color: var(--gray-600);
-  margin: 0;
-  line-height: 1.4;
-}
 
 /* ===== MAIN LAYOUT ===== */
 .settings-page {
-  background: var(--white); /* Changed to white background */
+  background: var(#f9f9f9); /* Changed to white background */
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
