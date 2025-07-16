@@ -234,7 +234,7 @@
 /* For large screens: */
 @media (min-width: 1440px) {
   .log-chart-container {
-    max-width: 1300px;
+    max-width: 1100px;
   }
 
   .log-chart-box,
