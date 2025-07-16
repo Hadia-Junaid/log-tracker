@@ -105,6 +105,19 @@
   margin: auto;
 }
 
+.active-empty-state {
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  justify-content: center;
+  border: 2px dashed #bdc2cc;
+  padding: 32px;
+  border-radius: 8px;
+  height: 100%;
+  align-items: center;
+  background-color: #f9fafb;
+}
+
 /* === Responsive Styles for Active Apps === */
 @media (max-width: 768px) {
   .active-apps-container {
