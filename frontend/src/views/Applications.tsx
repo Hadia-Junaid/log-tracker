@@ -13,6 +13,7 @@ import "ojs/ojselectsingle";
 import ArrayDataProvider from "ojs/ojarraydataprovider";
 import "oj-c/select-multiple";
 import qs from "qs";
+import { useUser } from "./../context/UserContext";
 
 type Props = {
   path?: string;
@@ -42,6 +43,8 @@ export default function Applications({ path }: Props) {
     new Set()
   );
   const [sortOption, setSortOption] = useState("name");
+
+  const { user } = useUser();
 
   const statusOptions = [
     { value: "all", label: "All" },
@@ -192,14 +195,14 @@ export default function Applications({ path }: Props) {
 
           {/* RIGHT: Add Button + Total */}
           <div class="applications-header-actions">
-            <oj-button
+            {user?.is_admin && <oj-button
               chroming="solid"
               class="add-button"
               onojAction={() => setIsAddDialogOpen(true)}
             >
               <span slot="startIcon" class="oj-ux-ico-plus"></span>
               Add Application
-            </oj-button>
+            </oj-button>}
             <div class="applications-total">
               Total Applications: {totalCount}
             </div>
