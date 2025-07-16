@@ -41,4 +41,5 @@
     "smtpPass": "SMTP_PASS",
     "from": "SMTP_USER"
   }
+  
 }

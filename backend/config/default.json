@@ -33,5 +33,10 @@
     "smtpUser": "",
     "smtpPass": "",
     "from": ""
+  },
+  "adminSearch": {
+    "maxResults": 500,
+    "orderBy": "email",
+    "projection": "full"
   }
 }

@@ -8,7 +8,9 @@ import logger from '../utils/logger';
 type Schema$User = admin_directory_v1.Schema$User;
 
 export const searchUsers = async (req: Request, res: Response): Promise<void> => {
-  const MAX_RESULTS = 500;
+  const MAX_RESULTS = config.get<number>('adminSearch.maxResults');
+  const ORDER_BY = config.get<string>('adminSearch.orderBy');
+  const PROJECTION = config.get<string>('adminSearch.projection');
   const { error, value } = searchUsersSchema.validate(req.query);
   if (error) {
     res.status(400).json({ message: error.details[0].message });
@@ -26,10 +28,10 @@ export const searchUsers = async (req: Request, res: Response): Promise<void> =>
     const response = await admin.users.list({
       domain,
       query,
-      orderBy: 'email',
+      orderBy: ORDER_BY,
       maxResults: MAX_RESULTS,
       pageToken: nextPageToken,
-      projection: 'full'
+      projection: PROJECTION
     });
 
     if (response?.data.users) {
