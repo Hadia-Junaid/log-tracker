@@ -117,47 +117,8 @@
 .log-chart-error {
   color: red;
 }
-
-.log-chart-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.log-chart-summary-box {
-  text-align: center;
-  padding: 0.75rem;
-  background-color: #f9fafb;
-  border: 1px solid #eee;
-  border-radius: 8px;
-}
-
-.log-chart-summary-box .log-chart-label {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 0.25rem;
-  font-size: 0.875rem;
-  color: #555;
-}
-
-.log-chart-summary-box .log-chart-total {
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: #111;
-}
-
-.log-chart-summary-box .log-chart-avg {
-  font-size: 0.75rem;
-  color: #888;
-}
-
-.log-chart-color-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 2px;
+@media (max-width: 1024px) {
+  
 }
 
 /* Smaller screens: stack header and filters vertically */
@@ -180,11 +141,6 @@
     gap: 12px;
   }
 
-  .log-chart-summary {
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-    gap: 0.75rem;
-  }
-
   .log-chart-container {
     padding: 1rem;
   }
@@ -202,14 +158,6 @@
 
   .log-chart-checkbox {
     font-size: 14px;
-  }
-
-  .log-chart-summary-box {
-    padding: 0.5rem;
-  }
-
-  .log-chart-summary-box .log-chart-total {
-    font-size: 1.1rem;
   }
 
   .log-chart-app-dropdown-btn {

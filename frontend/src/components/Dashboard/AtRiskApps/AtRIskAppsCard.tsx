@@ -76,7 +76,7 @@ const AtRiskAppsListCard = () => {
   }, [isMoreDialogOpen]);
 
   return (
-    <div class="risk-card">
+    <div class="risk-card oj-panel">
       <div class="risk-header">
         <div class="risk-header-title">
           <AlertTriangle class="icon" />
@@ -91,57 +91,58 @@ const AtRiskAppsListCard = () => {
             {displayedApps.map((app) => (
               <AppRow key={app.appId} {...app} />
             ))}
-          </div>
+            {/* </div> */}
 
-          {remainingCount > 0 && (
-            <div class="risk-more-container">
-              <oj-button chroming="outlined" onojAction={() => setIsMoreDialogOpen(true)}>
-                +{remainingCount} more
-              </oj-button>
-            </div>
-          )}
-
-          {selectedApp && (
-            <oj-dialog
-              id="appDetailsDialog"
-              ref={dialogRef}
-              cancel-behavior="icon"
-              class="risk-dialog"
-              onojClose={() => setSelectedApp(null)}
-            >
-              <div slot="header" class="dialog-header">
-                <AlertTriangle class="icon" />
-                <span>{selectedApp.name}</span>
+            {remainingCount > 0 && (
+              <div class="risk-more-container">
+                <oj-button chroming="outlined" onojAction={() => setIsMoreDialogOpen(true)}>
+                  +{remainingCount} more
+                </oj-button>
               </div>
-              <div slot="body" class="dialog-body">
-                <ul class="risk-app-messages">
-                  {selectedApp.messages.map((msg, idx) => (
-                    <li key={idx} class="risk-app-message">{msg}</li>
+            )}
+
+            {selectedApp && (
+              <oj-dialog
+                id="appDetailsDialog"
+                ref={dialogRef}
+                cancel-behavior="icon"
+                class="risk-dialog"
+                onojClose={() => setSelectedApp(null)}
+              >
+                <div slot="header" class="dialog-header">
+                  <AlertTriangle class="icon" />
+                  <span>{selectedApp.name}</span>
+                </div>
+                <div slot="body" class="dialog-body">
+                  <ul class="risk-app-messages">
+                    {selectedApp.messages.map((msg, idx) => (
+                      <li key={idx} class="risk-app-message">{msg}</li>
+                    ))}
+                  </ul>
+                </div>
+              </oj-dialog>
+            )}
+
+            {isMoreDialogOpen && (
+              <oj-dialog
+                id="atRiskDialog"
+                ref={moreDialogRef}
+                cancel-behavior="icon"
+                class="risk-dialog"
+                onojClose={() => setIsMoreDialogOpen(false)}
+              >
+                <div slot="header" class="dialog-header">
+                  <AlertTriangle class="icon" />
+                  <span>All At-Risk Applications ({apps.length})</span>
+                </div>
+                <div slot="body" class="dialog-body">
+                  {apps.map((app) => (
+                    <AppRow key={app.appId} {...app} />
                   ))}
-                </ul>
-              </div>
-            </oj-dialog>
-          )}
-
-          {isMoreDialogOpen && (
-            <oj-dialog
-              id="atRiskDialog"
-              ref={moreDialogRef}
-              cancel-behavior="icon"
-              class="risk-dialog"
-              onojClose={() => setIsMoreDialogOpen(false)}
-            >
-              <div slot="header" class="dialog-header">
-                <AlertTriangle class="icon" />
-                <span>All At-Risk Applications ({apps.length})</span>
-              </div>
-              <div slot="body" class="dialog-body">
-                {apps.map((app) => (
-                  <AppRow key={app.appId} {...app} />
-                ))}
-              </div>
-            </oj-dialog>
-          )}
+                </div>
+              </oj-dialog>
+            )}
+          </div>
         </>
       ) : (
         <div class="risk-empty-state">

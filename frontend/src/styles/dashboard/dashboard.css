@@ -38,9 +38,26 @@
   gap: 24px;
 }
 
+/* Tablet / small desktop */
+@media (max-width: 1024px) {
+  .dashboard-cards-grid {
+    grid-template-columns: 1fr; /* One column */
+    gap: 16px;
+  }
+}
+
+/* Smaller tablets / phones */
+@media (max-width: 830px) {
+  .dashboard-cards-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* Mobile devices */
 @media (max-width: 400px) {
   .dashboard-cards-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: 1fr;
     gap: 10px;
   }
 }
