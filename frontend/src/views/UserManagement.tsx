@@ -59,10 +59,6 @@ export default function UserManagement(props: Props) {
   }, []);
   
 
-  useEffect(() => {
-    loadGroups(true); // Initial load
-  }, []);
-
   const loadGroups = async (showLoading: boolean = true) => {
     if (showLoading) {
       setIsLoading(true);
