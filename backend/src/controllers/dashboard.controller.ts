@@ -339,59 +339,98 @@ type TimeUnit = keyof typeof unitInMinutes;
 function isValidUnit(unit: string): unit is TimeUnit {
   return unit in unitInMinutes;
 }
-
 export const getAtRiskApps = async (req: Request, res: Response): Promise<void> => {
-    const apps = await Application.find({ isActive: true });
-    const rules = await AtRiskRule.find();
+  const rules = await AtRiskRule.find();
+  const apps = await Application.find({ isActive: true }).select("_id name").lean();
 
-    const atRiskResults = [];
+  if (!rules.length || !apps.length) {
+    res.status(200).json({ at_risk_applications: [] });
+    return;
+  }
 
-    for (const app of apps) {
-      const messages: string[] = [];
+  const appIdSet = new Set(apps.map(app => app._id.toString()));
 
-      for (const rule of rules) {
-        const { type_of_logs, operator, unit, time, number_of_logs } = rule;
+  // Build match stages from all rules
+  const orConditions = rules
+    .filter(rule => isValidUnit(rule.unit))
+    .map(rule => {
+      const minutes = rule.time * unitInMinutes[rule.unit as TimeUnit];
+      const timeThreshold = new Date(Date.now() - minutes * 60 * 1000);
 
-        if (!isValidUnit(unit)) {
-          logger.warn(`Skipping rule with invalid unit: ${unit}`);
-          continue;
-        }
+      return {
+        log_level: rule.type_of_logs,
+        timestamp: { $gte: timeThreshold }
+      };
+    });
 
-        const minutes = time * unitInMinutes[unit];
-        const timeThreshold = new Date(Date.now() - minutes * 60 * 1000);
+  if (!orConditions.length) {
+    logger.warn("No valid at-risk rules found");
+    res.status(200).json({ at_risk_applications: [] });
+    return;
+  }
 
-        const logs = await Log.find({
-          application_id: app._id,
-          log_level: type_of_logs,
-          timestamp: { $gte: timeThreshold }
-        });
-
-        if (operator === 'greater' && logs.length > number_of_logs) {
-          messages.push(
-            `Too many '${type_of_logs}' logs in past ${time} ${unit}(s): ${logs.length} > ${number_of_logs}`
-          );
-        } else if (operator === 'less' && logs.length < number_of_logs) {
-          messages.push(
-            `Too few '${type_of_logs}' logs in past ${time} ${unit}(s): ${logs.length} < ${number_of_logs}`
-          );
-        } else if (operator === 'equal' && logs.length === number_of_logs) {
-          messages.push(
-            `'${type_of_logs}' logs exactly equal to ${number_of_logs} in past ${time} ${unit}(s)`
-          );
-        }
+  const aggregationResult = await Log.aggregate([
+    {
+      $match: {
+        $or: orConditions,
+        application_id: { $in: apps.map(app => app._id) }
       }
+    },
+    {
+      $group: {
+        _id: {
+          application_id: "$application_id",
+          log_level: "$log_level"
+        },
+        count: { $sum: 1 }
+      }
+    }
+  ]);
 
-      if (messages.length > 0) {
-        atRiskResults.push({
-          appId: app._id,
-          name: app.name,
-          messages
-        });
+  // Build a lookup table: { appId -> { log_level -> count } }
+  const logCountMap: Record<string, Record<string, number>> = {};
+  for (const entry of aggregationResult) {
+    const appId = entry._id.application_id.toString();
+    const level = entry._id.log_level.toUpperCase();
+    const count = entry.count;
+
+    if (!logCountMap[appId]) logCountMap[appId] = {};
+    logCountMap[appId][level] = count;
+  }
+
+  // Evaluate apps against rules
+  const atRiskResults = [];
+
+  for (const app of apps) {
+    const appLogs = logCountMap[app._id.toString()] || {};
+    const messages: string[] = [];
+
+    for (const rule of rules) {
+      if (!isValidUnit(rule.unit)) continue;
+
+      const level = rule.type_of_logs.toUpperCase();
+      const actualCount = appLogs[level] || 0;
+
+      if (
+        (rule.operator === "greater" && actualCount > rule.number_of_logs) ||
+        (rule.operator === "less" && actualCount < rule.number_of_logs) ||
+        (rule.operator === "equal" && actualCount === rule.number_of_logs)
+      ) {
+        messages.push(
+          `Log level '${rule.type_of_logs}' has ${actualCount} logs in past ${rule.time} ${rule.unit}(s) — rule requires '${rule.operator}' ${rule.number_of_logs}`
+        );
       }
     }
 
-    logger.info(`Found ${atRiskResults.length} at-risk applications`);
-    res.status(200).json({ at_risk_applications: atRiskResults });
-    
+    if (messages.length > 0) {
+      atRiskResults.push({
+        appId: app._id,
+        name: app.name,
+        messages
+      });
+    }
+  }
 
+  logger.info(`Found ${atRiskResults.length} at-risk applications`);
+  res.status(200).json({ at_risk_applications: atRiskResults });
 };
