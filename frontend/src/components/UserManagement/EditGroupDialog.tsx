@@ -118,6 +118,9 @@ export function EditGroupDialog({
       setIsDataLoaded(true);
     } catch (err: any) {
       setError('Failed to load data. Please try again.');
+      setTimeout(() => {
+        handleClose();
+      }, 2000);
       console.error('Failed to load data:', err);
     } finally {
       setIsLoading(false);

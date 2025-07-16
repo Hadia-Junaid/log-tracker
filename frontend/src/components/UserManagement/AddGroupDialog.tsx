@@ -77,6 +77,10 @@ export function AddGroupDialog({
       setIsDataLoaded(true);
     } catch (err: any) {
       setError('Failed to load data. Please try again.');
+      // close the dialog after 1.5 seconds
+      setTimeout(() => {
+        handleClose();
+      }, 2000);
       console.error('Failed to load data:', err);
     } finally {
       setIsLoading(false);

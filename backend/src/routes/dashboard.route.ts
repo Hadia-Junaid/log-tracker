@@ -22,9 +22,6 @@ router.patch("/pinned/:id/:appId", authenticate, updatePinnedApps);
 // POST /api/dashboard/pinned/cleanup - Clean up invalid pinned applications
 router.post("/pinned/:id/cleanup", authenticate, cleanupPinnedApps);
 
-// POST /api/dashboard/pinned/cleanup - Clean up invalid pinned applications
-router.post("/pinned/:id/cleanup", authenticate, cleanupPinnedApps);
-
 // GET /api/dashboard/active/:id - Get active applications
 router.get("/active/:id", authenticate, getActiveApps);
 

@@ -1,9 +1,14 @@
 import { Request, Response } from 'express';
 import { getAdminDirectoryService } from '../utils/googleAdminSDK';
+import { admin_directory_v1 } from 'googleapis';
 import config from 'config';
 import { searchUsersSchema } from '../validators/admin';
+import logger from '../utils/logger';
+
+type Schema$User = admin_directory_v1.Schema$User;
 
 export const searchUsers = async (req: Request, res: Response): Promise<void> => {
+  const MAX_RESULTS = 500;
   const { error, value } = searchUsersSchema.validate(req.query);
   if (error) {
     res.status(400).json({ message: error.details[0].message });
@@ -13,8 +18,8 @@ export const searchUsers = async (req: Request, res: Response): Promise<void> =>
   const { searchString: query } = value;
   const admin = await getAdminDirectoryService();
   const domain = config.get<string>('google.admin.domain');
-
-  let allUsers: any[] = [];
+  
+  let allUsers: Schema$User[] = [];
   let nextPageToken: string | undefined;
 
   do {
@@ -22,9 +27,9 @@ export const searchUsers = async (req: Request, res: Response): Promise<void> =>
       domain,
       query,
       orderBy: 'email',
-      maxResults: 500,
+      maxResults: MAX_RESULTS,
       pageToken: nextPageToken,
-      projection: 'full' // 👈 this may include thumbnailPhotoUrl
+      projection: 'full'
     });
 
     if (response?.data.users) {
@@ -34,12 +39,13 @@ export const searchUsers = async (req: Request, res: Response): Promise<void> =>
     nextPageToken = response?.data.nextPageToken;
   } while (nextPageToken);
 
-  // Now return name, email, and thumbnailPhotoUrl (if available)
+  logger.info(`✅ Found ${allUsers.length} users matching query: ${query}`);
+  // Now return name, email
   const users = allUsers.map(user => ({
     name: user.name?.fullName,
     email: user.primaryEmail,
-    photo: user.thumbnailPhotoUrl || null
   }));
 
   res.status(200).json(users);
+  return;
 };
