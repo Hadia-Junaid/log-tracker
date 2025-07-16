@@ -17,9 +17,7 @@
 }
 
 /* === Header Section === */
-/* .dashboard-header {
-  margin-bottom: 0 rem;
-} */
+
 
 .dashboard-title {
   font-size: 1.875rem; /* text-3xl */
@@ -38,6 +36,13 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   gap: 24px;
+}
+
+@media (max-width: 400px) {
+  .dashboard-cards-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+  }
 }
 
 .equal-height {

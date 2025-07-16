@@ -231,7 +231,7 @@
   min-width: 100%;
 }
 
-/* For large screens: constrain max width */
+/* For large screens: */
 @media (min-width: 1440px) {
   .log-chart-container {
     max-width: 1300px;
@@ -255,10 +255,22 @@
   }
 }
 
+/* 1024px to 1289px */
+@media (min-width: 1024px) and (max-width: 1289px) {
+  .log-chart-container {
+    max-width: 750px;
+  }
+
+  .log-chart-box,
+  .log-chart {
+    width: 100%;
+  }
+}
+
 /* Small laptops/tablets (768px to 1023px) */
 @media (max-width: 1023px) and (min-width: 768px) {
   .log-chart-container {
-    max-width: 720px;
+    max-width: 400px;
   }
 
   .log-chart-box,
@@ -268,7 +280,7 @@
 }
 
 /* Mobile screens (below 768px) */
-@media (max-width: 767px) {
+@media (min-width:601px) and (max-width: 767px) {
   .log-chart-container {
     max-width: 100%;
     padding: 1rem;
@@ -277,45 +289,20 @@
   .log-chart-box,
   .log-chart {
     width: 100%;
-    min-width: 100%;
   }
 }
 
-/* 1440px to 1616px */
-@media (min-width: 1440px) and (max-width: 1616px) {
+
+/* Mobile screens (below 768px) */
+@media (max-width: 600px) {
   .log-chart-container {
-    max-width: 1350px;
+    max-width: 300px;
+    padding: 1rem;
   }
 
   .log-chart-box,
   .log-chart {
     width: 100%;
-    min-width: 1200px;
-  }
-}
-
-/* 1024px to 1289px */
-@media (min-width: 1024px) and (max-width: 1289px) {
-  .log-chart-container {
-    max-width: 960px;
-  }
-
-  .log-chart-box,
-  .log-chart {
-    width: 100%;
-    min-width: 900px;
-  }
-}
-
-/* 769px to 947px */
-@media (min-width: 769px) and (max-width: 947px) {
-  .log-chart-container {
-    max-width: 750px;
-  }
-
-  .log-chart-box,
-  .log-chart {
-    width: 100%;
-    min-width: 700px;
+    
   }
 }

@@ -23,6 +23,13 @@
   }
 }
 
+@media (max-width: 600px) {
+  .oj-web-applayout-content main.oj-flex-item {
+    width: calc(100vw - 50px);
+    max-width: calc(100vw - 50px);
+  }
+}
+
 @media (max-width: 480px) {
   .oj-web-applayout-content {
     padding: 0;
