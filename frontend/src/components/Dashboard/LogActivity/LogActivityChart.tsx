@@ -156,7 +156,7 @@ const LogActivityChart = () => {
         return [...prev, appId];
       }
     });
-    }, 100); // Delay to ensure dropdown closes before state update
+    }, 50); // Debounce delay to prevent rapid resizing due to rapid toggling
   };
 
   const getApplicationName = (appId: string) => {
@@ -203,7 +203,7 @@ const LogActivityChart = () => {
 
   const chartRef = useRef<HTMLElement>(null);
 
-  // 3) whenever data, groups, or visibleSeries change, force a refresh
+  //whenever data, groups, or visibleSeries change, force a refresh
   useEffect(() => {
     if (chartRef.current && typeof (chartRef.current as any).refresh === "function") {
       (chartRef.current as any).refresh();
