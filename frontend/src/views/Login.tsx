@@ -11,8 +11,11 @@ import "ojs/ojvcomponent";
 import "../styles/login.css";
 import logoImage from "../assets/logtracker.png";
 
+interface LoginProps {
+  serverUnavailable?: boolean;
+}
 
-export default function Login() {
+export default function Login({ serverUnavailable }: LoginProps) {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +33,11 @@ export default function Login() {
       if (errorParam && message) {
         setError(decodeURIComponent(message));
         // Clear the hash query after showing the message
-        window.history.replaceState(null, "", window.location.pathname + "#login");
+        window.history.replaceState(
+          null,
+          "",
+          window.location.pathname + "#login"
+        );
       }
     }
   }, []);
@@ -55,9 +62,11 @@ export default function Login() {
           class="google-login-btn"
           chroming="solid"
           onojAction={handleLogin}
-          disabled={loading}
+          disabled={loading || serverUnavailable}
         >
-          {loading ? "Redirecting..." : "Login with Google"}
+          {loading
+            ? "Redirecting..."
+              : "Login with Google"}
         </oj-button>
 
         {loading && (
@@ -66,7 +75,17 @@ export default function Login() {
           </div>
         )}
 
-        {error && <p class="error-text oj-text-color-danger oj-sm-margin-2x-top">{error}</p>}
+        {serverUnavailable && (
+          <p class="error-text oj-text-color-danger oj-sm-margin-2x-top">
+            The server is currently unavailable.
+          </p>
+        )}
+
+        {error && (
+          <p class="error-text oj-text-color-danger oj-sm-margin-2x-top">
+            {error}
+          </p>
+        )}
       </div>
     </div>
   );
