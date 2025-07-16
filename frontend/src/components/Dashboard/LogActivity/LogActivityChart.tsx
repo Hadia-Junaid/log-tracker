@@ -171,13 +171,6 @@ const LogActivityChart = () => {
     };
   };
 
-  const colorMap: Record<string, string> = {
-    DEBUG: "#64748b",
-    INFO: "#06b6d4",
-    WARN: "#f59e0b",
-    ERROR: "#ef4444",
-  };
-
   if (error) {
     return (
       <div class="log-chart-error">
@@ -215,7 +208,7 @@ const LogActivityChart = () => {
                 class="log-chart-checkbox"
                 style={{
                   opacity: isLastChecked ? 0.6 : 1,
-                  color: colorMap[level],
+                  color: "#6b7280",   //need a neutral color here same for all levels
                 }}
               >
                 <input
