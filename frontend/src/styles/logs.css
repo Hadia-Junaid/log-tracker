@@ -251,8 +251,8 @@
 
 
 .logs-table-wrapper{
-  background-color: #fff;
   flex:1;
   padding-left: 1.8rem;
-  background-color: rgb(251, 249, 248);
+  overflow: auto;
+  justify-content: center;
 }

@@ -28,6 +28,7 @@ export default function LogsTable({loading, error, dataProvider, columns }: Logs
           scroll-policy-options='{"fetchSize": 10}'
           columns={columns}
           class="demo-table-container"
+          vertical-grid-visible="enabled"
         ></oj-table>
       )}
     </>
