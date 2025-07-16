@@ -11,7 +11,7 @@ import "ojs/ojavatar";
 import "ojs/ojinputtext";
 import "../../../styles/dashboard/pinnedapps.css";
 import "../../../styles/dashboard/activeapps.css";
-import { Activity } from "lucide-preact";
+import { Activity, AlertTriangle } from "lucide-preact";
 import CardRow from "../utils/CardRow";
 
 interface ActiveApp {
@@ -78,52 +78,60 @@ const ActiveAppsDashboard = () => {
 
       {loading && <oj-progress-circle size="md" class="loader"></oj-progress-circle>}
       {error && <p class="error-text">{error}</p>}
-
-      {!loading && !error && (
-        <div class="active-apps-list">
-          {displayedApps.map((app) => (
-            <div class="active-app-row" key={app._id}>
-              <span class="active-app-name">{app.name}</span>
-              <CardRow
-                label=""
-                value={app.totalLogsLast24h.toLocaleString()}
-                badge="NEUTRAL"
-                labelClass="card-row-logs-label"
-              />
-            </div>
-          ))}
-
-          {remainingCount > 0 && (
-            <div class="see-more-container">
-              <oj-button onojAction={() => setDialogOpen(true)}>+{remainingCount} more</oj-button>
-            </div>
-          )}
-
-          <oj-dialog
-            id="activeAppDialog"
-            class="app-dialog"
-            ref={dialogRef}
-            onojClose={() => setDialogOpen(false)}
-            cancel-behavior="icon">
-            <div slot="header">
-              <h2 class="dialog-title">All Active Applications ({apps.length})</h2>
-            </div>
-            <div slot="body">
-              <div class="dialog-apps-list">
-                {apps.map((app) => (
-                  <div class="active-app-row" key={app._id}>
-                    <span class="active-app-name">{app.name}</span>
-                    <CardRow
-                      label=""
-                      value={app.totalLogsLast24h.toLocaleString()}
-                      badge="NEUTRAL"
-                      labelClass="card-row-logs-label"
-                    />
-                  </div>
-                ))}
+      {displayedApps.length > 0 ? (
+        !loading && !error && (
+          <div class="active-apps-list">
+            {displayedApps.map((app) => (
+              <div class="active-app-row" key={app._id}>
+                <span class="active-app-name">{app.name}</span>
+                <CardRow
+                  label=""
+                  value={app.totalLogsLast24h.toLocaleString()}
+                  badge="NEUTRAL"
+                  labelClass="card-row-logs-label"
+                />
               </div>
-            </div>
-          </oj-dialog>
+            ))}
+
+            {remainingCount > 0 && (
+              <div class="see-more-container">
+                <oj-button onojAction={() => setDialogOpen(true)}>+{remainingCount} more</oj-button>
+              </div>
+            )}
+
+            <oj-dialog
+              id="activeAppDialog"
+              class="app-dialog"
+              ref={dialogRef}
+              onojClose={() => setDialogOpen(false)}
+              cancel-behavior="icon">
+              <div slot="header">
+                <h2 class="dialog-title">All Active Applications ({apps.length})</h2>
+              </div>
+              <div slot="body">
+                <div class="dialog-apps-list">
+                  {apps.map((app) => (
+                    <div class="active-app-row" key={app._id}>
+                      <span class="active-app-name">{app.name}</span>
+                      <CardRow
+                        label=""
+                        value={app.totalLogsLast24h.toLocaleString()}
+                        badge="NEUTRAL"
+                        labelClass="card-row-logs-label"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </oj-dialog>
+          </div>
+        )
+
+      ) : (
+        <div class="active-empty-state">
+          <AlertTriangle class="icon" />
+          <p>No Active applications found</p>
+          <small>Active Applications will appear here</small>
         </div>
       )}
     </div>
