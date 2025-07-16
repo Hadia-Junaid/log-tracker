@@ -39,6 +39,20 @@ const AtRiskAppsListCard = () => {
   const displayedApps = apps.slice(0, 3);
   const remainingCount = apps.length - 3;
 
+  const [showOnlyBadge, setShowOnlyBadge] = useState(false);
+
+  useEffect(() => {
+    const checkWidth = () => {
+      const width = window.innerWidth;
+      setShowOnlyBadge(width >= 1025 && width <= 1300);
+    };
+
+    checkWidth(); // run once on mount
+
+    window.addEventListener("resize", checkWidth);
+    return () => window.removeEventListener("resize", checkWidth);
+  }, []);
+
   const AppRow = (app: AtRiskApp) => (
     <div class="risk-item" onClick={() => setSelectedApp(app)}>
       <div class="risk-app-info">
@@ -46,13 +60,15 @@ const AtRiskAppsListCard = () => {
         <div class="risk-app-name">{app.name}</div>
       </div>
       <div class="risk-app-rule-preview">
-        {app.messages.length > 1 ? (
+        {showOnlyBadge ? (
+          <span class="risk-rule-count oj-badge oj-badge-neutral">{app.messages.length} rule{app.messages.length > 1 ? "s" : ""}</span>
+        ) : app.messages.length > 1 ? (
           <div class="risk-multiple-rules">
-            <span class="risk-single-rule">{app.messages[0]}</span>
+            <span class="risk-single-rule" title={app.messages[0]}>{app.messages[0]}</span>
             <span class="risk-rule-count oj-badge oj-badge-neutral">+{app.messages.length - 1} rules</span>
           </div>
         ) : (
-          <span class="risk-single-rule">{app.messages[0]}</span>
+          <span class="risk-single-rule" title={app.messages[0]}>{app.messages[0]}</span>
         )}
       </div>
     </div>
