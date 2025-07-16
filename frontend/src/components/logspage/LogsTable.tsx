@@ -14,7 +14,7 @@ export default function LogsTable({loading, error, dataProvider, columns }: Logs
   return (
     <>
       {loading ? (
-        <div class="oj-flex oj-sm-justify-content-center" style="width: 100%;">
+        <div class="oj-flex" style="width: 100%;">
           <oj-progress-circle size="md" value={-1}></oj-progress-circle>
         </div>
       ) : error ? (

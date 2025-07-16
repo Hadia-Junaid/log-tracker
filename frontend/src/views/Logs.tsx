@@ -329,7 +329,7 @@ const fetchLogs = async () => {
   };
 
   return (
-  <div class="oj-sm-padding-2x logs-page logs-page-root" style="display: flex; flex-direction: column; height: 100vh;">
+  <div class="logs-page logs-page-root">
     <LogsHeader
       search={search}
       setSearch={setSearch}
@@ -351,7 +351,7 @@ const fetchLogs = async () => {
       logTTL={logTTL}
     />
 
-    <div style="flex: 1; overflow: auto;">
+    <div class="logs-table-wrapper">
       <LogsTable loading={loading} error={error} dataProvider={dataProvider} columns={columns} />
     </div>
 

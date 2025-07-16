@@ -115,7 +115,7 @@ export default function LogsHeader({
 
   return (
     <>
-      <div class="oj-flex oj-sm-margin-4x-bottom" style="justify-content: space-between; align-items: center;">
+      <div class="logs-page-header">
         <div style={{ display: 'flex', flexDirection: 'column' }}>
           <h2 class="oj-typography-heading-lg">Logs</h2>
           <div class="logs-description">Monitor your applications' logs.</div>
@@ -149,7 +149,7 @@ export default function LogsHeader({
         </div>
       </div>
       
-      <div class="oj-flex oj-sm-margin-4x-bottom" style="gap: 1.3rem; align-items: flex-end;">
+      <div class="oj-flex logs-page-filters">
         <oj-input-text
           placeholder="Search messages..."
           value={search}
@@ -228,8 +228,8 @@ export default function LogsHeader({
         
       </div>
 
-      <div class="oj-flex oj-sm-margin-4x-bottom log-level-btn-row">
-        <span class="oj-typography-body-md">Log Levels:</span>
+      <div class="oj-flex log-level-btn-row">
+        <span class="oj-typography-body-lg">Log Levels:</span>
         {logLevelOptions.map((level) => {
           const selected = logLevels.includes(level);
           return (

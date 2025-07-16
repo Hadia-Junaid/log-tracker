@@ -1,9 +1,24 @@
-/* .logs-page-root {
-  width: 100%; 
-  max-height: 99%;  
+.logs-page-root {
   display: flex;
- flex-direction: column;
-} */
+  flex-direction: column;
+  height: 100vh;
+  gap: 16px;
+}
+
+.logs-page{
+  padding: 2rem;
+}
+
+.logs-page-header{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logs-page-filters{
+  gap: 1.3rem;
+  align-items: flex-end;
+}
 
 .logs-pagination-container {
   margin-top: auto;
@@ -234,3 +249,10 @@
   margin-bottom: 0.5rem;
 }
 
+
+.logs-table-wrapper{
+  background-color: #fff;
+  flex:1;
+  padding-left: 1.8rem;
+  background-color: rgb(251, 249, 248);
+}
