@@ -7,7 +7,11 @@ type SettingsProps = {
 };
 
 const Settings = (_props: SettingsProps) => {
-  return <SettingsPanel />;
+  return (
+    <div class="oj-hybrid-padding">
+      <SettingsPanel />
+    </div>
+  );
 };
 
 export default Settings;

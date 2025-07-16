@@ -295,7 +295,7 @@ if (isLoading) {
   return (
     <div class="settings-loading-outer">
       <div class="settings-loading-inner">
-        <oj-progress-circle value={-1} size="lg" />
+      <oj-progress-circle value={-1} size="lg" />
         <p class="loading-spinner-message">Loading Settings...</p>
       </div>
     </div>

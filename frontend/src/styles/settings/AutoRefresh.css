@@ -1,65 +1,77 @@
-/* ===== AUTO REFRESH COMPONENT STYLES (Black & White) ===== */
 .auto-refresh-container {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 12px;
-  background: var(--gray-50);
-  border: 1px solid var(--gray-200);
+  background: #f5f5f5;
+  border: 1px solid #e5e5e5;
   border-radius: 8px;
   transition: all 0.2s ease;
   min-height: 56px;
   width: 100%;
   max-width: 200px;
   margin: 0 auto;
+  touch-action: manipulation;
 }
+
 .auto-refresh-container:hover {
-  background: var(--gray-100);
-  border-color: var(--gray-300);
+  background: #eff6ff;
+  border-color: #93c5fd;
 }
 
 .professional-switch {
-  /* Simplified switch styling */
+  /* Enhanced mobile touch targets */
   --oj-switch-track-height: 28px;
   --oj-switch-track-width: 52px;
   --oj-switch-thumb-height: 24px;
   --oj-switch-thumb-width: 24px;
   --oj-switch-track-border-radius: 16px;
   --oj-switch-thumb-border-radius: 14px;
+
   /* Track Colors */
-  --oj-switch-track-bg-color: var(--gray-300);
-  --oj-switch-track-bg-color-selected: var(--gray-800);
-  --oj-switch-track-bg-color-hover: var(--gray-400);
-  --oj-switch-track-bg-color-selected-hover: var(--black);
+  --oj-switch-track-bg-color: #e5e5e5;
+  --oj-switch-track-bg-color-selected: #3b82f6;
+  --oj-switch-track-bg-color-hover: #d4d4d4;
+  --oj-switch-track-bg-color-selected-hover: #2563eb;
+
   /* Thumb Colors */
-  --oj-switch-thumb-bg-color: var(--white);
-  --oj-switch-thumb-bg-color-selected: var(--white);
-  --oj-switch-thumb-border-color: var(--gray-400);
-  --oj-switch-thumb-border-color-selected: var(--gray-800);
-  --oj-switch-thumb-border-color-hover: var(--gray-500);
-  --oj-switch-thumb-border-color-selected-hover: var(--black);
+  --oj-switch-thumb-bg-color: #ffffff;
+  --oj-switch-thumb-bg-color-selected: #ffffff;
+  --oj-switch-thumb-border-color: #d4d4d4;
+  --oj-switch-thumb-border-color-selected: #3b82f6;
+  --oj-switch-thumb-border-color-hover: #a3a3a3;
+  --oj-switch-thumb-border-color-selected-hover: #2563eb;
+
   /* Transitions */
-  --oj-switch-thumb-transition: all 0.2s ease;
-  --oj-switch-track-transition: all 0.2s ease;
+  --oj-switch-thumb-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  --oj-switch-track-transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
   /* Shadow */
   --oj-switch-thumb-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  --oj-switch-thumb-shadow-selected: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --oj-switch-thumb-shadow-selected: 0 2px 4px rgba(59, 130, 246, 0.2);
+
+  transform: scale(1.3);
   transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+
+.professional-switch:hover {
+  transform: scale(1.4);
 }
 
 .professional-switch:focus {
   outline: none;
-  box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
   border-radius: 20px;
 }
 
 .professional-switch:active {
-  /* No transform on active */
+  transform: scale(1.2);
 }
 
 /* Enhanced visual feedback */
 .professional-switch[value="true"] {
-  --oj-switch-thumb-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --oj-switch-thumb-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
 }
 
 /* Responsive breakpoints */
@@ -78,11 +90,12 @@
     --oj-switch-thumb-width: 20px;
     --oj-switch-track-border-radius: 14px;
     --oj-switch-thumb-border-radius: 12px;
-    /* No transform */
+
+    transform: scale(1.1);
   }
 
   .professional-switch:hover {
-    /* No transform */
+    transform: scale(1.15);
   }
 }
 
@@ -104,34 +117,35 @@
     --oj-switch-track-width: 48px;
     --oj-switch-thumb-height: 22px;
     --oj-switch-thumb-width: 22px;
-    /* No transform */
+
+    transform: scale(1.2);
   }
 
   .professional-switch:hover {
-    /* No transform */
+    transform: scale(1.25);
   }
 }
 
 /* Touch device optimizations */
 @media (hover: none) and (pointer: coarse) {
   .auto-refresh-container:hover {
-    background: var(--gray-50);
-    border-color: var(--gray-200);
+    background: #f5f5f5;
+    border-color: #e5e5e5;
   }
 
   .professional-switch:hover {
-    /* No transform */
+    transform: scale(1.3);
   }
 
   @media (min-width: 640px) {
     .professional-switch:hover {
-      /* No transform */
+      transform: scale(1.1);
     }
   }
 
   @media (min-width: 1280px) {
     .professional-switch:hover {
-      /* No transform */
+      transform: scale(1.2);
     }
   }
 }
@@ -141,13 +155,15 @@
   .professional-switch {
     --oj-switch-thumb-transition: none;
     --oj-switch-track-transition: none;
-    /* No transform */
+    transform: none;
     transition: none;
   }
+
   .professional-switch:hover,
   .professional-switch:active {
-    /* No transform */
+    transform: none;
   }
+
   .auto-refresh-container {
     transition: none;
   }
@@ -156,14 +172,14 @@
 /* High contrast mode */
 @media (prefers-contrast: high) {
   .auto-refresh-container {
-    border-color: var(--black);
+    border-color: #000000;
   }
 
   .professional-switch {
-    --oj-switch-track-bg-color: var(--white);
-    --oj-switch-track-bg-color-selected: var(--black);
-    --oj-switch-thumb-border-color: var(--black);
-    --oj-switch-thumb-border-color-selected: var(--black);
+    --oj-switch-track-bg-color: #ffffff;
+    --oj-switch-track-bg-color-selected: #000000;
+    --oj-switch-thumb-border-color: #000000;
+    --oj-switch-thumb-border-color-selected: #000000;
   }
 }
 
@@ -179,9 +195,11 @@
     --oj-switch-track-width: 36px;
     --oj-switch-thumb-height: 16px;
     --oj-switch-thumb-width: 16px;
-    /* No transform */
+
+    transform: scale(1.0);
   }
+
   .professional-switch:hover {
-    /* No transform */
+    transform: scale(1.05);
   }
 }
