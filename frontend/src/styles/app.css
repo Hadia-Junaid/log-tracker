@@ -9,6 +9,17 @@
 /* Main layout responsiveness */
 .oj-web-applayout-content {
   overflow-x: hidden;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+}
+
+.oj-web-applayout-content main.oj-flex-item {
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  width: 100%;
+  max-width: 100%;
 }
 
 @media (max-width: 768px) {

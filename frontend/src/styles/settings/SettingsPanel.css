@@ -159,6 +159,8 @@
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   min-height: 100vh;
   overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
 }
 
 .settings-container {
@@ -166,6 +168,8 @@
   margin: 0 auto;
   padding: 16px;
   min-height: calc(100vh - 32px);
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* ===== HEADER ===== */
@@ -403,6 +407,8 @@
   display: grid;
   grid-template-columns: 1fr;
   gap: 16px;
+  width: 100%;
+  min-width: 0;
 }
 
 /* ===== CARD STYLES ===== */
@@ -413,6 +419,8 @@
   border: 1px solid var(--neutral-200);
   overflow: hidden;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 100%;
+  min-width: 0;
 }
 
 .settings-card:hover {
@@ -1175,6 +1183,53 @@
   .rule-modal {
     max-width: 1200px !important;
     width: 80vw !important;
+  }
+}
+
+/* Responsive adjustments for sidebar width changes */
+@media (min-width: 640px) and (max-width: 1023px) {
+  .settings-container {
+    padding: 20px;
+  }
+  
+  .settings-grid {
+    gap: 20px;
+  }
+  
+  .settings-card {
+    padding: 20px;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .settings-container {
+    padding: 24px;
+  }
+  
+  .settings-grid {
+    gap: 24px;
+  }
+}
+
+/* Ensure content adapts to available space when sidebar expands */
+@media (min-width: 768px) {
+  .settings-page {
+    min-width: 0;
+    flex: 1;
+  }
+  
+  .settings-container {
+    min-width: 0;
+    overflow-x: auto;
+  }
+  
+  .settings-grid {
+    min-width: 0;
+  }
+  
+  .settings-card {
+    min-width: 0;
+    overflow: hidden;
   }
 }
 

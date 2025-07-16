@@ -377,7 +377,6 @@ if (isLoading) {
               {hasLogDisplayChanges && (
                 <div class="card-changes-indicator">
                   <div class="changes-dot"></div>
-                  <span class="changes-text">Modified</span>
                 </div>
               )}
             </div>
@@ -465,7 +464,6 @@ if (isLoading) {
               </oj-button>
               <oj-button
                 chroming="solid"
-                class={`save-button ${hasLogDisplayChanges ? "save-button-active" : ""}`}
                 disabled={isLogDisplaySaveDisabled}
                 onojAction={handleLogDisplaySaveInitiate}
               >
@@ -530,7 +528,6 @@ if (isLoading) {
               <div class="settings-card-actions">
                 <oj-button
                   chroming="solid"
-                  class={`save-button ${hasDataRetentionChanges ? "save-button-active" : ""}`}
                   disabled={!hasDataRetentionChanges || isSavingDataRetention}
                   onojAction={handleDataRetentionSaveInitiate}
                 >
@@ -638,7 +635,6 @@ if (isLoading) {
               </oj-button>
               <oj-button
                 chroming="solid"
-                class="modal-confirm-btn"
                 onojAction={handleLogDisplaySaveConfirm}
                 disabled={isSavingLogDisplay}
               >
@@ -689,7 +685,6 @@ if (isLoading) {
               </oj-button>
               <oj-button
                 chroming="solid"
-                class="modal-confirm-btn"
                 onojAction={handleDataRetentionSaveConfirm}
                 disabled={isSavingDataRetention}
               >
