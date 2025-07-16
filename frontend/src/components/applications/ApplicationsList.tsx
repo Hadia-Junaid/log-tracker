@@ -63,7 +63,7 @@ export default function ApplicationsList({
           >
             {searchQuery
               ? "No applications match your search criteria!"
-              : "Create your first application to get started."}{" "}
+              : "There are currently no applications to show."}{" "}
           </p>
         </div>
       </div>
