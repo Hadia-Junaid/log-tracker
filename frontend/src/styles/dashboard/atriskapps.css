@@ -35,11 +35,11 @@
 }
 
 .risk-single-rule {
-  background-color: #fadddd;
+  background-color: #FFCCCB ;
   padding: 4px 8px;
   border-radius: 6px;
   font-size: 0.8rem;
-  color: red;
+  color: black;
   line-height: 20px;
 }
 
