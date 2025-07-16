@@ -71,6 +71,7 @@ const ActiveAppsDashboard = () => {
         <span class="active-apps-title-container">
           <Activity class="icon-green" />
           <h2 class="active-apps-title">Active Applications</h2>
+          <p>(logs 24hrs)</p>
         </span>
         <span class="app-count-badge">{apps.length} Apps</span>
       </div>
