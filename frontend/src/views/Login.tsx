@@ -9,6 +9,8 @@ import "ojs/ojavatar";
 import "ojs/ojprogress-circle";
 import "ojs/ojvcomponent";
 import "../styles/login.css";
+import logoImage from "../assets/logtracker.png";
+
 
 export default function Login() {
   const [error, setError] = useState<string | null>(null);
@@ -37,11 +39,11 @@ export default function Login() {
     <div class="login-container oj-flex oj-sm-flex-items-initial oj-sm-justify-content-center oj-sm-align-items-center">
       <div class="login-card oj-panel oj-sm-padding-5x">
         <div class="oj-flex oj-sm-justify-content-center oj-sm-margin-3x-bottom">
-          <oj-avatar
-            size="lg"
-            role="img"
-            initials="LT"
-            class="oj-avatar-bg-orange"
+          <img
+            src={logoImage}
+            alt="Log Tracker Logo"
+            class="sidebar-logo-image"
+            style={{ width: "65px", height: "65px" }}
           />
         </div>
 
