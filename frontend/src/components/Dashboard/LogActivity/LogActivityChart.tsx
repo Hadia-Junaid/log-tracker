@@ -72,7 +72,7 @@ const LogActivityChart = () => {
 
         const localEnd = new Date(); // Now in local time
         const localStart = new Date(localEnd); // Clone
-        localStart.setHours(localStart.getHours() - 24); // Subtract 24 *local* hours
+        localStart.setHours(localStart.getHours() - 23); // Subtract 24 *local* hours
 
         const params: any = {
           start_time: localStart.toISOString(), // will be in UTC
