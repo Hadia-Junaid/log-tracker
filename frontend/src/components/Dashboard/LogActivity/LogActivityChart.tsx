@@ -7,6 +7,7 @@ import ArrayDataProvider from "ojs/ojarraydataprovider";
 import "oj-c/line-chart";
 import axios from "../../../api/axios";
 import "../../../styles/dashboard/logactivitychart.css";
+import { AxiosError } from 'axios';
 
 type ChartItem = { groupId: string; seriesId: string; value: number };
 
@@ -106,11 +107,19 @@ const LogActivityChart = () => {
         setApplications(data.applications);
         setLoading(false);
         console.log("✅ Log activity chart data loaded successfully!");
-      } catch (err) {
-        console.error("❌ Failed to fetch log activity data:", err);
-        setError("Failed to load log activity data");
-        setLoading(false);
-      }
+      } catch (error) {
+  const err = error as unknown as AxiosError<any>;
+  console.error("❌ Failed to fetch log activity data:", err);
+
+  const backendMessage =
+    err.response?.data?.message || // if backend uses { message: "..." }
+    err.response?.data?.error ||   // if backend uses { error: "..." }
+    err.message ||                 // fallback to Axios error
+    "Failed to load log activity data"; // default
+
+  setError(backendMessage);
+  setLoading(false);
+}
     };
 
     fetchData();
