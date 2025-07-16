@@ -24,6 +24,7 @@
 
   .pinned-dashboard-header > oj-button {
     width: 100% ;
+    margin-bottom: 1rem;
   }
 }
 
@@ -81,7 +82,7 @@
   }
 }
 
-@media (max-width: 800px) {
+@media (max-width: 650px) {
   .pinned-cards-wrapper {
     grid-template-columns: repeat(1, 1fr);
   }
@@ -238,4 +239,98 @@
 
 .hidden {
   display: none;
+}
+
+/* === Responsive Adjustments for Small Screens === */
+@media (max-width: 768px) {
+  .pinned-dashboard {
+    padding: 1rem;
+    border-radius: 4px;
+  }
+
+  .pinned-dashboard-title {
+    font-size: 1.25rem;
+  }
+
+  .pinned-card {
+    padding: 1rem;
+  }
+
+  .pinned-card-title {
+    font-size: 1.1rem;
+  }
+
+  .card-row {
+    font-size: 0.8rem;
+  }
+
+  .card-row-label,
+  .card-row-value {
+    font-size: 0.8rem;
+  }
+
+  .card-row-badge {
+    font-size: 0.7rem;
+    padding: 2px 6px;
+  }
+
+  .pin-message {
+    font-size: 0.85rem;
+    padding: 0.5rem 0.75rem;
+  }
+
+  .manage-pins-header-subtitle {
+    font-size: 0.8rem;
+  }
+
+  #managePinsDialog {
+    width: 95vw;
+    height: 65vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .pinned-dashboard-title {
+    font-size: 1.1rem;
+    text-align: center;
+  }
+
+  .pinned-card-title {
+    font-size: 1rem;
+  }
+
+  .pinned-card {
+    padding: 0.75rem;
+  }
+
+  .card-row {
+    font-size: 0.75rem;
+  }
+
+  .card-row-label,
+  .card-row-value {
+    font-size: 0.75rem;
+  }
+
+  .card-row-badge {
+    font-size: 0.65rem;
+  }
+
+  .unpin-icon {
+    padding: 3px;
+  }
+
+  .pin-message {
+    font-size: 0.75rem;
+  }
+
+  .manage-pins-header-subtitle {
+    font-size: 0.75rem;
+  }
+
+  #managePinsDialog {
+    width: 100vw;
+    height: 65vh;
+    max-width: 100%;
+  }
 }

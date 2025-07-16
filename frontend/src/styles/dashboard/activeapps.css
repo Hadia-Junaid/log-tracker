@@ -78,7 +78,7 @@
 
 .see-more-container > oj-button {
   width: 100%;
-  max-width: 200px;
+  color: white;
 }
 
 .dialog-apps-list {
@@ -97,4 +97,76 @@
 
 .loader {
   margin: auto;
+}
+
+/* === Responsive Styles for Active Apps === */
+@media (max-width: 768px) {
+  .active-apps-container {
+    padding: 1rem;
+    border-radius: 8px;
+    gap: 12px;
+  }
+
+  .active-apps-title {
+    font-size: 1.25rem;
+  }
+
+  .app-count-badge {
+    font-size: 0.75rem;
+    padding: 3px 6px;
+  }
+
+  .active-app-row {
+    padding: 10px 12px;
+    font-size: 0.85rem;
+  }
+
+  .active-app-name {
+    font-size: 0.85rem;
+  }
+
+  .dialog-title {
+    font-size: 1rem;
+  }
+
+  .dialog-apps-list {
+    padding: 0.5rem;
+    gap: 10px;
+  }
+
+  .see-more-container > oj-button {
+    width: 100%;
+    max-width: none;
+  }
+
+  .loader {
+    margin: 1rem auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .active-apps-title {
+    font-size: 1.1rem;
+  }
+
+  .active-app-row {
+    padding: 8px 10px;
+    font-size: 0.8rem;
+  }
+
+  .active-app-name {
+    font-size: 0.8rem;
+  }
+
+  .card-row-value {
+    font-size: 0.75rem;
+  }
+
+  .dialog-title {
+    font-size: 0.95rem;
+  }
+
+  .dialog-apps-list {
+    gap: 8px;
+  }
 }
