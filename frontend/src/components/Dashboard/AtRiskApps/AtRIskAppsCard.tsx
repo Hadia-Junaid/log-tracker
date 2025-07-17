@@ -67,8 +67,15 @@ const AtRiskAppsListCard = () => {
           <span class="risk-rule-count oj-badge oj-badge-neutral oj-badge-subtle">{app.messages.length} rule{app.messages.length > 1 ? "s" : ""}</span>
         ) : app.messages.length > 1 ? (
           <div class="risk-multiple-rules">
-            <span class="risk-single-rule" title={app.messages[0]}>{app.messages[0]}</span>
-            <span class="risk-rule-count oj-badge oj-badge-neutral">+{app.messages.length - 1} rules</span>
+            {/* <span class="risk-single-rule" title={app.messages[0]}>{app.messages[0]}</span> */}
+            <span
+              class="risk-rule-count oj-badge oj-badge-neutral risk-rule-hover"
+              style={{ cursor: "pointer" }}
+              onMouseEnter={e => (e.currentTarget.style.backgroundColor = "#0e0e0eff")}
+              onMouseLeave={e => (e.currentTarget.style.backgroundColor = "")}
+            >
+              {app.messages.length} rules violated
+            </span>
           </div>
         ) : (
           <span class="risk-single-rule oj-badge oj-badge-neutral" title={app.messages[0]}>{app.messages[0]}</span>
