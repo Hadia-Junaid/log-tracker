@@ -114,7 +114,6 @@ export const getLogs = async (req: Request, res: Response): Promise<void> => {
   ]);
 
   const total_pages = Math.ceil(total_logs / limitNum);
-
   res.status(200).json({
     data: logs,
     total: logs.length,
@@ -198,7 +197,7 @@ export const exportLogs = async (
 
   // 4. Count logs first
   const logCount = await Log.countDocuments(logQuery);
-  if (logCount > 1000) {
+  if (logCount > 10000) {
     // Trigger async email send (placeholder)
     await sendLogsByEmail(user, logQuery, is_csv === "true");
     res.status(200).json({ emailSent: true });
@@ -350,11 +349,6 @@ export const userdata = async (req: Request, res: Response): Promise<void> => {
   // 4. Get user settings
   const { autoRefresh, autoRefreshTime } = user.settings || {};
   // 5. Get TTL index value from Log collection
-  // const indexes = await Log.collection.indexes();
-  // const ttlIndex = indexes.find(
-  //   (idx) => idx.key && idx.key.timestamp === 1 && idx.expireAfterSeconds
-  // );
-  // const logTTL = ttlIndex ? ttlIndex.expireAfterSeconds : null;
   const mdataRetention = await datatRetention.findOne().lean();
   const logTTL = mdataRetention ? mdataRetention.retentionDays * 86400 : null;
   res.status(200).json({

@@ -17,22 +17,27 @@ messages=(
   "Unexpected error occurred"
 )
 
-# Available log levels
-log_levels=("INFO" "ERROR" "WARN" "DEBUG")
+# Weighted log levels (INFO x5, ERROR x3, DEBUG x2, WARN x1)
+weighted_log_levels=(
+  "INFO" "INFO" "INFO" "INFO" "INFO"
+  "ERROR" "ERROR" "ERROR"
+  "DEBUG" "DEBUG"
+  "WARN"
+)
 
 while true; do
-  for i in {1..10}; do
+  for i in {1..1000}; do
     # Timestamp in ISO8601 format: yyyy-MM-dd HH:mm:ss,SSS
     timestamp=$(date -u +"%Y-%m-%d %H:%M:%S,%3N")
 
-    # Random message and log level
+    # Random message and weighted log level
     msg=${messages[$RANDOM % ${#messages[@]}]}
-    level=${log_levels[$RANDOM % ${#log_levels[@]}]}
+    level=${weighted_log_levels[$RANDOM % ${#weighted_log_levels[@]}]}
 
-    # Print log line matching the format: [%d] [%p] [%X{traceid}]%m%n
+    # Print log line
     echo "[$timestamp] [$level] [traceid=$traceid] $msg"
   done
 
-  # Sleep 1 second before generating the next 1000 logs
+  # Sleep 1 second before next batch
   sleep 1
 done

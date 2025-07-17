@@ -58,7 +58,7 @@ export default function Logs(props: Props) {
   const [autoRefresh, setAutoRefresh] = useState<boolean | undefined>(undefined);
   const [autoRefreshTime, setAutoRefreshTime] = useState<number | undefined>(undefined);
   const [logTTL, setLogTTL] = useState<number | null>(null);
-
+  const [totalLogs, setTotalLogs] = useState<number>(0);
   // Ref to track last fetch time (ms since epoch)
   const lastFetchTimeRef = useRef<number>(Date.now());
 
@@ -137,6 +137,7 @@ const fetchLogs = async () => {
     });
     setLogs(res.data.data);
     setTotalPages(res.data.total_pages || 1);
+    setTotalLogs(res.data.total_logs || 0); // NEW
     setError(null);
   } catch (error) {
   const err = error as unknown as AxiosError<any>;
@@ -168,7 +169,7 @@ const fetchLogs = async () => {
       const now = Date.now();
       if (now - lastFetchTimeRef.current >= autoRefreshTime * 1000) {
         updateStartEndTimesFromTimeRange();
-        fetchLogs();
+        // fetchLogs();
       }
     }, 1000); // Check every second
     return () => clearInterval(interval);
@@ -244,23 +245,26 @@ const fetchLogs = async () => {
     },
   ];
   const handleResetFilters = () => {
-  setSearch("");
-  setDebouncedSearch(""); 
-  setSelectedAppIds([]);
-  setLogLevels([]);
-  setTimeRange("Last 24 hours");
-  setCustomStart(null);
-  setCustomEnd(null);
-  setPage(1);
-  const now = new Date();
-  let start: Date | null = null;
-  start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
-  setStartTime(start.toISOString());
-  setEndTime(now.toISOString());
-
+    setSearch("");
+    setDebouncedSearch(""); 
+    setSelectedAppIds([]);
+    setLogLevels([]);
+    setTimeRange("Last 24 hours");
+    setCustomStart(null);
+    setCustomEnd(null);
+    setPage(1);
+    const now = new Date();
+    let start: Date | null = null;
+    start = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    setStartTime(start.toISOString());
+    setEndTime(now.toISOString());
   };
   
   const handleExport = async (format: "csv" | "json") => {
+    if (totalLogs > 10000) {
+      setExportStatus({ type: 'success', message: 'You will receive an email.' });
+      setTimeout(() => setExportStatus(null), 1000);
+    }
     try {
       // updateStartEndTimesFromTimeRange();
       const res = await axios.get(`/logs/export`, {
@@ -281,8 +285,6 @@ const fetchLogs = async () => {
         try {
           const json = JSON.parse(text);
           if (json && json.emailSent) {
-            setExportStatus({ type: 'success', message: 'You will receive an email.' });
-            setTimeout(() => setExportStatus(null), 4000);
             return;
           }
         } catch (e) {
@@ -301,8 +303,6 @@ const fetchLogs = async () => {
       } else {
         // JSON export
         if (res.data && res.data.emailSent) {
-          setExportStatus({ type: 'success', message: 'You will receive an email.' });
-          setTimeout(() => setExportStatus(null), 4000);
           return;
         }
         const blob = new Blob([
