@@ -5,9 +5,10 @@
   gap: 16px;
 }
 
-.logs-page{
-  padding: 2rem;
+.logs-page {
+  padding: 2rem 2rem 0 2rem; /* top right bottom left */
 }
+
 
 .logs-page-header{
   display: flex;
@@ -31,7 +32,9 @@
   z-index: 10;
   padding: 1rem 0 0.5rem 0;
   gap: 12px;
+  /* position: fixed; */
 }
+
 
 .logs-pagination-btn {
   padding: 0.5em 1.2em;

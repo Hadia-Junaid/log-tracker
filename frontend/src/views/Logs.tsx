@@ -168,10 +168,7 @@ const fetchLogs = async () => {
       const now = Date.now();
       if (now - lastFetchTimeRef.current >= autoRefreshTime * 1000) {
         updateStartEndTimesFromTimeRange();
-        if(timeRange === "custom" && customStart && customEnd) {
-          fetchLogs();
-        }
-        // fetchLogs();
+        fetchLogs();
       }
     }, 1000); // Check every second
     return () => clearInterval(interval);
