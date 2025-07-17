@@ -8,19 +8,20 @@ import {
 } from '../controllers/userGroup.controller';
 import { authenticate } from '../middleware/auth';
 import { requireAdmin } from '../middleware/adminAuth';
-import validate from '../middleware/validate';
-import { updateUserGroupSchema, createUserGroupSchema } from '../validators/userGroup.validator';
+import {validateBody, validateParams, validateQuery} from '../middleware/validate';
+import { updateUserGroupSchema, createUserGroupSchema, getUserGroupsQuerySchema} from '../validators/userGroup.validator';
+import { mongoDbIdSchema } from '../validators/mongoId';
 
 const router = Router();
 
 // GET routes - accessible to all authenticated users
-router.get('/', authenticate, requireAdmin, getUserGroups);
-router.get('/:id', authenticate,requireAdmin, getUserGroupById);
+router.get('/', authenticate, requireAdmin, validateQuery(getUserGroupsQuerySchema), getUserGroups);
+router.get('/:id', authenticate,requireAdmin, validateParams(mongoDbIdSchema), getUserGroupById);
 
 // Admin-only routes - require both authentication and admin privilege
-router.post('/', authenticate, requireAdmin, validate(createUserGroupSchema), createUserGroup);
-router.patch('/:id', authenticate, requireAdmin, validate(updateUserGroupSchema), updateUserGroup);
-router.delete('/:id', authenticate, requireAdmin, deleteUserGroup);
+router.post('/', authenticate, requireAdmin, validateBody(createUserGroupSchema), createUserGroup);
+router.patch('/:id', authenticate, requireAdmin, validateParams(mongoDbIdSchema), validateBody(updateUserGroupSchema), updateUserGroup);
+router.delete('/:id', authenticate, requireAdmin, validateParams(mongoDbIdSchema), deleteUserGroup);
 
 
 export default router;

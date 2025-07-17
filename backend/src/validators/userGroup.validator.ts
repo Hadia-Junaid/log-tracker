@@ -56,3 +56,13 @@ export const updateUserGroupSchema = Joi.object({
     email: Joi.string().email().required(),
   })).required()
 });
+
+
+export const getUserGroupsQuerySchema = Joi.object({
+  page: Joi.number().integer().min(1).default(1),
+  pageSize: Joi.number().integer().min(1).default(8),
+  search: Joi.string().allow('').trim().default(''),
+  is_admin: Joi.boolean().truthy('true').falsy('false').optional(),
+  is_active: Joi.boolean().truthy('true').falsy('false').optional(),
+  allPages: Joi.boolean().truthy('true').falsy('false').default(false),
+});

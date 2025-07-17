@@ -14,8 +14,6 @@ import { Parser as Json2csvParser } from "json2csv";
 import nodemailer from "nodemailer";
 import config from "config";
 
-import fs from "fs";
-import path from "path";
 // GET /api/logs/:userId
 export const getLogs = async (req: Request, res: Response): Promise<void> => {
   const userId = req.user.id;
