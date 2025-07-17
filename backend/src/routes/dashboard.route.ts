@@ -7,6 +7,8 @@ import {
     getActiveApps,
     getAtRiskApps
 } from "../controllers/dashboard.controller";
+import validate from '../middleware/validate';
+import { pinnedAppsSchema } from '../validators/pinnedApps';
 
 const router = express.Router();
 
@@ -15,7 +17,7 @@ const router = express.Router();
 router.get("/pinned/:id", authenticate, getPinnedApps);
 
 // PATCH /api/dashboard/pinned - Update pinned application
-router.patch("/pinned/:id", authenticate, updatePinnedApps);
+router.patch("/pinned/:id", authenticate, validate(pinnedAppsSchema), updatePinnedApps);
 
 router.patch("/pinned/:id/:appId", authenticate, updatePinnedApps);
 
