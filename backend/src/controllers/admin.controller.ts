@@ -11,7 +11,7 @@ export const searchUsers = async (req: Request, res: Response): Promise<void> =>
   const MAX_RESULTS = config.get<number>('adminSearch.maxResults');
   const ORDER_BY = config.get<string>('adminSearch.orderBy');
   const PROJECTION = config.get<string>('adminSearch.projection');
-  const { error, value } = searchUsersSchema.validate(req.query);
+  const { error, value } = searchUsersSchema.validate(req.query); 
   if (error) {
     res.status(400).json({ message: error.details[0].message });
     return;
