@@ -13,7 +13,7 @@ import "ojs/ojmenu";
 import "ojs/ojbutton";
 import axios from "../api/axios";
 import { useUser } from "../context/UserContext";
-import "./header.css";
+import "../styles/header.css";
 
 type Props = Readonly<{
     appName?: string;

@@ -22,9 +22,6 @@ const errorHandler = (
     return;
   }
 
-  
-
-
   const frontendBase = config.get<string>("frontend.baseUrl");
 
   if (req.originalUrl.includes("/google/callback")) {
