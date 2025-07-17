@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { userGroupService } from '../../services/userGroupServices';
 import { MemberData, ApplicationOption } from '../../types/userManagement';
 import { GroupDialogBase } from './GroupDialogBase';
+import { useUser } from '../../context/UserContext';
 import 'ojs/ojinputsearch';
 import 'ojs/ojbutton';
 import 'ojs/ojlistview';
@@ -44,6 +45,9 @@ export function AddGroupDialog({
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const groupNameRef = useRef<any>(null);
   const checkboxRefs = useRef<{ [key: string]: any }>({});
+
+  // Get the refreshUser function from UserContext
+  const { refreshUser } = useUser();
 
   useEffect(() => {
     if (isOpen && !isDataLoaded) {
@@ -120,6 +124,9 @@ export function AddGroupDialog({
 
       // Set success message
       setSuccessMessage('Group created successfully');
+      
+      // Refresh user data to update header groups count
+      await refreshUser();
       
       // Close dialog after a short delay to show the message
       setTimeout(() => {
