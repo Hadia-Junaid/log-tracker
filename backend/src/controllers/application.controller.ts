@@ -1,6 +1,7 @@
 // Controller functions for managing applications
 import { Request, Response } from "express";
 import Application from "../models/Application";
+import Log from "../models/Log";
 import mongoose from "mongoose";
 import logger from "../utils/logger";
 import UserGroup from "../models/UserGroup";
@@ -303,6 +304,19 @@ export const deleteApplication = async (
     { assigned_applications: id },
     { $pull: { assigned_applications: id } }
   );
+
+  //Go to the logs table and delete all logs from this application
+  const deleteLogs = await Log.deleteMany({ application_id: id });
+
+  if (deleteLogs.deletedCount > 0) {
+    logger.info(
+      `Deleted ${deleteLogs.deletedCount} logs for application ${deleted.name} (${deleted._id})`
+    );
+  } else {
+    logger.info(
+      `No logs found for application ${deleted.name} (${deleted._id})`
+    );
+  }
 
   logger.info(`Application deleted: ${deleted.name} (${deleted._id})`);
   res.send({ message: "Application deleted successfully." });
