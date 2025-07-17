@@ -1,32 +1,45 @@
 import { Request, Response } from "express";
 import UserGroup from "../models/UserGroup";
-import User from "../models/User";
+import User, { IUser } from "../models/User";
 import Application from "../models/Application";
 import logger from "../utils/logger";
 import mongoose from "mongoose";
 import { fetchUserFromDirectory } from "../utils/fetchUserFromDirectory";
 import { getSuperAdminEmails } from "../utils/getSuperAdminEmails";
+import {
+  createUserGroupSchema,
+  updateUserGroupSchema,
+} from "../validators/userGroup.validator";
+import { escapeRegex } from "../utils/escapeRegex";
 
 export const createUserGroup = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  //check if the group name is already in the database
-  const existingGroup = await UserGroup.findOne({ name: req.body.name });
-  if (existingGroup) {
-    res.status(409).json({ error: "Group name already exists." });
+  // Trim the name before validation
+  if (req.body.name) {
+    req.body.name = req.body.name.trim();
+  }
+
+  // Validate input using Joi schema
+  const { error, value } = createUserGroupSchema.validate(req.body);
+  if (error) {
+    res.status(400).json({ error: error.details[0].message });
     return;
   }
 
   const {
     name,
     is_admin = false,
+    is_active = true,
     members = [],
     assigned_applications = [],
-  } = req.body;
+  } = value;
 
-  if (!name) {
-    res.status(400).json({ error: "Group name is required." });
+  // Check if the group name already exists (after trim and validation)
+  const existingGroup = await UserGroup.findOne({ name });
+  if (existingGroup) {
+    res.status(400).json({ error: "A group with this name already exists." });
     return;
   }
 
@@ -42,42 +55,50 @@ export const createUserGroup = async (
 
   const verifiedMemberIds: mongoose.Types.ObjectId[] = [];
 
-  // Only process members if the array is not empty
-  if (members.length > 0) {
-    for (const email of members) {
-      let user = await User.findOne({ email });
 
-      if (!user) {
-        const userData = await fetchUserFromDirectory(email);
-        if (!userData) {
-          res
-            .status(404)
-            .json({ error: `User ${email} not found in directory API.` });
-          return;
-        }
+  // Get all existing users
+  //Get array of emails from members
+  const memberEmails = members.map((m: { email: string }) => m.email);
+  const existingUsers = await User.find({ email: { $in: memberEmails } });
+  // If any members NOT in existingUsers, add them to Users
+  // new Members
+  const newMembers = members.filter(
+    (member: { email: string }) =>
+      !existingUsers.some((user) => user.email === member.email)
+  );
+  logger.debug("New members to be added:" + JSON.stringify(newMembers));
 
-        user = new User({
-          email: userData.email,
-          name: userData.name,
-          pinned_applications: [],
-          settings: {
-            autoRefresh: false,
-            autoRefreshTime: 30,
-            logsPerPage: 50,
-          },
-        });
+  // Add newMembers to the User db
 
-        await user.save();
-        logger.info(` Created new user from directory API: ${email}`);
-      }
+  // Build new user documents
+  const newUserDocs = newMembers.map((member: { name: string; email: string }) => ({
+    email: member.email,
+    name: member.name,
+    is_active: true,
+    pinned_applications: [],
+    
+  }));
 
+  // Insert all new users
+  let insertedUsers: any[] = [];
+  if (newUserDocs.length > 0) {
+      insertedUsers = await User.insertMany(newUserDocs, { ordered: false });
+    
+  }
+  // Combine existing and inserted users
+  const allUsers = [...existingUsers, ...insertedUsers];
+
+  // Add their ObjectIds to verifiedMemberIds
+  allUsers.forEach((user) => {
+    if (user._id) {
       verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
     }
-  }
+  });
 
   const userGroup = new UserGroup({
     name,
     is_admin,
+    is_active,
     assigned_applications: validAppIds,
     members: verifiedMemberIds,
   });
@@ -94,7 +115,13 @@ export const updateUserGroup = async (
   res: Response
 ): Promise<void> => {
   const { id } = req.params;
-  const { name, is_admin, applications = [], members = [] } = req.body;
+  const {
+    name,
+    is_admin,
+    is_active,
+    assigned_applications = [],
+    members = [],
+  } = req.body;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
     res.status(400).json({ error: "Invalid group ID." });
@@ -111,44 +138,70 @@ export const updateUserGroup = async (
   const finalIsAdmin =
     typeof is_admin === "boolean" ? is_admin : group.is_admin;
 
+  // Validate input for non-admin groups
+  if (!finalIsAdmin) {
+    const { error } = updateUserGroupSchema.validate(req.body);
+    if (error) {
+      res.status(400).json({ error: error.details[0].message });
+      return;
+    }
+  }
+
   // For admin groups, override applications with all available apps
   const validAppIds = finalIsAdmin
     ? await Application.find().distinct("_id")
-    : await Application.find({ _id: { $in: applications } }).distinct("_id");
+    : await Application.find({ _id: { $in: assigned_applications } }).distinct(
+        "_id"
+      );
 
   const superAdminEmails = getSuperAdminEmails();
   const verifiedMemberIds: mongoose.Types.ObjectId[] = [];
+  logger.debug("Members array" + JSON.stringify(members));
 
-  for (const email of members) {
-    let user = await User.findOne({ email }).select("_id");
+  // Get all existing users
+  //Get array of emails from members
+  const memberEmails = members.map((m: { email: string }) => m.email);
+  const existingUsers = await User.find({ email: { $in: memberEmails } });
+  // If any members NOT in existingUsers, add them to Users
+  // new Members
+  const newMembers = members.filter(
+    (member: { email: string }) =>
+      !existingUsers.some((user) => user.email === member.email)
+  );
 
-    if (!user) {
-      const userData = await fetchUserFromDirectory(email);
-      if (!userData) {
-        res
-          .status(404)
-          .json({ error: `User ${email} not found in directory API.` });
-        return;
-      }
+  // Add newMembers to the User db
 
-      user = await User.create({
-        email: userData.email,
-        name: userData.name,
-        pinned_applications: [],
-        settings: {
-          autoRefresh: false,
-          autoRefreshTime: 30,
-          logsPerPage: 50,
-        },
-      });
+  // Build new user documents
+  const newUserDocs = newMembers.map((member: { name: string; email: string }) => ({
+    email: member.email,
+    name: member.name,
+    is_active: true,
+    is_super_admin: superAdminEmails.includes(member.email),
+    pinned_applications: [],
+   
+  }));
 
-      logger.info(`Created user ${email} during group update.`);
-    }
-
-    verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
+  // Insert all new users
+  let insertedUsers: any[] = [];
+  if (newUserDocs.length > 0) {
+      insertedUsers = await User.insertMany(newUserDocs, { ordered: false });
+    
   }
+  // Combine existing and inserted users
+  const allUsers = [...existingUsers, ...insertedUsers];
+
+  // Add their ObjectIds to verifiedMemberIds
+  allUsers.forEach((user) => {
+    if (user._id) {
+      verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
+    }
+  });
+
+  //   verifiedMemberIds.push(user._id as mongoose.Types.ObjectId);
+  // }
 
   // Prevent removal of super admins from admin group
+
   if (finalIsAdmin) {
     const allSuperAdminUsers = (await User.find({
       email: { $in: superAdminEmails },
@@ -171,29 +224,15 @@ export const updateUserGroup = async (
       ...(typeof is_admin === "boolean" && { is_admin }),
       assigned_applications: validAppIds,
       members: verifiedMemberIds,
+      is_active: typeof is_active === "boolean" ? is_active : group.is_active,
     },
     { new: true }
   );
 
   logger.info(`✅ User group '${id}' updated successfully.`);
 
-  //change the response to include members emails and application names in the members and assigned_applications fields
-  const populatedGroup = await UserGroup.findById(id)
-    .populate('assigned_applications', 'name')
-    .populate('members', 'email');
-  
-  if (!populatedGroup) {
-    res.status(404).json({ error: 'User group not found after update' });
-    return;
-  }
-
-  logger.info(`✅ User group '${id}' updated successfully.`);
-
-  res.status(200).json(populatedGroup);
+  res.status(200).json({ message: "User group updated successfully", group });
 };
-
-
-
 
 
 export const deleteUserGroup = async (
@@ -228,18 +267,43 @@ export const getUserGroups = async (
   req: Request,
   res: Response
 ): Promise<void> => {
-  const { name, is_admin } = req.query;
+  const page = Math.max(1, parseInt(req.query.page as string) || 1);
+  const pageSize = Math.max(1, parseInt(req.query.pageSize as string) || 8);
+  const search = (req.query.search as string)?.trim() || "";
+  const { is_admin, is_active } = req.query;
+  const allPages = req.query.allPages === "true" ? true : false;
+
+  logger.debug(`Fetching user groups (allPages: ${allPages})`);
+
   const filter: any = {};
 
-  if (name) filter.name = { $regex: name as string, $options: "i" };
+  if (search) {
+    const escapedSearch = escapeRegex(search);
+    logger.info(`Escaped search term: ${escapedSearch}`);
+    logger.debug(`Search regex: /${escapedSearch}/i`);
+    filter.name = { $regex: escapedSearch, $options: "i" };
+  }
   if (is_admin !== undefined) filter.is_admin = is_admin === "true";
+  if (is_active !== undefined) filter.is_active = is_active === "true";
 
-  const groups = await UserGroup.find(filter)
-    .populate("assigned_applications")
-    .populate("members");
+  const [total, groups] = await Promise.all([
+    UserGroup.countDocuments(filter),
+    UserGroup.find(filter)
+      .select(
+        "name is_admin is_active assigned_applications members createdAt updatedAt"
+      )
+      .populate("assigned_applications")
+      .populate("members")
+      .skip(allPages ? 0 : (page - 1) * pageSize)
+      .limit(allPages ? 0 : pageSize)
+      .lean(),
+  ]);
 
-  logger.info(`ℹ️ Retrieved ${groups.length} user groups.`);
-  res.status(200).json(groups);
+  logger.info(
+    `Fetched ${groups.length} groups (page ${page}) with search "${search}"`
+  );
+
+  res.json({ data: groups, total });
 };
 
 export const getUserGroupById = async (
@@ -255,7 +319,8 @@ export const getUserGroupById = async (
 
   const group = await UserGroup.findById(id)
     .populate("assigned_applications")
-    .populate("members");
+    .populate("members")
+    .populate("is_active");
 
   if (!group) {
     res.status(404).json({ error: "User group not found" });
@@ -270,85 +335,6 @@ export const getUserGroupById = async (
     responseGroup.super_admin_emails = superAdminEmails;
   }
 
-  logger.info(`ℹ️ Retrieved user group: ${group.name}`);
+  logger.info(`ℹ️ Retrieved user group: ${group}`);
   res.status(200).json(responseGroup);
-};
-
-//API endpoint for assigning application to user group (PATCH)
-
-export const assignApplicationToUserGroup = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { id } = req.params;
-  const { applicationId } = req.body;
-
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    res.status(400).json({ error: "Invalid group ID" });
-    return;
-  }
-
-  if (!mongoose.Types.ObjectId.isValid(applicationId)) {
-    res.status(400).json({ error: "Invalid application ID" });
-    return;
-  }
-
-  const userGroup = await UserGroup.findById(id);
-  if (!userGroup) {
-    res.status(404).json({ error: "User group not found" });
-    return;
-  }
-
-  if (userGroup.assigned_applications.includes(applicationId)) {
-    res
-      .status(400)
-      .json({ error: "Application already assigned to this group" });
-    return;
-  }
-
-  userGroup.assigned_applications.push(applicationId);
-  await userGroup.save();
-
-  logger.info(
-    `✅ Application '${applicationId}' assigned to user group '${id}'.`
-  );
-  res.status(200).json(userGroup);
-};
-
-export const removeApplicationFromUserGroup = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  const { id } = req.params;
-  const { applicationId } = req.body;
-
-  if (!mongoose.Types.ObjectId.isValid(id)) {
-    res.status(400).json({ error: "Invalid group ID" });
-    return;
-  }
-
-  if (!mongoose.Types.ObjectId.isValid(applicationId)) {
-    res.status(400).json({ error: "Invalid application ID" });
-    return;
-  }
-
-  const userGroup = await UserGroup.findById(id);
-  if (!userGroup) {
-    res.status(404).json({ error: "User group not found" });
-    return;
-  }
-
-  const index = userGroup.assigned_applications.indexOf(applicationId);
-  if (index === -1) {
-    res.status(400).json({ error: "Application not assigned to this group" });
-    return;
-  }
-
-  userGroup.assigned_applications.splice(index, 1);
-  await userGroup.save();
-
-  logger.info(
-    `✅ Application '${applicationId}' removed from user group '${id}'.`
-  );
-  res.status(200).json(userGroup);
 };

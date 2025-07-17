@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import jwtService from '../services/jwtService';
 import User from '../models/User';
 import logger from '../utils/logger';
+import { checkUserAdminStatus } from '../utils/checkAdminStatus';
 
 declare global {
   namespace Express {
@@ -39,13 +40,16 @@ export const authenticate = async (
       return;
     }
 
+    // Check current admin status from database instead of relying on token
+    const isAdmin = await checkUserAdminStatus(user.email);
+
     req.user = {
       id: user._id,
       email: user.email,
       name: user.name,
       settings: user.settings,
       pinned_applications: user.pinned_applications,
-      is_admin: decoded.is_admin,
+      is_admin: isAdmin,
     };
 
     next();

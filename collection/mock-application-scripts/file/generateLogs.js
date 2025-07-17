@@ -13,6 +13,8 @@ const messages = [
   "Unexpected error occurred mocking request",
 ];
 
+const logLevels = ["info", "error", "warn", "debug"];
+
 function getRandomInt(max) {
   return Math.floor(Math.random() * max);
 }
@@ -20,10 +22,14 @@ function getRandomInt(max) {
 let logId = 0;
 
 function logBatch() {
-  logger.info({
-    id: logId++,
-    traceid: 'abcd1234',
-    message: messages[getRandomInt(messages.length)]
+  const traceid = 'abcd1234';
+  const message = messages[getRandomInt(messages.length)];
+  const level = logLevels[getRandomInt(logLevels.length)];
+
+  logger.log({
+    level,
+    message,
+    traceid,
   });
 
   setTimeout(logBatch, 1000); // Log one message every second

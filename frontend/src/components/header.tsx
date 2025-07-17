@@ -11,77 +11,170 @@ import * as ResponsiveUtils from "ojs/ojresponsiveutils";
 import "ojs/ojtoolbar";
 import "ojs/ojmenu";
 import "ojs/ojbutton";
-import axios from "../api/axios"; // Adjust the import path as necessary
+import axios from "../api/axios";
+import { useUser } from "../context/UserContext";
+import "../styles/header.css";
 
 type Props = Readonly<{
-  appName: string,
-  userLogin: string
+    appName?: string;
+    userLogin?: string;
 }>;
 
 export function Header({ appName, userLogin }: Props) {
-  const mediaQueryRef = useRef<MediaQueryList>(window.matchMedia(ResponsiveUtils.getFrameworkQuery("sm-only")!));
-  
-  const [isSmallWidth, setIsSmallWidth] = useState(mediaQueryRef.current.matches);
 
-  useEffect(() => {
-    mediaQueryRef.current.addEventListener("change", handleMediaQueryChange);
-    return (() => mediaQueryRef.current.removeEventListener("change", handleMediaQueryChange));
-  }, [mediaQueryRef]);
+    const mediaQueryRef = useRef<MediaQueryList>(
+        window.matchMedia(ResponsiveUtils.getFrameworkQuery("sm-only")!)
+    );
 
-  function handleMediaQueryChange(e: MediaQueryListEvent) {
-    setIsSmallWidth(e.matches);
-  }
+    const [isSmallWidth, setIsSmallWidth] = useState(
+        mediaQueryRef.current.matches
+    );
 
-  function getDisplayType() {
-    return (isSmallWidth ? "icons" : "all");
-  };
+    // Import the user context directly
+    const { user, setUser } = useUser();
 
-  function getEndIconClass() {
-    return (isSmallWidth ? "oj-icon demo-appheader-avatar" : "oj-component-icon oj-button-menu-dropdown-icon");
-  }
+    useEffect(() => {
+        mediaQueryRef.current.addEventListener(
+            "change",
+            handleMediaQueryChange
+        );
+        return () =>
+            mediaQueryRef.current.removeEventListener(
+                "change",
+                handleMediaQueryChange
+            );
+    }, [mediaQueryRef]);
 
-  async function handleSignOut() {
-    //first, make a request to the backend to sign out
-    try {
-      await axios.post(`/auth/logout`, {});
-      
-      //then, redirect to the login page
-      window.location.href = "/login";
+    function handleMediaQueryChange(e: MediaQueryListEvent) {
+        setIsSmallWidth(e.matches);
     }
-    catch (error) {
-      console.error("Sign out failed:", error);
-      // Can show the error here later with a banner 
-    }
-  }
 
-  return (
-    <header role="banner" class="oj-web-applayout-header">
-      <div class="oj-web-applayout-max-width oj-flex-bar oj-sm-align-items-center">
-        <div class="oj-flex-bar-middle oj-sm-align-items-baseline">
-        <img class="oj-icon demo-oracle-icon"
-              title="Oracle Logo"
-              alt="Oracle Logo"/>
-          <h1
-            class="oj-sm-only-hide oj-web-applayout-header-title"
-            title="Application Name">
-            {appName}
-          </h1>
-        </div>
-        <div class="oj-flex-bar-end">
-        <oj-toolbar>
-          <oj-menu-button id="userMenu" display={getDisplayType()} chroming="borderless">
-            <span>{userLogin}</span>
-            <span slot="endIcon" class={getEndIconClass()}></span>
-            <oj-menu id="menu1" slot="menu">
-              <oj-option id="pref" value="pref">Preferences</oj-option>
-              <oj-option id="help" value="help">Help</oj-option>
-              <oj-option id="about" value="about">About</oj-option>
-              <oj-option id="out" value="out" onClick={handleSignOut}>Sign Out</oj-option>
-            </oj-menu>
-          </oj-menu-button>
-        </oj-toolbar>
-        </div>
-      </div>
-    </header>
-  );  
+    function getDisplayType() {
+        return isSmallWidth ? "icons" : "all";
+    }
+
+    function getEndIconClass() {
+        return isSmallWidth
+            ? "oj-icon demo-appheader-avatar"
+            : "oj-component-icon oj-button-menu-dropdown-icon";
+    }
+
+    async function handleSignOut() {
+        //first, make a request to the backend to sign out
+        try {
+            await axios.post(`/auth/logout`, {});
+
+            //Reset the user
+            setUser(null);
+
+            //then, redirect to the login page
+            window.location.href = "/login";
+        } catch (error) {
+            console.error("Sign out failed:", error);
+            // Can show the error here later with a banner
+        }
+    }
+
+    return (
+        <header role="banner" class="oj-web-applayout-header">
+            <div
+                class="oj-flex-bar oj-sm-align-items-center"
+                style="width: 100%; padding: 0 16px;"
+            >
+                <div class="oj-flex-bar-middle oj-sm-align-items-baseline">
+                    <img
+                        class="oj-icon demo-oracle-icon"
+                        title="Oracle Logo"
+                        alt="Oracle Logo"
+                    />
+                    <h1
+                        class="oj-sm-only-hide oj-web-applayout-header-title"
+                        title="Application Name"
+                    >
+                        {appName}
+                    </h1>
+                </div>
+                <div class="oj-flex-bar-end">
+                    <oj-toolbar>
+                        {/* Groups Menu Button */}
+                        {user?.groups && user.groups.length > 0 && (
+                            <oj-menu-button
+                                id="groupsMenu"
+                                display={getDisplayType()}
+                                chroming="borderless"
+                                style="margin-right: 8px;"
+                            >
+                                <span style="font-size: 14px; color: var(--oj-core-text-color-primary);">
+                                    Groups ({user.groups.length})
+                                </span>
+                                <span
+                                    slot="endIcon"
+                                    class="oj-component-icon oj-button-menu-dropdown-icon"
+                                ></span>
+
+                                <oj-menu id="groupsMenu1" slot="menu">
+                                    <oj-option id="groups-header" disabled>
+                                        <div style="font-weight: 600; font-size: 14px; padding: 8px 12px; color: var(--oj-core-text-color-primary);">
+                                            My Groups
+                                        </div>
+                                    </oj-option>
+
+                                    {user.groups.map((g) => (
+                                        <oj-option
+                                            key={g.id}
+                                            id={g.id}
+                                            disabled
+                                        >
+                                            <div style="font-size: 12px; line-height: 1.3; padding: 2px 12px; color: var(--oj-core-text-color-primary);">
+                                                {g.name}{" "}
+                                                {g.is_admin && "(Admin)"}
+                                            </div>
+                                        </oj-option>
+                                    ))}
+                                </oj-menu>
+                            </oj-menu-button>
+                        )}
+
+                        {/* User Menu Button */}
+                        <oj-menu-button
+                            id="userMenu"
+                            display={getDisplayType()}
+                            chroming="borderless"
+                        >
+                            <span>{user?.name}</span>
+                            <span
+                                slot="endIcon"
+                                class={getEndIconClass()}
+                            ></span>
+
+                            <oj-menu id="menu1" slot="menu">
+                                <oj-option id="user-info" disabled>
+                                    <div style="padding: 8px 12px; color: var(--oj-core-text-color-primary);">
+                                        <div style="font-weight: 600; font-size: 14px;">
+                                            {user?.email ?? "Unknown User"}
+                                        </div>
+                                        <div style="font-size: 12px; color: var(--oj-core-text-color-primary); margin-top: 2px;">
+                                            {user?.is_admin
+                                                ? "Admin"
+                                                : "Client"}
+                                        </div>
+                                    </div>
+                                </oj-option>
+
+                                <oj-option
+                                    id="out"
+                                    value="out"
+                                    onClick={handleSignOut}
+                                >
+                                    <span style="padding-left: 12px; display: inline-block;color: var(--oj-core-text-color-danger);">
+                                        Sign Out
+                                    </span>
+                                </oj-option>
+                            </oj-menu>
+                        </oj-menu-button>
+                    </oj-toolbar>
+                </div>
+            </div>
+        </header>
+    );
 }

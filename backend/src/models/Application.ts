@@ -5,7 +5,7 @@ export interface IApplication extends Document {
   hostname: string;
   environment: string;
   isActive: boolean;
-  description?: string;
+  description: string;
 }
 
 const ApplicationSchema: Schema = new Schema({
@@ -13,7 +13,7 @@ const ApplicationSchema: Schema = new Schema({
   hostname: { type: String, required: true },
   environment: { type: String, required: true },
   isActive: { type: Boolean, default: true },
-  description: { type: String }
+  description: { type: String, required: true }
 }, { timestamps: true });
 
 export default mongoose.model<IApplication>('Application', ApplicationSchema);

@@ -1,7 +1,6 @@
 #!/bin/bash
 exec > >(tee -a ../../logs/io_logs.log) 2>&1
 
-counter=0
 traceid="abcd1234"
 
 # Sample log messages
@@ -18,11 +17,27 @@ messages=(
   "Unexpected error occurred"
 )
 
-while true
-do
-  timestamp=$(date -u +"%Y-%m-%dT%H:%M:%S.%3NZ")  # UTC ISO timestamp
-  msg=${messages[$RANDOM % ${#messages[@]}]}
-  echo "[$timestamp] [INFO] [$traceid]id=$counter message=\"${msg}\""
-  ((counter++))
-  sleep 5
+# Weighted log levels (INFO x5, ERROR x3, DEBUG x2, WARN x1)
+weighted_log_levels=(
+  "INFO" "INFO" "INFO" "INFO" "INFO"
+  "ERROR" "ERROR" "ERROR"
+  "DEBUG" "DEBUG"
+  "WARN"
+)
+
+while true; do
+  for i in {1..1000}; do
+    # Timestamp in ISO8601 format: yyyy-MM-dd HH:mm:ss,SSS
+    timestamp=$(date -u +"%Y-%m-%d %H:%M:%S,%3N")
+
+    # Random message and weighted log level
+    msg=${messages[$RANDOM % ${#messages[@]}]}
+    level=${weighted_log_levels[$RANDOM % ${#weighted_log_levels[@]}]}
+
+    # Print log line
+    echo "[$timestamp] [$level] [traceid=$traceid] $msg"
+  done
+
+  # Sleep 1 second before next batch
+  sleep 1
 done

@@ -1,61 +1,28 @@
-import dotenv from "dotenv";
-dotenv.config(); // Load environment variables from .env file
 import express from "express";
-import mongoose from "mongoose";
-import logger, {morganStream} from "./utils/logger";
-import errorHandler from "./middleware/error";
+import config from "./startup/config";
+import logger from "./utils/logger";
+import { setupMiddleware } from "./startup/middleware";
+import { setupRoutes } from "./startup/routes";
+import { setupErrorHandling } from "./startup/errorHandlers";
+import { connectToDatabase } from "./startup/db";
 import { processErrors } from "./startup/processErrors";
-import config from "config";
-import morgan from "morgan";
-import authRoutes from "./routes/authRoutes";
-import adminRoutes from "./routes/admin.route";
-import userGroupRoutes from './routes/userGroup.route';
-import applications from "./routes/application.routes";
-import cors from "cors";
-import cookieParser from "cookie-parser";
 
-processErrors(); // Initialize process level error handlers
-
-
-const PORT = config.get<number>('server.port') || 3000;
-const mongoUri = config.get<string>('mongoUri') || '';
-logger.debug(`Mongo URI: ${mongoUri}`); // Log the Mongo URI for debugging
-const baseUrl = config.get<string>("frontend.baseUrl");
-
-
+processErrors();
 const app = express();
 
-// Use cookie parser to handle cookies
-app.use(cookieParser());
-// Enable CORS for frontend
-app.use(
-  cors({
-    origin: baseUrl,
-    credentials: true,              // allow cookies to be sent
-  })
-);
-app.use(express.json());
-app.use(morgan('tiny', { stream: morganStream }));
+setupMiddleware(app);
+setupRoutes(app);
 
-mongoose.connect(mongoUri)
-  .then(() => {
-    logger.info('MongoDB connected');
-    app.listen(PORT, () => {
-      logger.info(`Server is running on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    logger.error('MongoDB connection error:', err);
+
+const PORT = config.get<number>("server.port") || 3000;
+
+(async () => {
+  await connectToDatabase();
+
+  app.listen(PORT, () => {
+    logger.info(`Server is running on port ${PORT}`);
   });
+})();
 
+setupErrorHandling(app);
 
-// Authentication routes
-app.use('/api/auth', authRoutes);
-// ✅ Mount the routes
-app.use('/api/user-groups', userGroupRoutes);
-// Register routes
-app.use('/api/admin', adminRoutes);
-
-app.use('/api/applications', applications);
-// ✅ Error handler last
-app.use(errorHandler);

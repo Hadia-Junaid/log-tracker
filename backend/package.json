@@ -7,7 +7,9 @@
     "dev": "nodemon --exec ts-node src/index.ts",
     "dev:watch": "ts-node-dev --respawn --transpile-only src/index.ts",
     "start": "node dist/index.js",
-    "build": "tsc"
+    "build": "tsc",
+    "migrate:user-groups": "node src/scripts/migrate-user-groups.js",
+    "migrate:user-groups:ts": "ts-node src/scripts/migrate-user-groups.ts"
   },
   "keywords": [],
   "author": "",
@@ -29,10 +31,12 @@
     "google-auth-library": "^10.1.0",
     "googleapis": "^150.0.1",
     "joi": "^17.13.3",
+    "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
     "lint": "^0.8.19",
     "mongoose": "^8.16.0",
     "morgan": "^1.10.0",
+    "nodemailer": "^7.0.5",
     "passport": "^0.7.0",
     "passport-google-oauth20": "^2.0.0",
     "winston": "^3.17.0"
@@ -46,6 +50,7 @@
     "@types/mongoose": "^5.11.97",
     "@types/morgan": "^1.9.10",
     "@types/node": "^24.0.3",
+    "@types/nodemailer": "^6.4.17",
     "@types/winston": "^2.4.4",
     "@typescript-eslint/eslint-plugin": "^8.35.0",
     "@typescript-eslint/parser": "^8.35.0",

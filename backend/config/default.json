@@ -1,4 +1,5 @@
 {
+  "environment": "development",
   "server": {
     "port": 3000
   },
@@ -7,7 +8,7 @@
     "google": {
       "clientId": "",
       "clientSecret": "",
-      "redirectUri": "http://localhost:3000/api/auth/google/callback"
+      "redirectUri": ""
     },
     "jwt": {
       "secret": "",
@@ -25,5 +26,17 @@
       "domain": ""
     }
   },
-  "adminEmails": []
+  "adminEmails": [],
+  "email": {
+    "smtpHost": "",
+    "smtpPort": 587,
+    "smtpUser": "",
+    "smtpPass": "",
+    "from": ""
+  },
+  "adminSearch": {
+    "maxResults": 500,
+    "orderBy": "email",
+    "projection": "full"
+  }
 }

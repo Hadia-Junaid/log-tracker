@@ -1,6 +1,46 @@
-version: "3.8"
+# version: "3.8"
+
+# services:
+#   backend:
+#     build:
+#       context: ./backend
+#       dockerfile: Dockerfile
+#     ports:
+#       - "3000:3000"
+#     env_file:
+#       - ./backend/.env
+
+#   frontend:
+#     build:
+#       context: ./frontend
+#       dockerfile: Dockerfile
+#     ports:
+#       - "8000:8000"
+#     depends_on:
+#       - backend
+
+
 
 services:
+  # === REDIS ===
+  redis:
+    image: redis:7
+    container_name: redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - ./redis-server/redis/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./redis-server/redis/data:/data
+    command: [
+      "redis-server",
+      "/usr/local/etc/redis/redis.conf",
+      "--requirepass", "${REDIS_PASSWORD}",
+      "--bind", "0.0.0.0"
+    ]
+    environment:
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+
+  # === BACKEND ===
   backend:
     build:
       context: ./backend
@@ -10,6 +50,7 @@ services:
     env_file:
       - ./backend/.env
 
+  # === FRONTEND ===
   frontend:
     build:
       context: ./frontend
@@ -18,3 +59,47 @@ services:
       - "8000:8000"
     depends_on:
       - backend
+    env_file:
+      - ./frontend/.env
+
+  # === INGESTION SERVICE ===
+  ingestion:
+    build:
+      context: ./ingestion  # Adjust path if needed
+      dockerfile: Dockerfile
+    container_name: ingestion
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+    ports:
+      - "3100:3000"  # avoid port conflict with backend
+    restart: unless-stopped
+    depends_on:
+      - redis
+
+  # === BRIDGE SERVICE ===
+  bridge:
+    build: ./redis-server/bridge
+    container_name: bridge
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - REDIS_PASSWORD=${REDIS_PASSWORD}
+
+  # === FLUENT BIT COLLECTOR ===
+  collector:
+    image: majst01/fluent-bit-go-redis-output
+    container_name: fluentbit
+    tty: true
+    stdin_open: true
+    volumes:
+      - ./collection/fluent-bit.conf:/fluent-bit/etc/fluent-bit.conf
+      - ./collection/logs:/fluent-bit/logs
+    depends_on:
+      - redis
+
+networks:
+  default:
+    name: logtracker-network

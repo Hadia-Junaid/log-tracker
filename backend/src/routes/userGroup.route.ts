@@ -5,26 +5,23 @@ import {
   deleteUserGroup,
   getUserGroups,
   getUserGroupById,
-  assignApplicationToUserGroup,
-  removeApplicationFromUserGroup
 } from '../controllers/userGroup.controller';
 import { authenticate } from '../middleware/auth';
 import { requireAdmin } from '../middleware/adminAuth';
+import {validateBody, validateParams, validateQuery} from '../middleware/validate';
+import { updateUserGroupSchema, createUserGroupSchema, getUserGroupsQuerySchema} from '../validators/userGroup.validator';
+import { mongoDbIdSchema } from '../validators/mongoId';
 
 const router = Router();
 
 // GET routes - accessible to all authenticated users
-router.get('/', authenticate, getUserGroups);
-router.get('/:id', authenticate, getUserGroupById);
+router.get('/', authenticate, requireAdmin, validateQuery(getUserGroupsQuerySchema), getUserGroups);
+router.get('/:id', authenticate,requireAdmin, validateParams(mongoDbIdSchema), getUserGroupById);
 
-// Admin-only routes - require both authentication and admin privileges
-router.post('/', authenticate, requireAdmin, createUserGroup);
-router.patch('/:id', authenticate, requireAdmin, updateUserGroup);
-router.delete('/:id', authenticate, requireAdmin, deleteUserGroup);
+// Admin-only routes - require both authentication and admin privilege
+router.post('/', authenticate, requireAdmin, validateBody(createUserGroupSchema), createUserGroup);
+router.patch('/:id', authenticate, requireAdmin, validateParams(mongoDbIdSchema), validateBody(updateUserGroupSchema), updateUserGroup);
+router.delete('/:id', authenticate, requireAdmin, validateParams(mongoDbIdSchema), deleteUserGroup);
 
-//API endpoint for assigning application to user group (PATCH)
-router.patch('/:id/assign-application',authenticate,requireAdmin, assignApplicationToUserGroup);
-//API endpoint for unassigning application from user group (DELETE)
-router.delete('/:id/unassign-application', authenticate, requireAdmin, removeApplicationFromUserGroup);
 
 export default router;

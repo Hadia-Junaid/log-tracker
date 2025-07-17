@@ -6,7 +6,6 @@ import logger from '../utils/logger';
  * This middleware should be used after the authenticate middleware
  */
 export const requireAdmin = (req: Request, res: Response, next: NextFunction): void => {
-  try {
     // Check if user is authenticated (should be set by authenticate middleware)
     if (!req.user) {
       res.status(401).json({
@@ -29,11 +28,5 @@ export const requireAdmin = (req: Request, res: Response, next: NextFunction): v
     logger.info(`Admin access granted for user: ${req.user.email}`);
     next();
 
-  } catch (error) {
-    logger.error('Admin authorization middleware error:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Internal server error during authorization'
-    });
-  }
+  
 }; 

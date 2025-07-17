@@ -28,12 +28,17 @@ messages = [
     "Unexpected error occurred"
 ]
 
+log_levels = ["info", "error", "warn", "debug"]
+
 def insert_logs(batch_size=1000):
     with conn.cursor() as cur:
         for _ in range(batch_size):
+            message = random.choice(messages)
+            level = random.choice(log_levels)
+            timestamp = datetime.utcnow()
             cur.execute(
                 "INSERT INTO log (level, message, timestamp) VALUES (%s, %s, %s)",
-                ("info", random.choice(messages), datetime.utcnow())
+                (level, message, timestamp)
             )
     conn.commit()
 
@@ -42,8 +47,7 @@ try:
         start_time = time.time()
         insert_logs()
         elapsed = time.time() - start_time
-        sleep_time = max(0, 1.0 - elapsed)
-        time.sleep(sleep_time)
+        time.sleep(max(0, 1.0 - elapsed))
         print("Inserted 1000 logs.")
 except KeyboardInterrupt:
     print("Stopped.")

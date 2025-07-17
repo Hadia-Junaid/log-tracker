@@ -3,26 +3,19 @@ const path = require('path');
 
 const customFormat = format.printf(({ level, message, traceid, timestamp }) => {
   const traceId = traceid || 'unknown';
-  const msg =
-    typeof message === 'object'
-      ? Object.entries(message)
-          .filter(([k]) => k !== 'traceid')
-          .map(([k, v]) => `${k}=${JSON.stringify(v)}`)
-          .join(' ')
-      : message;
-
-  return `[${timestamp}] [${level.toUpperCase()}] [${traceId}]${msg}`;
+  return `[${timestamp}] [${level.toUpperCase()}] [traceid=${traceId}] ${message}`;
 });
 
 const logger = createLogger({
-  level: 'info',
+  level: 'debug', // allow all log levels
   format: format.combine(
-    format.timestamp(),
+    format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss,SSS' }), // match console.sh format
     customFormat
   ),
   transports: [
     new transports.File({
-      filename: path.join(__dirname, '..', '..', 'logs', 'app.log')
+      filename: path.join(__dirname, '..', '..', 'logs', 'app.log'),
+      level: 'debug', // capture all logs
     })
   ]
 });
