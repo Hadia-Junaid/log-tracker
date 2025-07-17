@@ -69,10 +69,10 @@ export default function Applications({ path }: Props) {
   ];
 
   const pageSizeOptions = [
-    { value: 4, label: "4 per page" },
+    { value: 3, label: "3 per page" },
     { value: 6, label: "6 per page" },
-    { value: 10, label: "10 per page" },
-    { value: 20, label: "20 per page" },
+    { value: 9, label: "9 per page" },
+    { value: 21, label: "21 per page" },
   ];
 
   const statusDataProvider = useMemo(() => {
@@ -128,11 +128,12 @@ export default function Applications({ path }: Props) {
       setApplications(response.data.data);
       setTotalCount(response.data.total);
     } catch (err) {
-      console.error("Error fetching applications:", err);
-      if (isAxiosError(err) && err.response) {
-        setError(err.response.data.error || "Failed to fetch applications.");
-      }
-      setError("Failed to fetch applications. Please try again.");
+  console.error("Error fetching applications:", err);
+  const backendMessage =
+    isAxiosError(err) && err.response?.data?.error
+      ? err.response.data.error
+      : "Failed to fetch applications. Please try again.";
+  setError(backendMessage);
     } finally {
       if (showLoading) {
         setLoading(false);
