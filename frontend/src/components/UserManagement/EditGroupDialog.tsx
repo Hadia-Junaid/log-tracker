@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { userGroupService } from '../../services/userGroupServices';
 import { MemberData, ApplicationOption } from '../../types/userManagement';
 import { GroupDialogBase } from './GroupDialogBase';
+import { useUser } from '../../context/UserContext';
 import 'ojs/ojinputsearch';
 import 'ojs/ojbutton';
 import 'ojs/ojlistview';
@@ -57,6 +58,9 @@ export function EditGroupDialog({
   const searchInputRef = useRef<any>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const checkboxRefs = useRef<{ [key: string]: any }>({});
+
+  // Get the refreshUser function from UserContext
+  const { refreshUser } = useUser();
 
   useEffect(() => {
     if (isOpen && !isDataLoaded) {
@@ -283,6 +287,9 @@ const restoreBodyScroll = () => {
 
       // Set success message
       setSuccessMessage('Group updated successfully');
+      
+      // Refresh user data to update header groups count
+      await refreshUser();
       
       // Close dialog after a short delay to show the message
       setTimeout(() => {

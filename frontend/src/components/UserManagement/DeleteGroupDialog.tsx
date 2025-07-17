@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import "ojs/ojdialog";
 import "ojs/ojbutton";
 import { userGroupService } from "../../services/userGroupServices";
+import { useUser } from "../../context/UserContext";
 import "../../styles/AddGroupDialog.css";
 
 interface DeleteGroupDialogProps {
@@ -24,6 +25,9 @@ export function DeleteGroupDialog({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState('');
+
+  // Get the refreshUser function from UserContext
+  const { refreshUser } = useUser();
 
   useEffect(() => {
     if (dialogRef.current) {
@@ -52,6 +56,9 @@ export function DeleteGroupDialog({
       
       // Set success message
       setSuccessMessage('Group deleted successfully!');
+      
+      // Refresh user data to update header groups count
+      await refreshUser();
       
       // Close dialog after a short delay to show the message
       setTimeout(() => {

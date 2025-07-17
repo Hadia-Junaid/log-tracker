@@ -13,6 +13,7 @@ import "ojs/ojmenu";
 import "ojs/ojbutton";
 import axios from "../api/axios";
 import { useUser } from "../context/UserContext";
+import "./header.css";
 
 type Props = Readonly<{
     appName?: string;
@@ -20,6 +21,7 @@ type Props = Readonly<{
 }>;
 
 export function Header({ appName, userLogin }: Props) {
+
     const mediaQueryRef = useRef<MediaQueryList>(
         window.matchMedia(ResponsiveUtils.getFrameworkQuery("sm-only")!)
     );
@@ -94,6 +96,46 @@ export function Header({ appName, userLogin }: Props) {
                 </div>
                 <div class="oj-flex-bar-end">
                     <oj-toolbar>
+                        {/* Groups Menu Button */}
+                        {user?.groups && user.groups.length > 0 && (
+                            <oj-menu-button
+                                id="groupsMenu"
+                                display={getDisplayType()}
+                                chroming="borderless"
+                                style="margin-right: 8px;"
+                            >
+                                <span style="font-size: 14px; color: var(--oj-core-text-color-primary);">
+                                    Groups ({user.groups.length})
+                                </span>
+                                <span
+                                    slot="endIcon"
+                                    class="oj-component-icon oj-button-menu-dropdown-icon"
+                                ></span>
+
+                                <oj-menu id="groupsMenu1" slot="menu">
+                                    <oj-option id="groups-header" disabled>
+                                        <div style="font-weight: 600; font-size: 14px; padding: 8px 12px; color: var(--oj-core-text-color-primary);">
+                                            My Groups
+                                        </div>
+                                    </oj-option>
+
+                                    {user.groups.map((g) => (
+                                        <oj-option
+                                            key={g.id}
+                                            id={g.id}
+                                            disabled
+                                        >
+                                            <div style="font-size: 12px; line-height: 1.3; padding: 2px 12px; color: var(--oj-core-text-color-primary);">
+                                                {g.name}{" "}
+                                                {g.is_admin && "(Admin)"}
+                                            </div>
+                                        </oj-option>
+                                    ))}
+                                </oj-menu>
+                            </oj-menu-button>
+                        )}
+
+                        {/* User Menu Button */}
                         <oj-menu-button
                             id="userMenu"
                             display={getDisplayType()}
@@ -106,7 +148,7 @@ export function Header({ appName, userLogin }: Props) {
                             ></span>
 
                             <oj-menu id="menu1" slot="menu">
-                                <oj-option id="user-info" disabled={true}>
+                                <oj-option id="user-info" disabled>
                                     <div style="padding: 8px 12px; color: var(--oj-core-text-color-primary);">
                                         <div style="font-weight: 600; font-size: 14px;">
                                             {user?.email ?? "Unknown User"}
@@ -114,7 +156,7 @@ export function Header({ appName, userLogin }: Props) {
                                         <div style="font-size: 12px; color: var(--oj-core-text-color-primary); margin-top: 2px;">
                                             {user?.is_admin
                                                 ? "Admin"
-                                                : "Non-admin"}
+                                                : "Client"}
                                         </div>
                                     </div>
                                 </oj-option>
@@ -124,7 +166,7 @@ export function Header({ appName, userLogin }: Props) {
                                     value="out"
                                     onClick={handleSignOut}
                                 >
-                                    <span style="padding-left: 12px; display: inline-block; color: var(--oj-core-text-color-danger);">
+                                    <span style="padding-left: 12px; display: inline-block;color: var(--oj-core-text-color-danger);">
                                         Sign Out
                                     </span>
                                 </oj-option>
