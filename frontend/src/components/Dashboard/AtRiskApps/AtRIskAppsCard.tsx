@@ -18,6 +18,7 @@ const AtRiskAppsListCard = () => {
   const [selectedApp, setSelectedApp] = useState<AtRiskApp | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isMoreDialogOpen, setIsMoreDialogOpen] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   const { user } = useUser();
 
@@ -30,6 +31,8 @@ const AtRiskAppsListCard = () => {
         setApps(response.data.at_risk_applications ?? []);
       } catch (error) {
         console.error("Error fetching at-risk applications:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -101,9 +104,11 @@ const AtRiskAppsListCard = () => {
         <span class="app-count-badge">{apps.length} Apps</span>
       </div>
 
-      {apps.length > 0 ? (
+      { loading ? (
+        <oj-progress-circle size="md" class="loader"></oj-progress-circle>
+      ) : apps.length !== 0 ? (
         <>
-          <div class="risk-list">
+          {!loading && (<div class="risk-list">
             {displayedApps.map((app) => (
               <AppRow key={app.appId} {...app} />
             ))}
@@ -158,7 +163,7 @@ const AtRiskAppsListCard = () => {
                 </div>
               </oj-dialog>
             )}
-          </div>
+          </div>)}
         </>
       ) : (
         <div class="risk-empty-state">

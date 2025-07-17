@@ -1,4 +1,5 @@
 /** @jsx h */
+/** @jsxFrag */
 import { h } from "preact";
 import { useEffect, useState, useRef } from "preact/hooks";
 import axios from "../../../api/axios";
@@ -76,64 +77,69 @@ const ActiveAppsDashboard = () => {
         <span class="app-count-badge">{apps.length} Apps</span>
       </div>
 
-      {loading && <oj-progress-circle size="md" class="loader"></oj-progress-circle>}
-      {error && <p class="error-text">{error}</p>}
-      {displayedApps.length > 0 ? (
-        !loading && !error && (
-          <div class="active-apps-list">
-            {displayedApps.map((app) => (
-              <div class="active-app-row" key={app._id}>
-                <span class="active-app-name">{app.name}</span>
-                <CardRow
-                  label=""
-                  value={app.totalLogsLast24h.toLocaleString()}
-                  badge="NEUTRAL"
-                  labelClass="card-row-logs-label"
-                />
-              </div>
-            ))}
-
-            {remainingCount > 0 && (
-              <div class="see-more-container">
-                <oj-button onojAction={() => setDialogOpen(true)}>+{remainingCount} more</oj-button>
-              </div>
-            )}
-
-            <oj-dialog
-              id="activeAppDialog"
-              class="app-dialog"
-              ref={dialogRef}
-              onojClose={() => setDialogOpen(false)}
-              cancel-behavior="icon">
-              <div slot="header">
-                <h2 class="dialog-title">All Active Applications ({apps.length})</h2>
-              </div>
-              <div slot="body">
-                <div class="dialog-apps-list">
-                  {apps.map((app) => (
-                    <div class="active-app-row" key={app._id}>
-                      <span class="active-app-name">{app.name}</span>
-                      <CardRow
-                        label=""
-                        value={app.totalLogsLast24h.toLocaleString()}
-                        badge="NEUTRAL"
-                        labelClass="card-row-logs-label"
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </oj-dialog>
-          </div>
-        )
-
-      ) : (
+      {!loading && displayedApps.length === 0 ? (
         <div class="active-empty-state">
           <AlertTriangle class="icon" />
           <p>No Active applications found</p>
           <small>Active Applications will appear here</small>
         </div>
-      )}
+
+      ) : (
+        <>
+          {loading && <oj-progress-circle size="md" class="loader"></oj-progress-circle>}
+          {error && <p class="error-text">{error}</p>}
+          {!loading && !error && (
+            <div class="active-apps-list">
+              {displayedApps.map((app) => (
+                <div class="active-app-row" key={app._id}>
+                  <span class="active-app-name">{app.name}</span>
+                  <CardRow
+                    label=""
+                    value={app.totalLogsLast24h.toLocaleString()}
+                    badge="NEUTRAL"
+                    labelClass="card-row-logs-label"
+                  />
+                </div>
+              ))}
+
+              {remainingCount > 0 && (
+                <div class="see-more-container">
+                  <oj-button onojAction={() => setDialogOpen(true)}>+{remainingCount} more</oj-button>
+                </div>
+              )}
+
+              <oj-dialog
+                id="activeAppDialog"
+                class="app-dialog"
+                ref={dialogRef}
+                onojClose={() => setDialogOpen(false)}
+                cancel-behavior="icon">
+                <div slot="header">
+                  <h2 class="dialog-title">All Active Applications ({apps.length})</h2>
+                </div>
+                <div slot="body">
+                  <div class="dialog-apps-list">
+                    {apps.map((app) => (
+                      <div class="active-app-row" key={app._id}>
+                        <span class="active-app-name">{app.name}</span>
+                        <CardRow
+                          label=""
+                          value={app.totalLogsLast24h.toLocaleString()}
+                          badge="NEUTRAL"
+                          labelClass="card-row-logs-label"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </oj-dialog>
+            </div>
+          )}
+        </>
+
+
+      )
+      }
     </div>
   );
 };
