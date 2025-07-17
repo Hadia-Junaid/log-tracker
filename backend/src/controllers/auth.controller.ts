@@ -133,8 +133,8 @@ class AuthController {
         }
 
         // Check if user is admin by checking membership in admin groups
+        const isAdmin = await checkUserAdminStatus(user.email);
         const userGroups = await getUserGroups(user.id.toString());
-        const isAdmin = userGroups.some((group) => group.is_admin);
 
         const token = jwtService.generateToken(user, isAdmin);
         tempCodeManager.deleteTempCode(auth_code);
@@ -261,9 +261,11 @@ class AuthController {
             return;
         }
 
-        const userGroups = await getUserGroups(user.id.toString());
+        // Check current admin status from database instead of relying on token
+        const isAdmin = await checkUserAdminStatus(user.email);
 
-        const isAdmin = userGroups.some((group) => group.is_admin);
+        // Get user groups for additional context
+        const userGroups = await getUserGroups(user.id.toString());
 
         res.status(200).json({
             authenticated: true,

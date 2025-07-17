@@ -35,6 +35,7 @@ export function EditGroupDialog({
   onClose,
   onGroupUpdated
 }: EditGroupDialogProps) {
+  const { user, refreshUser } = useUser();
   const [selectedMembers, setSelectedMembers] = useState<MemberData[]>([]);
   const [allMembers, setAllMembers] = useState<MemberData[]>([]);
   const [applications, setApplications] = useState<ApplicationOption[]>([]);
@@ -58,9 +59,6 @@ export function EditGroupDialog({
   const searchInputRef = useRef<any>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const checkboxRefs = useRef<{ [key: string]: any }>({});
-
-  // Get the refreshUser function from UserContext
-  const { refreshUser } = useUser();
 
   useEffect(() => {
     if (isOpen && !isDataLoaded) {
@@ -285,17 +283,24 @@ const restoreBodyScroll = () => {
 
       await userGroupService.updateUserGroup(groupId, payload);
 
+      // Refresh user data to update header groups count
+      try {
+        await refreshUser();
+      } catch (err) {
+        console.error('Failed to refresh user data:', err);
+      }
+
       // Set success message
       setSuccessMessage('Group updated successfully');
-      
-      // Refresh user data to update header groups count
-      await refreshUser();
+    
       
       // Close dialog after a short delay to show the message
       setTimeout(() => {
         onGroupUpdated();
         handleClose();
       }, 1500);
+      
+
       
     } catch (err: any) {
       // Handle validation errors from backend (400) and display the exact error message
