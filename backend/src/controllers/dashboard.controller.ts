@@ -34,7 +34,7 @@ export const getPinnedApps = async (req: Request, res: Response): Promise<void> 
     }
 
     // Get user's active applications to validate pinned apps
-    const userGroups = await UserGroup.find({ members: user._id }).lean();
+    const userGroups = await UserGroup.find({ members: user._id, is_active: true }).lean();
     const assignedAppIds = userGroups.length > 0 ? [
         ...new Set(userGroups.flatMap(group => group.assigned_applications.map(id => id.toString())))
     ] : [];
@@ -201,8 +201,8 @@ export const cleanupPinnedApps = async (req: Request, res: Response): Promise<vo
     return;
   }
 
-  // Get user's active applications
-  const userGroups = await UserGroup.find({ members: user._id }).lean();
+  // Get user's active user groups
+  const userGroups = await UserGroup.find({ members: user._id, is_active: true}).lean();
   const assignedAppIds = userGroups.length > 0 ? [
     ...new Set(userGroups.flatMap(group => group.assigned_applications.map(id => id.toString())))
   ] : [];
@@ -257,8 +257,8 @@ export const getActiveApps = async (req: Request, res: Response): Promise<void> 
         return;
     }
 
-    // 2. Find user groups the user belongs to
-    const userGroups = await UserGroup.find({ members: user._id }).lean();
+    // 2. Find active user groups the user belongs to
+    const userGroups = await UserGroup.find({ members: user._id, is_active: true}).lean();
     logger.info(`Found ${userGroups.length} user groups for user: ${userId}`);
     if (!userGroups.length) {
         logger.info(`No user groups found for user: ${userId}`);
@@ -359,8 +359,8 @@ export const getAtRiskApps = async (req: Request, res: Response): Promise<void> 
         return;
     }
 
-    // 2. Find user groups the user belongs to
-    const userGroups = await UserGroup.find({ members: user._id }).lean();
+    // 2. Find active user groups the user belongs to
+    const userGroups = await UserGroup.find({ members: user._id, is_active: true}).lean();
     logger.info(`Found ${userGroups.length} user groups for user: ${userId}`);
     if (!userGroups.length) {
         logger.info(`No user groups found for user: ${userId}`);
