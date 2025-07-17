@@ -423,9 +423,7 @@ if (isLoading) {
                 </div>
                   <div class="setting-control flex items-center gap-2 justify-end">
                     <AutoRefresh value={autoRefresh} onChange={setAutoRefresh} />
-                    {hasLogDisplayChanges && (
-                      <div class="unsaved-dot w-2 h-2 bg-red-500 rounded-full"></div>
-                    )}
+                    {hasLogDisplayChanges}
                   </div>
               </div>
 
@@ -503,15 +501,7 @@ if (isLoading) {
                   <p class="settings-card-subtitle">Manage log storage and cleanup policies</p>
                 </div>
                 <div class="settings-card-header-right">
-                  <div class="admin-badge">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                      <line x1="12" y1="19" x2="12" y2="23" />
-                      <line x1="8" y1="23" x2="16" y2="23" />
-                    </svg>
-                    Admin Access
-                  </div>
+
                   {hasDataRetentionChanges && (
                     <div class="card-changes-indicator">
                       <div class="changes-dot"></div>
@@ -575,15 +565,7 @@ if (isLoading) {
                   <h2 class="settings-card-title">Risk Management</h2>
                   <p class="settings-card-subtitle">Configure automated risk detection rules</p>
                 </div>
-                <div class="admin-badge">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
-                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
-                    <line x1="12" y1="19" x2="12" y2="23" />
-                    <line x1="8" y1="23" x2="16" y2="23" />
-                  </svg>
-                  Admin Access
-                </div>
+    
               </div>
 
               <div class="settings-card-content">

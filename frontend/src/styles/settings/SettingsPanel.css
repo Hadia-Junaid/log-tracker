@@ -256,11 +256,11 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background: var(--warning-50);
-  border: 1px solid var(--warning-200);
+  background: var(--error-200);
+  border: 1px solid var(--error-300);
   padding: 12px 16px;
   border-radius: 8px;
-  color: var(--warning-700);
+  color: var(--error-600);
   font-size: 14px;
   font-weight: 500;
   animation: pulse 2s infinite;
@@ -271,7 +271,7 @@
 .unsaved-dot {
   width: 8px;
   height: 8px;
-  background: var(--warning-500);
+  background: var(--error-700);
   border-radius: 50%;
   animation: blink 1.5s infinite;
   flex-shrink: 0;
