@@ -169,7 +169,7 @@ const fetchLogs = async () => {
       const now = Date.now();
       if (now - lastFetchTimeRef.current >= autoRefreshTime * 1000) {
         updateStartEndTimesFromTimeRange();
-        // fetchLogs();
+        fetchLogs();
       }
     }, 1000); // Check every second
     return () => clearInterval(interval);
@@ -319,7 +319,7 @@ const fetchLogs = async () => {
       }
     } catch (err) {
       console.error("Failed to export logs:", err);
-      setExportStatus({ type: 'error', message: 'Failed to export logs.' });
+      setExportStatus({ type: 'error', message: 'Failed to export logs. Please try again later' });
     } finally {
       setTimeout(() => setExportStatus(null), 4000);
     }
