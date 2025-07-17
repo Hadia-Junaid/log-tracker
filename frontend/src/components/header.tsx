@@ -22,8 +22,6 @@ type Props = Readonly<{
 
 export function Header({ appName, userLogin }: Props) {
 
-    const [isGroupsExpanded, setIsGroupsExpanded] = useState(false);
-
     const mediaQueryRef = useRef<MediaQueryList>(
         window.matchMedia(ResponsiveUtils.getFrameworkQuery("sm-only")!)
     );
@@ -98,6 +96,46 @@ export function Header({ appName, userLogin }: Props) {
                 </div>
                 <div class="oj-flex-bar-end">
                     <oj-toolbar>
+                        {/* Groups Menu Button */}
+                        {user?.groups && user.groups.length > 0 && (
+                            <oj-menu-button
+                                id="groupsMenu"
+                                display={getDisplayType()}
+                                chroming="borderless"
+                                style="margin-right: 8px;"
+                            >
+                                <span style="font-size: 14px; color: var(--oj-core-text-color-primary);">
+                                    Groups ({user.groups.length})
+                                </span>
+                                <span
+                                    slot="endIcon"
+                                    class="oj-component-icon oj-button-menu-dropdown-icon"
+                                ></span>
+
+                                <oj-menu id="groupsMenu1" slot="menu">
+                                    <oj-option id="groups-header" disabled>
+                                        <div style="font-weight: 600; font-size: 14px; padding: 8px 12px; color: var(--oj-core-text-color-primary);">
+                                            My Groups
+                                        </div>
+                                    </oj-option>
+
+                                    {user.groups.map((g) => (
+                                        <oj-option
+                                            key={g.id}
+                                            id={g.id}
+                                            disabled
+                                        >
+                                            <div style="font-size: 12px; line-height: 1.3; padding: 2px 12px; color: var(--oj-core-text-color-primary);">
+                                                {g.name}{" "}
+                                                {g.is_admin && "(Admin)"}
+                                            </div>
+                                        </oj-option>
+                                    ))}
+                                </oj-menu>
+                            </oj-menu-button>
+                        )}
+
+                        {/* User Menu Button */}
                         <oj-menu-button
                             id="userMenu"
                             display={getDisplayType()}
@@ -122,82 +160,6 @@ export function Header({ appName, userLogin }: Props) {
                                         </div>
                                     </div>
                                 </oj-option>
-
-                                {/* Groups Header */}
-                                <oj-option id="user-groups-header" disabled>
-                                    <div style="font-weight: 600; font-size: 14px; padding: 8px 12px 2px; color: var(--oj-core-text-color-primary);">
-                                        Groups
-                                    </div>
-                                </oj-option>
-
-                                {/* --- MODIFIED DYNAMIC LIST --- */}
-                                {user?.groups?.length &&
-                                user.groups.length > 0 ? (
-                                    <>
-                                        {(isGroupsExpanded
-                                            ? user?.groups
-                                            : user?.groups?.slice(0, 2)
-                                        ).map((g) => (
-                                            <oj-option
-                                                key={g.id}
-                                                id={g.id}
-                                                disabled
-                                            >
-                                                <div style="font-size: 12px; line-height: 1.3; padding: 2px 12px; color: var(--oj-core-text-color-primary);">
-                                                    {g.name}{" "}
-                                                    {g.is_admin && "(Admin)"}
-                                                </div>
-                                            </oj-option>
-                                        ))}
-
-                                        {/* "Show More" button appears only if there are more than 2 groups and it's not expanded */}
-                                        {user?.groups?.length &&
-                                            user.groups.length > 2 &&
-                                            !isGroupsExpanded && (
-                                                <oj-option
-                                                    id="expand-groups"
-                                                    value="expand"
-                                                    onClick={() =>
-                                                        setIsGroupsExpanded(
-                                                            true
-                                                        )
-                                                    }
-                                                >
-                                                    <div style="font-size: 12px; font-style: italic; padding: 4px 12px; color: var(--oj-core-text-color-secondary);">
-                                                        ... and{" "}
-                                                        {user?.groups?.length &&
-                                                            user.groups.length -
-                                                                2}{" "}
-                                                        more
-                                                    </div>
-                                                </oj-option>
-                                            )}
-                                    </>
-                                ) : (
-                                    /* Fallback for No Groups (no change here) */
-                                    <oj-option id="no-groups" disabled>
-                                        <div style="font-size: 12px; font-style: italic; color: gray; padding: 2px 12px 8px;">
-                                            No groups
-                                        </div>
-                                    </oj-option>
-                                )}
-
-                                {/* --- "Show Less" BUTTON --- */}
-                                {user?.groups?.length &&
-                                    user.groups.length > 2 &&
-                                    isGroupsExpanded && (
-                                        <oj-option
-                                            id="collapse-groups"
-                                            value="collapse"
-                                            onClick={() =>
-                                                setIsGroupsExpanded(false)
-                                            }
-                                        >
-                                            <div style="font-size: 12px; font-style: italic; padding: 4px 12px; color: var(--oj-core-text-color-secondary);">
-                                                Show Less
-                                            </div>
-                                        </oj-option>
-                                    )}
 
                                 <oj-option
                                     id="out"
