@@ -180,6 +180,38 @@ const LogActivityChart = () => {
     };
   };
 
+
+  function renderChartSafely() {
+  try {
+    return (
+      <oj-c-line-chart
+        data={chartProvider}
+        groups={groups.length ? groups : ["00:00"]}
+        series={visibleSeries.length ? visibleSeries : ["INFO"]}
+        orientation="vertical"
+        tooltip-renderer={tooltipRenderer}
+        style={{ width: "100%", height: "100%" }}
+        legend={{ position: "bottom", rendered: "on", maxSize: "50px" }}
+      >
+        <template slot="seriesTemplate" render={chartSeries} />
+        <template slot="itemTemplate" render={chartItem} />
+      </oj-c-line-chart>
+    );
+  } catch (err) {
+    console.log("Error in catch block of renderChartSafely:", err);
+    if (err instanceof Error && err.message.includes("_getPreferredSize")) {
+      console.warn("Chart render error:", err.message);
+      return (
+        <div class="chart-overlay chart-overlay-error">
+          <span>Chart failed to load. Please refresh the page.</span>
+        </div>
+      );
+    }
+    throw err; // rethrow if it's not the known error
+  }
+}
+
+
   if (error) {
     return (
       <div class="log-chart-error">
@@ -263,43 +295,31 @@ const LogActivityChart = () => {
       </div>
 
       {/* Chart */}
-      <div class="log-chart-box">
-        {/* Conditionally render overlay or chart */}
-        {loading ? (
-          <div class="chart-overlay">
-            <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center oj-sm-flex-direction-column">
-          <oj-progress-circle value={-1} size="lg" />
-          <p
-            class="oj-typography-body-md oj-text-color-secondary"
-            style="margin-top: 16px;"
-          >
-            Loading log activity...
-          </p>
-        </div>
-          </div>
-        ) : error ? (
-          <div class="chart-overlay chart-overlay-error">
-            <span>{error}</span>
-          </div>
-        ) : chartData.length === 0 ? (
-          <div class="chart-overlay">
-            <span>No log data available for the last 24 hours.</span>
-          </div>
-        ) : (
-          <oj-c-line-chart
-            data={chartProvider}
-            groups={groups.length ? groups : ["00:00"]}
-            series={visibleSeries.length ? visibleSeries : ["INFO"]}
-            orientation="vertical"
-            tooltip-renderer={tooltipRenderer}
-            style={{ width: "100%", height: "100%" }}
-            legend={{ position: "bottom", rendered: "on", maxSize: "50px" }}
-          >
-            <template slot="seriesTemplate" render={chartSeries} />
-            <template slot="itemTemplate" render={chartItem} />
-          </oj-c-line-chart>
-        )}
+     <div class="log-chart-box">
+  {loading ? (
+    <div class="chart-overlay">
+      <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center oj-sm-flex-direction-column">
+        <oj-progress-circle value={-1} size="lg" />
+        <p
+          class="oj-typography-body-md oj-text-color-secondary"
+          style="margin-top: 16px;"
+        >
+          Loading log activity...
+        </p>
       </div>
+    </div>
+  ) : error ? (
+    <div class="chart-overlay chart-overlay-error">
+      <span>{error}</span>
+    </div>
+  ) : chartData.length === 0 ? (
+    <div class="chart-overlay">
+      <span>No log data available for the last 24 hours.</span>
+    </div>
+  ) : (
+    renderChartSafely()
+  )}
+</div>
     </div>
   );
 };
