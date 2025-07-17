@@ -67,7 +67,13 @@ export const AuthenticatedApp = ({ appName }: { appName: string }) => {
   }, [isAuthenticated]);
 
   if (isAuthenticated === null) return <LoadingSpinner />;
-  if (!isAuthenticated) return <Login serverUnavailable={serverUnavailable} setServerUnavailable={setServerUnavailable} />;
+  if (!isAuthenticated)
+    return (
+      <Login
+        serverUnavailable={serverUnavailable}
+        setServerUnavailable={setServerUnavailable}
+      />
+    );
 
   return (
     <div id="appContainer" class="oj-web-applayout-page">
@@ -78,10 +84,17 @@ export const AuthenticatedApp = ({ appName }: { appName: string }) => {
       >
         <Sidebar />
         <main class="oj-flex-item" style={{ overflow: "auto", height: "100%" }}>
-          <Router>
+          <Router
+            // onChange={(e) => {
+            //   // If user is not admin and tries to access /users, redirect to /
+            //   if (e.url === "/users" && !user?.is_admin) {
+            //     window.location.replace("/");
+            //   }
+            // }}
+          >
             <Dashboard path="/" />
             <Logs path="/logs" />
-            <UserManagement path="/users" />
+            {user?.is_admin ? <UserManagement path="/users" /> : null}
             <Applications path="/applications" />
             <Settings path="/settings" />
             <NotFound default />
