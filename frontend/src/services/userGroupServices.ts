@@ -139,20 +139,6 @@ export const userGroupService = {
       initials: getInitials(user.name)
     }));
   },
-
-  // Assign application to user group
-  async assignApplication(groupId: string, applicationId: string): Promise<void> {
-    await axios.patch(`/user-groups/${groupId}/assign-application`, {
-      applicationId: applicationId
-    });
-  },
-
-  // Unassign application from user group
-  async unassignApplication(groupId: string, applicationId: string): Promise<void> {
-    await axios.delete(`/user-groups/${groupId}/unassign-application`, {
-      data: { applicationId: applicationId }
-    });
-  }
 };
 
 // Utility functions
