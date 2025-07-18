@@ -9,3 +9,9 @@
 2. Then run:
 
     docker compose up --build
+
+- This will start up the bridge script as well as the redis server.
+
+- Note: you can simply run the redis-server as part of the whole application by navigating to the project root directory and running:
+    docker compose up --build
+

@@ -12,3 +12,6 @@ It is meant to be deployed as an independent service.
     
 2) Run the following command:
     docker compose up --build
+
+- Note: to run the ingestion service as part of the whole application, simply navigate to the project's root directory and run:
+    docker compose up --build
