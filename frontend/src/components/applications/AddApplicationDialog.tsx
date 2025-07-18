@@ -72,7 +72,6 @@ export default function AddApplicationDialog({
             },
           })
           .then((res) => {
-            console.log("Fetched user groups:", res.data);
             setUserGroups(res.data.data);
           })
           .catch((err) => {
@@ -211,7 +210,6 @@ export default function AddApplicationDialog({
         isActive,
         userGroups: selectedGroups,
       };
-      console.log("New application data:", newApp);
 
       const response = await axios.post("/applications", newApp);
       setSuccessMessage("Application added successfully!");

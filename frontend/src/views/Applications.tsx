@@ -102,16 +102,6 @@ export default function Applications({ path }: Props) {
     setError(null); // Clear previous errors
 
     try {
-      console.log("Fetching applications with filters:", {
-        currentPage,
-        searchQuery,
-        statusFilter,
-        environmentFilter: environmentFilter
-          ? Array.from(environmentFilter)
-          : [],
-        sortOption,
-        pageSize,
-      });
       const response = await axios.get("/applications", {
         params: {
           page: currentPage,

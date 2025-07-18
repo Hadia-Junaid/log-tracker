@@ -68,7 +68,6 @@ export default function EditApplicationDialog({
         axios
           .get(`/applications/${application._id}/assigned-groups`)
           .then((res) => {
-            console.log("Fetched user groups:", res.data);
             setUserGroups(res.data.allGroups);
             setSelectedGroups(res.data.assignedGroupIds);
             application.selectedGroups = res.data.assignedGroupIds;
@@ -141,8 +140,6 @@ export default function EditApplicationDialog({
   const validate = () => {
     let valid = true;
 
-    console.log("Description:", description);
-
     const nameTrimmed = name.trim();
     const hostnameTrimmed = hostname.trim();
     const descriptionTrimmed = description?.trim() ?? "";
@@ -196,8 +193,6 @@ export default function EditApplicationDialog({
     setError(null);
     setSuccessMessage(null);
 
-    console.log("Validating form data...");
-
     const isValid = validate();
     if (!isValid) {
       console.error("Validation failed");
@@ -217,14 +212,11 @@ export default function EditApplicationDialog({
         userGroups: selectedGroups,
       };
 
-      console.log("Updating application:", updatedApp);
-
       const response = await axios.patch(
         `/applications/${application._id}`,
         updatedApp
       );
       setSuccessMessage("Application updated successfully!");
-      console.log("Updated application:", response.data);
       onApplicationUpdated(response.data);
       setTimeout(() => onClose(), 1000);
     } catch (err) {
@@ -362,7 +354,6 @@ export default function EditApplicationDialog({
                 id="editAppDescription"
                 value={description}
                 onrawValueChanged={(e: CustomEvent) =>{
-                  console.log("Description in the form:", e.detail)
                   setDescription(e.detail.value)
                 }}
                 disabled={loading}
