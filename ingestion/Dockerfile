@@ -23,5 +23,8 @@ RUN npm install --omit=dev
 COPY --from=builder /app/dist ./dist
 COPY config ./config
 
+ENV NODE_ENV=production
+
+
 # Start the app
 CMD ["node", "dist/index.js"]

@@ -1,10 +1,3 @@
 {
-  "google": {
-    "admin": {
-      "serviceAccountKeyPath": "GOOGLE_SERVICE_ACCOUNT_KEY_PATH",
-      "adminImpersonationEmail": "GOOGLE_ADMIN_IMPERSONATION_EMAIL",
-      "adminScopes": "GOOGLE_ADMIN_SCOPES",
-      "domain": "GOOGLE_WORKSPACE_DOMAIN"
-    }
-  }
+  "environment": "development"
 }

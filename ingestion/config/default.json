@@ -1,4 +1,5 @@
 {
+  "environment": "development",
   "redisServer": {
     "host": "redis",
     "port": 6379,
