@@ -323,11 +323,7 @@ const LogActivityChart = () => {
           <oj-c-line-chart
             data={chartProvider}
             groups={groups.length ? groups : ["00:00"]}
-<<<<<<< HEAD
-  series={visibleSeries.length ? visibleSeries : ["INFO"]} // Use the full 'series' state
-=======
             series={series.length ? series : ["INFO", "ERROR", "DEBUG", "WARN"]} // Use the full 'series' state
->>>>>>> bugfix/activity-chart-crash
             orientation="vertical"
             tooltip-renderer={tooltipRenderer}
             style={{ width: "100%", height: "100%" }}
