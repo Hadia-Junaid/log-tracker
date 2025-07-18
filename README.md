@@ -147,7 +147,3 @@ The backend runs the **compiled TypeScript** app from dist/index.js
 Make sure not to commit service-account-key.json publicly
 
 ---
-
-## Contact
-
-For questions or collaboration, feel free to reach out @ bilal.salman@gosaas.io
