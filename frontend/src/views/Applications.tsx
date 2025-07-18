@@ -124,7 +124,6 @@ export default function Applications({ path }: Props) {
         paramsSerializer: (params) =>
           qs.stringify(params, { arrayFormat: "repeat" }),
       });
-      console.log("Fetched applications:", response);
       setApplications(response.data.data);
       setTotalCount(response.data.total);
     } catch (err) {
@@ -248,7 +247,6 @@ export default function Applications({ path }: Props) {
                 data={statusDataProvider}
                 value={statusFilter}
                 onvalueChanged={(e: CustomEvent) => {
-                  console.log("Status filter changed:", e);
                   setStatusFilter(e.detail.value);
                   setCurrentPage(1);
                 }}
@@ -264,7 +262,6 @@ export default function Applications({ path }: Props) {
                 // Use the event handler to update your state
                 onvalueChanged={(event: any) => {
                   const newValue = event.detail.value as Set<string> | null;
-                  console.log("Environment filter changed:", newValue);
                   setEnvironmentFilter(newValue ?? new Set<string>());
                   setCurrentPage(1);
                 }}

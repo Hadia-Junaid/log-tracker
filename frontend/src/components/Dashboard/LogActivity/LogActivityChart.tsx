@@ -7,7 +7,7 @@ import ArrayDataProvider from "ojs/ojarraydataprovider";
 import "oj-c/line-chart";
 import axios from "../../../api/axios";
 import "../../../styles/dashboard/logactivitychart.css";
-import { AxiosError } from 'axios';
+import { AxiosError } from "axios";
 
 type ChartItem = { groupId: string; seriesId: string; value: number };
 
@@ -33,6 +33,32 @@ const LogActivityChart = () => {
   const [error, setError] = useState<string | null>(null);
   const [showApplicationDropdown, setShowApplicationDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+
+  useEffect(() => {
+    const handler = (event: PromiseRejectionEvent | ErrorEvent) => {
+      const msg =
+        "message" in event
+          ? (event as ErrorEvent).error?.message ||
+            (event as ErrorEvent).message
+          : (event as PromiseRejectionEvent).reason?.message || "";
+
+      if (msg.includes("_getPreferredSize")) {
+        console.warn("Ignored chart _getPreferredSize error:", msg);
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        location.reload(); // Force reload
+        return;
+      }
+    };
+
+    window.addEventListener("error", handler as any, true);
+    window.addEventListener("unhandledrejection", handler as any, true);
+    return () => {
+      window.removeEventListener("error", handler as any, true);
+      window.removeEventListener("unhandledrejection", handler as any, true);
+    };
+  }, []);
 
   const [visibleLogLevels, setVisibleLogLevels] = useState<string[]>([
     "DEBUG",
@@ -67,59 +93,59 @@ const LogActivityChart = () => {
         setLoading(true);
         setError(null);
 
-        console.log("🔍 Starting to fetch log activity data...");
 
         // Build query parameters
 
-        const localEnd = new Date(); // Now in local time
-        const localStart = new Date(localEnd); // Clone
-        localStart.setHours(localStart.getHours() - 23); // Subtract 24 *local* hours
+        const localEnd = new Date();
+        const localStart = new Date(localEnd); 
+        //Round local Start back to the hour
+        localStart.setMinutes(0, 0, 0); // Set minutes, seconds, milliseconds to 0
+        localStart.setHours(localStart.getHours() - 24); // Subtract 24 *local* hours
 
         const params: any = {
           start_time: localStart.toISOString(), // will be in UTC
           end_time: localEnd.toISOString(), // will be in UTC
         };
 
-        console.log("📊 Query parameters:", params);
 
         if (selectedApplication && selectedApplication !== "") {
           params.app_ids = selectedApplication;
         }
 
-        console.log("📊 Fetching log activity with params:", params);
 
         const response = await axios.get("/logs/activity", { params });
         const data: LogActivityData = response.data;
 
-        console.log("📊 Log activity response:", data);
 
         setChartData(data.data);
         setGroups(
-          data.groups.map(
-            (g) =>
-              new Date(g).toLocaleTimeString([], {
+          data.groups.map((g) => {
+            const d = new Date(g);
+            const label =
+              d.toLocaleTimeString([], {
                 hour: "2-digit",
                 hour12: false,
-              }) + ":00"
-          )
+              }) + ":00";
+
+       return label;
+          })
         );
         setSeries(data.series);
         setApplications(data.applications);
         setLoading(false);
-        console.log("✅ Log activity chart data loaded successfully!");
       } catch (error) {
-  const err = error as unknown as AxiosError<any>;
-  console.error("❌ Failed to fetch log activity data:", err);
+        const err = error as unknown as AxiosError<any>;
+        console.error("Failed to fetch log activity data:", err);
 
-  const backendMessage =
-    err.response?.data?.message || // if backend uses { message: "..." }
-    err.response?.data?.error ||   // if backend uses { error: "..." }
-    err.message ||                 // fallback to Axios error
-    "Failed to load log activity data"; // default
+        const backendMessage =
+          err.response?.data?.message || // if backend uses { message: "..." }
+          err.response?.data?.error || // if backend uses { error: "..." }
+          err.message || // fallback to Axios error
+          "Failed to load log activity data"; // default
 
-  setError(backendMessage);
-  setLoading(false);
-}
+        setError(backendMessage);
+        setLoading(false);
+      }
     };
 
     fetchData();
@@ -130,25 +156,63 @@ const LogActivityChart = () => {
   }, [chartData, visibleLogLevels]);
 
   const chartProvider = useMemo(() => {
-    const refinedData = filteredChartData.map((item) => ({
-      ...item,
-      groupId:
-        new Date(item.groupId).toLocaleTimeString([], {
+    // First, collect all local hour labels for today and yesterday
+    const now = new Date();
+    const todayHours = new Set<string>();
+    const yesterdayHours = new Set<string>();
+
+    filteredChartData.forEach((item) => {
+      const date = new Date(item.groupId);
+      const label =
+        date.toLocaleTimeString([], {
           hour: "2-digit",
           hour12: false,
-        }) + ":00",
+        }) + ":00";
 
-      seriesId: item.seriesId,
-    }));
+      if (
+        date.getFullYear() === now.getFullYear() &&
+        date.getMonth() === now.getMonth()
+      ) {
+        if (date.getDate() === now.getDate()) {
+          todayHours.add(label);
+        } else if (date.getDate() === now.getDate() - 1) {
+          yesterdayHours.add(label);
+        }
+      }
+    });
+
+    // Now map data and add `_y` only if both sets contain that hour
+    const refinedData = filteredChartData.map((item) => {
+      const date = new Date(item.groupId);
+      const label =
+        date.toLocaleTimeString([], {
+          hour: "2-digit",
+          hour12: false,
+        }) + ":00";
+
+      const isYesterday =
+        date.getFullYear() === now.getFullYear() &&
+        date.getMonth() === now.getMonth() &&
+        date.getDate() === now.getDate() - 1;
+
+      const hasDuplicate = isYesterday && todayHours.has(label);
+
+      return {
+        ...item,
+        groupId: hasDuplicate ? `${label}_y` : label,
+        displayLabel: label,
+        seriesId: item.seriesId,
+      };
+    });
 
     return new ArrayDataProvider(refinedData, {
       keyAttributes: ["groupId", "seriesId"],
     });
   }, [filteredChartData]);
 
-  const visibleSeries = useMemo(() => {
-    return series.filter((s) => visibleLogLevels.includes(s));
-  }, [series, visibleLogLevels]);
+  // const visibleSeries = useMemo(() => {
+  //   return series.filter((s) => visibleLogLevels.includes(s));
+  // }, [series, visibleLogLevels]);
 
   const chartSeries = () => {
     return (
@@ -176,7 +240,7 @@ const LogActivityChart = () => {
       <div><strong>${series}</strong></div>
       <div>Time: ${group}</div>
       <div>Logs: ${value}</div>
-    </div>`,
+      </div>`,
     };
   };
 
@@ -206,39 +270,9 @@ const LogActivityChart = () => {
       </div>
 
       <div class="log-chart-filter-bar">
-        <div class="log-chart-controls">
-          {series.map((level) => {
-            const isLastChecked =
-              visibleLogLevels.length === 1 && visibleLogLevels.includes(level);
-
-            return (
-              <label
-                key={level}
-                class="log-chart-checkbox"
-                style={{
-                  opacity: isLastChecked ? 0.6 : 1,
-                  color: "#6b7280",   //need a neutral color here same for all levels
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={visibleLogLevels.includes(level)}
-                  disabled={isLastChecked}
-                  onChange={() => {
-                    setVisibleLogLevels((prev) =>
-                      prev.includes(level)
-                        ? prev.length > 1
-                          ? prev.filter((l) => l !== level)
-                          : prev
-                        : [...prev, level]
-                    );
-                  }}
-                />
-                {level}
-              </label>
-            );
-          })}
-        </div>
+        {/* <div class="log-chart-controls">
+          
+        </div> */}
 
         {/* Single select dropdown */}
         <oj-select-single
@@ -268,14 +302,14 @@ const LogActivityChart = () => {
         {loading ? (
           <div class="chart-overlay">
             <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center oj-sm-flex-direction-column">
-          <oj-progress-circle value={-1} size="lg" />
-          <p
-            class="oj-typography-body-md oj-text-color-secondary"
-            style="margin-top: 16px;"
-          >
-            Loading log activity...
-          </p>
-        </div>
+              <oj-progress-circle value={-1} size="lg" />
+              <p
+                class="oj-typography-body-md oj-text-color-secondary"
+                style="margin-top: 16px;"
+              >
+                Loading log activity...
+              </p>
+            </div>
           </div>
         ) : error ? (
           <div class="chart-overlay chart-overlay-error">
@@ -289,7 +323,11 @@ const LogActivityChart = () => {
           <oj-c-line-chart
             data={chartProvider}
             groups={groups.length ? groups : ["00:00"]}
+<<<<<<< HEAD
   series={visibleSeries.length ? visibleSeries : ["INFO"]} // Use the full 'series' state
+=======
+            series={series.length ? series : ["INFO", "ERROR", "DEBUG", "WARN"]} // Use the full 'series' state
+>>>>>>> bugfix/activity-chart-crash
             orientation="vertical"
             tooltip-renderer={tooltipRenderer}
             style={{ width: "100%", height: "100%" }}

@@ -73,7 +73,6 @@ export default function LogsHeader({
   };
   const logLevelOptions = ["INFO", "ERROR", "WARN", "DEBUG"];
   const [currentDateTime, setCurrentDateTime] = useState(new Date().toISOString());
-  console.log("currentDateTime", currentDateTime);
   const timeRangeOptions: TimeRangeOption[] = [
     { value: "Last hour", label: "Last hour" },
     { value: "Last 24 hours", label: "Last 24 hours" },
@@ -92,7 +91,6 @@ export default function LogsHeader({
     const interval = setInterval(() => {
       setCurrentDateTime(new Date().toISOString());
     }, 60000); // update every 60 seconds
-    console.log(",currentDateTime", currentDateTime)
     return () => clearInterval(interval);
   }, []);
 
