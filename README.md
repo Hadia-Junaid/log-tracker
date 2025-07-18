@@ -128,6 +128,7 @@ docker builder prune -f
 
 cd collection/mock-application-scripts/stream
 
+chmod +x ./console.sh
 ./console.sh
 
 
