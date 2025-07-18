@@ -68,14 +68,6 @@ export const getLogs = async (req: Request, res: Response): Promise<void> => {
     });
     return;
   }
-
-  // 3. Get assigned applications' ids and names
-  const assignedApplications = await Application.find({
-    _id: { $in: groupAppIds },
-  })
-    .select("_id name")
-    .lean();
-
   // 4. Build log query
   const logQuery: any = {
     application_id: {
@@ -117,7 +109,6 @@ export const getLogs = async (req: Request, res: Response): Promise<void> => {
     total: logs.length,
     total_logs,
     total_pages,
-    assigned_applications: assignedApplications,
   });
 };
 
@@ -203,8 +194,10 @@ export const exportLogs = async (
   }
 
   // 5. Query all logs (no pagination)
-  const logs = await Log.find(logQuery).sort({ timestamp: -1 }).lean();
-
+  const logs = await Log.find(logQuery)
+    .select("_id application_id timestamp log_level trace_id message")
+    .sort({ timestamp: -1 })
+    .lean();
   // 6. Return as CSV or JSON
   if (is_csv === "true") {
     // Convert logs to CSV
@@ -222,32 +215,20 @@ export const exportLogs = async (
     res.header("Content-Type", "text/csv");
     res.attachment("logs.csv");
     res.send(csv);
+    logger.info(`Sent Logs export to user ${user.email} in csv format`);
   } else {
-    const allowedFields = [
-      "_id",
-      "application_id",
-      "timestamp",
-      "log_level",
-      "trace_id",
-      "message",
-    ];
-    const filteredLogs = logs.map((log) => {
-      const filtered: any = {};
-      const logObj = log as Record<string, any>;
-      allowedFields.forEach((field) => {
-        if (logObj[field] !== undefined) filtered[field] = logObj[field];
-      });
-      return filtered;
-    });
-    res.status(200).json({ data: filteredLogs, total: filteredLogs.length });
+    res.status(200).json({ data: logs, total: logs.length });
+    logger.info(`Sent Logs export to user ${user.email} in json format`);
   }
 };
 
 // Placeholder for async email sending
 async function sendLogsByEmail(user: any, logQuery: any, isCsv: boolean) {
   // Query all logs
-  const logs = await Log.find(logQuery).sort({ timestamp: -1 }).lean();
-  let fileBuffer: Buffer;
+ const logs = await Log.find(logQuery)
+    .select("_id application_id timestamp log_level trace_id message")
+    .sort({ timestamp: -1 })
+    .lean();  let fileBuffer: Buffer;
   let filename: string;
   let mimetype: string;
   if (isCsv) {
@@ -266,23 +247,7 @@ async function sendLogsByEmail(user: any, logQuery: any, isCsv: boolean) {
     filename = "logs.csv";
     mimetype = "text/csv";
   } else {
-    const allowedFields = [
-      "_id",
-      "application_id",
-      "timestamp",
-      "log_level",
-      "trace_id",
-      "message",
-    ];
-    const filteredLogs = logs.map((log) => {
-      const filtered: any = {};
-      const logObj = log as Record<string, any>;
-      allowedFields.forEach((field) => {
-        if (logObj[field] !== undefined) filtered[field] = logObj[field];
-      });
-      return filtered;
-    });
-    fileBuffer = Buffer.from(JSON.stringify(filteredLogs, null, 2), "utf-8");
+    fileBuffer = Buffer.from(JSON.stringify(logs, null, 2), "utf-8");
     filename = "logs.json";
     mimetype = "application/json";
   }
@@ -297,6 +262,7 @@ async function sendLogsByEmail(user: any, logQuery: any, isCsv: boolean) {
       },
     });
   // Send email
+  logger.info(`Attempting to send logs export email to ${user.email}`);
   await transporter.sendMail({
     from: config.get<string>('email.from'),
     to: user.email,
@@ -310,7 +276,7 @@ async function sendLogsByEmail(user: any, logQuery: any, isCsv: boolean) {
       },
     ],
   });
-  logger.info(`Sent logs export to ${user.email}`);
+  logger.info(`Sent logs export email to ${user.email}`);
 }
 
 export const userdata = async (req: Request, res: Response): Promise<void> => {
