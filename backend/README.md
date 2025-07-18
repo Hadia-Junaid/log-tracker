@@ -83,23 +83,7 @@ cd logtracker-backend
 The project uses the `config` package for configuration management. Create environment variables for the following:
 
 #### Required Environment Variables:
-
-```bash
-# MongoDB Configuration
-MONGO_URI=mongodb+srv://<username>:<password>@<cluster>.mongodb.net/<dbname>?retryWrites=true&w=majority
-
-# Google OAuth Configuration
-GOOGLE_CLIENT_ID=your-google-client-id-here
-GOOGLE_CLIENT_SECRET=your-google-client-secret-here
-
-# JWT Configuration  
-JWT_SECRET=your-super-secret-jwt-key-here
-```
-
-Replace the following with actual values:
-- `<username>`, `<password>`, `<cluster>`, and `<dbname>` with your MongoDB Atlas cluster details
-- `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` from Google Cloud Console
-- `JWT_SECRET` with a strong secret key for JWT token signing
+- Please refer to .env.example file.
 
 ### 3a. Google OAuth Setup
 
@@ -118,7 +102,7 @@ Run locally with Node.js:
 - "npm run dev"
 
 Run with Docker
-Ensure Docker is installed, then run:
+Ensure Docker is installed, then run from the project's root directory:
 
 - "docker-compose up --build"
 
@@ -126,16 +110,9 @@ This will:
 
 Start the backend on http://localhost:3000
 
-### 5. API Endpoints
+### 5. Logging
 
-#### Admin Routes (`/api/admin`):
-
-- `GET /api/admin/users/search?searchString=<query>` - Search users in Google Directory
-- `PATCH /api/admin/users/assign-group` - Add user to group and local database
-
-### 6. Logging
-
-All logging is done through Winston. To enable only production level logs, set the NODE_ENV variable in the .env file to "production".
+All logging is done through Winston. To enable only production level logs, set the NODE_ENV variable in the .env file to "production". This is already done when you run it through Docker.
 
 For developers, import the logger utility with:
 - "import logger from './utils/logger';"
