@@ -318,10 +318,21 @@ const fetchLogs = async () => {
         setExportStatus({ type: 'success', message: `Exported logs as JSON` });
       }
     } catch (err) {
-      console.error("Failed to export logs:", err);
-      setExportStatus({ type: 'error', message: 'Failed to export logs. Please try again later' });
+        const axiosErr = err as any;
+        if (axiosErr.response && axiosErr.response.status === 502) {
+          setExportStatus({
+            type: 'error',
+            message: 'Failed to send email due to network error. Please try again later.',
+          });
+        } else {
+          setExportStatus({
+            type: 'error',
+            message: 'Failed to export logs.',
+          });
+        }
+        console.error("Failed to export logs:", err);
     } finally {
-      setTimeout(() => setExportStatus(null), 4000);
+        setTimeout(() => setExportStatus(null), 2000);
     }
   };
 
