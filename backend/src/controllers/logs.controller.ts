@@ -262,6 +262,7 @@ async function sendLogsByEmail(user: any, logQuery: any, isCsv: boolean) {
       },
     });
   // Send email
+  logger.info(`Attempting to send logs export email to ${user.email}`);
   await transporter.sendMail({
     from: config.get<string>('email.from'),
     to: user.email,

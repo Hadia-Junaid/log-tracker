@@ -11,7 +11,15 @@ const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
-  logger.error(err.message, err);
+
+  if (
+    (err.message && err.message.includes("Connection timeout")) ||
+    ((err as any).code && (err as any).code === "ETIMEDOUT")
+  ) {
+    logger.error("Nodemailer error while sending email to export logs:", err);
+    res.status(502).json({ error: "Failed to send email: connection timeout" });
+    return;
+  }
 
   // Handle duplicate key errors from MongoDB
   if (isMongoDuplicateKeyError(err)) {
