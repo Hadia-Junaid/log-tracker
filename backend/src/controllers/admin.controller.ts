@@ -43,10 +43,14 @@ export const searchUsers = async (req: Request, res: Response): Promise<void> =>
 
   logger.info(`✅ Found ${allUsers.length} users matching query: ${query}`);
   // Now return name, email
-  const users = allUsers.map(user => ({
+
+  const users = allUsers
+  .filter(user => user.suspended === false && user.archived===false && user.organizations?.[0]?.description?.toLowerCase() !== 'exempted')
+  .map(user => ({
     name: user.name?.fullName,
     email: user.primaryEmail,
   }));
+
 
   res.status(200).json(users);
   return;

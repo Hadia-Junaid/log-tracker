@@ -289,7 +289,7 @@ const LogActivityChart = () => {
           <oj-c-line-chart
             data={chartProvider}
             groups={groups.length ? groups : ["00:00"]}
-            series={visibleSeries.length ? visibleSeries : ["INFO"]}
+  series={visibleSeries.length ? visibleSeries : ["INFO"]} // Use the full 'series' state
             orientation="vertical"
             tooltip-renderer={tooltipRenderer}
             style={{ width: "100%", height: "100%" }}

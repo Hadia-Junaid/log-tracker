@@ -335,6 +335,6 @@ export const getUserGroupById = async (
     responseGroup.super_admin_emails = superAdminEmails;
   }
 
-  logger.info(`ℹ️ Retrieved user group: ${group}`);
+  logger.info(`ℹ️ Retrieved user group: ${group.name}`);
   res.status(200).json(responseGroup);
 };
