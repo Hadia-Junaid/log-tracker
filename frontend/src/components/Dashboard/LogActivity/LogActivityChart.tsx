@@ -8,6 +8,7 @@ import "oj-c/line-chart";
 import axios from "../../../api/axios";
 import "../../../styles/dashboard/logactivitychart.css";
 import { AxiosError } from "axios";
+import { ChartErrorBoundary } from "./ChartErrorBoundary";
 
 type ChartItem = { groupId: string; seriesId: string; value: number };
 
@@ -34,7 +35,6 @@ const LogActivityChart = () => {
   const [showApplicationDropdown, setShowApplicationDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     const handler = (event: PromiseRejectionEvent | ErrorEvent) => {
@@ -48,7 +48,8 @@ const LogActivityChart = () => {
         console.warn("Ignored chart _getPreferredSize error:", msg);
         event.preventDefault();
         event.stopImmediatePropagation();
-        setReloadKey((k) => k + 1);
+        location.reload(); // Force reload
+        return;
       }
     };
 
@@ -130,13 +131,12 @@ const LogActivityChart = () => {
        return label;
           })
         );
-        console.log("📊 Groups:", data.groups);
         setSeries(data.series);
         setApplications(data.applications);
         setLoading(false);
       } catch (error) {
         const err = error as unknown as AxiosError<any>;
-        console.error("❌ Failed to fetch log activity data:", err);
+        console.error("Failed to fetch log activity data:", err);
 
         const backendMessage =
           err.response?.data?.message || // if backend uses { message: "..." }
@@ -241,7 +241,7 @@ const LogActivityChart = () => {
       <div><strong>${series}</strong></div>
       <div>Time: ${group}</div>
       <div>Logs: ${value}</div>
-    </div>`,
+      </div>`,
     };
   };
 
@@ -254,7 +254,7 @@ const LogActivityChart = () => {
   }
 
   return (
-    <div class="oj-panel log-chart-container" key={reloadKey}>
+    <div class="oj-panel log-chart-container">
       <div class="log-chart-header">
         <div class="log-chart-title">
           <ChartLine class="log-chart-icon" />
@@ -271,39 +271,9 @@ const LogActivityChart = () => {
       </div>
 
       <div class="log-chart-filter-bar">
-        <div class="log-chart-controls">
-          {series.map((level) => {
-            const isLastChecked =
-              visibleLogLevels.length === 1 && visibleLogLevels.includes(level);
-
-            return (
-              <label
-                key={level}
-                class="log-chart-checkbox"
-                style={{
-                  opacity: isLastChecked ? 0.6 : 1,
-                  color: "#6b7280", //need a neutral color here same for all levels
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={visibleLogLevels.includes(level)}
-                  disabled={isLastChecked}
-                  onChange={() => {
-                    setVisibleLogLevels((prev) =>
-                      prev.includes(level)
-                        ? prev.length > 1
-                          ? prev.filter((l) => l !== level)
-                          : prev
-                        : [...prev, level]
-                    );
-                  }}
-                />
-                {level}
-              </label>
-            );
-          })}
-        </div>
+        {/* <div class="log-chart-controls">
+          
+        </div> */}
 
         {/* Single select dropdown */}
         <oj-select-single
