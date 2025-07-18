@@ -67,31 +67,27 @@ const LogActivityChart = () => {
         setLoading(true);
         setError(null);
 
-        console.log("🔍 Starting to fetch log activity data...");
 
         // Build query parameters
 
         const localEnd = new Date(); // Now in local time
         const localStart = new Date(localEnd); // Clone
-        localStart.setHours(localStart.getHours() - 23); // Subtract 24 *local* hours
+        localStart.setHours(localStart.getHours() - 24); // Subtract 24 *local* hours
 
         const params: any = {
           start_time: localStart.toISOString(), // will be in UTC
           end_time: localEnd.toISOString(), // will be in UTC
         };
 
-        console.log("📊 Query parameters:", params);
 
         if (selectedApplication && selectedApplication !== "") {
           params.app_ids = selectedApplication;
         }
 
-        console.log("📊 Fetching log activity with params:", params);
 
         const response = await axios.get("/logs/activity", { params });
         const data: LogActivityData = response.data;
 
-        console.log("📊 Log activity response:", data);
 
         setChartData(data.data);
         setGroups(
@@ -101,12 +97,12 @@ const LogActivityChart = () => {
                 hour: "2-digit",
                 hour12: false,
               }) + ":00"
-          )
+            )          
         );
+      
         setSeries(data.series);
         setApplications(data.applications);
         setLoading(false);
-        console.log("✅ Log activity chart data loaded successfully!");
       } catch (error) {
   const err = error as unknown as AxiosError<any>;
   console.error("❌ Failed to fetch log activity data:", err);
@@ -140,6 +136,8 @@ const LogActivityChart = () => {
 
       seriesId: item.seriesId,
     }));
+    
+    
 
     return new ArrayDataProvider(refinedData, {
       keyAttributes: ["groupId", "seriesId"],
@@ -179,38 +177,6 @@ const LogActivityChart = () => {
     </div>`,
     };
   };
-
-
-  function renderChartSafely() {
-  try {
-    return (
-      <oj-c-line-chart
-        data={chartProvider}
-        groups={groups.length ? groups : ["00:00"]}
-        series={visibleSeries.length ? visibleSeries : ["INFO"]}
-        orientation="vertical"
-        tooltip-renderer={tooltipRenderer}
-        style={{ width: "100%", height: "100%" }}
-        legend={{ position: "bottom", rendered: "on", maxSize: "50px" }}
-      >
-        <template slot="seriesTemplate" render={chartSeries} />
-        <template slot="itemTemplate" render={chartItem} />
-      </oj-c-line-chart>
-    );
-  } catch (err) {
-    console.log("Error in catch block of renderChartSafely:", err);
-    if (err instanceof Error && err.message.includes("_getPreferredSize")) {
-      console.warn("Chart render error:", err.message);
-      return (
-        <div class="chart-overlay chart-overlay-error">
-          <span>Chart failed to load. Please refresh the page.</span>
-        </div>
-      );
-    }
-    throw err; // rethrow if it's not the known error
-  }
-}
-
 
   if (error) {
     return (
@@ -295,31 +261,43 @@ const LogActivityChart = () => {
       </div>
 
       {/* Chart */}
-     <div class="log-chart-box">
-  {loading ? (
-    <div class="chart-overlay">
-      <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center oj-sm-flex-direction-column">
-        <oj-progress-circle value={-1} size="lg" />
-        <p
-          class="oj-typography-body-md oj-text-color-secondary"
-          style="margin-top: 16px;"
-        >
-          Loading log activity...
-        </p>
+      <div class="log-chart-box">
+        {/* Conditionally render overlay or chart */}
+        {loading ? (
+          <div class="chart-overlay">
+            <div class="oj-flex oj-sm-align-items-center oj-sm-justify-content-center oj-sm-flex-direction-column">
+          <oj-progress-circle value={-1} size="lg" />
+          <p
+            class="oj-typography-body-md oj-text-color-secondary"
+            style="margin-top: 16px;"
+          >
+            Loading log activity...
+          </p>
+        </div>
+          </div>
+        ) : error ? (
+          <div class="chart-overlay chart-overlay-error">
+            <span>{error}</span>
+          </div>
+        ) : chartData.length === 0 ? (
+          <div class="chart-overlay">
+            <span>No log data available for the last 24 hours.</span>
+          </div>
+        ) : (
+          <oj-c-line-chart
+            data={chartProvider}
+            groups={groups.length ? groups : ["00:00"]}
+  series={visibleSeries.length ? visibleSeries : ["INFO"]} // Use the full 'series' state
+            orientation="vertical"
+            tooltip-renderer={tooltipRenderer}
+            style={{ width: "100%", height: "100%" }}
+            legend={{ position: "bottom", rendered: "on", maxSize: "50px" }}
+          >
+            <template slot="seriesTemplate" render={chartSeries} />
+            <template slot="itemTemplate" render={chartItem} />
+          </oj-c-line-chart>
+        )}
       </div>
-    </div>
-  ) : error ? (
-    <div class="chart-overlay chart-overlay-error">
-      <span>{error}</span>
-    </div>
-  ) : chartData.length === 0 ? (
-    <div class="chart-overlay">
-      <span>No log data available for the last 24 hours.</span>
-    </div>
-  ) : (
-    renderChartSafely()
-  )}
-</div>
     </div>
   );
 };

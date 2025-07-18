@@ -83,8 +83,6 @@ export function EditGroupDialog({
         userGroupService.fetchGroupById(groupId)
       ]);
 
-      console.log('Fetched applications:', allApplications);
-      console.log('Active applications:', allApplications.filter((app: ApplicationOption) => app.isActive));
       
       setApplications(allApplications);
       setAllMembers(members);
@@ -100,7 +98,6 @@ export function EditGroupDialog({
 
         // Set assigned applications
         const assignedAppIds = groupDetails.assigned_applications?.map((app: { _id: string }) => app._id) || [];
-        console.log('Assigned app IDs from group details:', assignedAppIds);
         setAssignedAppIds(assignedAppIds);
         setOriginalAppIds([...assignedAppIds]); // Store original app IDs
         
