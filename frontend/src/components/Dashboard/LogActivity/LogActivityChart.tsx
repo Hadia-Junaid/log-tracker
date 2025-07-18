@@ -93,7 +93,6 @@ const LogActivityChart = () => {
         setLoading(true);
         setError(null);
 
-        console.log("🔍 Starting to fetch log activity data...");
 
         // Build query parameters
 
@@ -108,18 +107,15 @@ const LogActivityChart = () => {
           end_time: localEnd.toISOString(), // will be in UTC
         };
 
-        console.log("📊 Query parameters:", params);
 
         if (selectedApplication && selectedApplication !== "") {
           params.app_ids = selectedApplication;
         }
 
-        console.log("📊 Fetching log activity with params:", params);
 
         const response = await axios.get("/logs/activity", { params });
         const data: LogActivityData = response.data;
 
-        console.log("📊 Log activity response:", data);
 
         setChartData(data.data);
         setGroups(
@@ -138,7 +134,6 @@ const LogActivityChart = () => {
         setSeries(data.series);
         setApplications(data.applications);
         setLoading(false);
-        console.log("✅ Log activity chart data loaded successfully!");
       } catch (error) {
         const err = error as unknown as AxiosError<any>;
         console.error("❌ Failed to fetch log activity data:", err);

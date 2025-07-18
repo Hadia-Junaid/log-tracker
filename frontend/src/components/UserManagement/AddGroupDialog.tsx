@@ -71,8 +71,6 @@ export function AddGroupDialog({
         userGroupService.searchUsers(''),
       ]);
 
-      console.log('Fetched applications:', allApplications);
-      console.log('Active applications:', allApplications.filter(app => app.isActive));
       
       setApplications(allApplications);
       setAllMembers(members);
