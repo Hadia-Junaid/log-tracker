@@ -8,7 +8,6 @@ import "oj-c/line-chart";
 import axios from "../../../api/axios";
 import "../../../styles/dashboard/logactivitychart.css";
 import { AxiosError } from "axios";
-import { ChartErrorBoundary } from "./ChartErrorBoundary";
 
 type ChartItem = { groupId: string; seriesId: string; value: number };
 
@@ -211,9 +210,9 @@ const LogActivityChart = () => {
     });
   }, [filteredChartData]);
 
-  const visibleSeries = useMemo(() => {
-    return series.filter((s) => visibleLogLevels.includes(s));
-  }, [series, visibleLogLevels]);
+  // const visibleSeries = useMemo(() => {
+  //   return series.filter((s) => visibleLogLevels.includes(s));
+  // }, [series, visibleLogLevels]);
 
   const chartSeries = () => {
     return (
@@ -324,7 +323,7 @@ const LogActivityChart = () => {
           <oj-c-line-chart
             data={chartProvider}
             groups={groups.length ? groups : ["00:00"]}
-            series={visibleSeries.length ? visibleSeries : ["INFO"]} // Use the full 'series' state
+            series={series.length ? series : ["INFO", "ERROR", "DEBUG", "WARN"]} // Use the full 'series' state
             orientation="vertical"
             tooltip-renderer={tooltipRenderer}
             style={{ width: "100%", height: "100%" }}
