@@ -62,8 +62,8 @@ Backend/
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/your-username/logtracker-backend.git
-cd logtracker-backend
+git clone https://github.com/Hadia-Junaid/log-tracker.git
+cd log-tracker/backend
 
 ```
 
