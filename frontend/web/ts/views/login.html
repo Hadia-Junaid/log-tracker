@@ -1,0 +1,39 @@
+<!--
+ Copyright (c) 2014, 2025, Oracle and/or its affiliates.
+ Licensed under The Universal Permissive License (UPL), Version 1.0
+ as shown at https://oss.oracle.com/licenses/upl/
+ -->
+<link rel="stylesheet" href="../../css/login.css">
+
+<div class="login-container">
+  <div class="login-card">
+    <h1 class="login-title">Welcome to LogTracker</h1>
+    <p class="login-subtitle">Sign in to access your logging dashboard</p>
+    
+    <!-- Error message display -->
+    <!-- ko if: errorMessage() -->
+    <div class="login-error">
+      <span data-bind="text: errorMessage"></span>
+    </div>
+    <!-- /ko -->
+    
+    <!-- Processing message -->
+    <!-- ko if: isProcessingAuth() -->
+    <div class="login-info">
+      <span>Processing authentication...</span>
+    </div>
+    <!-- /ko -->
+    
+    <oj-button id="loginButton" 
+              class="login-button"
+              disabled="[[isProcessingAuth()]]"
+              on-oj-action="[[handleLogin]]">
+      <!-- ko if: isProcessingAuth() -->
+      Signing in...
+      <!-- /ko -->
+      <!-- ko ifnot: isProcessingAuth() -->
+      Sign in with Google
+      <!-- /ko -->
+    </oj-button>
+  </div>
+</div> 

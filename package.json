@@ -1,0 +1,24 @@
+{
+  "devDependencies": {
+    "@types/config": "^3.3.5",
+    "@types/morgan": "^1.9.10",
+    "@types/nodemailer": "^6.4.17",
+    "@typescript-eslint/eslint-plugin": "^8.35.0",
+    "@typescript-eslint/parser": "^8.35.0",
+    "eslint": "^9.29.0",
+    "eslint-config-prettier": "^10.1.5",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-node": "^11.1.0",
+    "eslint-plugin-prefer-arrow": "^1.2.3",
+    "prettier": "^3.6.0"
+  },
+  "dependencies": {
+    "@oracle/ojet-cli": "^18.1.0",
+    "chart.js": "^4.5.0",
+    "config": "^4.0.0",
+    "joi": "^17.13.3",
+    "morgan": "^1.10.0",
+    "nodemailer": "^7.0.5",
+    "preact-router": "^4.1.2"
+  }
+}

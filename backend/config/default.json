@@ -1,0 +1,42 @@
+{
+  "environment": "development",
+  "server": {
+    "port": 3000
+  },
+  "mongoUri": "",
+  "auth": {
+    "google": {
+      "clientId": "",
+      "clientSecret": "",
+      "redirectUri": ""
+    },
+    "jwt": {
+      "secret": "",
+      "expiresIn": "24h"
+    }
+  },
+  "frontend": {
+    "baseUrl": ""
+  },
+  "google": {
+    "admin": {
+      "serviceAccountKeyPath": "",
+      "adminImpersonationEmail": "",
+      "adminScopes": "",
+      "domain": ""
+    }
+  },
+  "adminEmails": [],
+  "email": {
+    "smtpHost": "",
+    "smtpPort": 587,
+    "smtpUser": "",
+    "smtpPass": "",
+    "from": ""
+  },
+  "adminSearch": {
+    "maxResults": 500,
+    "orderBy": "email",
+    "projection": "full"
+  }
+}

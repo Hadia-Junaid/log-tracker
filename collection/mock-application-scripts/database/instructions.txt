@@ -1,0 +1,32 @@
+Install postresql on your system and follow these steps to create a logs table:
+
+a. Create a user:
+
+psql
+CREATE USER log_user WITH PASSWORD 'log_pass';
+GRANT ALL PRIVILEGES ON DATABASE project TO log_user;
+
+b. Create a database:
+
+createdb project
+
+c. Create the logs table:
+
+Connect to the DB:
+psql -d project -U log_user
+
+Create table:
+CREATE TABLE log (
+    id SERIAL PRIMARY KEY,
+    level TEXT,
+    message TEXT,
+    timestamp TIMESTAMPTZ DEFAULT NOW()
+);
+\q
+
+Store the following variables in a .env file: 
+PG_HOST
+PG_PORT
+PG_DB
+PG_USER
+PG_PASSWORD

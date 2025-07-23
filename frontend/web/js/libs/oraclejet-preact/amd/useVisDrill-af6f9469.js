@@ -1,0 +1,2 @@
+define(['exports', 'preact/hooks', './useDoubleTap-b6bf5458', './eventsUtils-edf8f4e5', './accUtils-93ee6f16', './clientUtils-8c0e90ff', './mergeProps-bcfa6a92'], (function(e,n,o,s,l,t,c){"use strict";e.useVisDrill=function(e,l,a=!1){const i=n.useCallback((n=>{"none"===e&&l(n)}),[e,l]),r=n.useCallback((n=>{"none"!==e&&l(n)}),[e,l]),u=o.useDoubleTap({onDoubleTap:r,threshold:t.isMobile()?600:250}),b=n.useCallback((e=>{"Enter"===e.key&&(l(e),s.cancelEvent(e))}),[l]);return a?{}:c.mergeProps(u,{onPointerUp:i,onKeyDown:b})}}));
+//# sourceMappingURL=useVisDrill-af6f9469.js.map

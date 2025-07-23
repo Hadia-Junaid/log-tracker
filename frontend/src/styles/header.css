@@ -1,0 +1,26 @@
+
+
+/* Groups menu button styling */
+#groupsMenu {
+    min-width: auto;
+}
+
+#groupsMenu span {
+    white-space: nowrap;
+}
+
+/* Ensure proper spacing between groups and user menu */
+.oj-toolbar > oj-menu-button:not(:last-child) {
+    margin-right: 8px;
+}
+
+/* Responsive adjustments for small screens */
+@media (max-width: 768px) {
+    #groupsMenu span {
+        font-size: 12px !important;
+    }
+    
+    .oj-toolbar > oj-menu-button:not(:last-child) {
+        margin-right: 4px;
+    }
+}

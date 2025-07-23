@@ -1,25 +1,28 @@
-import express from 'express';
-import mongoose from 'mongoose';
-import dotenv from 'dotenv';
+import express from "express";
+import config from "./startup/config";
+import logger from "./utils/logger";
+import { setupMiddleware } from "./startup/middleware";
+import { setupRoutes } from "./startup/routes";
+import { setupErrorHandling } from "./startup/errorHandlers";
+import { connectToDatabase } from "./startup/db";
+import { processErrors } from "./startup/processErrors";
 
-dotenv.config();
-
+processErrors();
 const app = express();
-const PORT = process.env.PORT || 3000;
 
-app.use(express.json());
+setupMiddleware(app);
+setupRoutes(app);
 
-mongoose.connect(process.env.MONGO_URI!)
-  .then(() => {
-    console.log('MongoDB connected');
-    app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
-    });
-  })
-  .catch(err => {
-    console.error('MongoDB connection error:', err);
+
+const PORT = config.get<number>("server.port") || 3000;
+
+(async () => {
+  await connectToDatabase();
+
+  app.listen(PORT, () => {
+    logger.info(`Server is running on port ${PORT}`);
   });
+})();
 
-app.get('/', (req, res) => {
-  res.send('API is running!');
-});
+setupErrorHandling(app);
+
