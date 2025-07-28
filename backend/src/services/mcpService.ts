@@ -1,0 +1,267 @@
+import { Anthropic } from "@anthropic-ai/sdk";
+import {
+  MessageParam,
+  Tool,
+} from "@anthropic-ai/sdk/resources/messages/messages.mjs";
+
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import readline from "readline/promises";
+import {
+  checkApplicationAccess,
+  checkAggregateAccess,
+} from "../utils/checkToolPrivileges";
+
+import dotenv from "dotenv";
+
+dotenv.config(); // load environment variables from .env
+
+const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+if (!ANTHROPIC_API_KEY) {
+  throw new Error("ANTHROPIC_API_KEY is not set");
+}
+
+class MCPClient {
+  private mcp: Client;
+  private anthropic: Anthropic;
+  private transport: StdioClientTransport | null = null;
+  private tools: Tool[] = [];
+
+  constructor() {
+    // Initialize Anthropic client and MCP client
+    this.anthropic = new Anthropic({
+      apiKey: ANTHROPIC_API_KEY,
+    });
+    this.mcp = new Client({ name: "mcp-client-cli", version: "1.0.0" });
+  }
+
+  async connectToMongoMcpServer() {
+    /**
+     * Connect to a MongoDB MCP Server via npx
+     */
+    const mongoUri = process.env.MONGO_URI;
+    if (!mongoUri) {
+      throw new Error("MONGODB_URI is not set in environment");
+    }
+
+    this.transport = new StdioClientTransport({
+      command: "npx",
+      args: ["-y", "mongodb-mcp-server", "--connectionString", mongoUri],
+    });
+
+    await this.mcp.connect(this.transport);
+
+    // Load available tools
+    const toolsResult = await this.mcp.listTools();
+
+    // List of tools we want to exclude
+    const excludedTools = new Set([
+      "switch-connection",
+      "rename-collection",
+      "drop-database",
+      "drop-collection",
+    ]);
+
+    this.tools = toolsResult.tools
+      .filter((tool) => !excludedTools.has(tool.name))
+      .map((tool) => ({
+        name: tool.name,
+        description: tool.description,
+        input_schema: tool.inputSchema,
+      }));
+
+    console.log(
+      "Connected to Mongo MCP Server with tools:",
+      this.tools.map((t) => t.name)
+    );
+  }
+
+  async processQuery(query: string) {
+    const messages: MessageParam[] = [{ role: "user", content: query }];
+
+    const user = {
+      //   id: "6865076e568c37c6aa0e54bb",
+      id: "6865076e568c37c6aa0e54b3",
+      email: "raahem.nabeel@gosaas.io",
+      name: "Muhammad Raahem Nabeel",
+      settings: {},
+      pinned_applications: [],
+      is_admin: false,
+    };
+
+    //define RBAC based tools
+    const isAdmin = user.is_admin;
+    let userTools = [...this.tools];
+
+    // filter out writing tools for non-admin users
+    if (!isAdmin) {
+      userTools = userTools.filter(
+        (tool) =>
+          [
+            "create-index",
+            "insert-many",
+            "delete-many",
+            "update-many",
+          ].includes(tool.name) === false
+      );
+    }
+
+    let finalText = [];
+    let hasToolUse = true;
+
+    const maxToolCalls = 6; // Limit to prevent infinite loops
+    let toolCount = 0;
+
+    while (hasToolUse && toolCount < maxToolCalls) {
+      // Ask Claude
+      const response = await this.anthropic.messages.create({
+        model: "claude-3-5-sonnet-20241022",
+        max_tokens: 1000,
+        messages,
+        tools: userTools,
+        system: `You are a helpful assistant that can call MongoDB MCP tools. Currently, you are working with the db called "test".
+        Use tools only when necessary. When you have enough information to answer, stop calling tools and show the final response to the user.
+        If you need to access data to answer a query, use the collection-schema tool to understand the structure of the database.
+        Do not blindly call tools without understanding the data. My main collections are "users", "logs", "applications", and "usergroups".
+        `,
+      });
+
+      console.log("Claude response:", response.content);
+
+      messages.push({
+        role: "assistant",
+        content: response.content,
+      });
+
+      hasToolUse = false;
+
+      for (const content of response.content) {
+        if (content.type === "text") {
+          finalText.push(content.text);
+        } else if (content.type === "tool_use") {
+          hasToolUse = true;
+          const toolName = content.name;
+          const toolArgs = content.input as Record<string, unknown>;
+
+          console.log(`Tool requested: ${toolName}`, toolArgs);
+
+          if (toolArgs.pipeline) {
+            console.log(
+              "Full pipeline:",
+              JSON.stringify(toolArgs.pipeline, null, 2)
+            );
+          }
+
+          if (toolArgs.filter) {
+            console.log("Filter:", JSON.stringify(toolArgs.filter, null, 2));
+          }
+
+          //Check if the user has the necessary permissions to use the tool
+          if (
+            !isAdmin &&
+            toolName === "find" &&
+            toolArgs.collection === "logs"
+          ) {
+            // User can only access their own applications' logs
+            const authorized = await checkApplicationAccess(user, toolArgs);
+            if (!authorized) {
+              console.log("User does not have access to this application.");
+              return "You do not have permission to access this application's logs.";
+            }
+          }
+
+          //Check if the user has the necessary permissions to use the tool
+          if (
+            !isAdmin &&
+            toolName === "aggregate" &&
+            toolArgs.collection === "logs"
+          ) {
+            // User can only access their own applications' logs
+            const authorized = await checkAggregateAccess(user, toolArgs);
+            if (!authorized) {
+              console.log("User does not have access to this application.");
+              return "You do not have permission to access this application's logs via aggregate.";
+            }
+          }
+
+          // Execute the tool
+          const result = await this.mcp.callTool({
+            name: toolName,
+            arguments: toolArgs,
+          });
+
+          console.log(`Tool ${toolName} result:`, result);
+          //   console.log("Messages content:", messages);
+
+          // Add the result back to conversation so Claude can see it
+          messages.push({
+            role: "user",
+            content: [
+              {
+                type: "tool_result",
+                tool_use_id: content.id, // match the tool_use ID from the request
+                content: [{ type: "text", text: JSON.stringify(result) }],
+              },
+            ],
+          });
+        }
+      }
+
+      toolCount++;
+      // If Claude didn't request any tools, the loop stops.
+    }
+
+    return finalText[finalText.length - 1];
+  }
+
+  async chatLoop() {
+    /**
+     * Run an interactive chat loop
+     */
+    console.log("Starting interactive chat loop...");
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout,
+    });
+
+    try {
+      console.log("\nMCP Client Started!");
+      console.log("Type your queries or 'quit' to exit.");
+
+      while (true) {
+        const message = await rl.question("\nQuery: ");
+        if (message.toLowerCase() === "quit") {
+          break;
+        }
+        const response = await this.processQuery(message);
+        console.log("\nAI: " + response);
+      }
+    } catch (err) {
+      console.error("Error during chat loop:", err);
+    } finally {
+      rl.close();
+    }
+  }
+
+  async cleanup() {
+    /**
+     * Clean up resources
+     */
+    await this.mcp.close();
+  }
+}
+
+export default MCPClient;
+
+// async function main() {
+//   const mcpClient = new MCPClient();
+//   try {
+//     await mcpClient.connectToMongoMcpServer();
+//     await mcpClient.chatLoop();
+//   } finally {
+//     await mcpClient.cleanup();
+//     process.exit(0);
+//   }
+// }
+
+// main();

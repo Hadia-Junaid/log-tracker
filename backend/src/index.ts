@@ -6,6 +6,7 @@ import { setupRoutes } from "./startup/routes";
 import { setupErrorHandling } from "./startup/errorHandlers";
 import { connectToDatabase } from "./startup/db";
 import { processErrors } from "./startup/processErrors";
+import { initMCP } from "./services/mcpClient";
 
 processErrors();
 const app = express();
@@ -18,7 +19,8 @@ const PORT = config.get<number>("server.port") || 3000;
 
 (async () => {
   await connectToDatabase();
-
+  await initMCP(); // Initialize MCP connection
+  
   app.listen(PORT, () => {
     logger.info(`Server is running on port ${PORT}`);
   });

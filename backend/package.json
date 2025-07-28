@@ -16,6 +16,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.57.0",
+    "@langchain/mcp-adapters": "^0.6.0",
+    "@modelcontextprotocol/sdk": "^1.17.0",
     "@types/cors": "^2.8.19",
     "@types/express-session": "^1.18.2",
     "@types/jsonwebtoken": "^9.0.10",
@@ -34,6 +37,7 @@
     "json2csv": "^6.0.0-alpha.2",
     "jsonwebtoken": "^9.0.2",
     "lint": "^0.8.19",
+    "mongodb-mcp-server": "^0.2.0",
     "mongoose": "^8.16.0",
     "morgan": "^1.10.0",
     "nodemailer": "^7.0.5",
