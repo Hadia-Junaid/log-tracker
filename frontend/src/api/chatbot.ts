@@ -57,25 +57,18 @@ export interface MCPConnectResponse {
 }
 
 export class ChatbotAPI {
-  // Send a message to the chatbot
+  // Send a message to the chatbot (MCP mode only)
   static async sendMessage(
     message: string, 
-    sessionId?: string, 
-    useMCP: boolean = true, 
-    mcpServerPath?: string
+    sessionId?: string
   ): Promise<ChatbotResponse> {
     const payload: any = {
-      message,
-      useMCP
+      message
     };
 
     // Only include context if sessionId is provided and not empty
     if (sessionId && sessionId.trim()) {
       payload.context = { sessionId };
-    }
-
-    if (useMCP && mcpServerPath) {
-      payload.mcpServerPath = mcpServerPath;
     }
 
     const response = await axios.post('/chatbot/message', payload);

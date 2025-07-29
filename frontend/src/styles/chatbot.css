@@ -2,7 +2,7 @@
 .chatbot-container {
   display: flex;
   flex-direction: column;
-  height: 100vh;
+  height: 100%;
   background-color: #f8f9fa;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
@@ -138,26 +138,6 @@
   display: flex;
   gap: 0.5rem;
   align-items: center;
-}
-
-.connect-section {
-  display: flex;
-  gap: 0.5rem;
-  flex: 1;
-}
-
-.mcp-server-input {
-  flex: 1;
-  padding: 0.5rem;
-  border: 1px solid #ced4da;
-  border-radius: 0.25rem;
-  font-size: 0.875rem;
-}
-
-.mcp-server-input:focus {
-  outline: none;
-  border-color: #007bff;
-  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
 }
 
 /* Messages Container */
@@ -483,7 +463,7 @@
 /* Responsive Design */
 @media (max-width: 768px) {
   .chatbot-container {
-    height: 100vh;
+    height: 100%;
   }
   
   .chatbot-header {

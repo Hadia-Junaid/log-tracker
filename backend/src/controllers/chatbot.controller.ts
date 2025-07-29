@@ -1,5 +1,4 @@
 import { Request, Response } from 'express';
-import { OpenAIService } from '../services/openaiService';
 import { mcpClient } from '../services/mcpClient';
 import { ChatMessage } from '../models/ChatMessage';
 import { v4 as uuidv4 } from 'uuid';
@@ -7,7 +6,7 @@ import config from 'config';
 
 export const processChatbotMessage = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { message, context, useMCP = true, mcpServerPath } = req.body;
+    const { message, context } = req.body;
     const userId = (req as any).user?.id || (req as any).user?.email;
     const sessionId = context?.sessionId || uuidv4();
     const authToken = req.headers.authorization?.replace('Bearer ', '') || '';
@@ -47,29 +46,27 @@ export const processChatbotMessage = async (req: Request, res: Response): Promis
     
     let result: any;
 
-    // Use MCP client if requested and available
-    if (useMCP) {
-      try {
-        // Check if MCP client is connected (auto-connects to MongoDB)
-        if (!mcpClient.isServerConnected()) {
-          console.log('MCP client not connected, attempting to connect...');
-          // The MCP client will auto-connect to MongoDB MCP server
-          await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for auto-connection
-        }
-
-        if (mcpClient.isServerConnected()) {
-          result = await mcpClient.processQuery(message, conversationHistory, jwtToken, userId);
-        } else {
-          throw new Error('MCP client connection failed');
-        }
-      } catch (mcpError) {
-        console.error('MCP client error, falling back to OpenAI service:', mcpError);
-        // Fall back to regular OpenAI service
-        result = await OpenAIService.processMessage(message, jwtToken, conversationHistory, userId);
+    try {
+      // Check if MCP client is connected (auto-connects to MongoDB)
+      if (!mcpClient.isServerConnected()) {
+        console.log('MCP client not connected, attempting to connect...');
+        // The MCP client will auto-connect to MongoDB MCP server
+        await new Promise(resolve => setTimeout(resolve, 3000)); // Wait for auto-connection
       }
-    } else {
-      // Use regular OpenAI service
-      result = await OpenAIService.processMessage(message, jwtToken, conversationHistory, userId);
+
+      if (mcpClient.isServerConnected()) {
+        result = await mcpClient.processQuery(message, conversationHistory, jwtToken, userId);
+      } else {
+        throw new Error('MCP client connection failed');
+      }
+    } catch (mcpError) {
+      console.error('MCP client error:', mcpError);
+      res.status(500).json({ 
+        success: false, 
+        error: 'MCP server is not available. Please ensure the MCP server is running.',
+        details: mcpError instanceof Error ? mcpError.message : 'Unknown error'
+      });
+      return;
     }
 
     // Save the conversation
@@ -96,7 +93,7 @@ export const processChatbotMessage = async (req: Request, res: Response): Promis
       functionCalls: result.toolCalls,
       mcpConnected: mcpClient.isServerConnected(),
       mongoDBStatus,
-      availableTools: useMCP ? mcpClient.getAvailableTools().map(t => t.name) : []
+      availableTools: mcpClient.getAvailableTools().map(t => t.name)
     });
 
   } catch (error) {

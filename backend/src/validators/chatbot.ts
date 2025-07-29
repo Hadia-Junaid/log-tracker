@@ -6,13 +6,7 @@ export const chatbotMessageSchema = Joi.object({
     userId: Joi.string().optional(),
     sessionId: Joi.string().optional().allow(''),
     timestamp: Joi.date().optional()
-  }).optional(),
-  useMCP: Joi.boolean().optional().default(true),
-  mcpServerPath: Joi.string().optional().when('useMCP', {
-    is: true,
-    then: Joi.optional(),
-    otherwise: Joi.forbidden()
-  })
+  }).optional()
 });
 
 export const mcpConnectSchema = Joi.object({

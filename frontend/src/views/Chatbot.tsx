@@ -53,8 +53,6 @@ export default function Chatbot(props: Props) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string>("");
-  const [useMCP, setUseMCP] = useState(true);
-  const [mcpServerPath, setMcpServerPath] = useState("");
   const [mcpStatus, setMcpStatus] = useState<MCPStatusResponse | null>(null);
   const [showMCPConfig, setShowMCPConfig] = useState(false);
   const [isRestartingMongo, setIsRestartingMongo] = useState(false);
@@ -81,33 +79,37 @@ export default function Chatbot(props: Props) {
       const response = await ChatbotAPI.getChatHistory(50, 0);
 
       if (response.success) {
-        const chatMessages: ChatMessage[] = response.messages.map((msg: any) => ({
-          id: `${msg.timestamp}-${Math.random()}`,
-          message: msg.message,
-          response: msg.response,
-          timestamp: new Date(msg.timestamp),
-          isUser: true
-        }));
-
-        // Add assistant responses
-        const assistantMessages: ChatMessage[] = response.messages.map((msg: any) => ({
-          id: `${msg.timestamp}-assistant-${Math.random()}`,
-          message: "",
-          response: msg.response,
-          timestamp: new Date(msg.timestamp),
-          isUser: false
-        }));
-
-        // Interleave user and assistant messages
-        const allMessages: ChatMessage[] = [];
-        chatMessages.forEach((userMsg, index) => {
-          allMessages.push(userMsg);
-          if (assistantMessages[index]) {
-            allMessages.push(assistantMessages[index]);
-          }
+        // Create pairs of user and assistant messages
+        const messagePairs: ChatMessage[] = [];
+        
+        response.messages.forEach((msg: any) => {
+          const timestamp = new Date(msg.timestamp);
+          
+          // Add user message
+          messagePairs.push({
+            id: `${msg.timestamp}-user-${Math.random()}`,
+            message: msg.message,
+            response: "",
+            timestamp: timestamp,
+            isUser: true
+          });
+          
+          // Add assistant response
+          messagePairs.push({
+            id: `${msg.timestamp}-assistant-${Math.random()}`,
+            message: "",
+            response: msg.response,
+            timestamp: timestamp,
+            isUser: false
+          });
         });
 
-        setMessages(allMessages);
+        // Sort messages by timestamp in ascending order (oldest first)
+        const sortedMessages = messagePairs.sort((a, b) => 
+          a.timestamp.getTime() - b.timestamp.getTime()
+        );
+
+        setMessages(sortedMessages);
       }
     } catch (err) {
       console.error("Failed to load chat history:", err);
@@ -121,66 +123,6 @@ export default function Chatbot(props: Props) {
       setMcpStatus(status);
     } catch (err) {
       console.error("Failed to check MCP status:", err);
-    }
-  };
-
-  const connectMCPServer = async () => {
-    if (!mcpServerPath.trim()) {
-      setError("Please enter a valid MCP server path");
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      const response = await ChatbotAPI.connectMCPServer(mcpServerPath);
-      
-      if (response.success) {
-        setUseMCP(true);
-        setShowMCPConfig(false);
-        await checkMCPStatus();
-        
-        // Add system message about MCP connection
-        const systemMessage: ChatMessage = {
-          id: Date.now().toString(),
-          message: "",
-          response: `✅ Connected to MCP server! Available tools: ${response.availableTools.map(t => t.name).join(', ')}`,
-          timestamp: new Date(),
-          isUser: false
-        };
-        setMessages(prev => [...prev, systemMessage]);
-      }
-    } catch (err: any) {
-      console.error("Failed to connect to MCP server:", err);
-      setError(err.response?.data?.error || "Failed to connect to MCP server");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const disconnectMCPServer = async () => {
-    try {
-      const response = await ChatbotAPI.disconnectMCPServer();
-      
-      if (response.success) {
-        setUseMCP(false);
-        setMcpServerPath("");
-        await checkMCPStatus();
-        
-        // Add system message about disconnection
-        const systemMessage: ChatMessage = {
-          id: Date.now().toString(),
-          message: "",
-          response: "🔌 Disconnected from MCP server",
-          timestamp: new Date(),
-          isUser: false
-        };
-        setMessages(prev => [...prev, systemMessage]);
-      }
-    } catch (err: any) {
-      console.error("Failed to disconnect from MCP server:", err);
-      setError(err.response?.data?.error || "Failed to disconnect from MCP server");
     }
   };
 
@@ -229,12 +171,7 @@ export default function Chatbot(props: Props) {
     setError(null);
 
     try {
-      const response = await ChatbotAPI.sendMessage(
-        inputMessage, 
-        sessionId, 
-        useMCP, 
-        useMCP ? mcpServerPath : undefined
-      );
+      const response = await ChatbotAPI.sendMessage(inputMessage, sessionId);
 
       if (response.success) {
         const assistantMessage: ChatMessage = {
@@ -300,12 +237,10 @@ export default function Chatbot(props: Props) {
         <div class="chatbot-title">
           <span class="oj-icon oj-ux-ico-chat"></span>
           <h2>AI Assistant</h2>
-          {useMCP && (
-            <span class="mcp-badge">
-              <span class="oj-icon oj-ux-ico-connection"></span>
-              MCP
-            </span>
-          )}
+          <span class="mcp-badge">
+            <span class="oj-icon oj-ux-ico-connection"></span>
+            MCP
+          </span>
         </div>
         <div class="chatbot-actions">
           <button
@@ -365,34 +300,6 @@ export default function Chatbot(props: Props) {
               </ul>
             </div>
           )}
-
-          <div class="mcp-controls">
-            {!mcpStatus?.connected ? (
-              <div class="connect-section">
-                <input
-                  type="text"
-                  placeholder="Enter MCP server path (e.g., /path/to/server.js)"
-                  value={mcpServerPath}
-                  onChange={(e) => setMcpServerPath((e.target as HTMLInputElement).value)}
-                  class="mcp-server-input"
-                />
-                <button
-                  onClick={connectMCPServer}
-                  disabled={!mcpServerPath.trim() || isLoading}
-                  class="oj-button oj-button-primary"
-                >
-                  Connect
-                </button>
-              </div>
-            ) : (
-              <button
-                onClick={disconnectMCPServer}
-                class="oj-button oj-button-text"
-              >
-                Disconnect
-              </button>
-            )}
-          </div>
         </div>
       )}
 
@@ -402,15 +309,13 @@ export default function Chatbot(props: Props) {
             <span class="oj-icon oj-ux-ico-chat"></span>
             <h3>Welcome to the AI Assistant!</h3>
             <p>Ask me anything about your logs, applications, dashboard, or settings.</p>
-            {useMCP && (
-              <div class="mcp-info">
-                <p><strong>🤖 MCP Mode Active</strong></p>
-                <p>You're connected to an MCP server with enhanced capabilities!</p>
-                {mcpStatus?.mongoDBStatus?.connected && (
-                  <p><strong>📊 MongoDB Integration:</strong> Direct database access available</p>
-                )}
-              </div>
-            )}
+            <div class="mcp-info">
+              <p><strong>🤖 MCP Mode Active</strong></p>
+              <p>You're connected to an MCP server with enhanced capabilities!</p>
+              {mcpStatus?.mongoDBStatus?.connected && (
+                <p><strong>📊 MongoDB Integration:</strong> Direct database access available</p>
+              )}
+            </div>
             <div class="example-queries">
               <p><strong>Try asking:</strong></p>
               <ul>
@@ -506,7 +411,7 @@ export default function Chatbot(props: Props) {
         </div>
         <div class="input-hint">
           Press Enter to send, Shift+Enter for new line
-          {useMCP && " • MCP Mode Active"}
+          {" • MCP Mode Active"}
           {mcpStatus?.mongoDBStatus?.connected && " • MongoDB Connected"}
         </div>
       </div>
