@@ -12,6 +12,7 @@ import "ojs/ojinputtext";
 import "ojs/ojformlayout";
 import "../styles/chat.css";
 import axios from "../api/axios";
+import { useUser } from "../context/UserContext";
 
 interface ChatMessage {
   id: string;
@@ -26,10 +27,16 @@ interface ChatInterfaceProps {
 }
 
 export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
+  const { user } = useUser(); // Assuming useUser is a custom hook to get user context
+
+  const initialMessageText = user?.is_admin
+    ? "Hello! I'm your AI assistant. I can help you with log analysis, performing various read and write tasks, and answering questions about your applications. How can I assist you today?"
+    : "Hello! I'm your AI assistant. I can help you with log analysis, troubleshooting, and answering questions about your applications. How can I assist you today?";
+
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: "welcome",
-      text: "Hello! I'm your AI assistant. I can help you with log analysis, troubleshooting, and answering questions about your applications. How can I assist you today?",
+      text: initialMessageText,
       isUser: false,
       timestamp: new Date(),
     },
@@ -43,7 +50,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     setMessages([
       {
         id: "welcome-new",
-        text: "Hello! I'm your AI assistant. I can help you with log analysis, troubleshooting, and answering questions about your applications. How can I assist you today?",
+        text: initialMessageText,
         isUser: false,
         timestamp: new Date(),
       },
@@ -57,7 +64,9 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
   };
 
   useEffect(() => {
-    scrollToBottom();
+    if (messages.length > 1) {
+      scrollToBottom();
+    }
   }, [messages]);
 
   useEffect(() => {
@@ -115,28 +124,6 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     }
 
     setIsTyping(false);
-
-    // // Simulate AI response (replace with actual backend integration later)
-    // setTimeout(() => {
-    //   const responses = [
-    //     "I understand your question about the log system. This feature will be connected to your backend soon for real-time assistance.",
-    //     "That's a great question! Once integrated with your backend, I'll be able to provide specific insights about your logs and applications.",
-    //     "I'm here to help! When connected to your log tracking system, I'll be able to analyze patterns and provide detailed assistance.",
-    //     "Thanks for reaching out! The backend integration will allow me to access your log data and provide more targeted help.",
-    //   ];
-
-    //   const randomResponse =
-    //     responses[Math.floor(Math.random() * responses.length)];
-
-    //   const aiResponse: ChatMessage = {
-    //     id: (Date.now() + 1).toString(),
-    //     text: randomResponse,
-    //     isUser: false,
-    //     timestamp: new Date(),
-    //   };
-    //   setMessages((prev) => [...prev, aiResponse]);
-    //   setIsTyping(false);
-    // }, 1500);
   };
 
   const handleKeyPress = (event: any) => {
@@ -168,6 +155,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
       <div class="chat-backdrop" onClick={onClose}></div>
       <div class="chat-overlay">
         <div class="chat-panel">
+            
           {/* Chat Header */}
           <div class="chat-header">
             <div class="chat-header-content">
@@ -189,7 +177,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
                   title="Clear Chat"
                   onojAction={clearChat}
                 >
-                  <span slot="startIcon" class="oj-icon oj-icon-refresh"></span>
+                  <span slot="startIcon" class="oj-ux-ico-refresh"></span>
                 </oj-button>
                 <oj-button
                   class="chat-close-button"
@@ -198,7 +186,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
                   title="Close Chat"
                   onojAction={onClose}
                 >
-                  <span slot="startIcon" class="oj-icon oj-icon-cross"></span>
+                  <span slot="startIcon" class="oj-ux-ico-close"></span>
                 </oj-button>
               </div>
             </div>
@@ -206,47 +194,6 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
 
           {/* Chat Messages */}
           <div class="chat-body">
-            {/* Quick Actions */}
-            {messages.length === 1 && (
-              <div class="quick-actions">
-                <div class="quick-actions-title">Quick actions:</div>
-                <div class="quick-actions-buttons">
-                  <oj-button
-                    class="quick-action-btn"
-                    chroming="outlined"
-                    size="sm"
-                    onojAction={() =>
-                      handleSendMessage("Show me recent error logs")
-                    }
-                  >
-                    🔍 Recent Errors
-                  </oj-button>
-                  <oj-button
-                    class="quick-action-btn"
-                    chroming="outlined"
-                    size="sm"
-                    onojAction={() =>
-                      handleSendMessage("Help me analyze log patterns")
-                    }
-                  >
-                    📊 Log Analysis
-                  </oj-button>
-                  <oj-button
-                    class="quick-action-btn"
-                    chroming="outlined"
-                    size="sm"
-                    onojAction={() =>
-                      handleSendMessage(
-                        "What are common troubleshooting steps?"
-                      )
-                    }
-                  >
-                    🔧 Troubleshooting
-                  </oj-button>
-                </div>
-              </div>
-            )}
-
             <div class="chat-messages-container">
               <div class="chat-messages">
                 {messages.map((message) => (

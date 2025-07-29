@@ -152,7 +152,6 @@ class MCPClient {
         description: app.description,
       }));
     }
-
     console.log("Final user object:", JSON.stringify(user, null, 2));
 
     let finalText = [];
@@ -170,16 +169,17 @@ class MCPClient {
         tools: userTools,
         system: `You are a helpful assistant that can call MongoDB MCP tools. Currently, you are working with the db called "test".
         Use tools only when necessary. When you have enough information to answer, stop calling tools and show the final response to the user.
-        If you need to access data to answer a query, use the collection-schema tool to understand the structure of the database.
-        Do not blindly call tools without understanding the data. 
+        If you need to access data to answer a query, use the collection-schema tool before fetching any data from a collection to understand the schema and field names.
+        Give concise and accurate answers, dont over-explain.
         ${
           isAdmin
-            ? 'My main collections are "users", "logs", "applications", and "usergroups" and you can access all of them since this is an admin user.'
+            ? 'My main collections are "users", "logs", "applications", and "usergroups" and you can access all of them since this is an admin user. These are only the active applications and user groups but you can also find inactive ones from the database.'
             : `The only collection you have access to is "logs" and the data provided in the user object below. You do not have access to any other collections as this is a non-admin user.
             If a user asks about applications or groups they have no access to, simply inform them that they do not have access to it. 
             No need to tell them about their user object details and permissions, just tell them they dont have access.`
         }
-        },
+        Note that the only log_level types are "INFO", "DEBUG", "ERROR", and "WARNING". 
+        IMPORTANT: All id fields such as application_id in logs collection are ObjectId type and need to be treated correctly e.g. using $oid to reference them.  
         Here is the current user object:
         ${JSON.stringify(user, null, 2)}
         `,
