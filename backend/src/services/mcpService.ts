@@ -173,7 +173,7 @@ class MCPClient {
         Give concise and accurate answers, dont over-explain.
         ${
           isAdmin
-            ? 'My main collections are "users", "logs", "applications", and "usergroups" and you can access all of them since this is an admin user. These are only the active applications and user groups but you can also find inactive ones from the database.'
+            ? 'My main collections are "users", "logs", "applications", "usergroups", "atriskrules", and "dataretentions", and you can access all of them since this is an admin user. These are only the active applications and user groups but you can also find inactive ones from the database.'
             : `The only collection you have access to is "logs" and the data provided in the user object below. You do not have access to any other collections as this is a non-admin user.
             If a user asks about applications or groups they have no access to, simply inform them that they do not have access to it. 
             No need to tell them about their user object details and permissions, just tell them they dont have access.`
