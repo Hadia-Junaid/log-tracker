@@ -3,7 +3,8 @@ import {
   MessageParam,
   Tool,
 } from "@anthropic-ai/sdk/resources/messages/messages.mjs";
-
+import UserGroup from "../models/UserGroup";
+import Application from "../models/Application";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import readline from "readline/promises";
@@ -13,6 +14,7 @@ import {
 } from "../utils/checkToolPrivileges";
 
 import dotenv from "dotenv";
+import logger from "../utils/logger";
 
 dotenv.config(); // load environment variables from .env
 
@@ -79,22 +81,22 @@ class MCPClient {
   async processQuery(query: string) {
     const messages: MessageParam[] = [{ role: "user", content: query }];
 
-    const user = {
+    const user: any = {
       //   id: "6865076e568c37c6aa0e54bb",
-      id: "6865076e568c37c6aa0e54b3",
-      email: "raahem.nabeel@gosaas.io",
-      name: "Muhammad Raahem Nabeel",
+      id: "6865461db4caa5eb646c8a8a",
+      email: "bilal.jadoon@gosaas.io",
+      name: "Bilal Jadoon",
       settings: {},
       pinned_applications: [],
       is_admin: false,
     };
 
-    //define RBAC based tools
     const isAdmin = user.is_admin;
+    //define RBAC based tools
     let userTools = [...this.tools];
 
-    // filter out writing tools for non-admin users
     if (!isAdmin) {
+      // If the user is not an admin, we need to filter all writing tools
       userTools = userTools.filter(
         (tool) =>
           [
@@ -104,7 +106,40 @@ class MCPClient {
             "update-many",
           ].includes(tool.name) === false
       );
+
+      // Fetch user's active groups
+      const userGroups = await UserGroup.find({
+        members: user.id,
+        is_active: true,
+      }).select("name _id assigned_applications");
+
+      // Collect assigned applications from all active groups
+      const allowedApplications = userGroups.flatMap(
+        (group) => group.assigned_applications
+      );
+
+      // Fetch user's active applications
+      const applications = await Application.find({
+        _id: { $in: allowedApplications },
+        isActive: true,
+      }).select("name hostname environment description _id"); // Only needed fields
+
+      // Build the final user object fields
+      user.user_groups = userGroups.map((group) => ({
+        id: group._id,
+        name: group.name,
+      }));
+
+      user.assigned_applications = applications.map((app) => ({
+        id: app._id,
+        name: app.name,
+        hostname: app.hostname,
+        environment: app.environment,
+        description: app.description,
+      }));
     }
+
+    console.log("Final user object:", JSON.stringify(user, null, 2));
 
     let finalText = [];
     let hasToolUse = true;
@@ -122,7 +157,17 @@ class MCPClient {
         system: `You are a helpful assistant that can call MongoDB MCP tools. Currently, you are working with the db called "test".
         Use tools only when necessary. When you have enough information to answer, stop calling tools and show the final response to the user.
         If you need to access data to answer a query, use the collection-schema tool to understand the structure of the database.
-        Do not blindly call tools without understanding the data. My main collections are "users", "logs", "applications", and "usergroups".
+        Do not blindly call tools without understanding the data. 
+        ${
+          isAdmin
+            ? 'My main collections are "users", "logs", "applications", and "usergroups" and you can access all of them since this is an admin user.'
+            : `The only collection you have access to is "logs" and the data provided in the user object below. You do not have access to any other collections as this is a non-admin user.
+            If a user asks about applications or groups they have no access to, simply inform them that they do not have access to it. 
+            No need to tell them about their user object details and permissions in detail.`
+        }
+        },
+        Here is the current user object:
+        ${JSON.stringify(user, null, 2)}
         `,
       });
 
@@ -145,38 +190,43 @@ class MCPClient {
 
           console.log(`Tool requested: ${toolName}`, toolArgs);
 
-          if (toolArgs.pipeline) {
-            console.log(
-              "Full pipeline:",
-              JSON.stringify(toolArgs.pipeline, null, 2)
-            );
-          }
-
-          if (toolArgs.filter) {
-            console.log("Filter:", JSON.stringify(toolArgs.filter, null, 2));
-          }
-
           //Check if the user has the necessary permissions to use the tool
+          // The user should not be able to access details for applications that they do not have access to
+          if (
+            !isAdmin &&
+            (toolName == "find" || toolName == "aggregate") &&
+            (toolArgs.collection === "applications" ||
+              toolArgs.collection === "users" ||
+              toolArgs.collection === "usergroups")
+          ) {
+            logger.debug(
+              "User does not have access to applications or usergroups."
+            );
+            return "You do not have access to this application or it does not exist.";
+          }
+
+          // The user should not be able to access logs for applications that they do not have access to
           if (
             !isAdmin &&
             toolName === "find" &&
             toolArgs.collection === "logs"
           ) {
-            // User can only access their own applications' logs
+            logger.debug("Checking for logs access.");
             const authorized = await checkApplicationAccess(user, toolArgs);
             if (!authorized) {
-              console.log("User does not have access to this application.");
-              return "You do not have permission to access this application's logs.";
+              console.log(
+                "User does not have access to this application's logs."
+              );
+              return "You do not have permission to access this application's logs or it does not exist.";
             }
           }
 
-          //Check if the user has the necessary permissions to use the tool
           if (
             !isAdmin &&
             toolName === "aggregate" &&
             toolArgs.collection === "logs"
           ) {
-            // User can only access their own applications' logs
+            logger.debug("Checking for logs access in aggregate.");
             const authorized = await checkAggregateAccess(user, toolArgs);
             if (!authorized) {
               console.log("User does not have access to this application.");
@@ -211,7 +261,9 @@ class MCPClient {
       // If Claude didn't request any tools, the loop stops.
     }
 
-    return finalText[finalText.length - 1];
+    return finalText.length > 0
+      ? finalText[finalText.length - 1]
+      : "No response could be generated.";
   }
 
   async chatLoop() {
