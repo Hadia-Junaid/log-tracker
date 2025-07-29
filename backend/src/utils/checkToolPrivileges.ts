@@ -1,48 +1,56 @@
-import UserGroup from "../models/UserGroup";
-import Application from "../models/Application";
+import logger from "./logger";
+import { checkAggregateLogAccess, checkFindLogAccess } from "./checkLogAccess";
+import { ChatUser } from "../services/mcpService";
 
-export const checkApplicationAccess = async (user: any, toolArgs: any) => {
-  //Check user groups for this user
-  const allowedApplications = await UserGroup.find({
-    members: user.id,
-  }).distinct("assigned_applications");
+interface CheckAccessResponse {
+  authorized: boolean;
+  message?: string;
+}
 
-  // Check if the user has access to the requested application
-  if (!allowedApplications.includes(toolArgs.applicationId)) {
-    return false;
+export const checkToolPrivileges = (
+  user: ChatUser,
+  toolName: string,
+  toolArgs: Record<string, unknown>
+): CheckAccessResponse => {
+  if (
+    (toolArgs.toolName == "find" || toolArgs.toolName == "aggregate") &&
+    (toolArgs.toolCollection === "applications" ||
+      toolArgs.collection === "users" ||
+      toolArgs.collection === "usergroups")
+  ) {
+    logger.debug("User does not have access to applications or usergroups.");
+    return {
+      authorized: false,
+      message:
+        "You do not have access to this application or it does not exist.",
+    };
   }
 
-  return true;
-};
-
-export const checkAggregateAccess = async (
-  user: any,
-  toolArgs: any
-): Promise<boolean> => {
-  const allowedApplicationIds = await UserGroup.find({
-    members: user.id,
-  }).distinct("assigned_applications");
-
-  console.log("Allowed application IDs:", allowedApplicationIds);
-
-  //now get these applications
-  const allowedApps = await Application.find({
-    _id: { $in: allowedApplicationIds },
-  }).select("name");
-
-  console.log("Allowed applications:", allowedApps);
-
-  const allowedAppNames = allowedApps.map((app) => app.name);
-
-  const pipeline = toolArgs.pipeline || [];
-  for (const stage of pipeline) {
-    if (stage.$match && stage.$match["application.name"]) {
-      const requestedApp = stage.$match["application.name"];
-      if (!allowedAppNames.includes(requestedApp)) {
-        return false; // user is trying to access an app they don’t have access to
-      }
+  if (toolName === "find" && toolArgs.collection === "logs") {
+    logger.debug("Checking for logs access.");
+    const authorized = checkFindLogAccess(user, toolArgs);
+    if (!authorized) {
+      console.log("User does not have access to this application's logs.");
+      return {
+        authorized: false,
+        message:
+          "You do not have permission to access this application's logs or it does not exist.",
+      };
     }
   }
 
-  return true;
+  if (toolName === "aggregate" && toolArgs.collection === "logs") {
+    logger.debug("Checking for logs access in aggregate.");
+    const authorized = checkAggregateLogAccess(user, toolArgs);
+    if (!authorized) {
+      console.log("User does not have access to this application.");
+      return {
+        authorized: false,
+        message:
+          "You do not have permission to access this application's logs via aggregate.",
+      };
+    }
+  }
+
+  return { authorized: true };
 };

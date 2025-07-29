@@ -8,10 +8,7 @@ import Application from "../models/Application";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import readline from "readline/promises";
-import {
-  checkApplicationAccess,
-  checkAggregateAccess,
-} from "../utils/checkToolPrivileges";
+import { checkToolPrivileges } from "../utils/checkToolPrivileges";
 
 import dotenv from "dotenv";
 import logger from "../utils/logger";
@@ -21,6 +18,23 @@ dotenv.config(); // load environment variables from .env
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 if (!ANTHROPIC_API_KEY) {
   throw new Error("ANTHROPIC_API_KEY is not set");
+}
+
+export interface ChatUser {
+  id: string;
+  email: string;
+  name: string;
+  settings?: Record<string, unknown>;
+  pinned_applications?: string[];
+  is_admin: boolean;
+  user_groups?: { id: string; name: string }[];
+  assigned_applications?: {
+    id: string;
+    name: string;
+    hostname?: string;
+    environment?: string;
+    description?: string;
+  }[];
 }
 
 class MCPClient {
@@ -81,7 +95,7 @@ class MCPClient {
   async processQuery(query: string) {
     const messages: MessageParam[] = [{ role: "user", content: query }];
 
-    const user: any = {
+    const user: ChatUser = {
       //   id: "6865076e568c37c6aa0e54bb",
       id: "6865461db4caa5eb646c8a8a",
       email: "bilal.jadoon@gosaas.io",
@@ -126,12 +140,12 @@ class MCPClient {
 
       // Build the final user object fields
       user.user_groups = userGroups.map((group) => ({
-        id: group._id,
+        id: String(group._id),
         name: group.name,
       }));
 
       user.assigned_applications = applications.map((app) => ({
-        id: app._id,
+        id: String(app._id),
         name: app.name,
         hostname: app.hostname,
         environment: app.environment,
@@ -191,46 +205,15 @@ class MCPClient {
           console.log(`Tool requested: ${toolName}`, toolArgs);
 
           //Check if the user has the necessary permissions to use the tool
-          // The user should not be able to access details for applications that they do not have access to
-          if (
-            !isAdmin &&
-            (toolName == "find" || toolName == "aggregate") &&
-            (toolArgs.collection === "applications" ||
-              toolArgs.collection === "users" ||
-              toolArgs.collection === "usergroups")
-          ) {
-            logger.debug(
-              "User does not have access to applications or usergroups."
+          if (!isAdmin) {
+            const { authorized, message } = checkToolPrivileges(
+              user,
+              toolName,
+              toolArgs
             );
-            return "You do not have access to this application or it does not exist.";
-          }
-
-          // The user should not be able to access logs for applications that they do not have access to
-          if (
-            !isAdmin &&
-            toolName === "find" &&
-            toolArgs.collection === "logs"
-          ) {
-            logger.debug("Checking for logs access.");
-            const authorized = await checkApplicationAccess(user, toolArgs);
             if (!authorized) {
-              console.log(
-                "User does not have access to this application's logs."
-              );
-              return "You do not have permission to access this application's logs or it does not exist.";
-            }
-          }
-
-          if (
-            !isAdmin &&
-            toolName === "aggregate" &&
-            toolArgs.collection === "logs"
-          ) {
-            logger.debug("Checking for logs access in aggregate.");
-            const authorized = await checkAggregateAccess(user, toolArgs);
-            if (!authorized) {
-              console.log("User does not have access to this application.");
-              return "You do not have permission to access this application's logs via aggregate.";
+              console.log("Unauthorized tool: ", message);
+              return message;
             }
           }
 
