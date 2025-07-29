@@ -177,7 +177,7 @@ class MCPClient {
             ? 'My main collections are "users", "logs", "applications", and "usergroups" and you can access all of them since this is an admin user.'
             : `The only collection you have access to is "logs" and the data provided in the user object below. You do not have access to any other collections as this is a non-admin user.
             If a user asks about applications or groups they have no access to, simply inform them that they do not have access to it. 
-            No need to tell them about their user object details and permissions in detail.`
+            No need to tell them about their user object details and permissions, just tell them they dont have access.`
         }
         },
         Here is the current user object:
