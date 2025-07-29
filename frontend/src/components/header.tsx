@@ -13,6 +13,7 @@ import "ojs/ojmenu";
 import "ojs/ojbutton";
 import axios from "../api/axios";
 import { useUser } from "../context/UserContext";
+import { ChatInterface } from "./ChatInterface";
 import "../styles/header.css";
 
 type Props = Readonly<{
@@ -29,6 +30,8 @@ export function Header({ appName, userLogin }: Props) {
     const [isSmallWidth, setIsSmallWidth] = useState(
         mediaQueryRef.current.matches
     );
+
+    const [isChatOpen, setIsChatOpen] = useState(false);
 
     // Import the user context directly
     const { user, setUser } = useUser();
@@ -96,6 +99,23 @@ export function Header({ appName, userLogin }: Props) {
                 </div>
                 <div class="oj-flex-bar-end">
                     <oj-toolbar>
+                        {/* Chat Button */}
+                        <div class="chat-button-container">
+                            <oj-button
+                                id="chatButton"
+                                display="icons"
+                                chroming="borderless"
+                                class="chat-button"
+                                onojAction={() => setIsChatOpen(!isChatOpen)}
+                                title="Open AI Assistant"
+                            >
+                                <span slot="startIcon" class="oj-icon">💬</span>
+                            </oj-button>
+                            {!isChatOpen && (
+                                <span class="chat-notification-badge">AI</span>
+                            )}
+                        </div>
+
                         {/* Groups Menu Button */}
                         {user?.groups && user.groups.length > 0 && (
                             <oj-menu-button
@@ -175,6 +195,12 @@ export function Header({ appName, userLogin }: Props) {
                     </oj-toolbar>
                 </div>
             </div>
+            
+            {/* Chat Interface */}
+            <ChatInterface 
+                isOpen={isChatOpen} 
+                onClose={() => setIsChatOpen(false)} 
+            />
         </header>
     );
 }

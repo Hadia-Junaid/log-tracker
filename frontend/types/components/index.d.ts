@@ -34,6 +34,9 @@
           "oj-c-line-chart-item": any;
           "oj-bind-template":any;
           "oj-c-line-chart-group": any;
+          "oj-toolbar": any;
+          "oj-menu": any;
+          "oj-menu-button": any;
         }
       }
 

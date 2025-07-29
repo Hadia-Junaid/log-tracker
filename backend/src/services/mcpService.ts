@@ -92,18 +92,18 @@ class MCPClient {
     );
   }
 
-  async processQuery(query: string) {
+  async processQuery(user: ChatUser, query: string) {
     const messages: MessageParam[] = [{ role: "user", content: query }];
 
-    const user: ChatUser = {
-      //   id: "6865076e568c37c6aa0e54bb",
-      id: "6865461db4caa5eb646c8a8a",
-      email: "bilal.jadoon@gosaas.io",
-      name: "Bilal Jadoon",
-      settings: {},
-      pinned_applications: [],
-      is_admin: false,
-    };
+    // const user: ChatUser = {
+    //   //   id: "6865076e568c37c6aa0e54bb",
+    //   id: "6865461db4caa5eb646c8a8a",
+    //   email: "bilal.jadoon@gosaas.io",
+    //   name: "Bilal Jadoon",
+    //   settings: {},
+    //   pinned_applications: [],
+    //   is_admin: false,
+    // };
 
     const isAdmin = user.is_admin;
     //define RBAC based tools
@@ -253,6 +253,15 @@ class MCPClient {
     /**
      * Run an interactive chat loop
      */
+    const user: ChatUser = {
+      id: "6865461db4caa5eb646c8a8a",
+      email: "bilal.jadoon@gosaas.io",
+      name: "Bilal Jadoon",
+      settings: {},
+      pinned_applications: [],
+      is_admin: false,
+    };
+
     console.log("Starting interactive chat loop...");
     const rl = readline.createInterface({
       input: process.stdin,
@@ -268,7 +277,7 @@ class MCPClient {
         if (message.toLowerCase() === "quit") {
           break;
         }
-        const response = await this.processQuery(message);
+        const response = await this.processQuery(user, message);
         console.log("\nAI: " + response);
       }
     } catch (err) {

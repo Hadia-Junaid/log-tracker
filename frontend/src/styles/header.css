@@ -1,5 +1,52 @@
 
 
+/* Chat button styling */
+.chat-button-container {
+    position: relative;
+    margin-right: 8px;
+}
+
+.chat-button {
+    font-size: 16px !important;
+    transition: all 0.2s ease;
+}
+
+.chat-button:hover {
+    background: var(--oj-core-neutral-color-20) !important;
+    transform: scale(1.05);
+}
+
+.chat-button:active {
+    transform: scale(0.95);
+}
+
+.chat-notification-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: var(--oj-core-accent-color-1);
+    color: white;
+    border-radius: 8px;
+    padding: 2px 6px;
+    font-size: 10px;
+    font-weight: 600;
+    min-width: 16px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    animation: badgePulse 2s infinite ease-in-out;
+}
+
+@keyframes badgePulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.1);
+    }
+}
+
 /* Groups menu button styling */
 #groupsMenu {
     min-width: auto;
