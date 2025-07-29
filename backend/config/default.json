@@ -3,7 +3,7 @@
   "server": {
     "port": 3000
   },
-  "mongoUri": "",
+  "mongoUri": "mongodb+srv://dbAdmin:308NegraAroyoLane@logtracker-cluster.wdxyb7b.mongodb.net/test",
   "auth": {
     "google": {
       "clientId": "",
@@ -38,5 +38,8 @@
     "maxResults": 500,
     "orderBy": "email",
     "projection": "full"
+  },
+  "openai": {
+    "apiKey": ""
   }
 }

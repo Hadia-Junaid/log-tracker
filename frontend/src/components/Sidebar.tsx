@@ -10,6 +10,7 @@ const navItems = [
   { label: "Dashboard", path: "/", icon: "oj-ux-ico-dashboard" },
   { label: "Logs", path: "/logs", icon: "oj-ux-ico-documents" },
   { label: "Applications", path: "/applications", icon: "oj-ux-ico-applications" },
+  { label: "Chatbot", path: "/chatbot", icon: "oj-ux-ico-chat" },
   { label: "User Management", path: "/users", icon: "oj-ux-ico-user-data" },
   { label: "Settings", path: "/settings", icon: "oj-ux-ico-settings" },
 ];

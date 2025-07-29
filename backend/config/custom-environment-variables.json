@@ -41,6 +41,9 @@
     "smtpUser": "SMTP_USER",
     "smtpPass": "SMTP_PASS",
     "from": "SMTP_USER"
+  },
+  "openai":{
+    "apiKey": "OPENAI_API_KEY"
   }
   
 }

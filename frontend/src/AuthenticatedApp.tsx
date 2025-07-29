@@ -13,6 +13,7 @@ import Settings from "./views/Settings";
 import Applications from "./views/Applications";
 import UserManagement from "./views/UserManagement";
 import Login from "./views/Login";
+import Chatbot from "./views/Chatbot";
 
 export const AuthenticatedApp = ({ appName }: { appName: string }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
@@ -97,6 +98,7 @@ export const AuthenticatedApp = ({ appName }: { appName: string }) => {
             {user?.is_admin ? <UserManagement path="/users" /> : null}
             <Applications path="/applications" />
             <Settings path="/settings" />
+            <Chatbot path="/chatbot" />
             <NotFound default />
           </Router>
         </main>
