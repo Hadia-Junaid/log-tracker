@@ -202,7 +202,9 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
                     class={`chat-message ${message.isUser ? "user-message" : "ai-message"}`}
                   >
                     <div class="message-content">
-                      <div class="message-text">{message.text}</div>
+                      <div class="message-text" style={{
+                        whiteSpace: "pre-wrap", wordBreak: "break-word"
+                      }}>{message.text}</div>
                       <div class="message-time">
                         {formatTime(message.timestamp)}
                       </div>
