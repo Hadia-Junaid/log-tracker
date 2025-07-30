@@ -98,9 +98,20 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
 
     setIsTyping(true);
 
+    const previousChat = messages.slice(-4).map((msg) => ({
+      role: msg.isUser ? "user" : "assistant",
+      content: msg.text,
+    }));
+
+    //Add the current message to the chat context
+    const currentChat = [
+      ...previousChat,
+      { role: "user", content: textToSend },
+    ];
+
     try {
       const response = await axios.post("/chat", {
-        query: textToSend,
+        chat: currentChat,
       });
       console.log("AI response:", response.data);
 
@@ -155,7 +166,6 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
       <div class="chat-backdrop" onClick={onClose}></div>
       <div class="chat-overlay">
         <div class="chat-panel">
-            
           {/* Chat Header */}
           <div class="chat-header">
             <div class="chat-header-content">
@@ -202,9 +212,15 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
                     class={`chat-message ${message.isUser ? "user-message" : "ai-message"}`}
                   >
                     <div class="message-content">
-                      <div class="message-text" style={{
-                        whiteSpace: "pre-wrap", wordBreak: "break-word"
-                      }}>{message.text}</div>
+                      <div
+                        class="message-text"
+                        style={{
+                          whiteSpace: "pre-wrap",
+                          wordBreak: "break-word",
+                        }}
+                      >
+                        {message.text}
+                      </div>
                       <div class="message-time">
                         {formatTime(message.timestamp)}
                       </div>

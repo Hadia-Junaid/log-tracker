@@ -92,20 +92,11 @@ class MCPClient {
     );
   }
 
-  async processQuery(user: ChatUser, query: string) {
-    const messages: MessageParam[] = [{ role: "user", content: query }];
-
-    // const user: ChatUser = {
-    //   //   id: "6865076e568c37c6aa0e54bb",
-    //   id: "6865461db4caa5eb646c8a8a",
-    //   email: "bilal.jadoon@gosaas.io",
-    //   name: "Bilal Jadoon",
-    //   settings: {},
-    //   pinned_applications: [],
-    //   is_admin: false,
-    // };
+  async processQuery(user: ChatUser, chat: MessageParam[]) {
+    const messages: MessageParam[] = chat;
 
     const isAdmin = user.is_admin;
+    
     //define RBAC based tools
     let userTools = [...this.tools];
 
@@ -249,44 +240,6 @@ class MCPClient {
       : "No response could be generated.";
   }
 
-  async chatLoop() {
-    /**
-     * Run an interactive chat loop
-     */
-    const user: ChatUser = {
-      id: "6865461db4caa5eb646c8a8a",
-      email: "bilal.jadoon@gosaas.io",
-      name: "Bilal Jadoon",
-      settings: {},
-      pinned_applications: [],
-      is_admin: false,
-    };
-
-    console.log("Starting interactive chat loop...");
-    const rl = readline.createInterface({
-      input: process.stdin,
-      output: process.stdout,
-    });
-
-    try {
-      console.log("\nMCP Client Started!");
-      console.log("Type your queries or 'quit' to exit.");
-
-      while (true) {
-        const message = await rl.question("\nQuery: ");
-        if (message.toLowerCase() === "quit") {
-          break;
-        }
-        const response = await this.processQuery(user, message);
-        console.log("\nAI: " + response);
-      }
-    } catch (err) {
-      console.error("Error during chat loop:", err);
-    } finally {
-      rl.close();
-    }
-  }
-
   async cleanup() {
     /**
      * Clean up resources
@@ -296,16 +249,3 @@ class MCPClient {
 }
 
 export default MCPClient;
-
-// async function main() {
-//   const mcpClient = new MCPClient();
-//   try {
-//     await mcpClient.connectToMongoMcpServer();
-//     await mcpClient.chatLoop();
-//   } finally {
-//     await mcpClient.cleanup();
-//     process.exit(0);
-//   }
-// }
-
-// main();
