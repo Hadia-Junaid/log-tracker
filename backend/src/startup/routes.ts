@@ -8,6 +8,7 @@ import atRiskRuleRoutes from "../routes/atRiskRule.route";
 import dashboardRoutes from "../routes/dashboard.route";
 import dataRetentionRoutes from "../routes/dataRetention.route";
 import logsRoutes from "../routes/logs.route";
+import mcpRoutes from "../routes/mcpRoutes";
 
 export function setupRoutes(app: Application): void {
   app.use("/api/data-retention", dataRetentionRoutes);
@@ -19,4 +20,6 @@ export function setupRoutes(app: Application): void {
   app.use("/api/dashboard", dashboardRoutes);
   app.use("/api/applications", applications);
   app.use("/api/logs", logsRoutes);
+  app.use("/api/mcp", mcpRoutes);
+
 }

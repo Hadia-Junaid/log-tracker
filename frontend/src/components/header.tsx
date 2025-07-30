@@ -13,6 +13,7 @@ import "ojs/ojmenu";
 import "ojs/ojbutton";
 import axios from "../api/axios";
 import { useUser } from "../context/UserContext";
+import { ChatDialog } from "./ChatDialog";
 import "../styles/header.css";
 
 type Props = Readonly<{
@@ -29,6 +30,7 @@ export function Header({ appName, userLogin }: Props) {
     const [isSmallWidth, setIsSmallWidth] = useState(
         mediaQueryRef.current.matches
     );
+    const [isChatOpen, setIsChatOpen] = useState(false);
 
     // Import the user context directly
     const { user, setUser } = useUser();
@@ -96,6 +98,15 @@ export function Header({ appName, userLogin }: Props) {
                 </div>
                 <div class="oj-flex-bar-end">
                     <oj-toolbar>
+                        {/* Chat Button */}
+                        <oj-button 
+                            display="icons" 
+                            chroming="borderless"
+                            onClick={() => setIsChatOpen(true)}
+                        >
+                            <span slot="startIcon" class="oj-ux-ico-chat" />
+                        </oj-button>
+
                         {/* Groups Menu Button */}
                         {user?.groups && user.groups.length > 0 && (
                             <oj-menu-button
@@ -175,6 +186,7 @@ export function Header({ appName, userLogin }: Props) {
                     </oj-toolbar>
                 </div>
             </div>
+            <ChatDialog isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
         </header>
     );
 }

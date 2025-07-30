@@ -16,6 +16,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@types/cors": "^2.8.19",
     "@types/express-session": "^1.18.2",
     "@types/jsonwebtoken": "^9.0.10",
