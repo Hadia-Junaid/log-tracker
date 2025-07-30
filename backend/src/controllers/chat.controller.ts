@@ -3,11 +3,12 @@ import { Request, Response } from "express";
 
 
 export const handleChat = async (req: Request, res: Response) => {
-  const { query } = req.body;
+  const { chat } = req.body;
+
   const user = req.user; 
 
-  if (!query) {
-    res.status(400).json({ error: "Missing 'query' in request body" });
+  if (!chat) {
+    res.status(400).json({ error: "Missing 'chat' in request body" });
     return;
   }
 
@@ -16,10 +17,10 @@ export const handleChat = async (req: Request, res: Response) => {
     return;
   }
 
-  const response = await mcpClient.processQuery(user, query);
+  const response = await mcpClient.processQuery(user, chat);
 
   if (!response) {
-    res.status(500).json({ error: "Failed to process query" });
+    res.status(500).json({ error: "Failed to process chat" });
     return;
   }
 
