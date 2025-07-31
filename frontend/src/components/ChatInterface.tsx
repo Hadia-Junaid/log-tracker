@@ -10,6 +10,9 @@ import { useState, useRef, useEffect } from "preact/hooks";
 import "ojs/ojbutton";
 import "ojs/ojinputtext";
 import "ojs/ojformlayout";
+import "ojs/ojpopup";
+import "ojs/ojlistview";
+import "ojs/ojlistitemlayout";
 import "../styles/chat.css";
 import axios from "../api/axios";
 import { useUser } from "../context/UserContext";
@@ -21,14 +24,19 @@ interface ChatMessage {
   timestamp: Date;
 }
 
+interface SavedMessage {
+  id: string;
+  text: string;
+  timestamp: Date;
+}
+
 interface ChatInterfaceProps {
   isOpen: boolean;
   onClose: () => void;
 }
 
 export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
-  const { user } = useUser(); // Assuming useUser is a custom hook to get user context
-
+  const { user, setUser } = useUser();
   const initialMessageText = user?.is_admin
     ? "Hello! I'm your AI assistant. I can help you with log analysis, performing various read and write tasks, and answering questions about your applications. How can I assist you today?"
     : "Hello! I'm your AI assistant. I can help you with log analysis, troubleshooting, and answering questions about your applications. How can I assist you today?";
@@ -43,8 +51,10 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
   ]);
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
+  const [showSavedMessages, setShowSavedMessages] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<any>(null);
+  const savedMessagesPopupRef = useRef<any>(null);
 
   const clearChat = () => {
     setMessages([
@@ -55,6 +65,34 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
         timestamp: new Date(),
       },
     ]);
+  };
+
+  const saveMessage = async (messageText: string) => {
+    try {
+      // POST to your backend; adjust the route if you prefer "/chat/pin-message" etc.
+      const response = await axios.post("/chat/save-message", {
+        message: messageText,
+      });
+
+      setUser({
+        ...user!,
+        saved_messages: response.data.saved_messages,
+      });
+    } catch (err) {
+      console.error("Failed to save message:", err);
+    }
+  };
+
+  const loadSavedMessage = (messageText: string) => {
+    setInputValue(messageText);
+    setShowSavedMessages(false);
+    if (inputRef.current) {
+      inputRef.current.focus();
+    }
+  };
+
+  const toggleSavedMessages = () => {
+    setShowSavedMessages(!showSavedMessages);
   };
 
   const scrollToBottom = () => {
@@ -192,6 +230,15 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
                   class="chat-action-button"
                   chroming="borderless"
                   display="icons"
+                  title="Saved Messages"
+                  onojAction={toggleSavedMessages}
+                >
+                  <span slot="startIcon" class="oj-ux-ico-bookmark"></span>
+                </oj-button>
+                <oj-button
+                  class="chat-action-button"
+                  chroming="borderless"
+                  display="icons"
                   title="Clear Chat"
                   onojAction={clearChat}
                 >
@@ -219,19 +266,38 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
                     key={message.id}
                     class={`chat-message ${message.isUser ? "user-message" : "ai-message"}`}
                   >
-                    <div class="message-content">
-                      <div
-                        class="message-text"
-                        style={{
-                          whiteSpace: "pre-wrap",
-                          wordBreak: "break-word",
-                        }}
-                      >
-                        {message.text}
+                    <div class="message-wrapper">
+                      <div class="message-content">
+                        <div
+                          class="message-text"
+                          style={{
+                            whiteSpace: "pre-wrap",
+                            wordBreak: "break-word",
+                          }}
+                        >
+                          {message.text}
+                        </div>
+                        <div class="message-time">
+                          {formatTime(message.timestamp)}
+                        </div>
                       </div>
-                      <div class="message-time">
-                        {formatTime(message.timestamp)}
-                      </div>
+                      {message.isUser && (
+                        <div class="message-actions">
+                          <oj-button
+                            class="save-message-button"
+                            chroming="borderless"
+                            display="icons"
+                            size="sm"
+                            title="Save message"
+                            onojAction={() => saveMessage(message.text)}
+                          >
+                            <span
+                              slot="startIcon"
+                              class="oj-ux-ico-bookmark"
+                            ></span>
+                          </oj-button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -239,11 +305,13 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
                 {/* Typing indicator */}
                 {isTyping && (
                   <div class="chat-message ai-message typing-indicator">
-                    <div class="message-content">
-                      <div class="typing-dots">
-                        <span></span>
-                        <span></span>
-                        <span></span>
+                    <div class="message-wrapper">
+                      <div class="message-content">
+                        <div class="typing-dots">
+                          <span></span>
+                          <span></span>
+                          <span></span>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -279,6 +347,55 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
             </div>
           </div>
         </div>
+
+        {/* Saved Messages Popup */}
+        {showSavedMessages && (
+          <div
+            class="saved-messages-overlay"
+            onClick={() => setShowSavedMessages(false)}
+          >
+            <div
+              class="saved-messages-panel"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div class="saved-messages-header">
+                <h4 class="saved-messages-title">Saved Messages</h4>
+                <oj-button
+                  class="saved-messages-close"
+                  chroming="borderless"
+                  display="icons"
+                  title="Close"
+                  onojAction={() => setShowSavedMessages(false)}
+                >
+                  <span slot="startIcon" class="oj-ux-ico-close"></span>
+                </oj-button>
+              </div>
+              <div class="saved-messages-content">
+                {user?.saved_messages?.length === 0 ? (
+                  <div class="no-saved-messages">
+                    <span class="no-saved-messages-icon">📌</span>
+                    <p>No saved messages yet</p>
+                    <p class="no-saved-messages-hint">
+                      Save user messages to quickly access them later
+                    </p>
+                  </div>
+                ) : (
+                  <div class="saved-messages-list">
+                    {user?.saved_messages?.map((savedMessage, index) => (
+                      <div
+                        key={index}
+                        class="saved-message-item"
+                        onClick={() => loadSavedMessage(savedMessage)}
+                      >
+                        <div class="saved-message-text">{savedMessage}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

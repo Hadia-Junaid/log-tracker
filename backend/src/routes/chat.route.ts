@@ -1,11 +1,13 @@
 import express from "express";
 import { authenticate } from "../middleware/auth";
-import { handleChat } from "../controllers/chat.controller";
+import { handleChat, handleSaveMessage } from "../controllers/chat.controller";
 import { validateBody } from "../middleware/validate";
-import { chatSchema } from "../validators/chat";
+import { chatSchema, saveMessageSchema } from "../validators/chat";
 
 const router = express.Router();
 
 router.post("/", authenticate, validateBody(chatSchema), handleChat);
+
+router.post("/save-message", authenticate, validateBody(saveMessageSchema), handleSaveMessage)
 
 export default router;

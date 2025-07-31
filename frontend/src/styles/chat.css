@@ -370,6 +370,195 @@ chat-close-button,
   font-size: 18px;
 }
 
+/* Save Message Functionality */
+.message-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  width: 100%;
+}
+
+.user-message .message-wrapper {
+  flex-direction: row-reverse;
+}
+
+.ai-message .message-wrapper {
+  flex-direction: row;
+}
+
+.message-actions {
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  margin-bottom: 4px;
+}
+
+.chat-message:hover .message-actions {
+  opacity: 1;
+}
+
+.save-message-button {
+  min-width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  border: 1px solid rgba(0, 102, 204, 0.3) !important;
+  color: #0066cc !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.save-message-button:hover {
+  background: #0066cc !important;
+  color: white !important;
+  transform: scale(1.1);
+}
+
+.save-message-button .oj-ux-ico-bookmark {
+  font-size: 12px !important;
+}
+
+/* Saved Messages Badge */
+.saved-messages-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  background: #ff4444;
+  color: white;
+  border-radius: 50%;
+  width: 16px;
+  height: 16px;
+  font-size: 10px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  min-width: 16px;
+}
+
+/* Saved Messages Popup */
+.saved-messages-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 1002;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.saved-messages-panel {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+  width: 450px;
+  max-width: 90vw;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.saved-messages-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid #e0e0e0;
+  background: #f8f9fa;
+}
+
+.saved-messages-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+.saved-messages-close {
+  min-width: 32px !important;
+  height: 32px !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  color: #666 !important;
+}
+
+.saved-messages-close:hover {
+  background: #e0e0e0 !important;
+  color: #333 !important;
+}
+
+.saved-messages-content {
+  flex: 1;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+.no-saved-messages {
+  text-align: center;
+  padding: 40px 20px;
+  color: #666;
+}
+
+.no-saved-messages-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+  display: block;
+}
+
+.no-saved-messages p {
+  margin: 8px 0;
+}
+
+.no-saved-messages-hint {
+  font-size: 12px;
+  color: #999;
+}
+
+.saved-messages-list {
+  padding: 8px 0;
+}
+
+.saved-message-item {
+  padding: 12px 20px;
+  border-bottom: 1px solid #f0f0f0;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.saved-message-item:hover {
+  background: #f8f9fa;
+}
+
+.saved-message-item:last-child {
+  border-bottom: none;
+}
+
+.saved-message-text {
+  font-size: 14px;
+  color: #333;
+  line-height: 1.4;
+  margin-bottom: 4px;
+  word-wrap: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.saved-message-time {
+  font-size: 11px;
+  color: #666;
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
   .chat-overlay {
@@ -410,6 +599,20 @@ chat-close-button,
     font-size: 12px !important;
     padding: 8px 10px !important;
     min-height: 32px !important;
+  }
+
+  .saved-messages-panel {
+    width: 95vw;
+    max-height: 85vh;
+  }
+  
+  .message-actions {
+    opacity: 1; /* Always show on mobile */
+  }
+  
+  .save-message-button {
+    min-width: 28px !important;
+    height: 28px !important;
   }
 }
 

@@ -18,3 +18,7 @@ export const chatSchema = Joi.object({
     .min(1)
     .required(),
 });
+
+export const saveMessageSchema = Joi.object({
+  message: Joi.string().min(1).required(),
+});

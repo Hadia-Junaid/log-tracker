@@ -168,6 +168,7 @@ class AuthController {
                     name: group.name,
                     is_admin: group.is_admin,
                 })),
+                saved_messages: user.saved_messages,
             },
         });
     }
@@ -282,6 +283,7 @@ class AuthController {
                     name: group.name,
                     is_admin: group.is_admin,
                 })),
+                saved_messages: user.saved_messages
             },
         });
     }
