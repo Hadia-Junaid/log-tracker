@@ -1,6 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import axios from "../api/axios";
 import '../styles/chat-dialog.css';
+import { useLocalStorage } from '../hooks/useLocalStorage';
+
+type Message = {
+    type: 'user' | 'ai';
+    content: string;
+    timestamp: number;
+};
 
 type Props = {
     isOpen: boolean;
@@ -8,7 +15,7 @@ type Props = {
 };
 
 export function ChatDialog({ isOpen, onClose }: Props) {
-    const [messages, setMessages] = useState<Array<{ type: 'user' | 'ai'; content: string }>>([]);
+    const [messages, setMessages] = useLocalStorage<Message[]>('chat-messages', []);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -43,22 +50,58 @@ export function ChatDialog({ isOpen, onClose }: Props) {
         };
     }, [isOpen, onClose]);
 
+    const getRecentConversationHistory = () => {
+        // Get last 4 messages (2 exchanges) if available
+        return messages.slice(-4);
+    };
+
     const handleSubmit = async () => {
         if (!inputValue.trim()) return;
         const userMessage = inputValue.trim();
         setInputValue('');
-        setMessages(prev => [...prev, { type: 'user', content: userMessage }]);
-        console.log("Current messages:", messages);
+        
+        // Create the user message
+        const newUserMessage: Message = {
+            type: 'user',
+            content: userMessage,
+            timestamp: Date.now()
+        };
+
+        // Update messages with user's message
+        const updatedMessages = [...messages, newUserMessage];
+        setMessages(updatedMessages);
+        
         setIsLoading(true);
         try {
-            const response = await axios.post('/mcp/chat', { query: userMessage });
-            const aiMessage = { type: 'ai' as const, content: response.data.response };
-            setMessages(prev => [...prev, aiMessage]);
-            console.log("AI response added:", aiMessage);
+            // Get conversation history from the updated messages array
+            const history = updatedMessages.slice(-3, -1); 
+             const historyString = history
+            .map(msg => `${msg.type === 'user' ? "Previous user query" : "AI response"}: ${msg.content}`)
+            .join("\n");
+            // Send both current message and history to backend
+            const response = await axios.post('/mcp/chat', {
+                query: userMessage,
+                history: historyString
+            });
+
+            // Add AI response with timestamp
+            const aiMessage: Message = {
+                type: 'ai',
+                content: response.data.response,
+                timestamp: Date.now()
+            };
+
+            // Update messages with both user message and AI response
+            setMessages([...updatedMessages, aiMessage]);
+            console.log("Messages after AI response:", [...updatedMessages, aiMessage]);
         } catch (error) {
-            const errorMessage = { type: 'ai' as const, content: 'Error occurred. Please try again.' };
-            setMessages(prev => [...prev, errorMessage]);
-            console.log("Error message added:", errorMessage);
+            const errorMessage: Message = {
+                type: 'ai',
+                content: 'Error occurred. Please try again.',
+                timestamp: Date.now()
+            };
+            // Update messages with both user message and error response
+            setMessages([...updatedMessages, errorMessage]);
         }
         setIsLoading(false);
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

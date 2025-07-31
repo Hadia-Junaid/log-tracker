@@ -12,7 +12,11 @@ const UserGroupSchema: Schema = new Schema({
   name: { type: String, required: true },
   is_admin: { type: Boolean, default: false },
   is_active: { type: Boolean, default: true},
-  assigned_applications: [{ type: Schema.Types.ObjectId, ref: 'Application' }],
+  assigned_applications: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Application',
+        required: true
+      }],
   members: [{ type: Schema.Types.ObjectId, ref: 'User' }],
 }, { timestamps: true });
 

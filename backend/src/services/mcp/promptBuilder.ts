@@ -3,7 +3,8 @@ export function buildInitialPrompt(
   schemaInfo: string,
   assignedApps: { id: string; name: string }[],
   query: string,
-  is_admin: boolean
+  is_admin: boolean,
+  history: string
 ): string {
   const assignedAppsText = assignedApps.length
     ? assignedApps.map((a) => `- ${a.name} (id: ${a.id})`).join("\n")
@@ -20,7 +21,7 @@ export function buildInitialPrompt(
         Further instructions:
         - If multiple tool calls are required, make them sequentially until the operation is completed.
         - Display final results in a readable form, not raw JSON.
-        - Show application names instead of IDs in the final response if needed.
+        - Show application names instead of IDs in the final response if asked to display log documents. 
         -If asked to display some documents, don't display the id of the document. 
 
         Additional rules for interpreting the user query:
@@ -46,7 +47,10 @@ export function buildInitialPrompt(
 
         ${commonInstructions}
 
-        User query: ${query}
+        The following is the conversation history of past 2 messages. If you asked for some clarification and user gave that in current query, use the new information added in current query and execute previous query. Otherwise, execute current query.
+        Conversation history:\n${history}
+        
+        Current User query: ${query}
         `;
         } else {
             return `
@@ -63,8 +67,16 @@ export function buildInitialPrompt(
         ${assignedAppsText}
 
         ${commonInstructions}
+        IMPORTANT NOTES FOR ADDING DOCUMENTS:
+        1: If asked to add documents, look at the schema and ensure that you add the documents with all the required fields. If the user hasn't specified all fields use default values. If defaults aren't specified ask the user to make a request with all required fields mentioned. 
+        2: When generating insert tool calls for collections with timestamps: true, always include createdAt and updatedAt fields with valid ISO date strings, and set _v to 0 by default. 
+        3: ENSURE that createdAt and updatedAt are date objects and not strings. Syntax is  "$date": " "
+        4: If adding an application, add it to the list of assigned applications of the user group that has is_admin set as true
 
-        User query: ${query}
+        The following is the conversation history of past 2 messages. If you asked for some clarification in your response and user gave that in current query, use the new information given to you in current query and execute previous query. Otherwise, execute current query.
+        Conversation history:\n${history}
+        
+        Current User query: ${query}
         `;
     }
 }

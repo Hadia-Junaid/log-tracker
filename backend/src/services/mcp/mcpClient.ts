@@ -50,7 +50,7 @@ export class MCPChatClient {
       }
      
     
-      async processQuery(query: string, userid: string, is_admin: boolean) {
+      async processQuery(query: string, userid: string, is_admin: boolean, history: string) {
         const schemaInfo = loadSchemaDescriptions(is_admin);
         const assignedApps = await getAssignedApplicationsForUser(userid);
     
@@ -59,8 +59,10 @@ export class MCPChatClient {
           schemaInfo,
           assignedApps,
           query,
-          is_admin
+          is_admin,
+          history
         );
+        logger.info(`initial prompt is ${initialPrompt}`)
         const messages: any[] = [{
           role: "user",
           parts: [{

@@ -12,12 +12,12 @@ export async function chatHandler(req: Request, res: Response) {
     // }
 
     // const userid = "68650fd57a72d0b64525da71";
-    // const is_admin = false;
+    //const is_admin = false;
     const userId = req.user.id;
     const is_admin = req.user.is_admin;
     const client = getMcpClient();
-    const { query } = req.body;
-    const response = await client.processQuery(query, userId, is_admin);
+    const { query, history } = req.body;
+    const response = await client.processQuery(query, userId, is_admin, history);
     res.json({ response });
   } catch (err) {
     console.error(err);
