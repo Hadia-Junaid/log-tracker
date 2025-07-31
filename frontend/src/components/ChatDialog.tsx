@@ -26,6 +26,10 @@ export function ChatDialog({ isOpen, onClose }: Props) {
         if (dialogRef.current) {
             if (isOpen) {
                 dialogRef.current.open();
+                // Scroll to bottom when dialog opens
+                setTimeout(() => {
+                    messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
+                }, 100);
             } else {
                 dialogRef.current.close();
             }
@@ -104,7 +108,10 @@ export function ChatDialog({ isOpen, onClose }: Props) {
             setMessages([...updatedMessages, errorMessage]);
         }
         setIsLoading(false);
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        // Scroll to bottom smoothly after new message
+        setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
     };
 
     return (
@@ -114,18 +121,7 @@ export function ChatDialog({ isOpen, onClose }: Props) {
             </div>
             <div slot="body">
                 <div class="chat-messages">
-                    {messages.map((message, index) => {
-                        console.log("Rendering message:", message);
-                        return (
-                            <div key={index} class={`message ${message.type}`}>
-                                <div class="message-bubble">
-                                    {message.content.split('\n').map((line, i) => (
-                                        <div key={i}>{line}</div>
-                                    ))}
-                                </div>
-                            </div>
-                        );
-                    })}
+                    <div ref={messagesEndRef} />
                     {isLoading && (
                         <div class="message ai">
                             <div class="message-bubble">
@@ -136,7 +132,18 @@ export function ChatDialog({ isOpen, onClose }: Props) {
                             </div>
                         </div>
                     )}
-                    <div ref={messagesEndRef} />
+                    {[...messages].reverse().map((message, index) => {
+                        console.log("Rendering message:", message);
+                        return (
+                            <div key={message.timestamp} class={`message ${message.type}`}>
+                                <div class="message-bubble">
+                                    {message.content.split('\n').map((line, i) => (
+                                        <div key={i}>{line}</div>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
                 <div class="chat-input">
                     <oj-text-area
