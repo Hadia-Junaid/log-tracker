@@ -139,7 +139,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     if (messages.length > 1) {
       scrollToBottom();
     }
-  }, [messages]);
+  }, [messages, isOpen]);
 
   useEffect(() => {
     if (isOpen && inputRef.current) {
