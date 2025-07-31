@@ -1,4 +1,3 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import UserGroup from "../models/UserGroup";
 import Application from "../models/Application";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -8,12 +7,9 @@ import { checkToolPrivileges } from "../utils/checkToolPrivileges";
 import dotenv from "dotenv";
 import logger from "../utils/logger";
 
-dotenv.config(); // load environment variables from .env
+import { GoogleGenAI, Type } from "@google/genai";
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-if (!GEMINI_API_KEY) {
-  throw new Error("GEMINI_API_KEY is not set");
-}
+dotenv.config(); // load environment variables from .env
 
 export interface ChatUser {
   id: string;
@@ -32,26 +28,15 @@ export interface ChatUser {
   }[];
 }
 
-export interface GeminiMessage {
-  role: "user" | "model";
-  parts: Array<{ text: string } | { functionCall: any } | { functionResponse: any }>;
-}
-
-export interface Tool {
-  name: string;
-  description: string;
-  input_schema: any;
-}
-
 class MCPClient {
   private mcp: Client;
-  private genAI: GoogleGenerativeAI;
   private transport: StdioClientTransport | null = null;
-  private tools: Tool[] = [];
+  private tools: any[] = []; // Use 'any' for tools to allow flexibility
+  private gemini: GoogleGenAI;
 
   constructor() {
     // Initialize Gemini client and MCP client
-    this.genAI = new GoogleGenerativeAI(GEMINI_API_KEY!);
+    this.gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
     this.mcp = new Client({ name: "mcp-client-cli", version: "1.0.0" });
   }
 
@@ -86,7 +71,7 @@ class MCPClient {
       .filter((tool) => !excludedTools.has(tool.name))
       .map((tool) => ({
         name: tool.name,
-        description: tool.description || "",
+        description: tool.description,
         input_schema: tool.inputSchema,
       }));
 
@@ -94,14 +79,15 @@ class MCPClient {
       "Connected to Mongo MCP Server with tools:",
       this.tools.map((t) => t.name)
     );
-  }  async processQuery(user: ChatUser, chat: any[]) {
-    // Convert chat messages to Gemini format
-    const messages: GeminiMessage[] = this.convertToGeminiFormat(chat);
+  }
 
-    console.log("Converted messages to Gemini format:", JSON.stringify(messages, null, 2));
+  async processQuery(user: ChatUser, chat: any) {
+    const messages: any[] = chat;
+
+    console.log("Processing query for user:", user.email);
 
     const isAdmin = user.is_admin;
-    
+
     //define RBAC based tools
     let userTools = [...this.tools];
 
@@ -150,20 +136,127 @@ class MCPClient {
     }
     console.log("Final user object:", JSON.stringify(user, null, 2));
 
-    let finalText = [];
+    let finalText: string[] = [];
     let hasToolUse = true;
 
     const maxToolCalls = 6; // Limit to prevent infinite loops
     let toolCount = 0;
 
-    // Convert tools to Gemini format
-    const geminiTools = this.convertToolsToGeminiFormat(userTools);
-    
-    // Get Gemini model
-    const model = this.genAI.getGenerativeModel({ 
-      model: "gemini-1.5-pro",
-      tools: geminiTools.length > 0 ? [{ functionDeclarations: geminiTools }] : undefined,
-      systemInstruction: `You are a helpful assistant that can call MongoDB MCP tools. Currently, you are working with the db called "test".
+    // Convert MCP tools to Gemini function declarations format
+    const toolDeclarations = userTools.map((tool) => {
+      // Sanitize the schema for Gemini compatibility
+      const sanitizeSchema = (schema: any): any => {
+        if (!schema || typeof schema !== "object") return {};
+
+        const sanitized: any = {};
+
+        for (const [key, value] of Object.entries(schema)) {
+          if (typeof value === "object" && value !== null) {
+            const valueObj = value as any;
+
+            if (Array.isArray(value)) {
+              // Skip arrays that might contain complex structures
+              continue;
+            } else if (valueObj.hasOwnProperty("const")) {
+              // Convert const values to simple string type
+              sanitized[key] = { type: "string" };
+            } else if (
+              valueObj.hasOwnProperty("anyOf") ||
+              valueObj.hasOwnProperty("oneOf")
+            ) {
+              // Simplify union types to string
+              sanitized[key] = { type: "string" };
+            } else if (valueObj.type === "array") {
+              // Handle array types properly
+              sanitized[key] = {
+                type: "array",
+                items: valueObj.items
+                  ? sanitizeArrayItems(valueObj.items)
+                  : { type: "string" },
+              };
+            } else if (valueObj.hasOwnProperty("type")) {
+              // Keep simple types, recursively sanitize nested objects
+              sanitized[key] = {
+                type: valueObj.type,
+                ...(valueObj.properties
+                  ? { properties: sanitizeSchema(valueObj.properties) }
+                  : {}),
+                ...(valueObj.description
+                  ? { description: valueObj.description }
+                  : {}),
+              };
+            } else {
+              // For nested objects without type, recurse
+              const nested = sanitizeSchema(valueObj);
+              if (Object.keys(nested).length > 0) {
+                sanitized[key] = { type: "object", properties: nested };
+              }
+            }
+          } else {
+            // Keep primitive values as is
+            sanitized[key] = value;
+          }
+        }
+
+        return sanitized;
+      };
+
+      // Helper function to sanitize array items
+      const sanitizeArrayItems = (items: any): any => {
+        if (!items || typeof items !== "object") {
+          return { type: "string" };
+        }
+
+        if (items.anyOf || items.oneOf) {
+          // Simplify complex union types to string
+          return { type: "string" };
+        }
+
+        if (items.type) {
+          if (items.type === "object" && items.properties) {
+            return {
+              type: "object",
+              properties: sanitizeSchema(items.properties),
+            };
+          }
+          return { type: items.type };
+        }
+
+        // Default to string for unknown array item types
+        return { type: "string" };
+      };
+
+      return {
+        name: tool.name,
+        description: tool.description || "",
+        parameters: {
+          type: Type.OBJECT,
+          properties: sanitizeSchema(tool.input_schema?.properties || {}),
+          required: tool.input_schema?.required || [],
+        },
+      };
+    });
+
+    console.log(
+      "Sanitized tool declarations:",
+      JSON.stringify(toolDeclarations, null, 2)
+    );
+
+    // Get the latest user message from chat
+    const latestMessage = messages[messages.length - 1];
+    const userQuery = latestMessage?.content || "Help me with my query";
+    const contents: Array<{ role: string; parts: Array<any> }> = [
+      { role: "user", parts: [{ text: userQuery }] },
+    ];
+
+    while (hasToolUse && toolCount < maxToolCalls) {
+      // 1) Ask Gemini
+      const response = await this.gemini.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents,
+        config: {
+          tools: [{ functionDeclarations: toolDeclarations }],
+          systemInstruction: `You are a helpful assistant that can call MongoDB MCP tools as part of a logging microservice. Currently, you are working with the db called "test".
         Use tools only when necessary. When you have enough information to answer, stop calling tools and show the final response to the user.
         If you need to access data to answer a query, use the collection-schema tool before fetching any data from a collection to understand the schema and field names.
         Give concise and accurate answers, dont over-explain.
@@ -177,146 +270,78 @@ class MCPClient {
         Note that the only log_level types are "INFO", "DEBUG", "ERROR", and "WARNING". 
         IMPORTANT: All id fields such as application_id in logs collection are ObjectId type and need to be treated correctly e.g. using $oid to reference them.  
         Here is the current user object:
-        ${JSON.stringify(user, null, 2)}`
-    });
-
-    while (hasToolUse && toolCount < maxToolCalls) {
-      // Ask Gemini
-      const chat = model.startChat({
-        history: messages.slice(0, -1), // All messages except the last one
+        ${JSON.stringify(user, null, 2)}
+        `,
+          maxOutputTokens: 1000,
+        },
       });
 
-      const lastMessage = messages[messages.length - 1];
-      const lastMessageText = lastMessage.parts
-        .filter(part => 'text' in part)
-        .map(part => (part as { text: string }).text)
-        .join(' ');
-      const result = await chat.sendMessage(lastMessageText);
+      console.log("Gemini response:", JSON.stringify(response, null, 2));
 
-      console.log("Gemini response:", result.response);
-
-      const response = result.response;
-      
-      // Add assistant response to messages
-      const responseText = response.text();
-      if (responseText) {
-        messages.push({
-          role: "model",
-          parts: [{ text: responseText }]
-        });
+      const candidate = response.candidates?.[0];
+      if (!candidate?.content?.parts) {
+        throw new Error("Unexpected Gemini response shape");
       }
 
       hasToolUse = false;
 
-      // Check for function calls
-      const functionCalls = response.functionCalls();
-      if (functionCalls && functionCalls.length > 0) {
-        hasToolUse = true;
-        
-        for (const functionCall of functionCalls) {
-          const toolName = functionCall.name;
-          const toolArgs = functionCall.args as Record<string, unknown>;
+      for (const part of candidate.content.parts) {
+        if (part.text) {
+          // For text responses without tool calls
+          finalText.push(part.text);
+        } else if (part.functionCall) {
+          // Gemini wants to call a tool
+          hasToolUse = true;
+          const { name: toolName, args: toolArgs } = part.functionCall as {
+            name: string;
+            args: Record<string, any>;
+          };
 
           console.log(`Tool requested: ${toolName}`, toolArgs);
 
-          //Check if the user has the necessary permissions to use the tool
+          // — push the function-call back into the convo so the model sees it
+          contents.push({
+            role: "model",
+            parts: [{ functionCall: { name: toolName, args: toolArgs } }],
+          });
+
+          // — execute the tool
           if (!isAdmin) {
             const { authorized, message } = checkToolPrivileges(
               user,
               toolName,
               toolArgs
             );
-            if (!authorized) {
-              console.log("Unauthorized tool: ", message);
-              return message;
-            }
+            if (!authorized) return message;
           }
-
-          // Execute the tool
           const toolResult = await this.mcp.callTool({
             name: toolName,
             arguments: toolArgs,
           });
-
           console.log(`Tool ${toolName} result:`, toolResult);
 
-          // Add the function call and response to messages
-          messages.push({
-            role: "model",
-            parts: [{ functionCall: functionCall }]
-          });
-
-          messages.push({
+          // — push the result back in as a “user” message
+          contents.push({
             role: "user",
-            parts: [{ 
-              functionResponse: {
-                name: toolName,
-                response: toolResult
-              }
-            }]
+            parts: [
+              {
+                functionResponse: {
+                  name: toolName,
+                  response: { result: toolResult },
+                },
+              },
+            ],
           });
         }
-      } else if (responseText) {
-        finalText.push(responseText);
       }
 
       toolCount++;
-      // If Gemini didn't request any tools, the loop stops.
     }
 
+    // 3) Once no more tool calls, return the last text
     return finalText.length > 0
-      ? finalText[finalText.length - 1]
+      ? finalText.join(" ")
       : "No response could be generated.";
-  }
-
-  private convertToGeminiFormat(chat: any[]): GeminiMessage[] {
-    const geminiMessages: GeminiMessage[] = [];
-    
-    for (const message of chat) {
-      if (message.role === "user") {
-        geminiMessages.push({
-          role: "user",
-          parts: [{ text: message.content }]
-        });
-      } else if (message.role === "assistant") {
-        if (typeof message.content === "string") {
-          geminiMessages.push({
-            role: "model",
-            parts: [{ text: message.content }]
-          });
-        } else if (Array.isArray(message.content)) {
-          const parts = [];
-          for (const content of message.content) {
-            if (content.type === "text") {
-              parts.push({ text: content.text });
-            } else if (content.type === "tool_use") {
-              parts.push({ 
-                functionCall: {
-                  name: content.name,
-                  args: content.input
-                }
-              });
-            }
-          }
-          if (parts.length > 0) {
-            geminiMessages.push({
-              role: "model",
-              parts: parts
-            });
-          }
-        }
-      }
-    }
-    
-    return geminiMessages;
-  }
-
-  private convertToolsToGeminiFormat(tools: Tool[]) {
-    return tools.map(tool => ({
-      name: tool.name,
-      description: tool.description,
-      parameters: tool.input_schema
-    }));
   }
 
   async cleanup() {

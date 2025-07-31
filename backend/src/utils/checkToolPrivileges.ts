@@ -1,6 +1,6 @@
 import logger from "./logger";
 import { checkAggregateLogAccess, checkFindLogAccess } from "./checkLogAccess";
-import { ChatUser } from "../services/mcpService";
+import { ChatUser } from "../services/ClaudeMcpService";
 
 interface CheckAccessResponse {
   authorized: boolean;

@@ -98,10 +98,13 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
 
     setIsTyping(true);
 
-    const previousChat = messages.slice(-4).map((msg) => ({
+    // Copy last 4 messages but not the welcome message
+    const filteredMessages = messages.filter((msg) => msg.id !== "welcome-new" && msg.id !== "welcome");
+    const previousChat = filteredMessages.slice(-4).map((msg) => ({
       role: msg.isUser ? "user" : "assistant",
       content: msg.text,
     }));
+
 
     //Add the current message to the chat context
     const currentChat = [

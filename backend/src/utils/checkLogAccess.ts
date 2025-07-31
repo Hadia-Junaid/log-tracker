@@ -1,4 +1,4 @@
-import { ChatUser } from "../services/mcpService";
+import { ChatUser } from "../services/ClaudeMcpService";
 
 export const checkFindLogAccess = (
   user: ChatUser,
