@@ -52,6 +52,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
   const [inputValue, setInputValue] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [showSavedMessages, setShowSavedMessages] = useState(false);
+  const [originalMessages, setOriginalMessages] = useState<ChatMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<any>(null);
   const savedMessagesPopupRef = useRef<any>(null);
@@ -67,24 +68,47 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     ]);
   };
 
-  const saveMessage = async (messageText: string) => {
+  const saveOrUnsaveMessage = async (messageText: string) => {
     try {
-      // POST to your backend; adjust the route if you prefer "/chat/pin-message" etc.
-      const response = await axios.post("/chat/save-message", {
-        message: messageText,
-      });
+      const isAlreadySaved = user?.saved_messages?.includes(messageText);
 
-      setUser({
-        ...user!,
-        saved_messages: response.data.saved_messages,
-      });
+      if (isAlreadySaved) {
+        // Unsave the message
+        const response = await axios.delete("/chat/unsave-message", {
+          data: { message: messageText },
+        });
+
+        setUser({
+          ...user!,
+          saved_messages: response.data.saved_messages,
+        });
+      } else {
+        // Save the message
+        const response = await axios.post("/chat/save-message", {
+          message: messageText,
+        });
+
+        setUser({
+          ...user!,
+          saved_messages: response.data.saved_messages,
+        });
+      }
     } catch (err) {
-      console.error("Failed to save message:", err);
+      console.error("Failed to save/unsave message:", err);
     }
+  };
+
+  const isMessageSaved = (messageText: string) => {
+    return user?.saved_messages?.includes(messageText) || false;
   };
 
   const loadSavedMessage = (messageText: string) => {
     setInputValue(messageText);
+    // Go back to original conversation
+    if (originalMessages.length > 0) {
+      setMessages(originalMessages);
+      setOriginalMessages([]);
+    }
     setShowSavedMessages(false);
     if (inputRef.current) {
       inputRef.current.focus();
@@ -92,6 +116,16 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
   };
 
   const toggleSavedMessages = () => {
+    if (!showSavedMessages) {
+      // Store current conversation and show saved messages
+      setOriginalMessages(messages);
+    } else {
+      // Go back to original conversation
+      if (originalMessages.length > 0) {
+        setMessages(originalMessages);
+        setOriginalMessages([]);
+      }
+    }
     setShowSavedMessages(!showSavedMessages);
   };
 
@@ -230,172 +264,192 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
                   class="chat-action-button"
                   chroming="borderless"
                   display="icons"
-                  title="Saved Messages"
+                  title={showSavedMessages ? "Back to Chat" : "Saved Messages"}
                   onojAction={toggleSavedMessages}
                 >
-                  <span slot="startIcon" class="oj-ux-ico-bookmark"></span>
+                  <span
+                    slot="startIcon"
+                    class={
+                      showSavedMessages
+                        ? "oj-ux-ico-arrow-left"
+                        : "oj-ux-ico-bookmark"
+                    }
+                  ></span>
                 </oj-button>
-                <oj-button
-                  class="chat-action-button"
-                  chroming="borderless"
-                  display="icons"
-                  title="Clear Chat"
-                  onojAction={clearChat}
-                >
-                  <span slot="startIcon" class="oj-ux-ico-refresh"></span>
-                </oj-button>
-                <oj-button
-                  class="chat-close-button"
-                  chroming="borderless"
-                  display="icons"
-                  title="Close Chat"
-                  onojAction={onClose}
-                >
-                  <span slot="startIcon" class="oj-ux-ico-close"></span>
-                </oj-button>
+                {!showSavedMessages && (
+                  <>
+                    <oj-button
+                      class="chat-action-button"
+                      chroming="borderless"
+                      display="icons"
+                      title="Clear Chat"
+                      onojAction={clearChat}
+                    >
+                      <span slot="startIcon" class="oj-ux-ico-refresh"></span>
+                    </oj-button>
+                  </>
+                )}
+                    <oj-button
+                      class="chat-close-button"
+                      chroming="borderless"
+                      display="icons"
+                      title="Close Chat"
+                      onojAction={onClose}
+                    >
+                      <span slot="startIcon" class="oj-ux-ico-close"></span>
+                    </oj-button>
               </div>
             </div>
           </div>
 
           {/* Chat Messages */}
           <div class="chat-body">
-            <div class="chat-messages-container">
-              <div class="chat-messages">
-                {messages.map((message) => (
-                  <div
-                    key={message.id}
-                    class={`chat-message ${message.isUser ? "user-message" : "ai-message"}`}
-                  >
-                    <div class="message-wrapper">
-                      <div class="message-content">
+            {showSavedMessages ? (
+              <div class="saved-messages-view">
+                <div class="saved-messages-header">
+                  <h3 class="saved-messages-title">Your Saved Messages</h3>
+                  <p class="saved-messages-subtitle">
+                    Click on any message to use it
+                  </p>
+                </div>
+                <div class="saved-messages-list">
+                  {user?.saved_messages?.length === 0 ? (
+                    <div class="no-saved-messages">
+                      <span class="no-saved-messages-icon">📌</span>
+                      <p>No saved messages yet</p>
+                      <p class="no-saved-messages-hint">
+                        Save user messages to quickly access them later
+                      </p>
+                    </div>
+                  ) : (
+                    user?.saved_messages?.map((savedMessage, index) => (
+                      <div key={index} class="saved-message-item">
                         <div
-                          class="message-text"
-                          style={{
-                            whiteSpace: "pre-wrap",
-                            wordBreak: "break-word",
-                          }}
+                          class="saved-message-content"
+                          onClick={() => loadSavedMessage(savedMessage)}
                         >
-                          {message.text}
+                          <div class="saved-message-text">{savedMessage}</div>
                         </div>
-                        <div class="message-time">
-                          {formatTime(message.timestamp)}
-                        </div>
+                        <oj-button
+                          class="unsave-message-button"
+                          chroming="borderless"
+                          display="icons"
+                          size="sm"
+                          title="Remove saved message"
+                          onojAction={() => saveOrUnsaveMessage(savedMessage)}
+                        >
+                          <span slot="startIcon" class="oj-ux-ico-close"></span>
+                        </oj-button>
                       </div>
-                      {message.isUser && (
-                        <div class="message-actions">
-                          <oj-button
-                            class="save-message-button"
-                            chroming="borderless"
-                            display="icons"
-                            size="sm"
-                            title="Save message"
-                            onojAction={() => saveMessage(message.text)}
-                          >
-                            <span
-                              slot="startIcon"
-                              class="oj-ux-ico-bookmark"
-                            ></span>
-                          </oj-button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-
-                {/* Typing indicator */}
-                {isTyping && (
-                  <div class="chat-message ai-message typing-indicator">
-                    <div class="message-wrapper">
-                      <div class="message-content">
-                        <div class="typing-dots">
-                          <span></span>
-                          <span></span>
-                          <span></span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div ref={messagesEndRef} />
+                    ))
+                  )}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div class="chat-messages-container">
+                <div class="chat-messages">
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      class={`chat-message ${message.isUser ? "user-message" : "ai-message"}`}
+                    >
+                      <div class="message-wrapper">
+                        <div class="message-content">
+                          <div
+                            class="message-text"
+                            style={{
+                              whiteSpace: "pre-wrap",
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            {message.text}
+                          </div>
+                          <div class="message-time">
+                            {formatTime(message.timestamp)}
+                          </div>
+                        </div>
+                        {message.isUser && (
+                          <div class="message-actions">
+                            <oj-button
+                              class="save-message-button"
+                              chroming="borderless"
+                              display="icons"
+                              size="sm"
+                              title={
+                                isMessageSaved(message.text)
+                                  ? "Unsave message"
+                                  : "Save message"
+                              }
+                              onojAction={() =>
+                                saveOrUnsaveMessage(message.text)
+                              }
+                            >
+                              <span slot="startIcon">
+                                {isMessageSaved(message.text) ? (
+                                  <svg
+                                    viewBox="0 0 24 24"
+                                    width="16"
+                                    height="16"
+                                    fill="currentColor"
+                                    style="display: inline-block; vertical-align: middle;"
+                                  >
+                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+                                  </svg>
+                                ) : (
+                                  <span class="oj-ux-ico-bookmark"></span>
+                                )}
+                              </span>
+                            </oj-button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {/* Typing indicator */}
+                  {isTyping && (
+                    <div class="chat-message ai-message typing-indicator">
+                      <div class="message-wrapper">
+                        <div class="message-content">
+                          <div class="typing-dots">
+                            <span></span>
+                            <span></span>
+                            <span></span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}{" "}
+                  <div ref={messagesEndRef} />
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Chat Input */}
-          <div class="chat-footer">
-            <div class="chat-input-form">
-              <oj-input-text
-                ref={inputRef}
-                class="chat-input"
-                value={inputValue}
-                placeholder="Type your message..."
-                onkeydown={handleKeyPress}
-                onrawValueChanged={(e: CustomEvent) =>
-                  setInputValue(e.detail.value)
-                }
-              ></oj-input-text>
-              <oj-button
-                class="chat-send-button"
-                chroming="callToAction"
-                disabled={!inputValue.trim()}
-                onojAction={handleSendClick}
-                title="Send message"
-              >
-                <span class="oj-ux-ico-send"></span>
-              </oj-button>
-            </div>
-          </div>
-        </div>
-
-        {/* Saved Messages Popup */}
-        {showSavedMessages && (
-          <div
-            class="saved-messages-overlay"
-            onClick={() => setShowSavedMessages(false)}
-          >
-            <div
-              class="saved-messages-panel"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div class="saved-messages-header">
-                <h4 class="saved-messages-title">Saved Messages</h4>
+          {!showSavedMessages && (
+            <div class="chat-footer">
+              <div class="chat-input-form">
+                <oj-input-text
+                  ref={inputRef}
+                  class="chat-input"
+                  value={inputValue}
+                  placeholder="Type your message..."
+                  onkeydown={handleKeyPress}
+                  onrawValueChanged={(e: CustomEvent) => setInputValue(e.detail.value)}
+                ></oj-input-text>
                 <oj-button
-                  class="saved-messages-close"
-                  chroming="borderless"
-                  display="icons"
-                  title="Close"
-                  onojAction={() => setShowSavedMessages(false)}
+                  class="chat-send-button"
+                  chroming="callToAction"
+                  disabled={!inputValue.trim()}
+                  onojAction={handleSendClick}
+                  title="Send message"
                 >
-                  <span slot="startIcon" class="oj-ux-ico-close"></span>
+                  <span class="oj-ux-ico-send"></span>
                 </oj-button>
               </div>
-              <div class="saved-messages-content">
-                {user?.saved_messages?.length === 0 ? (
-                  <div class="no-saved-messages">
-                    <span class="no-saved-messages-icon">📌</span>
-                    <p>No saved messages yet</p>
-                    <p class="no-saved-messages-hint">
-                      Save user messages to quickly access them later
-                    </p>
-                  </div>
-                ) : (
-                  <div class="saved-messages-list">
-                    {user?.saved_messages?.map((savedMessage, index) => (
-                      <div
-                        key={index}
-                        class="saved-message-item"
-                        onClick={() => loadSavedMessage(savedMessage)}
-                      >
-                        <div class="saved-message-text">{savedMessage}</div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </>
   );

@@ -47,3 +47,29 @@ export const handleSaveMessage = async (req: Request, res: Response) => {
 
   res.json(updatedUser);
 };
+
+export const handleUnsaveMessage = async (req: Request, res: Response) => {
+  const { message } = req.body;
+
+  const user = req.user;
+
+  console.log("Message received to unsave:", message);
+
+  if (!user) {
+    res.status(401).json({ error: "Unauthorized user" });
+    return;
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    user.id,
+    { $pull: { saved_messages: message } },
+    { new: true }
+  ).select("saved_messages"); 
+
+  if (!updatedUser) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  res.json(updatedUser);
+};
