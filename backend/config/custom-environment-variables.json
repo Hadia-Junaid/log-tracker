@@ -44,6 +44,9 @@
   },
   "openai":{
     "apiKey": "OPENAI_API_KEY"
+  },
+  "gemini":{
+    "apiKey": "GEMINI_API_KEY"
   }
   
 }

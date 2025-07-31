@@ -233,35 +233,6 @@ export default function Chatbot(props: Props) {
 
   return (
     <div class="chatbot-container">
-      <div class="chatbot-header">
-        <div class="chatbot-title">
-          <span class="oj-icon oj-ux-ico-chat"></span>
-          <h2>AI Assistant</h2>
-          <span class="mcp-badge">
-            <span class="oj-icon oj-ux-ico-connection"></span>
-            MCP
-          </span>
-        </div>
-        <div class="chatbot-actions">
-          <button
-            class="oj-button oj-button-text"
-            onClick={() => setShowMCPConfig(!showMCPConfig)}
-            title="MCP Configuration"
-          >
-            <span class="oj-icon oj-ux-ico-settings"></span>
-            MCP
-          </button>
-          <button
-            class="oj-button oj-button-text"
-            onClick={clearChatHistory}
-            disabled={messages.length === 0}
-          >
-            <span class="oj-icon oj-ux-ico-delete"></span>
-            Clear History
-          </button>
-        </div>
-      </div>
-
       {showMCPConfig && (
         <div class="mcp-config-panel">
           <h3>MCP Configuration</h3>
@@ -413,6 +384,27 @@ export default function Chatbot(props: Props) {
           Press Enter to send, Shift+Enter for new line
           {" • MCP Mode Active"}
           {mcpStatus?.mongoDBStatus?.connected && " • MongoDB Connected"}
+        </div>
+      </div>
+
+      <div class="chatbot-footer">
+        <div class="chatbot-title">
+          <span class="oj-icon oj-ux-ico-chat"></span>
+          <h2>AI Assistant</h2>
+          <span class="mcp-badge">
+            <span class="oj-icon oj-ux-ico-connection"></span>
+            MCP
+          </span>
+        </div>
+        <div class="chatbot-actions">
+         
+          <button
+            class="oj-button oj-button-text"
+            onClick={clearChatHistory}
+            disabled={messages.length === 0}
+          >
+            Clear History
+          </button>
         </div>
       </div>
     </div>

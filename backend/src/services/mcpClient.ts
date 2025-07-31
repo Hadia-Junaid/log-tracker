@@ -195,32 +195,7 @@ export class MCPClient extends EventEmitter {
     }
   }
 
-  /**
-   * Check if user has access to a specific collection/database
-   */
-  private async checkAccess(userContext: UserContext, database: string, collection?: string): Promise<boolean> {
-    // Admin users have access to everything
-    if (userContext.isAdmin) {
-      return true;
-    }
-
-    // For non-admin users, only allow LOGS and USER collections
-    if (database === 'test') {
-      if (collection === 'logs') {
-        return true; // Users can query logs (will be filtered by application_id)
-      }
-      
-      if (collection === 'users') {
-        return true; // Users can query their own user data (will be filtered by _id)
-      }
-      
-      // Block access to all other collections for non-admin users
-      return false;
-    }
-
-    return false;
-  }
-
+  
   /**
    * Convert string IDs to MongoDB ObjectID format for MCP server
    */
@@ -248,7 +223,7 @@ export class MCPClient extends EventEmitter {
     if (toolName === 'find') {
       const { database, collection, filter = {} } = arguments_;
       
-      if (database === 'log-tracker') {
+      if (database === 'log-tracker' || database === 'test') {
         if (collection === 'applications') {
           // Users can only see applications assigned to their groups
           return {
@@ -646,6 +621,34 @@ export class MCPClient extends EventEmitter {
         console.log(`Applied access control for user ${userContext.userEmail} (Admin: ${userContext.isAdmin})`);
       }
 
+      // Add automatic fields for insert operations
+      if (toolName === 'insert-many' && finalArguments.documents) {
+        const now = new Date();
+        finalArguments.documents = finalArguments.documents.map((doc: any) => ({
+          ...doc,
+          createdAt: { $date: now.toISOString() }, // MongoDB Date format
+          updatedAt: { $date: now.toISOString() }, // MongoDB Date format
+          __v: 0
+        }));
+        console.log(`Added automatic fields (createdAt, updatedAt, __v) to ${finalArguments.documents.length} documents`);
+      }
+
+      // Add automatic updatedAt field for update operations
+      if (toolName === 'update-many' && finalArguments.update) {
+        const now = new Date();
+        // If update uses $set, add updatedAt to it
+        if (finalArguments.update.$set) {
+          finalArguments.update.$set.updatedAt = { $date: now.toISOString() }; // MongoDB Date format
+        } else {
+          // If no $set, create one with updatedAt
+          finalArguments.update = {
+            ...finalArguments.update,
+            $set: { updatedAt: { $date: now.toISOString() } } // MongoDB Date format
+          };
+        }
+        console.log(`Added automatic updatedAt field to update operation`);
+      }
+
       const callToolMessage = {
         jsonrpc: '2.0',
         id: Date.now(),
@@ -771,6 +774,11 @@ ${userContext.isAdmin ? `
 
 DATABASE: "test" (MongoDB Atlas cluster)
 
+⚠️ IMPORTANT SCHEMA NOTES:
+- All collections automatically include createdAt, updatedAt, and __v fields
+- The MCP client will automatically add these fields to insert and update operations
+- Only include the required business fields when creating documents - the system handles timestamps automatically
+
 COLLECTIONS AND SCHEMAS:
 
 1. users Collection:
@@ -783,7 +791,9 @@ COLLECTIONS AND SCHEMAS:
      autoRefreshTime: Number (default: 30)
      logsPerPage: Number (default: 25)
    }
-   - timestamps: createdAt, updatedAt
+   - createdAt: Date (auto-generated timestamp)
+   - updatedAt: Date (auto-generated timestamp)
+   - __v: Number (version key, auto-generated)
 
 2. usergroups Collection:
    - _id: ObjectId
@@ -792,7 +802,9 @@ COLLECTIONS AND SCHEMAS:
    - is_active: Boolean (default: true)
    - assigned_applications: [ObjectId] (references Application)
    - members: [ObjectId] (references User)
-   - timestamps: createdAt, updatedAt
+   - createdAt: Date (auto-generated timestamp)
+   - updatedAt: Date (auto-generated timestamp)
+   - __v: Number (version key, auto-generated)
    - Indexes: { members: 1 }, { assigned_applications: 1 }, { is_active: 1 }
 
 3. applications Collection:
@@ -802,7 +814,9 @@ COLLECTIONS AND SCHEMAS:
    - environment: String (required)
    - isActive: Boolean (default: true) ⚠️ NOTE: Field is "isActive", not "status"
    - description: String (required)
-   - timestamps: createdAt, updatedAt
+   - createdAt: Date (auto-generated timestamp)
+   - updatedAt: Date (auto-generated timestamp)
+   - __v: Number (version key, auto-generated)
 
 4. logs Collection:
    - _id: ObjectId
@@ -810,7 +824,9 @@ COLLECTIONS AND SCHEMAS:
    - log_level: String (error, warn, info, debug)
    - message: String
    - timestamp: Date
-   - timestamps: createdAt, updatedAt
+   - createdAt: Date (auto-generated timestamp)
+   - updatedAt: Date (auto-generated timestamp)
+   - __v: Number (version key, auto-generated)
 
 5. atriskrules Collection:
    - _id: ObjectId
@@ -819,7 +835,9 @@ COLLECTIONS AND SCHEMAS:
    - unit: String
    - time: Number
    - count: Number
-   - timestamps: createdAt, updatedAt
+   - createdAt: Date (auto-generated timestamp)
+   - updatedAt: Date (auto-generated timestamp)
+   - __v: Number (version key, auto-generated)
 
 🛠️ AVAILABLE MONGODB TOOLS:
 ${this.tools.map(tool => {
@@ -885,6 +903,15 @@ APPLICATION CREATION PATTERNS:
      "isActive": true,
      "description": "Inventory management service"
    }]}
+   
+   ✅ CORRECT EXAMPLE (The system will automatically add createdAt, updatedAt, and __v fields):
+   {"database": "test", "collection": "applications", "documents": [{
+     "name": "InventoryService",
+     "hostname": "localhost", 
+     "environment": "Development",
+     "isActive": true,
+     "description": "Inventory management service"
+   }]}
 
 2. "Create app 'StockService' and assign it to group 'Ops'" → 
    Step 1: Create application
@@ -900,6 +927,8 @@ USER GROUP CREATION PATTERNS:
      "assigned_applications": [],
      "members": []
    }]}
+   
+   ✅ The system will automatically add createdAt, updatedAt, and __v fields
 
 4. "Create admin group 'System Administrators'" → 
    insert-many usergroups:
@@ -910,6 +939,8 @@ USER GROUP CREATION PATTERNS:
      "assigned_applications": [],
      "members": []
    }]}
+   
+   ✅ The system will automatically add createdAt, updatedAt, and __v fields
 
 === 3. NATURAL LANGUAGE EDITING & PERMISSIONS ===
 
@@ -1127,6 +1158,9 @@ ${userContext.isAdmin ? `
    - User groups have "members" array (not "userId")
    - Applications have "isActive" field (not "status")
    - Logs have "log_level" field (not "level")
+9. ✅ AUTOMATIC FIELD HANDLING: The system automatically adds required fields:
+   - createdAt, updatedAt, and __v fields are added automatically to all insert operations
+   - Only include the required business fields: name, hostname, environment, isActive, description for applications
 
 🎨 RESPONSE FORMATTING EXAMPLES:
 
@@ -1177,7 +1211,9 @@ For complex operations involving multiple collections:
 
 📝 CREATION & EDITING BEST PRACTICES:
 • When creating applications: Always include name, hostname, environment, isActive, description
+  ✅ The system will automatically add createdAt, updatedAt, and __v fields
 • When creating user groups: Always include name, is_admin, is_active, empty arrays for members/assigned_applications
+  ✅ The system will automatically add createdAt, updatedAt, and __v fields
 • When adding users to groups: First find user by email, then update group's members array
 • When assigning apps to groups: First find app by name, then update group's assigned_applications array
 • When editing: Use exact field names from schema (isActive, not status; members, not userId)

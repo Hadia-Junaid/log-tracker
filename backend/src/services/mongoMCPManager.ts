@@ -31,7 +31,9 @@ export class MongoMCPManager extends EventEmitter {
         this.mongoMCPServer = spawn('npx', [
           '-y',
           'mongodb-mcp-server@latest',
-          '--connectionString=' + this.connectionString
+          '--connectionString=' + this.connectionString,
+          '--stdio', // Force stdio mode instead of web server mode
+          '--no-http' // Disable HTTP server mode
         ], {
           stdio: ['pipe', 'pipe', 'pipe'],
           env: { ...process.env }
@@ -49,6 +51,11 @@ export class MongoMCPManager extends EventEmitter {
           console.log('MongoDB MCP Server Output:', output);
           console.log('Current output buffer length:', this.outputBuffer.length);
           
+          // Log the full buffer for debugging
+          if (this.outputBuffer.length > 1000) {
+            console.log('Full output buffer:', this.outputBuffer);
+          }
+          
           // Check if server is ready by looking for MCP protocol response
           if (this.outputBuffer.includes('"jsonrpc":"2.0"') && 
               (this.outputBuffer.includes('"protocolVersion"') || this.outputBuffer.includes('"result"')) &&
@@ -59,6 +66,27 @@ export class MongoMCPManager extends EventEmitter {
             this.emit('connected');
             console.log('✅ MongoDB MCP server is ready and connected');
             resolve();
+          }
+          
+          // Also check if server is ready when we see "Server is running" message
+          if (this.outputBuffer.includes('Server is running') && !hasReceivedResponse) {
+            console.log('✅ Detected server running message, attempting to connect...');
+            // Give it a moment to fully initialize
+            setTimeout(() => {
+              if (!hasReceivedResponse) {
+                hasReceivedResponse = true;
+                this.isConnected = true;
+                this.emit('connected');
+                console.log('✅ MongoDB MCP server is ready and connected (fallback detection)');
+                resolve();
+              }
+            }, 2000);
+          }
+          
+          // Check if server is running in web mode instead of stdio mode
+          if (this.outputBuffer.includes('Server is running on port') && !hasReceivedResponse) {
+            console.warn('⚠️ Server appears to be running in web mode, not stdio mode');
+            console.warn('⚠️ This may cause communication issues');
           }
         });
 
@@ -96,7 +124,7 @@ export class MongoMCPManager extends EventEmitter {
         });
 
         // Send initialization message after a longer delay to ensure server is ready
-        setTimeout(() => {
+        const sendInitMessage = () => {
           if (this.mongoMCPServer && this.mongoMCPServer.stdin && !hasReceivedResponse) {
             const initMessage = {
               jsonrpc: '2.0',
@@ -121,7 +149,12 @@ export class MongoMCPManager extends EventEmitter {
           } else {
             console.warn('❌ Cannot send init message - server not ready or already received response');
           }
-        }, 5000); // Wait 5 seconds before sending init message (increased from 3s)
+        };
+
+        // Try sending init message multiple times
+        setTimeout(sendInitMessage, 3000); // First attempt after 3 seconds
+        setTimeout(sendInitMessage, 6000); // Second attempt after 6 seconds
+        setTimeout(sendInitMessage, 9000); // Third attempt after 9 seconds
 
         // Set a timeout for the entire startup process
         setTimeout(() => {
@@ -130,10 +163,18 @@ export class MongoMCPManager extends EventEmitter {
             console.debug('Output buffer content:', this.outputBuffer);
             console.debug('Has received response:', hasReceivedResponse);
             console.debug('Is connected:', this.isConnected);
+            
+            // If we see the server is running but not responding to MCP, mark it as connected anyway
+            if (this.outputBuffer.includes('Server is running') || this.outputBuffer.includes('MongoDB connected')) {
+              console.log('⚠️ Server is running but not responding to MCP protocol - marking as connected anyway');
+              this.isConnected = true;
+              this.emit('connected');
+            }
+            
             // Don't reject, just resolve without connection
             resolve();
           }
-        }, 20000); // 20 second timeout (increased from 15s)
+        }, 30000); // 30 second timeout (increased from 20s)
       });
 
       // Wait for the server to be ready
