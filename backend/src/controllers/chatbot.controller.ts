@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { mcpClient } from '../services/mcpClient';
 import { ChatMessage } from '../models/ChatMessage';
+import User from '../models/User';
 import { v4 as uuidv4 } from 'uuid';
 import config from 'config';
 
@@ -249,6 +250,120 @@ export const restartMongoDBServer = async (req: Request, res: Response): Promise
     res.status(500).json({ 
       success: false, 
       error: 'Failed to restart MongoDB MCP server',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+}; 
+
+export const savePrompt = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).user?.id;
+    const { prompt } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    if (!prompt || typeof prompt !== 'string') {
+      res.status(400).json({ error: 'Prompt is required and must be a string' });
+      return;
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Check if prompt already exists to avoid duplicates
+    if (!user.saved_messages.includes(prompt)) {
+      user.saved_messages.push(prompt);
+      await user.save();
+    }
+
+    res.json({
+      success: true,
+      message: 'Prompt saved successfully',
+      savedPrompts: user.saved_messages
+    });
+
+  } catch (error) {
+    console.error('Error saving prompt:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+export const getSavedPrompts = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    res.json({
+      success: true,
+      savedPrompts: user.saved_messages || []
+    });
+
+  } catch (error) {
+    console.error('Error getting saved prompts:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+};
+
+export const deleteSavedPrompt = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const userId = (req as any).user?.id;
+    const { prompt } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ error: 'User not authenticated' });
+      return;
+    }
+
+    if (!prompt || typeof prompt !== 'string') {
+      res.status(400).json({ error: 'Prompt is required and must be a string' });
+      return;
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    // Remove the prompt from saved_messages
+    user.saved_messages = user.saved_messages.filter(savedPrompt => savedPrompt !== prompt);
+    await user.save();
+
+    res.json({
+      success: true,
+      message: 'Prompt deleted successfully',
+      savedPrompts: user.saved_messages
+    });
+
+  } catch (error) {
+    console.error('Error deleting prompt:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
   }

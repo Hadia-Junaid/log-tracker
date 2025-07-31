@@ -2,6 +2,7 @@ import { h } from "preact";
 import { useEffect, useState, useRef } from "preact/hooks";
 import { ChatbotAPI, ChatHistoryResponse, MCPStatusResponse } from "../api/chatbot";
 import { useUser } from "../context/UserContext";
+import SavedPromptsDialog from "./SavedPromptsDialog";
 import "../styles/floatingChat.css";
 
 interface ChatMessage {
@@ -51,6 +52,7 @@ export default function FloatingChat() {
   const [error, setError] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string>("");
   const [mcpStatus, setMcpStatus] = useState<MCPStatusResponse | null>(null);
+  const [showSavedPrompts, setShowSavedPrompts] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
 
@@ -193,6 +195,19 @@ export default function FloatingChat() {
     }
   };
 
+  const savePrompt = async (prompt: string) => {
+    try {
+      await ChatbotAPI.savePrompt(prompt);
+    } catch (err: any) {
+      console.error("Failed to save prompt:", err);
+      setError(err.response?.data?.error || "Failed to save prompt");
+    }
+  };
+
+  const handleSelectSavedPrompt = (prompt: string) => {
+    setInputMessage(prompt);
+  };
+
   const handleKeyPress = (e: KeyboardEvent) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -230,6 +245,13 @@ export default function FloatingChat() {
               </span>
             </div>
             <div class="chat-actions">
+              <button
+                class="oj-button oj-button-text"
+                onClick={() => setShowSavedPrompts(true)}
+                title="Saved Prompts"
+              >
+                <span class="oj-icon oj-ux-ico-bookmark"></span>
+              </button>
               <button
                 class="oj-button oj-button-text"
                 onClick={clearChatHistory}
@@ -288,7 +310,16 @@ export default function FloatingChat() {
                 <div class="message-content">
                   {message.isUser ? (
                     <div class="user-bubble">
-                      <p>{message.message}</p>
+                      <div class="user-message-header">
+                        <p>{message.message}</p>
+                        <button
+                          class="oj-button oj-button-text save-prompt-button"
+                          onClick={() => savePrompt(message.message)}
+                          title="Save this prompt"
+                        >
+                          <span class="oj-icon oj-ux-ico-bookmark"></span>
+                        </button>
+                      </div>
                       <span class="message-time">{formatTimestamp(message.timestamp)}</span>
                     </div>
                   ) : (
@@ -364,6 +395,12 @@ export default function FloatingChat() {
           </div>
         </div>
       )}
+
+      <SavedPromptsDialog
+        isOpen={showSavedPrompts}
+        onClose={() => setShowSavedPrompts(false)}
+        onSelectPrompt={handleSelectSavedPrompt}
+      />
     </div>
   );
 } 

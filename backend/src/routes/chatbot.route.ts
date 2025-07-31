@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authenticate } from '../middleware/auth';
 import { requireAdmin } from '../middleware/adminAuth';
 import { validateBody } from '../middleware/validate';
-import { chatbotMessageSchema, mcpConnectSchema } from '../validators/chatbot';
+import { chatbotMessageSchema, mcpConnectSchema, savePromptSchema, deletePromptSchema } from '../validators/chatbot';
 import { 
   processChatbotMessage,
   getChatHistory,
@@ -10,7 +10,10 @@ import {
   connectMCPServer,
   disconnectMCPServer,
   getMCPStatus,
-  restartMongoDBServer
+  restartMongoDBServer,
+  savePrompt,
+  getSavedPrompts,
+  deleteSavedPrompt
 } from '../controllers/chatbot.controller';
 
 const router = Router();
@@ -23,6 +26,16 @@ router.get('/history', authenticate, getChatHistory);
 
 // DELETE /api/chatbot/history - Clear chat history for the authenticated user
 router.delete('/history', authenticate, clearChatHistory);
+
+// Saved prompts endpoints
+// POST /api/chatbot/save-prompt - Save a prompt
+router.post('/save-prompt', authenticate, validateBody(savePromptSchema), savePrompt);
+
+// GET /api/chatbot/saved-prompts - Get saved prompts
+router.get('/saved-prompts', authenticate, getSavedPrompts);
+
+// DELETE /api/chatbot/delete-prompt - Delete a saved prompt
+router.delete('/delete-prompt', authenticate, validateBody(deletePromptSchema), deleteSavedPrompt);
 
 // MCP-specific endpoints
 // POST /api/chatbot/mcp/connect - Connect to an MCP server

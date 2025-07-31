@@ -56,6 +56,11 @@ export interface MCPConnectResponse {
   }>;
 }
 
+export interface SavedPromptsResponse {
+  success: boolean;
+  savedPrompts: string[];
+}
+
 export class ChatbotAPI {
   // Send a message to the chatbot (MCP mode only)
   static async sendMessage(
@@ -84,6 +89,24 @@ export class ChatbotAPI {
   // Clear chat history
   static async clearChatHistory(): Promise<{ success: boolean; message: string; deletedCount: number }> {
     const response = await axios.delete('/chatbot/history');
+    return response.data;
+  }
+
+  // Save a prompt
+  static async savePrompt(prompt: string): Promise<{ success: boolean; message: string; savedPrompts: string[] }> {
+    const response = await axios.post('/chatbot/save-prompt', { prompt });
+    return response.data;
+  }
+
+  // Get saved prompts
+  static async getSavedPrompts(): Promise<SavedPromptsResponse> {
+    const response = await axios.get('/chatbot/saved-prompts');
+    return response.data;
+  }
+
+  // Delete a saved prompt
+  static async deleteSavedPrompt(prompt: string): Promise<{ success: boolean; message: string; savedPrompts: string[] }> {
+    const response = await axios.delete('/chatbot/delete-prompt', { data: { prompt } });
     return response.data;
   }
 
