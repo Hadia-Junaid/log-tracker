@@ -984,15 +984,22 @@ PERSONAL CONTEXT QUERIES:
     find applications where _id is in user's assigned apps:
     {"database": "test", "collection": "applications", "filter": {"_id": {"$in": [${userContext.assignedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}}}
 
-13. "Show my active applications" → 
+13. "List members in Quality Assurance group" → 
+    Step 1: Find group by name:
+    {"database": "test", "collection": "usergroups", "filter": {"name": "Quality Assurance"}}
+    Step 2: For each member ID in the result, make follow-up query to get user name:
+    {"database": "test", "collection": "users", "filter": {"_id": {"$oid": "MEMBER_ID"}}}
+    ⚠️ CRITICAL: You MUST make follow-up queries to resolve all member IDs to names
+
+14. "Show my active applications" → 
     find applications where _id is in assigned apps AND isActive is true:
     {"database": "test", "collection": "applications", "filter": {"_id": {"$in": [${userContext.assignedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}, "isActive": true}}
 
-14. "Show my pinned apps" → 
+15. "Show my pinned apps" → 
     find applications where _id is in user's pinned apps:
     {"database": "test", "collection": "applications", "filter": {"_id": {"$in": [${userContext.pinnedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}}}
 
-15. "Show my user profile" → 
+16. "Show my user profile" → 
     find user document with user ID:
     {"database": "test", "collection": "users", "filter": {"_id": {"$oid": "${userContext.userId}"}}}
 
@@ -1168,9 +1175,7 @@ ${userContext.isAdmin ? `
 ❌ BAD: "1. **Admin Group** (Admin) - **Active Status:** Yes - **Assigned Applications:** - GoCAR - GoCAD - **Created At:** July 2, 2025"
 ✅ GOOD: "You are a member of: Admin Group (Admin), Development Team"
 
-**Group Members Response:**
-❌ BAD: "The members of the 'admin group' are: 1. User ID: 68650fd57a72d0b64525da71 2. User ID: 686537574ddafa6df2987e26"
-✅ GOOD: "The members of the Admin Group are: John Doe, Jane Smith, Bob Johnson, Alice Brown, Mike Wilson, You (Bilal Salman)"
+
 
 **Applications Response:**
 ❌ BAD: "1. **GoCAR** - **Hostname:** localhost - **Environment:** Development - **Description:** This is a placeholder..."
@@ -1188,17 +1193,21 @@ When user asks "give me details" or "show me more info", then provide full data 
 - NEVER use bullet points (-, •, *)
 - NEVER use bold formatting (**text**)
 - NEVER show technical fields (Created At, Updated At, Active Status, IDs)
-- NEVER show User IDs - ALWAYS fetch and display user names instead
+- ⚠️ NEVER show User IDs - ALWAYS fetch and display user names instead
+- ⚠️ CRITICAL: When showing user group members, ALWAYS make follow-up queries to resolve User IDs to names
 - ALWAYS use simple comma-separated lists
 - ALWAYS focus on user-friendly information only
 
-👥 USER NAME RESOLUTION:
+👥 USER NAME RESOLUTION - CRITICAL REQUIREMENT:
 When displaying user information (members, users, etc.):
-1. If you see User IDs in results, ALWAYS make a follow-up query to get user names
-2. Use find query: {"database": "test", "collection": "users", "filter": {"_id": {"$oid": "USER_ID"}}}
-3. Extract the "name" field from the user document
-4. Display only the user names, never the IDs
-5. Example: Instead of "User ID: 68650fd57a72d0b64525da71", show "John Doe"
+1. ⚠️ ALWAYS make follow-up queries when you see User IDs in results
+2. ⚠️ NEVER display User IDs to the user - ALWAYS fetch and display user names
+3. ⚠️ For user group members: When you get a usergroups result with member IDs, IMMEDIATELY make follow-up queries to get each member's name
+4. Use find query: {"database": "test", "collection": "users", "filter": {"_id": {"$oid": "USER_ID"}}}
+5. Extract the "name" field from the user document
+6. Display only the user names, never the IDs
+7. Example: If usergroups query returns members: [{"$oid": "686537574ddafa6df2987e26"}, {"$oid": "6865076e568c37c6aa0e54bb"}], then make follow-up queries to get names for each ID
+8. ⚠️ CRITICAL: For "list members" or "show members" queries, you MUST make follow-up queries to resolve all User IDs to names
 
 🔧 MULTI-STEP OPERATION HANDLING:
 For complex operations involving multiple collections:
@@ -1250,69 +1259,116 @@ ${userContext && !userContext.isAdmin ? `
       const tokensUsed = response.usage?.total_tokens || 0;
 
       if (toolCalls.length > 0) {
-        const toolResults: MCPToolResult[] = [];
+        const allToolCalls: any[] = [];
+        const allToolResults: MCPToolResult[] = [];
+        let currentMessages = [...messages];
+        let currentToolCalls = toolCalls;
+        let totalTokensUsed = response.usage?.total_tokens || 0;
+        let maxIterations = 5; // Prevent infinite loops
+        let iteration = 0;
 
-        for (const toolCall of toolCalls) {
-          try {
-            // Parse arguments if they come as a string from OpenAI
-            let parsedArguments: any = toolCall.function.arguments;
-            if (typeof parsedArguments === 'string') {
-              try {
-                parsedArguments = JSON.parse(parsedArguments);
-              } catch (parseError) {
-                console.error('Failed to parse tool arguments:', parseError);
-                parsedArguments = {};
+        while (currentToolCalls.length > 0 && iteration < maxIterations) {
+          iteration++;
+          console.log(`Tool call iteration ${iteration}: ${currentToolCalls.length} tool calls`);
+          
+          const toolResults: MCPToolResult[] = [];
+
+          for (const toolCall of currentToolCalls) {
+            try {
+              // Parse arguments if they come as a string from OpenAI
+              let parsedArguments: any = toolCall.function.arguments;
+              if (typeof parsedArguments === 'string') {
+                try {
+                  parsedArguments = JSON.parse(parsedArguments);
+                } catch (parseError) {
+                  console.error('Failed to parse tool arguments:', parseError);
+                  parsedArguments = {};
+                }
               }
+              
+              // Call the MCP tool with user context for access control
+              const result = await this.callTool(toolCall.function.name, parsedArguments, userContext ?? undefined);
+              
+              // Ensure the result is properly stringified
+              let content: string;
+              if (result === null || result === undefined) {
+                content = JSON.stringify({ error: 'Tool returned null result' });
+              } else if (typeof result === 'string') {
+                content = result;
+              } else {
+                content = JSON.stringify(result);
+              }
+              
+              toolResults.push({
+                tool_call_id: toolCall.id,
+                role: 'tool',
+                content: content
+              });
+            } catch (error: any) {
+              console.error(`Error executing MCP tool ${toolCall.function.name}:`, error);
+              toolResults.push({
+                tool_call_id: toolCall.id,
+                role: 'tool',
+                content: JSON.stringify({ error: 'Failed to execute tool', details: error.message || 'Unknown error' })
+              });
             }
-            
-            // Call the MCP tool with user context for access control
-            const result = await this.callTool(toolCall.function.name, parsedArguments, userContext ?? undefined);
-            
-            // Ensure the result is properly stringified
-            let content: string;
-            if (result === null || result === undefined) {
-              content = JSON.stringify({ error: 'Tool returned null result' });
-            } else if (typeof result === 'string') {
-              content = result;
-            } else {
-              content = JSON.stringify(result);
-            }
-            
-            toolResults.push({
-              tool_call_id: toolCall.id,
-              role: 'tool',
-              content: content
-            });
-          } catch (error: any) {
-            console.error(`Error executing MCP tool ${toolCall.function.name}:`, error);
-            toolResults.push({
-              tool_call_id: toolCall.id,
-              role: 'tool',
-              content: JSON.stringify({ error: 'Failed to execute tool', details: error.message || 'Unknown error' })
-            });
+          }
+
+          // Add current tool calls and results to the overall tracking
+          allToolCalls.push(...currentToolCalls);
+          allToolResults.push(...toolResults);
+
+          // Update messages for next iteration
+          currentMessages = [
+            ...currentMessages,
+            { role: 'assistant', content: null, tool_calls: currentToolCalls },
+            ...toolResults
+          ];
+
+          // Check if AI wants to make more tool calls
+          const nextResponse = await this.openai.chat.completions.create({
+            model: 'gpt-4o-mini',
+            messages: currentMessages,
+            tools,
+            tool_choice: 'auto',
+            temperature: 0.7,
+            max_tokens: 1000
+          });
+
+          const nextAssistantMessage = nextResponse.choices[0].message;
+          currentToolCalls = nextAssistantMessage.tool_calls || [];
+          totalTokensUsed += nextResponse.usage?.total_tokens || 0;
+
+          // If no more tool calls, we're done
+          if (currentToolCalls.length === 0) {
+            return {
+              response: nextAssistantMessage.content || '',
+              toolCalls: allToolCalls.map(call => ({
+                name: call.function.name,
+                arguments: call.function.arguments,
+                result: allToolResults.find(r => r.tool_call_id === call.id)?.content
+              })),
+              tokensUsed: totalTokensUsed
+            };
           }
         }
 
-        // Get the final response with tool results
+        // If we hit max iterations, get final response
         const finalResponse = await this.openai.chat.completions.create({
           model: 'gpt-4o-mini',
-          messages: [
-            ...messages,
-            assistantMessage,
-            ...toolResults
-          ],
+          messages: currentMessages,
           temperature: 0.7,
           max_tokens: 1000
         });
 
         return {
           response: finalResponse.choices[0].message.content || '',
-          toolCalls: toolCalls.map(call => ({
+          toolCalls: allToolCalls.map(call => ({
             name: call.function.name,
             arguments: call.function.arguments,
-            result: toolResults.find(r => r.tool_call_id === call.id)?.content
+            result: allToolResults.find(r => r.tool_call_id === call.id)?.content
           })),
-          tokensUsed: (response.usage?.total_tokens || 0) + (finalResponse.usage?.total_tokens || 0)
+          tokensUsed: totalTokensUsed + (finalResponse.usage?.total_tokens || 0)
         };
       }
 
