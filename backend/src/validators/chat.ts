@@ -4,17 +4,14 @@ export const chatSchema = Joi.object({
   chat: Joi.array()
     .items(
       Joi.object({
-        role: Joi.string().valid("user", "assistant", "system").required(),
-        content: Joi.alternatives()
-          .try(
-            Joi.string().min(1),
-            Joi.array().items(
-              Joi.object({
-                type: Joi.string().valid("text").required(),
-                text: Joi.string().min(1).required(),
-              })
-            )
+        role: Joi.string().valid("user", "model").required(),
+        parts: Joi.array()
+          .items(
+            Joi.object({
+              text: Joi.string().min(1).required(),
+            })
           )
+          .min(1)
           .required(),
       })
     )

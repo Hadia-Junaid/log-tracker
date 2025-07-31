@@ -82,9 +82,9 @@ class MCPClient {
   }
 
   async processQuery(user: ChatUser, chat: any) {
-    const messages: any[] = chat;
+    const contents: any[] = chat;
 
-    console.log("Processing query for user:", user.email);
+    console.log("User chat contents:", JSON.stringify(contents, null, 2));
 
     const isAdmin = user.is_admin;
 
@@ -142,120 +142,126 @@ class MCPClient {
     const maxToolCalls = 6; // Limit to prevent infinite loops
     let toolCount = 0;
 
-    // Convert MCP tools to Gemini function declarations format
-    const toolDeclarations = userTools.map((tool) => {
-      // Sanitize the schema for Gemini compatibility
-      const sanitizeSchema = (schema: any): any => {
-        if (!schema || typeof schema !== "object") return {};
+    // // Convert MCP tools to Gemini function declarations format
+    // const toolDeclarations = userTools.map((tool) => {
+    //   // Sanitize the schema for Gemini compatibility
+    //   const sanitizeSchema = (schema: any): any => {
+    //     if (!schema || typeof schema !== "object") return {};
 
-        const sanitized: any = {};
+    //     const sanitized: any = {};
 
-        for (const [key, value] of Object.entries(schema)) {
-          if (typeof value === "object" && value !== null) {
-            const valueObj = value as any;
+    //     for (const [key, value] of Object.entries(schema)) {
+    //       if (typeof value === "object" && value !== null) {
+    //         const valueObj = value as any;
 
-            if (Array.isArray(value)) {
-              // Skip arrays that might contain complex structures
-              continue;
-            } else if (valueObj.hasOwnProperty("const")) {
-              // Convert const values to simple string type
-              sanitized[key] = { type: "string" };
-            } else if (
-              valueObj.hasOwnProperty("anyOf") ||
-              valueObj.hasOwnProperty("oneOf")
-            ) {
-              // Simplify union types to string
-              sanitized[key] = { type: "string" };
-            } else if (valueObj.type === "array") {
-              // Handle array types properly
-              sanitized[key] = {
-                type: "array",
-                items: valueObj.items
-                  ? sanitizeArrayItems(valueObj.items)
-                  : { type: "string" },
-              };
-            } else if (valueObj.hasOwnProperty("type")) {
-              // Keep simple types, recursively sanitize nested objects
-              sanitized[key] = {
-                type: valueObj.type,
-                ...(valueObj.properties
-                  ? { properties: sanitizeSchema(valueObj.properties) }
-                  : {}),
-                ...(valueObj.description
-                  ? { description: valueObj.description }
-                  : {}),
-              };
-            } else {
-              // For nested objects without type, recurse
-              const nested = sanitizeSchema(valueObj);
-              if (Object.keys(nested).length > 0) {
-                sanitized[key] = { type: "object", properties: nested };
-              }
-            }
-          } else {
-            // Keep primitive values as is
-            sanitized[key] = value;
-          }
-        }
+    //         if (Array.isArray(value)) {
+    //           // Skip arrays that might contain complex structures
+    //           continue;
+    //         } else if (valueObj.hasOwnProperty("const")) {
+    //           // Convert const values to simple string type
+    //           sanitized[key] = { type: "string" };
+    //         } else if (
+    //           valueObj.hasOwnProperty("anyOf") ||
+    //           valueObj.hasOwnProperty("oneOf")
+    //         ) {
+    //           // Simplify union types to string
+    //           sanitized[key] = { type: "string" };
+    //         } else if (valueObj.type === "array") {
+    //           // Handle array types properly
+    //           sanitized[key] = {
+    //             type: "array",
+    //             items: valueObj.items
+    //               ? sanitizeArrayItems(valueObj.items)
+    //               : { type: "string" },
+    //           };
+    //         } else if (valueObj.hasOwnProperty("type")) {
+    //           // Keep simple types, recursively sanitize nested objects
+    //           sanitized[key] = {
+    //             type: valueObj.type,
+    //             ...(valueObj.properties
+    //               ? { properties: sanitizeSchema(valueObj.properties) }
+    //               : {}),
+    //             ...(valueObj.description
+    //               ? { description: valueObj.description }
+    //               : {}),
+    //           };
+    //         } else {
+    //           // For nested objects without type, recurse
+    //           const nested = sanitizeSchema(valueObj);
+    //           if (Object.keys(nested).length > 0) {
+    //             sanitized[key] = { type: "object", properties: nested };
+    //           }
+    //         }
+    //       } else {
+    //         // Keep primitive values as is
+    //         sanitized[key] = value;
+    //       }
+    //     }
 
-        return sanitized;
-      };
+    //     return sanitized;
+    //   };
 
-      // Helper function to sanitize array items
-      const sanitizeArrayItems = (items: any): any => {
-        if (!items || typeof items !== "object") {
-          return { type: "string" };
-        }
+    //   // Helper function to sanitize array items
+    //   const sanitizeArrayItems = (items: any): any => {
+    //     if (!items || typeof items !== "object") {
+    //       return { type: "string" };
+    //     }
 
-        if (items.anyOf || items.oneOf) {
-          // Simplify complex union types to string
-          return { type: "string" };
-        }
+    //     if (items.anyOf || items.oneOf) {
+    //       // Simplify complex union types to string
+    //       return { type: "string" };
+    //     }
 
-        if (items.type) {
-          if (items.type === "object" && items.properties) {
-            return {
-              type: "object",
-              properties: sanitizeSchema(items.properties),
-            };
-          }
-          return { type: items.type };
-        }
+    //     if (items.type) {
+    //       if (items.type === "object" && items.properties) {
+    //         return {
+    //           type: "object",
+    //           properties: sanitizeSchema(items.properties),
+    //         };
+    //       }
+    //       return { type: items.type };
+    //     }
 
-        // Default to string for unknown array item types
-        return { type: "string" };
-      };
+    //     // Default to string for unknown array item types
+    //     return { type: "string" };
+    //   };
 
-      return {
-        name: tool.name,
-        description: tool.description || "",
-        parameters: {
-          type: Type.OBJECT,
-          properties: sanitizeSchema(tool.input_schema?.properties || {}),
-          required: tool.input_schema?.required || [],
-        },
-      };
-    });
+    //   return {
+    //     name: tool.name,
+    //     description: tool.description || "",
+    //     parameters: {
+    //       type: Type.OBJECT,
+    //       properties: sanitizeSchema(tool.input_schema?.properties || {}),
+    //       required: tool.input_schema?.required || [],
+    //     },
+    //   };
+    // });
 
-    console.log(
-      "Sanitized tool declarations:",
-      JSON.stringify(toolDeclarations, null, 2)
-    );
+    // // console.log(
+    // //   "Sanitized tool declarations:",
+    // //   JSON.stringify(toolDeclarations, null, 2)
+    // // );
 
-    // Get the latest user message from chat
-    const latestMessage = messages[messages.length - 1];
-    const userQuery = latestMessage?.content || "Help me with my query";
-    const contents: Array<{ role: string; parts: Array<any> }> = [
-      { role: "user", parts: [{ text: userQuery }] },
-    ];
+    const toolDeclarations = userTools.length
+      ? [
+          {
+            functionDeclarations: userTools.map((tool) => ({
+              name: tool.name,
+              description: tool.description || "",
+              // Pass the raw input_schema—Gemini will accept `{ properties, required }`
+              parameters: tool.input_schema
+            })),
+          },
+        ]
+      : undefined;
 
     while (hasToolUse && toolCount < maxToolCalls) {
-      // 1) Ask Gemini
+      // Ask Gemini
       const response = await this.gemini.models.generateContent({
         model: "gemini-2.5-flash",
         contents,
         config: {
-          tools: [{ functionDeclarations: toolDeclarations }],
+          tools: toolDeclarations,
           systemInstruction: `You are a helpful assistant that can call MongoDB MCP tools as part of a logging microservice. Currently, you are working with the db called "test".
         Use tools only when necessary. When you have enough information to answer, stop calling tools and show the final response to the user.
         If you need to access data to answer a query, use the collection-schema tool before fetching any data from a collection to understand the schema and field names.

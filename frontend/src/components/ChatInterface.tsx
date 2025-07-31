@@ -99,17 +99,22 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     setIsTyping(true);
 
     // Copy last 4 messages but not the welcome message
-    const filteredMessages = messages.filter((msg) => msg.id !== "welcome-new" && msg.id !== "welcome");
+    const filteredMessages = messages.filter(
+      (msg) => msg.id !== "welcome-new" && msg.id !== "welcome"
+    );
     const previousChat = filteredMessages.slice(-4).map((msg) => ({
-      role: msg.isUser ? "user" : "assistant",
+      role: msg.isUser ? "user" : "model",
       content: msg.text,
     }));
 
-
-    //Add the current message to the chat context
+    // Build Gemini contents format
     const currentChat = [
-      ...previousChat,
-      { role: "user", content: textToSend },
+      ...previousChat.map((m) => ({
+        role: m.role,
+        parts: [{ text: m.content }],
+      })),
+      // add the new user message
+      { role: "user", parts: [{ text: textToSend }] },
     ];
 
     try {
