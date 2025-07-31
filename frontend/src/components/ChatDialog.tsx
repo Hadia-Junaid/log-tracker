@@ -36,7 +36,6 @@ export function ChatDialog({ isOpen, onClose }: Props) {
         }
     }, [isOpen]);
 
-    // ✅ Added code to close dialog when clicking outside
     useEffect(() => {
         function handleOutsideClick(event: MouseEvent) {
             if (
@@ -116,8 +115,21 @@ export function ChatDialog({ isOpen, onClose }: Props) {
 
     return (
         <oj-dialog ref={dialogRef} class="chat-dialog" onojClose={onClose}  dragAffordance='title-bar' >
-            <div slot="header">
-                <h2 class="oj-dialog-title">AI Assistant</h2>
+            <div slot="header" style="display: flex; align-items: center; height: 20px; padding: 0px 0px 20px 0px;">
+                <h2 class="oj-dialog-title" style="margin: 0; flex: 1; padding-right: 165px">AI Assistant</h2>
+                <div class="new-chat-button" title="New Chat" style="margin-left: auto;">
+                    <oj-button 
+                        display="icons" 
+                        chroming="borderless"
+                        style="padding: 4px;"
+                        onClick={() => {
+                            setMessages([]);
+                            setInputValue('');
+                        }}
+                    >
+                        <span slot="startIcon" class="oj-ux-ico-plus" />
+                    </oj-button>
+                </div>
             </div>
             <div slot="body">
                 <div class="chat-messages">
