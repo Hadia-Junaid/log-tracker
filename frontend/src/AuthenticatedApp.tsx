@@ -6,6 +6,7 @@ import { useUser } from "./context/UserContext";
 import LoadingSpinner from "./components/LoadingSpinner";
 import { Header } from "./components/header";
 import Sidebar from "./components/Sidebar";
+import FloatingChat from "./components/FloatingChat";
 import Dashboard from "./views/Dashboard";
 import Logs from "./views/Logs";
 import NotFound from "./views/NotFound";
@@ -103,6 +104,7 @@ export const AuthenticatedApp = ({ appName }: { appName: string }) => {
           </Router>
         </main>
       </div>
+      <FloatingChat />
     </div>
   );
 };
