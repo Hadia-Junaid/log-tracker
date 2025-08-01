@@ -140,7 +140,7 @@ class MCPClient {
     let finalText: string[] = [];
     let hasToolUse = true;
 
-    const maxToolCalls = 6; // Limit to prevent infinite loops
+    const maxToolCalls = 10; // Limit to prevent infinite loops
     let toolCount = 0;
 
   
@@ -177,10 +177,14 @@ class MCPClient {
         }
         Note that the only log_level types are "INFO", "DEBUG", "ERROR", and "WARNING". 
         IMPORTANT: All id fields such as application_id in logs collection are ObjectId type and need to be treated correctly e.g. using $oid to reference them.  
+        Important Scenarios:
+        1) When creating or modifying any application or user group, always fetch the schema of the collection first to ensure you get field names right.
+        2) If creating a new application, make sure they are assigned to the admin group ALWAYS whether or not the user asks.
+        3) If user is asking about a specific application or user group, and the name doesnt match exactly, retry with a case-insensitive search or any possible similar variations.
         Here is the current user object:
         ${JSON.stringify(user, null, 2)}
         `,
-          maxOutputTokens: 1000,
+        //   maxOutputTokens: 1500,
         },
       });
 
