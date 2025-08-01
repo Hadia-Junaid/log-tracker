@@ -858,6 +858,26 @@ ${this.tools.map(tool => {
 🎯 COMPREHENSIVE USE CASES & QUERY PATTERNS:
 
 ${userContext ? `
+=== 0. EFFICIENT QUERY PATTERNS ===
+• "Get all user groups" → Single query: {"database": "test", "collection": "usergroups", "filter": {}}
+• "Show all groups" → Single query: {"database": "test", "collection": "usergroups", "filter": {}}
+• "List all applications" → Single query: {"database": "test", "collection": "applications", "filter": {}}
+• "Show all users" → Single query: {"database": "test", "collection": "users", "filter": {}}
+✅ EFFICIENT: Use single queries and avoid unnecessary follow-up queries
+
+=== USER NAME RESOLUTION (EFFICIENT) ===
+• When you need user names from user IDs, use single query with $in operator:
+  {"database": "test", "collection": "users", "filter": {"_id": {"$in": [USER_ID_ARRAY]}}}
+• NEVER make individual queries for each user ID
+• ALWAYS use $in operator for multiple user IDs
+• For "get all user groups" queries, only make follow-up queries if specifically asked for user names
+
+=== SPECIFIC QUERY OPTIMIZATION ===
+• "Get all user groups" → Single query only: {"database": "test", "collection": "usergroups", "filter": {}}
+• Do NOT automatically make follow-up queries for user names unless specifically requested
+• The user groups query already returns all necessary information
+• Only resolve user names if the user explicitly asks for member details
+
 === 1. LOG ANALYSIS USE CASES ===
 
 BASIC LOG QUERIES:
@@ -979,36 +999,41 @@ PERSONAL CONTEXT QUERIES:
 11. "Show my user groups" → 
     find usergroups where members array contains user ID:
     {"database": "test", "collection": "usergroups", "filter": {"members": {"$oid": "${userContext.userId}"}}}
+    
+12. "Get all user groups" (admin) or "Show all groups" → 
+    find all usergroups (for admin users only):
+    {"database": "test", "collection": "usergroups", "filter": {}}
+    ✅ EFFICIENT: Single query returns all groups with member IDs - use pre-fetched context or single $in query for user names if needed
 
-12. "List my applications" → 
+13. "List my applications" → 
     find applications where _id is in user's assigned apps:
     {"database": "test", "collection": "applications", "filter": {"_id": {"$in": [${userContext.assignedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}}}
 
-13. "List members in Quality Assurance group" → 
+14. "List members in Quality Assurance group" → 
     Step 1: Find group by name:
     {"database": "test", "collection": "usergroups", "filter": {"name": "Quality Assurance"}}
-    Step 2: For each member ID in the result, make follow-up query to get user name:
-    {"database": "test", "collection": "users", "filter": {"_id": {"$oid": "MEMBER_ID"}}}
-    ⚠️ CRITICAL: You MUST make follow-up queries to resolve all member IDs to names
+    Step 2: If you need user names, use a single efficient query with $in operator:
+    {"database": "test", "collection": "users", "filter": {"_id": {"$in": [MEMBER_IDS_FROM_STEP_1]}}}
+    ✅ EFFICIENT: Use single query with $in operator instead of multiple individual queries
 
-14. "Show my active applications" → 
+15. "Show my active applications" → 
     find applications where _id is in assigned apps AND isActive is true:
     {"database": "test", "collection": "applications", "filter": {"_id": {"$in": [${userContext.assignedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}, "isActive": true}}
 
-15. "Show my pinned apps" → 
+16. "Show my pinned apps" → 
     find applications where _id is in user's pinned apps:
     {"database": "test", "collection": "applications", "filter": {"_id": {"$in": [${userContext.pinnedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}}}
 
-16. "Show my user profile" → 
+17. "Show my user profile" → 
     find user document with user ID:
     {"database": "test", "collection": "users", "filter": {"_id": {"$oid": "${userContext.userId}"}}}
 
 SYSTEM-WIDE ADMIN QUERIES:
-16. "Show all users" → {"database": "test", "collection": "users", "filter": {}}
-17. "List all applications" → {"database": "test", "collection": "applications", "filter": {}}
-18. "System-wide logs" → {"database": "test", "collection": "logs", "filter": {}}
-19. "User group statistics" → {"database": "test", "collection": "usergroups", "filter": {}}
-20. "Application performance" → {"database": "test", "collection": "applications", "filter": {"isActive": true}}
+18. "Show all users" → {"database": "test", "collection": "users", "filter": {}}
+19. "List all applications" → {"database": "test", "collection": "applications", "filter": {}}
+20. "System-wide logs" → {"database": "test", "collection": "logs", "filter": {}}
+21. "User group statistics" → {"database": "test", "collection": "usergroups", "filter": {}}
+22. "Application performance" → {"database": "test", "collection": "applications", "filter": {"isActive": true}}
 
 ` : `
 USER QUERIES (LOGS & USER COLLECTIONS ONLY):
@@ -1168,6 +1193,11 @@ ${userContext.isAdmin ? `
 9. ✅ AUTOMATIC FIELD HANDLING: The system automatically adds required fields:
    - createdAt, updatedAt, and __v fields are added automatically to all insert operations
    - Only include the required business fields: name, hostname, environment, isActive, description for applications
+10. 🚀 QUERY EFFICIENCY: Always use the most efficient approach:
+    - Use $in operator for multiple IDs instead of individual queries
+    - Minimize the number of database calls
+    - Use pre-fetched context data when available
+    - Avoid unnecessary follow-up queries
 
 🎨 RESPONSE FORMATTING EXAMPLES:
 
@@ -1198,16 +1228,16 @@ When user asks "give me details" or "show me more info", then provide full data 
 - ALWAYS use simple comma-separated lists
 - ALWAYS focus on user-friendly information only
 
-👥 USER NAME RESOLUTION - CRITICAL REQUIREMENT:
+👥 USER NAME RESOLUTION - EFFICIENT APPROACH:
 When displaying user information (members, users, etc.):
-1. ⚠️ ALWAYS make follow-up queries when you see User IDs in results
-2. ⚠️ NEVER display User IDs to the user - ALWAYS fetch and display user names
-3. ⚠️ For user group members: When you get a usergroups result with member IDs, IMMEDIATELY make follow-up queries to get each member's name
-4. Use find query: {"database": "test", "collection": "users", "filter": {"_id": {"$oid": "USER_ID"}}}
-5. Extract the "name" field from the user document
-6. Display only the user names, never the IDs
-7. Example: If usergroups query returns members: [{"$oid": "686537574ddafa6df2987e26"}, {"$oid": "6865076e568c37c6aa0e54bb"}], then make follow-up queries to get names for each ID
-8. ⚠️ CRITICAL: For "list members" or "show members" queries, you MUST make follow-up queries to resolve all User IDs to names
+1. ✅ Use efficient single queries with $in operator instead of multiple individual queries
+2. ✅ NEVER display User IDs to the user - ALWAYS fetch and display user names
+3. ✅ For user group members: When you get a usergroups result with member IDs, use a single efficient query
+4. ✅ Use efficient find query: {"database": "test", "collection": "users", "filter": {"_id": {"$in": [USER_IDS_ARRAY]}}}
+5. ✅ Extract the "name" field from the user documents
+6. ✅ Display only the user names, never the IDs
+7. ✅ Example: If usergroups query returns members: [{"$oid": "686537574ddafa6df2987e26"}, {"$oid": "6865076e568c37c6aa0e54bb"}], use single query with $in operator
+8. ✅ EFFICIENT: For "list members" or "show members" queries, use single query with $in operator to resolve all User IDs to names at once
 
 🔧 MULTI-STEP OPERATION HANDLING:
 For complex operations involving multiple collections:

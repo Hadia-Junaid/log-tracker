@@ -110,7 +110,7 @@ export default function SavedPromptsDialog({ isOpen, onClose, onSelectPrompt }: 
                       onClick={() => handleDeletePrompt(prompt)}
                       title="Delete this prompt"
                     >
-                      <span class="oj-icon oj-ux-ico-delete"></span>
+                      <span class="oj-icon oj-ux-ico-delete-circle"></span>
                     </button>
                   </div>
                 </div>
