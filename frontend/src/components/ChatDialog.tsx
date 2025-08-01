@@ -2,7 +2,8 @@ import { useState, useRef, useEffect } from 'react';
 import axios from "../api/axios";
 import '../styles/chat-dialog.css';
 import { useLocalStorage } from '../hooks/useLocalStorage';
-
+import {  getPinnedMessages, updatePinnedMessages } from '../services/pinned-messages';
+import { useUser } from "../context/UserContext";
 type Message = {
     type: 'user' | 'ai';
     content: string;
@@ -18,7 +19,55 @@ export function ChatDialog({ isOpen, onClose }: Props) {
     const [messages, setMessages] = useLocalStorage<Message[]>('chat-messages', []);
     const [inputValue, setInputValue] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [pinnedMessages, setPinnedMessages] = useState<string[]>([]);
+    const [showPinnedMessages, setShowPinnedMessages] = useState(false);
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const pinnedMenuRef = useRef<any>(null);
+    // Close pinned messages dropdown when clicking outside
+    useEffect(() => {
+        function handleClickOutside(event: MouseEvent) {
+            if (pinnedMenuRef.current && !pinnedMenuRef.current.contains(event.target as Node)) {
+                setShowPinnedMessages(false);
+            }
+        }
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Fetch pinned messages when dialog opens
+    useEffect(() => {
+        if (isOpen) {
+            loadPinnedMessages();
+        }
+    }, [isOpen]);
+
+    const loadPinnedMessages = async () => {
+        const messages = await getPinnedMessages();
+        setPinnedMessages(messages);
+    };
+
+    const handlePinMessage = async (content: string) => {
+        const isAlreadyPinned = pinnedMessages.includes(content);
+        const updatedPinnedMessages = isAlreadyPinned
+            ? pinnedMessages.filter(msg => msg !== content)
+            : [...pinnedMessages, content];
+
+        setPinnedMessages(updatedPinnedMessages);
+        await updatePinnedMessages(updatedPinnedMessages);
+    };
+
+    const handleSelectPinnedMessage = (message: string) => {
+        setInputValue(message);
+        setShowPinnedMessages(false);
+    };
+
+    const handleUnpinMessage = async (message: string, event: MouseEvent) => {
+        event.stopPropagation(); // Prevent triggering selection
+        const updatedPinnedMessages = pinnedMessages.filter(msg => msg !== message);
+        setPinnedMessages(updatedPinnedMessages);
+        await updatePinnedMessages(updatedPinnedMessages);
+    };
 
     const dialogRef = useRef<any>(null); // Ref for oj-dialog
 
@@ -116,19 +165,50 @@ export function ChatDialog({ isOpen, onClose }: Props) {
     return (
         <oj-dialog ref={dialogRef} class="chat-dialog" onojClose={onClose}  dragAffordance='title-bar' >
             <div slot="header" style="display: flex; align-items: center; height: 20px; padding: 0px 0px 20px 0px;">
-                <h2 class="oj-dialog-title" style="margin: 0; flex: 1; padding-right: 165px">AI Assistant</h2>
-                <div class="new-chat-button" title="New Chat" style="margin-left: auto;">
-                    <oj-button 
-                        display="icons" 
-                        chroming="borderless"
-                        style="padding: 4px;"
-                        onClick={() => {
-                            setMessages([]);
-                            setInputValue('');
-                        }}
-                    >
-                        <span slot="startIcon" class="oj-ux-ico-plus" />
-                    </oj-button>
+                <h2 class="oj-dialog-title" style="margin: 0; flex: 1; padding-right: 100px">AI Assistant</h2>
+                <div style="display: flex; gap: 8px; align-items: center;">
+                    <div class="pinned-messages-menu">
+                        <oj-button
+                            display="icons"
+                            chroming="borderless"
+                            style="padding: 4px;"
+                            onClick={() => setShowPinnedMessages(!showPinnedMessages)}
+                        >
+                            <span slot="startIcon" class="oj-ux-ico-bookmark" />
+                        </oj-button>
+                        {showPinnedMessages && pinnedMessages.length > 0 && (
+                            <div class="pinned-messages-dropdown" ref={pinnedMenuRef}>
+                                {pinnedMessages.map((message, index) => (
+                                    <div
+                                        key={index}
+                                        class="pinned-message-item"
+                                        onClick={() => handleSelectPinnedMessage(message)}
+                                    >
+                                        <span class="pinned-message-content">{message}</span>
+                                        <span 
+                                            class="unpin-button"
+                                            onClick={(e) => handleUnpinMessage(message, e)}
+                                        >
+                                            <span class="oj-ux-ico-close" />
+                                        </span>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                    <div class="new-chat-button" title="New Chat">
+                        <oj-button 
+                            display="icons" 
+                            chroming="borderless"
+                            style="padding: 4px;"
+                            onClick={() => {
+                                setMessages([]);
+                                setInputValue('');
+                            }}
+                        >
+                            <span slot="startIcon" class="oj-ux-ico-plus" />
+                        </oj-button>
+                    </div>
                 </div>
             </div>
             <div slot="body">
@@ -149,6 +229,17 @@ export function ChatDialog({ isOpen, onClose }: Props) {
                         return (
                             <div key={message.timestamp} class={`message ${message.type}`}>
                                 <div class="message-bubble">
+                                    {message.type === 'user' && (
+                                        <div 
+                                            class={`pin-icon ${pinnedMessages.includes(message.content) ? 'pinned' : ''}`}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handlePinMessage(message.content);
+                                            }}
+                                        >
+                                            <span class="oj-ux-ico-pin" />
+                                        </div>
+                                    )}
                                     {message.content.split('\n').map((line, i) => (
                                         <div key={i}>{line}</div>
                                     ))}

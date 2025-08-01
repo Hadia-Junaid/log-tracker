@@ -13,6 +13,7 @@ export interface User {
         name: string;
         is_admin: boolean;
     }[];
+    saved_messages?: string[];
 }
 
 type UserContextType = {

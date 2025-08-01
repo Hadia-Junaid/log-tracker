@@ -9,6 +9,7 @@ export interface IUser extends Document {
     autoRefreshTime: number;
     logsPerPage: number;
   };
+  saved_messages: string[];
 }
 const UserSchema: Schema = new Schema({
   email: { type: String, required: true },
@@ -18,7 +19,8 @@ const UserSchema: Schema = new Schema({
     autoRefresh: { type: Boolean, default: false },
     autoRefreshTime: { type: Number, default: 30 },
     logsPerPage: { type: Number, default: 25 },
-  }
+  },
+  saved_messages: [{ type: String }],
 }, { timestamps: true });
 
 export default mongoose.model<IUser>('User', UserSchema);
