@@ -340,6 +340,42 @@ chat-close-button,
     opacity: 1;
   }
 }
+
+/* Confirmation Buttons */
+.confirmation-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  justify-content: flex-start;
+}
+
+.confirmation-button {
+  min-width: 80px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.confirm-button {
+  background: #0066cc;
+  color: white;
+  border: none;
+}
+
+.confirm-button:hover {
+  background: #0052a3;
+}
+
+.cancel-button {
+  background: transparent;
+  color: #666666;
+  border: 1px solid #d0d0d0;
+}
+
+.cancel-button:hover {
+  background: #f5f5f5;
+  border-color: #b0b0b0;
+}
+
 .chat-footer {
   padding: 12px 16px;
   border-top: 1px solid #e0e0e0;

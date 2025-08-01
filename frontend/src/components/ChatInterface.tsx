@@ -22,6 +22,8 @@ interface ChatMessage {
   text: string;
   isUser: boolean;
   timestamp: Date;
+  type?: string;
+  toolId?: string; // For confirmation messages
 }
 
 interface SavedMessage {
@@ -47,6 +49,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
       text: initialMessageText,
       isUser: false,
       timestamp: new Date(),
+      type: "response",
     },
   ]);
   const [inputValue, setInputValue] = useState("");
@@ -55,7 +58,6 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
   const [originalMessages, setOriginalMessages] = useState<ChatMessage[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<any>(null);
-  const savedMessagesPopupRef = useRef<any>(null);
 
   const clearChat = () => {
     setMessages([
@@ -197,9 +199,11 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
 
       const aiMessage: ChatMessage = {
         id: Date.now().toString(),
-        text: response.data,
+        type: response.data.type || "response",
+        text: response.data.message,
         isUser: false,
         timestamp: new Date(),
+        toolId: response.data.toolId, // Capture toolId for confirmation messages
       };
 
       setMessages((prev) => [...prev, aiMessage]);
@@ -208,6 +212,95 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
       const errorMessage: ChatMessage = {
         id: Date.now().toString(),
         text: "Sorry, I couldn't process your request. Please try again later.",
+        isUser: false,
+        timestamp: new Date(),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    }
+
+    setIsTyping(false);
+  };
+
+  const handleConfirmation = async (
+    message: ChatMessage,
+    confirmed: boolean
+  ) => {
+    // Update the message type to "response" to hide the buttons
+    setMessages((prev) =>
+      prev.map((msg) =>
+        msg.id === message.id ? { ...msg, type: "response" } : msg
+      )
+    );
+
+    if (!confirmed) {
+      // If cancelled, add a cancellation message
+      const cancellationMessage: ChatMessage = {
+        id: Date.now().toString(),
+        text: "Operation cancelled.",
+        isUser: false,
+        timestamp: new Date(),
+        type: "response",
+      };
+      setMessages((prev) => [...prev, cancellationMessage]);
+
+      //Optimistically send an API call to delete the pending operation from MongoDB
+      try {
+        axios.delete("/chat/pending-operation", {
+          data: { toolId: message.toolId },
+        });
+      } catch (error) {
+        console.error("Error deleting operation:", error);
+      }
+
+      return;
+    }
+
+    setIsTyping(true);
+
+    // Copy last 4 messages but not the welcome message
+    const filteredMessages = messages.filter(
+      (msg) => msg.id !== "welcome-new" && msg.id !== "welcome"
+    );
+    const previousChat = filteredMessages.slice(-4).map((msg) => ({
+      role: msg.isUser ? "user" : "model",
+      content: msg.text,
+    }));
+
+    // Build Gemini contents format with confirmation type
+    const currentChat = [
+      ...previousChat.map((m) => ({
+        role: m.role,
+        parts: [{ text: m.content }],
+      })),
+      // add the confirmation message
+      {
+        role: "user",
+        parts: [{ text: "I confirm this tool call." }],
+        type: "confirmation",
+        toolId: message.toolId,
+      },
+    ];
+
+    try {
+      const response = await axios.post("/chat", {
+        chat: currentChat,
+      });
+      console.log("AI confirmation response:", response.data);
+
+      const aiMessage: ChatMessage = {
+        id: Date.now().toString(),
+        type: response.data.type || "response",
+        text: response.data.message,
+        isUser: false,
+        timestamp: new Date(),
+      };
+
+      setMessages((prev) => [...prev, aiMessage]);
+    } catch (error) {
+      console.error("Error sending confirmation:", error);
+      const errorMessage: ChatMessage = {
+        id: Date.now().toString(),
+        text: "Sorry, I couldn't process the confirmation. Please try again later.",
         isUser: false,
         timestamp: new Date(),
       };
@@ -289,15 +382,15 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
                     </oj-button>
                   </>
                 )}
-                    <oj-button
-                      class="chat-close-button"
-                      chroming="borderless"
-                      display="icons"
-                      title="Close Chat"
-                      onojAction={onClose}
-                    >
-                      <span slot="startIcon" class="oj-ux-ico-close"></span>
-                    </oj-button>
+                <oj-button
+                  class="chat-close-button"
+                  chroming="borderless"
+                  display="icons"
+                  title="Close Chat"
+                  onojAction={onClose}
+                >
+                  <span slot="startIcon" class="oj-ux-ico-close"></span>
+                </oj-button>
               </div>
             </div>
           </div>
@@ -364,6 +457,30 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
                           >
                             {message.text}
                           </div>
+                          {message.type === "confirmation_required" && (
+                            <div class="confirmation-buttons">
+                              <oj-button
+                                class="confirmation-button confirm-button"
+                                chroming="callToAction"
+                                size="sm"
+                                onojAction={() =>
+                                  handleConfirmation(message, true)
+                                }
+                              >
+                                Continue
+                              </oj-button>
+                              <oj-button
+                                class="confirmation-button cancel-button"
+                                chroming="outlined"
+                                size="sm"
+                                onojAction={() =>
+                                  handleConfirmation(message, false)
+                                }
+                              >
+                                Cancel
+                              </oj-button>
+                            </div>
+                          )}
                           <div class="message-time">
                             {formatTime(message.timestamp)}
                           </div>
@@ -435,7 +552,9 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
                   value={inputValue}
                   placeholder="Type your message..."
                   onkeydown={handleKeyPress}
-                  onrawValueChanged={(e: CustomEvent) => setInputValue(e.detail.value)}
+                  onrawValueChanged={(e: CustomEvent) =>
+                    setInputValue(e.detail.value)
+                  }
                 ></oj-input-text>
                 <oj-button
                   class="chat-send-button"

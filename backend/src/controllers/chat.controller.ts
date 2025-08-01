@@ -1,4 +1,5 @@
 import User from "../models/User";
+import PendingOperation from "../models/PendingOperation";
 import mcpClient from "../services/mcpClient";
 import { Request, Response } from "express";
 
@@ -10,6 +11,29 @@ export const handleChat = async (req: Request, res: Response) => {
   if (!user) {
     res.status(401).json({ error: "Unauthorized user" });
     return;
+  }
+
+  console.log("Chat received in controller:", chat);
+
+  //if the last message of the chat has a type, and its "confirmation", call the MCP tool first
+  if (chat[chat.length - 1].type === "confirmation") {
+    const { functionResponse } = await mcpClient.executeToolFromDb(
+      chat[chat.length - 1].toolId
+    );
+
+    //remove the toolId and type fields from the last message so Gemini doesnt throw an error
+    chat[chat.length - 1].toolId = undefined;
+    chat[chat.length - 1].type = undefined;
+
+    //add the result of the tool call to the chat
+    chat.push({
+      role: "user",
+      parts: [
+        {
+          functionResponse,
+        },
+      ],
+    });
   }
 
   const response = await mcpClient.processQuery(user, chat);
@@ -38,7 +62,7 @@ export const handleSaveMessage = async (req: Request, res: Response) => {
     user.id,
     { $push: { saved_messages: message } },
     { new: true }
-  ).select("saved_messages"); 
+  ).select("saved_messages");
 
   if (!updatedUser) {
     res.status(404).json({ error: "User not found" });
@@ -64,7 +88,7 @@ export const handleUnsaveMessage = async (req: Request, res: Response) => {
     user.id,
     { $pull: { saved_messages: message } },
     { new: true }
-  ).select("saved_messages"); 
+  ).select("saved_messages");
 
   if (!updatedUser) {
     res.status(404).json({ error: "User not found" });
@@ -72,4 +96,29 @@ export const handleUnsaveMessage = async (req: Request, res: Response) => {
   }
 
   res.json(updatedUser);
+};
+
+export const handleDeletePendingOperation = async (
+  req: Request,
+  res: Response
+) => {
+  const { toolId } = req.body;
+
+  const user = req.user;
+
+  console.log("Tool ID received to delete pending operation:", toolId);
+
+  if (!user) {
+    res.status(401).json({ error: "Unauthorized user" });
+    return;
+  }
+
+  //delete the pending operation from the database
+  const result = await PendingOperation.deleteOne({ _id: toolId });
+  if (result.deletedCount === 0) {
+    res.status(404).json({ error: "Pending operation not found" });
+    return;
+  }
+  
+  res.json({ message: "Pending operation deleted successfully" });
 };

@@ -8,6 +8,7 @@ import dotenv from "dotenv";
 import logger from "../utils/logger";
 
 import { GoogleGenAI, Type } from "@google/genai";
+import PendingOperation from "../models/PendingOperation";
 
 dotenv.config(); // load environment variables from .env
 
@@ -65,7 +66,7 @@ class MCPClient {
       "rename-collection",
       "drop-database",
       "drop-collection",
-    "create-index",
+      "create-index",
     ]);
 
     this.tools = toolsResult.tools
@@ -143,7 +144,6 @@ class MCPClient {
     const maxToolCalls = 10; // Limit to prevent infinite loops
     let toolCount = 0;
 
-  
     const toolDeclarations = userTools.length
       ? [
           {
@@ -151,7 +151,7 @@ class MCPClient {
               name: tool.name,
               description: tool.description || "",
               // Pass the raw input_schema—Gemini will accept `{ properties, required }`
-              parameters: tool.input_schema
+              parameters: tool.input_schema,
             })),
           },
         ]
@@ -184,7 +184,7 @@ class MCPClient {
         Here is the current user object:
         ${JSON.stringify(user, null, 2)}
         `,
-        //   maxOutputTokens: 1500,
+          //   maxOutputTokens: 1500,
         },
       });
 
@@ -224,8 +224,36 @@ class MCPClient {
               toolName,
               toolArgs
             );
-            if (!authorized) return message;
+            if (!authorized)
+              return {
+                type: "response",
+                message,
+              };
           }
+
+          // If its a write tool, send the user a confirmation message
+          if (
+            ["insert-many", "update-many", "delete-many"].includes(toolName)
+          ) {
+            // Store the operation in PendingOperation collection
+            const pendingOperation = new PendingOperation({
+              toolName,
+              toolArgs,
+            });
+            const result = await pendingOperation.save();
+
+            console.log(`Pending operation saved with ID: ${result._id}`);
+
+            const toolId = result._id.toString();
+
+            // send the user a confirmation message
+            return {
+              type: "confirmation_required",
+              toolId: toolId,
+              message: `Are you sure you want to ${toolName} on the ${toolArgs.collection} collection with the following data? ${JSON.stringify(toolArgs.filter)}`,
+            };
+          }
+
           const toolResult = await this.mcp.callTool({
             name: toolName,
             arguments: toolArgs,
@@ -252,8 +280,43 @@ class MCPClient {
 
     // 3) Once no more tool calls, return the last text
     return finalText.length > 0
-      ? finalText.join(" ")
-      : "No response could be generated.";
+      ? {
+          type: "response",
+          message: finalText.join(" "),
+        }
+      : {
+          type: "response",
+          message: "No response could be generated.",
+        };
+  }
+
+  async executeToolFromDb(toolId: string) {
+    // first, get the tool name and args from the PendingOperation collection
+    const pendingOperation = await PendingOperation.findById(toolId);
+    if (!pendingOperation) {
+      throw new Error(`Pending operation with ID ${toolId} not found`);
+    }
+    const { toolName, toolArgs } = pendingOperation;
+    console.log(`Executing tool: ${toolName} from db with args:`, toolArgs);
+
+    // execute the tool
+    const toolResult = await this.mcp.callTool({
+      name: toolName,
+      arguments: toolArgs,
+    });
+    console.log(`Tool ${toolName} result:`, toolResult);
+
+    // remove the pending operation from the db
+    await PendingOperation.findByIdAndDelete(toolId);
+    console.log(`Pending operation with ID ${toolId} deleted`);
+
+    // return the result
+    return {
+      functionResponse: {
+        name: toolName,
+        response: { result: toolResult },
+      },
+    };
   }
 
   async cleanup() {
