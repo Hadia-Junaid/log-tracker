@@ -86,7 +86,7 @@ class MCPClient {
   async processQuery(user: ChatUser, chat: any) {
     const contents: any[] = chat;
 
-    console.log("User chat contents:", JSON.stringify(contents, null, 2));
+    console.log("User chat contents in processQuery:", JSON.stringify(contents, null, 2));
 
     const isAdmin = user.is_admin;
 
@@ -136,7 +136,6 @@ class MCPClient {
         description: app.description,
       }));
     }
-    console.log("Final user object:", JSON.stringify(user, null, 2));
 
     let finalText: string[] = [];
     let hasToolUse = true;
@@ -181,6 +180,7 @@ class MCPClient {
         1) When creating or modifying any application or user group, always fetch the schema of the collection first to ensure you get field names right.
         2) If creating a new application, make sure they are assigned to the admin group ALWAYS whether or not the user asks.
         3) If user is asking about a specific application or user group, and the name doesnt match exactly, retry with a case-insensitive search or any possible similar variations.
+        4) Once a user has said "I confirm this tool call", you can assume that the tool call that confirmation was requested for has already been executed in history and you don't need to do it again.
         Here is the current user object:
         ${JSON.stringify(user, null, 2)}
         `,
@@ -188,7 +188,7 @@ class MCPClient {
         },
       });
 
-      console.log("Gemini response:", JSON.stringify(response, null, 2));
+      // console.log("Gemini response:", JSON.stringify(response, null, 2));
 
       const candidate = response.candidates?.[0];
       if (!candidate?.content?.parts) {
@@ -212,6 +212,7 @@ class MCPClient {
           console.log(`Tool requested: ${toolName}`, toolArgs);
 
           // — push the function-call back into the convo so the model sees it
+          console.log(`Pushing tool call to contents: ${toolName}`, toolArgs);
           contents.push({
             role: "model",
             parts: [{ functionCall: { name: toolName, args: toolArgs } }],
@@ -250,6 +251,10 @@ class MCPClient {
             return {
               type: "confirmation_required",
               toolId: toolId,
+              toolDetails:{
+                toolName,
+                toolArgs
+              },
               message: `Are you sure you want to ${toolName} on the ${toolArgs.collection} collection with the following data? ${JSON.stringify(toolArgs.filter)}`,
             };
           }
@@ -262,7 +267,7 @@ class MCPClient {
 
           // — push the result back in as a “user” message
           contents.push({
-            role: "user",
+            role: "function",
             parts: [
               {
                 functionResponse: {

@@ -176,7 +176,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     const filteredMessages = messages.filter(
       (msg) => msg.id !== "welcome-new" && msg.id !== "welcome"
     );
-    const previousChat = filteredMessages.slice(-4).map((msg) => ({
+    const previousChat = filteredMessages.slice(-6).map((msg) => ({
       role: msg.isUser ? "user" : "model",
       content: msg.text,
     }));
@@ -192,21 +192,50 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     ];
 
     try {
+      console.log("sending current chat in handleSendMessage:", currentChat);
       const response = await axios.post("/chat", {
         chat: currentChat,
       });
       console.log("AI response:", response.data);
 
-      const aiMessage: ChatMessage = {
+      const newMessages: ChatMessage[] = [];
+
+      // If toolMessage was returned (role === "function")
+      if (response.data.toolResponse) {
+        newMessages.push({
+          id: Date.now().toString(),
+          type: "function",
+          text: JSON.stringify(
+            response.data.toolResponse.parts[0].functionResponse,
+            null,
+            2
+          ), // format nicely
+          isUser: false,
+          timestamp: new Date(),
+        });
+      }
+
+      if (response.data.toolDetails) {
+        newMessages.push({
+          id: Date.now().toString(),
+          type: "function",
+          text: JSON.stringify(response.data.toolDetails, null, 2), // format nicely
+          isUser: false,
+          timestamp: new Date(),
+        });
+      }
+
+      // Then push the actual AI response
+      newMessages.push({
         id: Date.now().toString(),
         type: response.data.type || "response",
         text: response.data.message,
         isUser: false,
         timestamp: new Date(),
-        toolId: response.data.toolId, // Capture toolId for confirmation messages
-      };
+        toolId: response.data.toolId,
+      });
 
-      setMessages((prev) => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, ...newMessages]);
     } catch (error) {
       console.error("Error sending message:", error);
       const errorMessage: ChatMessage = {
@@ -257,11 +286,22 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
 
     setIsTyping(true);
 
+    const confirmationMessage: ChatMessage = {
+      id: Date.now().toString(),
+      text: "I confirm this tool call.",
+      isUser: true,
+      timestamp: new Date(),
+      type: "confirmation",
+      toolId: message.toolId,
+    };
+
+    // setMessages((prev) => [...prev, confirmationMessage]);
+
     // Copy last 4 messages but not the welcome message
     const filteredMessages = messages.filter(
       (msg) => msg.id !== "welcome-new" && msg.id !== "welcome"
     );
-    const previousChat = filteredMessages.slice(-4).map((msg) => ({
+    const previousChat = filteredMessages.map((msg) => ({
       role: msg.isUser ? "user" : "model",
       content: msg.text,
     }));
@@ -282,20 +322,57 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     ];
 
     try {
+      console.log(
+        "Sending confirmation message in handleConfirmation:",
+        currentChat
+      );
       const response = await axios.post("/chat", {
         chat: currentChat,
       });
       console.log("AI confirmation response:", response.data);
 
-      const aiMessage: ChatMessage = {
+      const newMessages: ChatMessage[] = [];
+
+      // If toolMessage was returned (role === "function")
+      if (response.data.toolResponse) {
+        newMessages.push({
+          id: Date.now().toString(),
+          type: "function",
+          text: JSON.stringify(
+            response.data.toolResponse,
+            null,
+            2
+          ), // format nicely
+          isUser: false,
+          timestamp: new Date(),
+        });
+      }
+
+      if (response.data.toolDetails) {
+        newMessages.push({
+          id: Date.now().toString(),
+          type: "function",
+          text: JSON.stringify(response.data.toolDetails, null, 2), // format nicely
+          isUser: false,
+          timestamp: new Date(),
+        });
+      }
+
+      // Then push the actual AI response
+      if (response.data.message) {
+      newMessages.push({
         id: Date.now().toString(),
         type: response.data.type || "response",
         text: response.data.message,
         isUser: false,
         timestamp: new Date(),
-      };
+        toolId: response.data.toolId,
+      });
+    }
 
-      setMessages((prev) => [...prev, aiMessage]);
+      setMessages((prev) => [...prev, ...newMessages]);
+
+      console.log("Messages after AI confirmation:", messages);
     } catch (error) {
       console.error("Error sending confirmation:", error);
       const errorMessage: ChatMessage = {

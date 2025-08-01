@@ -15,25 +15,30 @@ export const handleChat = async (req: Request, res: Response) => {
 
   console.log("Chat received in controller:", chat);
 
+  let functionResponse;
+
   //if the last message of the chat has a type, and its "confirmation", call the MCP tool first
   if (chat[chat.length - 1].type === "confirmation") {
-    const { functionResponse } = await mcpClient.executeToolFromDb(
+    ({ functionResponse } = await mcpClient.executeToolFromDb(
       chat[chat.length - 1].toolId
-    );
+    ));
 
-    //remove the toolId and type fields from the last message so Gemini doesnt throw an error
-    chat[chat.length - 1].toolId = undefined;
-    chat[chat.length - 1].type = undefined;
+    // //remove the toolId and type fields from the last message so Gemini doesnt throw an error
+    // chat[chat.length - 1].toolId = undefined;
+    // chat[chat.length - 1].type = undefined;
+    //remove the last message completely and replace it with the function response
+    chat.pop();
 
     //add the result of the tool call to the chat
     chat.push({
-      role: "user",
+      role: "function",
       parts: [
         {
           functionResponse,
         },
       ],
     });
+
   }
 
   const response = await mcpClient.processQuery(user, chat);
@@ -43,7 +48,13 @@ export const handleChat = async (req: Request, res: Response) => {
     return;
   }
 
-  res.json(response);
+  res.json({
+    ...response,
+    ...(functionResponse && { 
+      role: "function",
+      parts: [{ functionResponse }],
+    }),
+  });
 };
 
 export const handleSaveMessage = async (req: Request, res: Response) => {
@@ -119,6 +130,6 @@ export const handleDeletePendingOperation = async (
     res.status(404).json({ error: "Pending operation not found" });
     return;
   }
-  
+
   res.json({ message: "Pending operation deleted successfully" });
 };
