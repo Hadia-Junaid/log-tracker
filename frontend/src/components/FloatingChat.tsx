@@ -258,7 +258,7 @@ export default function FloatingChat() {
                 disabled={messages.length === 0}
                 title="Clear History"
               >
-                <span class="oj-icon oj-ux-ico-delete"></span>
+                <span class="oj-icon oj-ux-ico-trash"></span>
               </button>
               <button
                 class="oj-button oj-button-text"

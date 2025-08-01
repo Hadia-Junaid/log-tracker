@@ -316,6 +316,35 @@ export class MCPClient extends EventEmitter {
       }
     }
 
+    // Handle update-many operations for pinning/unpinning applications
+    if (toolName === 'update-many') {
+      const { database, collection, filter = {}, update = {} } = arguments_;
+      
+      if (database === 'log-tracker' || database === 'test') {
+        if (collection === 'users') {
+          // Users can only update their own user data (for pinning/unpinning applications)
+          return {
+            ...arguments_,
+            filter: {
+              ...filter,
+              _id: this.convertToObjectId(userContext.userId)
+            }
+          };
+        }
+        
+        if (collection === 'applications') {
+          // Users can only update applications assigned to their groups
+          return {
+            ...arguments_,
+            filter: {
+              ...filter,
+              _id: { $in: this.convertToObjectIds(userContext.assignedApplications) }
+            }
+          };
+        }
+      }
+    }
+
     return arguments_;
   }
 
@@ -863,6 +892,8 @@ ${userContext ? `
 • "Show all groups" → Single query: {"database": "test", "collection": "usergroups", "filter": {}}
 • "List all applications" → Single query: {"database": "test", "collection": "applications", "filter": {}}
 • "Show all users" → Single query: {"database": "test", "collection": "users", "filter": {}}
+• "Pin an application" → Two-step: Find app by name, then update user's pinned_applications
+• "Unpin an application" → Two-step: Find app by name, then update user's pinned_applications
 ✅ EFFICIENT: Use single queries and avoid unnecessary follow-up queries
 
 === USER NAME RESOLUTION (EFFICIENT) ===
@@ -1024,16 +1055,28 @@ PERSONAL CONTEXT QUERIES:
     find applications where _id is in user's pinned apps:
     {"database": "test", "collection": "applications", "filter": {"_id": {"$in": [${userContext.pinnedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}}}
 
-17. "Show my user profile" → 
+17. "Pin an application" or "Add app to pinned" → 
+    Step 1: Find application by name:
+    {"database": "test", "collection": "applications", "filter": {"name": "APP_NAME"}}
+    Step 2: Add to user's pinned_applications array:
+    {"database": "test", "collection": "users", "filter": {"_id": {"$oid": "${userContext.userId}"}}, "update": {"$addToSet": {"pinned_applications": {"$oid": "APP_ID"}}}}
+
+18. "Unpin an application" or "Remove app from pinned" → 
+    Step 1: Find application by name:
+    {"database": "test", "collection": "applications", "filter": {"name": "APP_NAME"}}
+    Step 2: Remove from user's pinned_applications array:
+    {"database": "test", "collection": "users", "filter": {"_id": {"$oid": "${userContext.userId}"}}, "update": {"$pull": {"pinned_applications": {"$oid": "APP_ID"}}}}
+
+19. "Show my user profile" → 
     find user document with user ID:
     {"database": "test", "collection": "users", "filter": {"_id": {"$oid": "${userContext.userId}"}}}
 
 SYSTEM-WIDE ADMIN QUERIES:
-18. "Show all users" → {"database": "test", "collection": "users", "filter": {}}
-19. "List all applications" → {"database": "test", "collection": "applications", "filter": {}}
-20. "System-wide logs" → {"database": "test", "collection": "logs", "filter": {}}
-21. "User group statistics" → {"database": "test", "collection": "usergroups", "filter": {}}
-22. "Application performance" → {"database": "test", "collection": "applications", "filter": {"isActive": true}}
+20. "Show all users" → {"database": "test", "collection": "users", "filter": {}}
+21. "List all applications" → {"database": "test", "collection": "applications", "filter": {}}
+22. "System-wide logs" → {"database": "test", "collection": "logs", "filter": {}}
+23. "User group statistics" → {"database": "test", "collection": "usergroups", "filter": {}}
+24. "Application performance" → {"database": "test", "collection": "applications", "filter": {"isActive": true}}
 
 ` : `
 USER QUERIES (LOGS & USER COLLECTIONS ONLY):
@@ -1043,6 +1086,8 @@ USER QUERIES (LOGS & USER COLLECTIONS ONLY):
 • "My user profile" → {"database": "test", "collection": "users", "filter": {"_id": {"$oid": "${userContext.userId}"}}}
 • "My user groups" → Use pre-fetched userGroupDetails from context
 • "My pinned apps" → Use pre-fetched pinnedApplicationDetails from context
+• "Pin an application" → Find app by name, then add to pinned_applications array using $addToSet
+• "Unpin an application" → Find app by name, then remove from pinned_applications array using $pull
 `}
 ` : ''}
 
@@ -1081,6 +1126,12 @@ USER GROUP MANAGEMENT:
 • "Assign 'StockService' to 'Ops' group" - Find app by name, then update assigned_applications
 • "Revoke access of 'legacy-app' from all user groups" - Use $pull on all groups
 
+PERSONAL APPLICATION MANAGEMENT:
+• "Pin 'GoCAR' application" - Find app by name, then add to user's pinned_applications using $addToSet
+• "Unpin 'GoCAR' application" - Find app by name, then remove from user's pinned_applications using $pull
+• "Add 'user-service' to my pinned apps" - Find app by name, then add to user's pinned_applications
+• "Remove 'legacy-app' from my pinned apps" - Find app by name, then remove from user's pinned_applications
+
 PERMISSION MANAGEMENT:
 • "Give admin access to 'alice@company.com'" - Find user, then add to admin group
 • "Remove admin privileges from 'bob@company.com'" - Remove from admin groups
@@ -1091,12 +1142,16 @@ MULTI-STEP OPERATIONS:
 • "Set up a new development environment with apps A, B, C" - Create apps, create group, assign apps
 • "Migrate user 'john' from 'Dev' to 'Ops' group" - Remove from Dev, add to Ops
 • "Archive old applications and create new ones" - Deactivate old apps, create new ones
+• "Pin 'GoCAR' to my dashboard" - Find app by name, then add to user's pinned_applications
+• "Unpin 'legacy-app' from my dashboard" - Find app by name, then remove from user's pinned_applications
 ` : `
 USER QUERIES (Read-only access):
 • "Show my application logs" - Filter by user's assigned applications
 • "Find errors in my apps" - Filter by log_level: "error" and user's apps
 • "Show recent activity" - Sort by timestamp for user's applications
 • "Summarize my app performance" - Aggregate logs for user's applications
+• "Pin an application" - Find app by name, then add to pinned_applications array
+• "Unpin an application" - Find app by name, then remove from pinned_applications array
 `}
 ` : ''}
 
@@ -1255,6 +1310,8 @@ For complex operations involving multiple collections:
   ✅ The system will automatically add createdAt, updatedAt, and __v fields
 • When adding users to groups: First find user by email, then update group's members array
 • When assigning apps to groups: First find app by name, then update group's assigned_applications array
+• When pinning applications: First find app by name, then add to user's pinned_applications using $addToSet
+• When unpinning applications: First find app by name, then remove from user's pinned_applications using $pull
 • When editing: Use exact field names from schema (isActive, not status; members, not userId)
 
 ${userContext && !userContext.isAdmin ? `
