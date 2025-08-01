@@ -65,6 +65,7 @@ class MCPClient {
       "rename-collection",
       "drop-database",
       "drop-collection",
+    "create-index",
     ]);
 
     this.tools = toolsResult.tools
@@ -142,106 +143,7 @@ class MCPClient {
     const maxToolCalls = 6; // Limit to prevent infinite loops
     let toolCount = 0;
 
-    // // Convert MCP tools to Gemini function declarations format
-    // const toolDeclarations = userTools.map((tool) => {
-    //   // Sanitize the schema for Gemini compatibility
-    //   const sanitizeSchema = (schema: any): any => {
-    //     if (!schema || typeof schema !== "object") return {};
-
-    //     const sanitized: any = {};
-
-    //     for (const [key, value] of Object.entries(schema)) {
-    //       if (typeof value === "object" && value !== null) {
-    //         const valueObj = value as any;
-
-    //         if (Array.isArray(value)) {
-    //           // Skip arrays that might contain complex structures
-    //           continue;
-    //         } else if (valueObj.hasOwnProperty("const")) {
-    //           // Convert const values to simple string type
-    //           sanitized[key] = { type: "string" };
-    //         } else if (
-    //           valueObj.hasOwnProperty("anyOf") ||
-    //           valueObj.hasOwnProperty("oneOf")
-    //         ) {
-    //           // Simplify union types to string
-    //           sanitized[key] = { type: "string" };
-    //         } else if (valueObj.type === "array") {
-    //           // Handle array types properly
-    //           sanitized[key] = {
-    //             type: "array",
-    //             items: valueObj.items
-    //               ? sanitizeArrayItems(valueObj.items)
-    //               : { type: "string" },
-    //           };
-    //         } else if (valueObj.hasOwnProperty("type")) {
-    //           // Keep simple types, recursively sanitize nested objects
-    //           sanitized[key] = {
-    //             type: valueObj.type,
-    //             ...(valueObj.properties
-    //               ? { properties: sanitizeSchema(valueObj.properties) }
-    //               : {}),
-    //             ...(valueObj.description
-    //               ? { description: valueObj.description }
-    //               : {}),
-    //           };
-    //         } else {
-    //           // For nested objects without type, recurse
-    //           const nested = sanitizeSchema(valueObj);
-    //           if (Object.keys(nested).length > 0) {
-    //             sanitized[key] = { type: "object", properties: nested };
-    //           }
-    //         }
-    //       } else {
-    //         // Keep primitive values as is
-    //         sanitized[key] = value;
-    //       }
-    //     }
-
-    //     return sanitized;
-    //   };
-
-    //   // Helper function to sanitize array items
-    //   const sanitizeArrayItems = (items: any): any => {
-    //     if (!items || typeof items !== "object") {
-    //       return { type: "string" };
-    //     }
-
-    //     if (items.anyOf || items.oneOf) {
-    //       // Simplify complex union types to string
-    //       return { type: "string" };
-    //     }
-
-    //     if (items.type) {
-    //       if (items.type === "object" && items.properties) {
-    //         return {
-    //           type: "object",
-    //           properties: sanitizeSchema(items.properties),
-    //         };
-    //       }
-    //       return { type: items.type };
-    //     }
-
-    //     // Default to string for unknown array item types
-    //     return { type: "string" };
-    //   };
-
-    //   return {
-    //     name: tool.name,
-    //     description: tool.description || "",
-    //     parameters: {
-    //       type: Type.OBJECT,
-    //       properties: sanitizeSchema(tool.input_schema?.properties || {}),
-    //       required: tool.input_schema?.required || [],
-    //     },
-    //   };
-    // });
-
-    // // console.log(
-    // //   "Sanitized tool declarations:",
-    // //   JSON.stringify(toolDeclarations, null, 2)
-    // // );
-
+  
     const toolDeclarations = userTools.length
       ? [
           {
