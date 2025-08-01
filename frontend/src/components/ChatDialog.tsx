@@ -167,7 +167,7 @@ export function ChatDialog({ isOpen, onClose }: Props) {
             <div slot="header" style="display: flex; align-items: center; height: 20px; padding: 0px 0px 20px 0px;">
                 <h2 class="oj-dialog-title" style="margin: 0; flex: 1; padding-right: 100px">AI Assistant</h2>
                 <div style="display: flex; gap: 8px; align-items: center;">
-                    <div class="pinned-messages-menu">
+                    <div class="pinned-messages-menu" title="Pinned Messages">
                         <oj-button
                             display="icons"
                             chroming="borderless"

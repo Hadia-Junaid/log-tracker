@@ -54,6 +54,7 @@
     white-space: pre-wrap; /* Preserves formatting */
     min-width: 100px; /* Ensures minimum width */
     display: inline-block; /* Helps with bubble sizing */
+    padding-right: 32px; /* Add space for pin icon */
 }
 
 .message.user .message-bubble {
@@ -99,15 +100,17 @@
 .pinned-messages-dropdown {
     position: absolute;
     top: 100%;
-    right: 0;
-    width: 300px;
-    max-height: 300px;
+    left: 0px;
+    transform: translateX(-62%);
+    width: 396px;
+    max-height: 165px;
     overflow-y: auto;
     border: 1px solid var(--oj-core-divider-color);
     border-radius: 4px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
     z-index: 1100;
     background: white;
+    margin-top: 8px;
 }
 
 .pinned-message-item {
