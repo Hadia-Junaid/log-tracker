@@ -20,7 +20,7 @@ export async function chatHandler(req: Request, res: Response) {
     // }
 
     // const userid = "68650fd57a72d0b64525da71";
-    //const is_admin = false;
+    // const is_admin = false;
     const userId = req.user.id;
     const is_admin = req.user.is_admin;
     const client = getMcpClient();
@@ -33,12 +33,8 @@ export async function chatHandler(req: Request, res: Response) {
   }
 }
 
-export const getPinnedMessages = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const userId = req.user?.id;
-    if (!userId) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
+export const getPinnedMessages = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user.id;
 
     const user = await User.findById(userId);
     
@@ -51,12 +47,8 @@ export const getPinnedMessages = async (req: Request, res: Response, next: NextF
   
 };
 
-export const updatePinnedMessages = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
-    const userId = req.user?.id;
-    if (!userId) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
+export const updatePinnedMessages = async (req: Request, res: Response): Promise<void> => {
+    const userId = req.user.id;
 
     const { messages } = req.body;
 

@@ -15,6 +15,5 @@ export const updatePinnedMessages = async (messages: string[]): Promise<void> =>
         await axios.patch('/mcp/pinned-messages', { messages });
     } catch (error) {
         console.error('Failed to update pinned messages:', error);
-        throw error;
     }
 };

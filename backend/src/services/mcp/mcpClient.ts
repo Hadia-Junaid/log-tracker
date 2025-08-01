@@ -46,7 +46,7 @@ export class MCPChatClient {
           })),
         }, ];
     
-        logger.info(`🔧 Available tools:`, toolsResult.tools.map((t) => t.name).join(", "));
+        logger.info(`🔧 Available tools: ${toolsResult.tools.map((t) => t.name).join(", ")}`);
       }
      
     
@@ -81,7 +81,7 @@ export class MCPChatClient {
         let response = await model.generateContent({
           contents: messages,
         });
-    
+        let toolCallCount = 0;
         while (true) {
           if (!response.response.candidates || response.response.candidates.length === 0) {
             logger.warn("No candidates found in the Gemini API response. Breaking loop.");
@@ -122,6 +122,12 @@ export class MCPChatClient {
           }
     
           if (toolCalls.length > 0) {
+            toolCallCount += toolCalls.length;
+            if (toolCallCount > 20) {
+              logger.error("❌ Exceeded maximum allowed tool calls (20). Stopping execution.");
+              finalText.push(" Query processing stopped: too many tool calls.");
+              break;
+            }
             messages.push({
               role: "model",
               parts: toolCalls.map(tc => ({
@@ -156,8 +162,9 @@ export class MCPChatClient {
               
               if ((toolName.includes("find") || toolName.includes("count") || toolName.includes("aggregate"))) {
                   // Restrict logs to assigned apps only
-                  const assignedAppIds = assignedApps.map((a) => ({ $oid: a.id }));
-    
+                  const assignedAppIds = assignedApps
+                    .filter((a) => a.isActive) 
+                    .map((a) => ({ $oid: a.id }));    
                   if (!toolArgs.filter) toolArgs.filter = {};
     
                   if (toolArgs.filter.application_id) {
@@ -205,6 +212,7 @@ export class MCPChatClient {
           }
           break;
         }
+        logger.info(`number of tool calls ${toolCallCount}`)
         return finalText.join(" ");
       }
     

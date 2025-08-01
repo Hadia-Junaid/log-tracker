@@ -37,7 +37,6 @@ export function cleanSchema(schema: any): any {
 }
 
 export const getAssignedApplicationsForUser = async (userId: string) => {
-  if (!mongoose.Types.ObjectId.isValid(userId)) throw new Error("Invalid userId");
 
   let userGroups = await UserGroup.find({ members: userId }).lean();
   userGroups = userGroups.filter((g) => g.is_active === true);
@@ -52,5 +51,5 @@ export const getAssignedApplicationsForUser = async (userId: string) => {
     _id: { $in: groupAppIds.map((id) => new ObjectId(id)) },
   }).lean();
 
-  return apps.map((a) => ({ id: a._id.toString(), name: a.name }));
+  return apps.map((a) => ({ id: a._id.toString(), name: a.name , isActive: a.isActive, hostname: a.hostname, environment: a.environment, description: a.description}));
 };
