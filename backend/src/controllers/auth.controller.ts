@@ -21,7 +21,6 @@ class AuthController {
     async googleCallback(req: Request, res: Response): Promise<void> {
         const { code } = req.query;
 
-        console.log("Google callback received with code:", code);
         if (!code || typeof code !== "string") {
             res.redirect(
                 `${config.get<string>("frontend.baseUrl")}/#login?error=missing_code&message=Authorization code is required. Please try again.`

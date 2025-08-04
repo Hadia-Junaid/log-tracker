@@ -85,16 +85,10 @@ class MCPClient {
         input_schema: tool.inputSchema,
       }));
 
-    console.log(
-      "Connected to Mongo MCP Server with tools:",
-      this.tools.map((t) => t.name)
-    );
   }
 
   async processQuery(user: ChatUser, chat: MessageParam[]) {
     const messages: MessageParam[] = chat;
-
-    console.log("Processing query for user:", user.email);  
 
     const isAdmin = user.is_admin;
 
@@ -144,7 +138,6 @@ class MCPClient {
         description: app.description,
       }));
     }
-    console.log("Final user object:", JSON.stringify(user, null, 2));
 
     let finalText = [];
     let hasToolUse = true;
@@ -177,8 +170,6 @@ class MCPClient {
         `,
       });
 
-      console.log("Claude response:", response.content);
-
       messages.push({
         role: "assistant",
         content: response.content,
@@ -194,7 +185,6 @@ class MCPClient {
           const toolName = content.name;
           const toolArgs = content.input as Record<string, unknown>;
 
-          console.log(`Tool requested: ${toolName}`, toolArgs);
 
           //Check if the user has the necessary permissions to use the tool
           if (!isAdmin) {
@@ -204,7 +194,7 @@ class MCPClient {
               toolArgs
             );
             if (!authorized) {
-              console.log("Unauthorized tool: ", message);
+              logger.warn("Unauthorized tool: "+ message);
               return message;
             }
           }
@@ -215,8 +205,6 @@ class MCPClient {
             arguments: toolArgs,
           });
 
-          console.log(`Tool ${toolName} result:`, result);
-          //   console.log("Messages content:", messages);
 
           // Add the result back to conversation so Claude can see it
           messages.push({

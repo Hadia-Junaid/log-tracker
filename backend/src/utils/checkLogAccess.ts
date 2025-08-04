@@ -1,4 +1,5 @@
 import { ChatUser } from "../services/ClaudeMcpService";
+import logger from "./logger";
 
 export const checkFindLogAccess = (
   user: ChatUser,
@@ -14,7 +15,7 @@ export const checkFindLogAccess = (
   );
 
   if (!allowedApplicationIds.includes(toolArgs.applicationId)) {
-    console.log("User does not have access to this application.");
+    logger.warn("User does not have access to this application.");
     return false; // user is trying to access an app they don’t have access to
   }
 
@@ -31,8 +32,6 @@ export const checkAggregateLogAccess = (
 
   //now get these applications
   const allowedApps = user.assigned_applications;
-
-  console.log("Allowed applications:", allowedApps);
 
   const allowedAppNames = allowedApps.map((app) => app.name);
 

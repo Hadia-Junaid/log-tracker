@@ -30,7 +30,7 @@ export const checkToolPrivileges = (
     logger.debug("Checking for logs access.");
     const authorized = checkFindLogAccess(user, toolArgs);
     if (!authorized) {
-      console.log("User does not have access to this application's logs.");
+      logger.warn("User does not have access to this application's logs.");
       return {
         authorized: false,
         message:
@@ -43,7 +43,7 @@ export const checkToolPrivileges = (
     logger.debug("Checking for logs access in aggregate.");
     const authorized = checkAggregateLogAccess(user, toolArgs);
     if (!authorized) {
-      console.log("User does not have access to this application.");
+      logger.warn("User does not have access to this application.");
       return {
         authorized: false,
         message:

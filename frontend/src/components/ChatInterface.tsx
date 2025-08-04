@@ -153,7 +153,6 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
 
   const handleSendMessage = async (messageText?: string) => {
     const textToSend = messageText || inputValue.trim();
-    console.log("Sending message:", textToSend);
     if (!textToSend) return;
 
     const userMessage: ChatMessage = {
@@ -174,11 +173,12 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
 
     // Build clean chat history - include user messages, model responses, function calls AND function responses
     const chatHistory = messages
-      .filter((msg) => 
-        msg.id !== "welcome-new" && 
-        msg.id !== "welcome" && 
-        msg.type !== "confirmed" && 
-        msg.type !== "confirmation_required"
+      .filter(
+        (msg) =>
+          msg.id !== "welcome-new" &&
+          msg.id !== "welcome" &&
+          msg.type !== "confirmed" &&
+          msg.type !== "confirmation_required"
         // Don't filter out anything else - include function calls and responses
       )
       .slice(-15) // Keep more messages to include function calls and responses
@@ -186,7 +186,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
         if (msg.role === "user") {
           return {
             role: "user",
-            parts: [{ text: msg.text }]
+            parts: [{ text: msg.text }],
           };
         } else if (msg.role === "model" && msg.type === "function_call") {
           // Parse the stored function call and format it correctly
@@ -194,13 +194,13 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
             const functionCall = JSON.parse(msg.text);
             return {
               role: "model",
-              parts: [{ functionCall: functionCall }]
+              parts: [{ functionCall: functionCall }],
             };
           } catch (e) {
             console.error("Error parsing function call:", e);
             return {
               role: "model",
-              parts: [{ text: msg.text }]
+              parts: [{ text: msg.text }],
             };
           }
         } else if (msg.role === "function") {
@@ -209,13 +209,13 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
             const functionResponse = JSON.parse(msg.text);
             return {
               role: "function",
-              parts: [{ functionResponse: functionResponse }]
+              parts: [{ functionResponse: functionResponse }],
             };
           } catch (e) {
             console.error("Error parsing function response:", e);
             return {
               role: "function",
-              parts: [{ text: msg.text }]
+              parts: [{ text: msg.text }],
             };
           }
         } else if (msg.role === "model" && msg.type === "function") {
@@ -225,11 +225,11 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
           // Regular model response
           return {
             role: "model",
-            parts: [{ text: msg.text }]
+            parts: [{ text: msg.text }],
           };
         }
       })
-      .filter(msg => msg !== null); // Remove null entries
+      .filter((msg) => msg !== null); // Remove null entries
 
     // Add the new user message
     const currentChat = [
@@ -238,11 +238,9 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     ];
 
     try {
-      console.log("sending current chat in handleSendMessage:", currentChat);
       const response = await axios.post("/chat", {
         chat: currentChat,
       });
-      console.log("AI response:", response.data);
 
       const newMessages: ChatMessage[] = [];
 
@@ -251,9 +249,9 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
       if (response.data.toolDetails) {
         const functionCall = {
           name: response.data.toolDetails.toolName,
-          args: response.data.toolDetails.toolArgs
+          args: response.data.toolDetails.toolArgs,
         };
-        
+
         newMessages.push({
           id: "functionCall" + Date.now().toString(),
           type: "function_call",
@@ -281,7 +279,11 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
         newMessages.push({
           id: "functionResponse" + Date.now().toString(),
           type: "function_response",
-          text: JSON.stringify(response.data.parts[0].functionResponse, null, 2),
+          text: JSON.stringify(
+            response.data.parts[0].functionResponse,
+            null,
+            2
+          ),
           role: "function",
           timestamp: new Date(),
         });
@@ -333,9 +335,6 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     message: ChatMessage,
     confirmed: boolean
   ) => {
-    console.log("Messages in confirmation handler:", messages);
-    console.log("Message passed: ", message);
-
     // Update the message type to "confirmed" to hide the buttons
     setMessages((prev) =>
       prev.map((msg) =>
@@ -371,18 +370,19 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     // Build the chat history for confirmation
     // Include user messages, model responses, function calls, and function responses
     const chatHistory = messages
-      .filter((msg) => 
-        msg.id !== "welcome-new" && 
-        msg.id !== "welcome" && 
-        msg.type !== "confirmed" && 
-        msg.type !== "confirmation_required"
+      .filter(
+        (msg) =>
+          msg.id !== "welcome-new" &&
+          msg.id !== "welcome" &&
+          msg.type !== "confirmed" &&
+          msg.type !== "confirmation_required"
         // Don't filter out anything else - include function calls and responses
       )
       .map((msg) => {
         if (msg.role === "user") {
           return {
             role: "user",
-            parts: [{ text: msg.text }]
+            parts: [{ text: msg.text }],
           };
         } else if (msg.role === "model" && msg.type === "function_call") {
           // Parse the stored function call and format it correctly
@@ -390,13 +390,13 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
             const functionCall = JSON.parse(msg.text);
             return {
               role: "model",
-              parts: [{ functionCall: functionCall }]
+              parts: [{ functionCall: functionCall }],
             };
           } catch (e) {
             console.error("Error parsing function call:", e);
             return {
               role: "model",
-              parts: [{ text: msg.text }]
+              parts: [{ text: msg.text }],
             };
           }
         } else if (msg.role === "function") {
@@ -405,13 +405,13 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
             const functionResponse = JSON.parse(msg.text);
             return {
               role: "function",
-              parts: [{ functionResponse: functionResponse }]
+              parts: [{ functionResponse: functionResponse }],
             };
           } catch (e) {
             console.error("Error parsing function response:", e);
             return {
               role: "function",
-              parts: [{ text: msg.text }]
+              parts: [{ text: msg.text }],
             };
           }
         } else if (msg.role === "model" && msg.type === "function") {
@@ -421,13 +421,11 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
           // Regular model response
           return {
             role: "model",
-            parts: [{ text: msg.text }]
+            parts: [{ text: msg.text }],
           };
         }
       })
-      .filter(msg => msg !== null); // Remove null entries
-
-    console.log("Clean chat history for confirmation:", chatHistory);
+      .filter((msg) => msg !== null); // Remove null entries
 
     // Build Gemini contents format with confirmation
     const currentChat = [
@@ -441,14 +439,9 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     ];
 
     try {
-      console.log(
-        "Sending confirmation message in handleConfirmation:",
-        currentChat
-      );
       const response = await axios.post("/chat", {
         chat: currentChat,
       });
-      console.log("AI confirmation response:", response.data);
 
       const newMessages: ChatMessage[] = [];
 
@@ -457,9 +450,9 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
       if (response.data.toolDetails) {
         const functionCall = {
           name: response.data.toolDetails.toolName,
-          args: response.data.toolDetails.toolArgs
+          args: response.data.toolDetails.toolArgs,
         };
-        
+
         newMessages.push({
           id: "functionCall" + Date.now().toString(),
           type: "function_call",
@@ -487,7 +480,11 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
         newMessages.push({
           id: "functionResponse" + Date.now().toString(),
           type: "function_response",
-          text: JSON.stringify(response.data.parts[0].functionResponse, null, 2),
+          text: JSON.stringify(
+            response.data.parts[0].functionResponse,
+            null,
+            2
+          ),
           role: "function",
           timestamp: new Date(),
         });
@@ -521,8 +518,6 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
       }
 
       setMessages((prev) => [...prev, ...newMessages]);
-
-      console.log("Messages after AI confirmation:", newMessages);
     } catch (error) {
       console.error("Error sending confirmation:", error);
       const errorMessage: ChatMessage = {
@@ -669,93 +664,94 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
               <div class="chat-messages-container">
                 <div class="chat-messages">
                   {messages
-                    .filter((message) => 
-                      (message.role === "user") || 
-                      (message.role === "model" && 
-                       message.type !== "function" && 
-                       message.type !== "function_call")
+                    .filter(
+                      (message) =>
+                        message.role === "user" ||
+                        (message.role === "model" &&
+                          message.type !== "function" &&
+                          message.type !== "function_call")
                     )
                     .map((message) => (
-                    <div
-                      key={message.id}
-                      class={`chat-message ${message.role === "user" ? "user-message" : "ai-message"}`}
-                    >
-                      <div class="message-wrapper">
-                        <div class="message-content">
-                          <div
-                            class="message-text"
-                            style={{
-                              whiteSpace: "pre-wrap",
-                              wordBreak: "break-word",
-                            }}
-                          >
-                            {message.text}
+                      <div
+                        key={message.id}
+                        class={`chat-message ${message.role === "user" ? "user-message" : "ai-message"}`}
+                      >
+                        <div class="message-wrapper">
+                          <div class="message-content">
+                            <div
+                              class="message-text"
+                              style={{
+                                whiteSpace: "pre-wrap",
+                                wordBreak: "break-word",
+                              }}
+                            >
+                              {message.text}
+                            </div>
+                            {message.type === "confirmation_required" && (
+                              <div class="confirmation-buttons">
+                                <oj-button
+                                  class="confirmation-button confirm-button"
+                                  chroming="callToAction"
+                                  size="sm"
+                                  onojAction={() =>
+                                    handleConfirmation(message, true)
+                                  }
+                                >
+                                  Continue
+                                </oj-button>
+                                <oj-button
+                                  class="confirmation-button cancel-button"
+                                  chroming="outlined"
+                                  size="sm"
+                                  onojAction={() =>
+                                    handleConfirmation(message, false)
+                                  }
+                                >
+                                  Cancel
+                                </oj-button>
+                              </div>
+                            )}
+                            <div class="message-time">
+                              {formatTime(message.timestamp)}
+                            </div>
                           </div>
-                          {message.type === "confirmation_required" && (
-                            <div class="confirmation-buttons">
+                          {message.role === "user" && (
+                            <div class="message-actions">
                               <oj-button
-                                class="confirmation-button confirm-button"
-                                chroming="callToAction"
+                                class="save-message-button"
+                                chroming="borderless"
+                                display="icons"
                                 size="sm"
+                                title={
+                                  isMessageSaved(message.text)
+                                    ? "Unsave message"
+                                    : "Save message"
+                                }
                                 onojAction={() =>
-                                  handleConfirmation(message, true)
+                                  saveOrUnsaveMessage(message.text)
                                 }
                               >
-                                Continue
-                              </oj-button>
-                              <oj-button
-                                class="confirmation-button cancel-button"
-                                chroming="outlined"
-                                size="sm"
-                                onojAction={() =>
-                                  handleConfirmation(message, false)
-                                }
-                              >
-                                Cancel
+                                <span slot="startIcon">
+                                  {isMessageSaved(message.text) ? (
+                                    <svg
+                                      viewBox="0 0 24 24"
+                                      width="16"
+                                      height="16"
+                                      fill="currentColor"
+                                      style="display: inline-block; vertical-align: middle;"
+                                    >
+                                      <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+                                    </svg>
+                                  ) : (
+                                    <span class="oj-ux-ico-bookmark"></span>
+                                  )}
+                                </span>
                               </oj-button>
                             </div>
                           )}
-                          <div class="message-time">
-                            {formatTime(message.timestamp)}
-                          </div>
                         </div>
-                        {message.role === "user" && (
-                          <div class="message-actions">
-                            <oj-button
-                              class="save-message-button"
-                              chroming="borderless"
-                              display="icons"
-                              size="sm"
-                              title={
-                                isMessageSaved(message.text)
-                                  ? "Unsave message"
-                                  : "Save message"
-                              }
-                              onojAction={() =>
-                                saveOrUnsaveMessage(message.text)
-                              }
-                            >
-                              <span slot="startIcon">
-                                {isMessageSaved(message.text) ? (
-                                  <svg
-                                    viewBox="0 0 24 24"
-                                    width="16"
-                                    height="16"
-                                    fill="currentColor"
-                                    style="display: inline-block; vertical-align: middle;"
-                                  >
-                                    <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
-                                  </svg>
-                                ) : (
-                                  <span class="oj-ux-ico-bookmark"></span>
-                                )}
-                              </span>
-                            </oj-button>
-                          </div>
-                        )}
                       </div>
-                    </div>
-                  ))}
+                    ))}
                   {/* Typing indicator */}
                   {isTyping && (
                     <div class="chat-message ai-message typing-indicator">

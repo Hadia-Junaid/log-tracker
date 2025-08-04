@@ -13,7 +13,6 @@ export const handleChat = async (req: Request, res: Response) => {
     return;
   }
 
-  console.log("Chat received in controller:", chat);
 
   let functionResponse;
 
@@ -62,8 +61,6 @@ export const handleSaveMessage = async (req: Request, res: Response) => {
 
   const user = req.user;
 
-  console.log("Message received to save:", message);
-
   if (!user) {
     res.status(401).json({ error: "Unauthorized user" });
     return;
@@ -87,8 +84,6 @@ export const handleUnsaveMessage = async (req: Request, res: Response) => {
   const { message } = req.body;
 
   const user = req.user;
-
-  console.log("Message received to unsave:", message);
 
   if (!user) {
     res.status(401).json({ error: "Unauthorized user" });
@@ -116,8 +111,6 @@ export const handleDeletePendingOperation = async (
   const { toolId } = req.body;
 
   const user = req.user;
-
-  console.log("Tool ID received to delete pending operation:", toolId);
 
   if (!user) {
     res.status(401).json({ error: "Unauthorized user" });

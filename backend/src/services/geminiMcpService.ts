@@ -77,16 +77,14 @@ class MCPClient {
         input_schema: tool.inputSchema,
       }));
 
-    console.log(
-      "Connected to Mongo MCP Server with tools:",
+    logger.info(
+      "Connected to Mongo MCP Server with tools:" +
       this.tools.map((t) => t.name)
     );
   }
 
   async processQuery(user: ChatUser, chat: any) {
     const contents: any[] = chat;
-
-    console.log("User chat contents in processQuery:", JSON.stringify(contents, null, 2));
 
     const isAdmin = user.is_admin;
 
@@ -188,8 +186,6 @@ class MCPClient {
         },
       });
 
-      // console.log("Gemini response:", JSON.stringify(response, null, 2));
-
       const candidate = response.candidates?.[0];
       if (!candidate?.content?.parts) {
         throw new Error("Unexpected Gemini response shape");
@@ -209,10 +205,7 @@ class MCPClient {
             args: Record<string, any>;
           };
 
-          console.log(`Tool requested: ${toolName}`, toolArgs);
-
           // — push the function-call back into the convo so the model sees it
-          console.log(`Pushing tool call to contents: ${toolName}`, toolArgs);
           contents.push({
             role: "model",
             parts: [{ functionCall: { name: toolName, args: toolArgs } }],
@@ -243,8 +236,6 @@ class MCPClient {
             });
             const result = await pendingOperation.save();
 
-            console.log(`Pending operation saved with ID: ${result._id}`);
-
             const toolId = result._id.toString();
 
             // send the user a confirmation message
@@ -263,7 +254,6 @@ class MCPClient {
             name: toolName,
             arguments: toolArgs,
           });
-          console.log(`Tool ${toolName} result:`, toolResult);
 
           // — push the result back in as a “user” message
           contents.push({
@@ -302,18 +292,15 @@ class MCPClient {
       throw new Error(`Pending operation with ID ${toolId} not found`);
     }
     const { toolName, toolArgs } = pendingOperation;
-    console.log(`Executing tool: ${toolName} from db with args:`, toolArgs);
 
     // execute the tool
     const toolResult = await this.mcp.callTool({
       name: toolName,
       arguments: toolArgs,
     });
-    console.log(`Tool ${toolName} result:`, toolResult);
 
     // remove the pending operation from the db
     await PendingOperation.findByIdAndDelete(toolId);
-    console.log(`Pending operation with ID ${toolId} deleted`);
 
     // return the result
     return {
