@@ -86,6 +86,8 @@ class MCPClient {
   async processQuery(user: ChatUser, chat: any) {
     const contents: any[] = chat;
 
+    logger.debug(`Chat received: ${JSON.stringify(contents)}`);
+
     const isAdmin = user.is_admin;
 
     //define RBAC based tools
@@ -187,7 +189,9 @@ class MCPClient {
       });
 
       const candidate = response.candidates?.[0];
+
       if (!candidate?.content?.parts) {
+        logger.info(`Gemini response: ${JSON.stringify(response)}`);
         throw new Error("Unexpected Gemini response shape");
       }
 
@@ -204,6 +208,8 @@ class MCPClient {
             name: string;
             args: Record<string, any>;
           };
+
+          logger.debug(`Gemini requested tool: ${toolName} with args: ${JSON.stringify(toolArgs)}`);
 
           // — push the function-call back into the convo so the model sees it
           contents.push({
@@ -292,12 +298,15 @@ class MCPClient {
       throw new Error(`Pending operation with ID ${toolId} not found`);
     }
     const { toolName, toolArgs } = pendingOperation;
+    logger.info(`Executing tool ${toolName} with args: ${JSON.stringify(toolArgs)}`);
 
     // execute the tool
     const toolResult = await this.mcp.callTool({
       name: toolName,
       arguments: toolArgs,
     });
+
+    logger.debug(`Tool ${toolName} executed successfully with result: ${JSON.stringify(toolResult)}`);
 
     // remove the pending operation from the db
     await PendingOperation.findByIdAndDelete(toolId);

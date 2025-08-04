@@ -151,6 +151,84 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     }
   }, [isOpen]);
 
+  const validateAndCleanChatHistory = (messages: ChatMessage[]) => {
+    const filteredMessages = messages
+      .filter(
+        (msg) =>
+          msg.id !== "welcome-new" &&
+          msg.id !== "welcome" &&
+          msg.type !== "confirmed" &&
+          msg.type !== "confirmation_required"
+      );
+
+    const cleanedChat: any[] = [];
+    let expectingFunctionResponse = false;
+    let lastFunctionCallName = "";
+
+    for (let i = 0; i < filteredMessages.length; i++) {
+      const msg = filteredMessages[i];
+
+      if (msg.role === "user") {
+        // User messages reset the expectation
+        expectingFunctionResponse = false;
+        cleanedChat.push({
+          role: "user",
+          parts: [{ text: msg.text }],
+        });
+      } else if (msg.role === "model" && msg.type === "function_call") {
+        // Function call - parse and add
+        try {
+          const functionCall = JSON.parse(msg.text);
+          expectingFunctionResponse = true;
+          lastFunctionCallName = functionCall.name;
+          cleanedChat.push({
+            role: "model",
+            parts: [{ functionCall: functionCall }],
+          });
+        } catch (e) {
+          console.error("Error parsing function call:", e);
+          // Skip malformed function calls
+        }
+      } else if (msg.role === "function") {
+        // Function response - only add if we're expecting one
+        if (expectingFunctionResponse) {
+          try {
+            const functionResponse = JSON.parse(msg.text);
+            expectingFunctionResponse = false;
+            cleanedChat.push({
+              role: "function",
+              parts: [{ functionResponse: functionResponse }],
+            });
+          } catch (e) {
+            console.error("Error parsing function response:", e);
+            // Skip malformed function responses
+          }
+        } else {
+          console.warn("Skipping orphaned function response:", msg.text);
+        }
+      } else if (msg.role === "model" && msg.type === "response") {
+        // Regular model response
+        expectingFunctionResponse = false;
+        cleanedChat.push({
+          role: "model",
+          parts: [{ text: msg.text }],
+        });
+      }
+      // Skip other message types (like toolDetails)
+    }
+
+    // If we end with an incomplete function call, remove it
+    if (expectingFunctionResponse && cleanedChat.length > 0) {
+      const lastMessage = cleanedChat[cleanedChat.length - 1];
+      if (lastMessage.role === "model" && lastMessage.parts?.[0]?.functionCall) {
+        console.warn("Removing incomplete function call at end:", lastMessage);
+        cleanedChat.pop();
+      }
+    }
+
+    return cleanedChat.slice(-15); // Keep last 15 messages
+  };
+
   const handleSendMessage = async (messageText?: string) => {
     const textToSend = messageText || inputValue.trim();
     if (!textToSend) return;
@@ -171,65 +249,8 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
 
     setIsTyping(true);
 
-    // Build clean chat history - include user messages, model responses, function calls AND function responses
-    const chatHistory = messages
-      .filter(
-        (msg) =>
-          msg.id !== "welcome-new" &&
-          msg.id !== "welcome" &&
-          msg.type !== "confirmed" &&
-          msg.type !== "confirmation_required"
-        // Don't filter out anything else - include function calls and responses
-      )
-      .slice(-15) // Keep more messages to include function calls and responses
-      .map((msg) => {
-        if (msg.role === "user") {
-          return {
-            role: "user",
-            parts: [{ text: msg.text }],
-          };
-        } else if (msg.role === "model" && msg.type === "function_call") {
-          // Parse the stored function call and format it correctly
-          try {
-            const functionCall = JSON.parse(msg.text);
-            return {
-              role: "model",
-              parts: [{ functionCall: functionCall }],
-            };
-          } catch (e) {
-            console.error("Error parsing function call:", e);
-            return {
-              role: "model",
-              parts: [{ text: msg.text }],
-            };
-          }
-        } else if (msg.role === "function") {
-          // This is a function response
-          try {
-            const functionResponse = JSON.parse(msg.text);
-            return {
-              role: "function",
-              parts: [{ functionResponse: functionResponse }],
-            };
-          } catch (e) {
-            console.error("Error parsing function response:", e);
-            return {
-              role: "function",
-              parts: [{ text: msg.text }],
-            };
-          }
-        } else if (msg.role === "model" && msg.type === "function") {
-          // This is toolDetails - skip it as it's not part of the conversation
-          return null;
-        } else {
-          // Regular model response
-          return {
-            role: "model",
-            parts: [{ text: msg.text }],
-          };
-        }
-      })
-      .filter((msg) => msg !== null); // Remove null entries
+    // Build clean and validated chat history
+    const chatHistory = validateAndCleanChatHistory(messages);
 
     // Add the new user message
     const currentChat = [
@@ -238,6 +259,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     ];
 
     try {
+      console.log("Sending validated chat history:", currentChat);
       const response = await axios.post("/chat", {
         chat: currentChat,
       });
@@ -367,65 +389,10 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
 
     setIsTyping(true);
 
-    // Build the chat history for confirmation
-    // Include user messages, model responses, function calls, and function responses
-    const chatHistory = messages
-      .filter(
-        (msg) =>
-          msg.id !== "welcome-new" &&
-          msg.id !== "welcome" &&
-          msg.type !== "confirmed" &&
-          msg.type !== "confirmation_required"
-        // Don't filter out anything else - include function calls and responses
-      )
-      .map((msg) => {
-        if (msg.role === "user") {
-          return {
-            role: "user",
-            parts: [{ text: msg.text }],
-          };
-        } else if (msg.role === "model" && msg.type === "function_call") {
-          // Parse the stored function call and format it correctly
-          try {
-            const functionCall = JSON.parse(msg.text);
-            return {
-              role: "model",
-              parts: [{ functionCall: functionCall }],
-            };
-          } catch (e) {
-            console.error("Error parsing function call:", e);
-            return {
-              role: "model",
-              parts: [{ text: msg.text }],
-            };
-          }
-        } else if (msg.role === "function") {
-          // This is a function response
-          try {
-            const functionResponse = JSON.parse(msg.text);
-            return {
-              role: "function",
-              parts: [{ functionResponse: functionResponse }],
-            };
-          } catch (e) {
-            console.error("Error parsing function response:", e);
-            return {
-              role: "function",
-              parts: [{ text: msg.text }],
-            };
-          }
-        } else if (msg.role === "model" && msg.type === "function") {
-          // This is toolDetails - skip it as it's not part of the conversation
-          return null;
-        } else {
-          // Regular model response
-          return {
-            role: "model",
-            parts: [{ text: msg.text }],
-          };
-        }
-      })
-      .filter((msg) => msg !== null); // Remove null entries
+    // Build clean and validated chat history for confirmation
+    const chatHistory = validateAndCleanChatHistory(messages);
+
+    console.log("Clean chat history for confirmation:", chatHistory);
 
     // Build Gemini contents format with confirmation
     const currentChat = [
@@ -439,6 +406,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     ];
 
     try {
+      console.log("Sending confirmation with validated history:", currentChat);
       const response = await axios.post("/chat", {
         chat: currentChat,
       });
