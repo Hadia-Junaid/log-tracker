@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import axios from 'axios';
 import config from 'config';
 import { spawn, ChildProcess } from 'child_process';
@@ -68,14 +69,18 @@ interface UserContext {
   };
 }
 
+export type AIModel = 'openai-gpt-4o-mini' | 'openai-gpt-4o' | 'gemini-2.0-flash' | 'gemini-2.5-flash' | 'gemini-2.5-pro';
+
 export class MCPClient extends EventEmitter {
   private openai: OpenAI;
+  private gemini: GoogleGenerativeAI;
   private mcpProcess: ChildProcess | null = null;
   private tools: MCPTool[] = [];
   private isConnected: boolean = false;
   private messageQueue: any[] = [];
   private responseBuffer: string = '';
   private autoConnectMongo: boolean = true;
+  private defaultModel: AIModel = 'openai-gpt-4o-mini';
 
   constructor() {
     super();
@@ -83,10 +88,64 @@ export class MCPClient extends EventEmitter {
       apiKey: config.get<string>('openai.apiKey'),
     });
     
+    this.gemini = new GoogleGenerativeAI(config.get<string>('gemini.apiKey'));
+    
     // Auto-connect to MongoDB MCP server if enabled
     if (this.autoConnectMongo) {
       this.autoConnectToMongoDB();
     }
+  }
+
+  /**
+   * Set the default AI model
+   */
+  setDefaultModel(model: AIModel): void {
+    this.defaultModel = model;
+  }
+
+  /**
+   * Get the default AI model
+   */
+  getDefaultModel(): AIModel {
+    return this.defaultModel;
+  }
+
+  /**
+   * Get available models
+   */
+  getAvailableModels(): Array<{ id: AIModel; name: string; provider: string; description: string }> {
+    return [
+      {
+        id: 'openai-gpt-4o-mini',
+        name: 'GPT-4o Mini',
+        provider: 'OpenAI',
+        description: 'Fast and efficient model for most tasks'
+      },
+      {
+        id: 'openai-gpt-4o',
+        name: 'GPT-4o',
+        provider: 'OpenAI',
+        description: 'Most capable model with advanced reasoning'
+      },
+      {
+        id: 'gemini-2.0-flash',
+        name: 'Gemini 2.0 Flash',
+        provider: 'Google',
+        description: 'Fast and efficient Gemini model'
+      },
+      {
+        id: 'gemini-2.5-flash',
+        name: 'Gemini 2.5 Flash',
+        provider: 'Google',
+        description: 'Advanced Gemini model with function calling'
+      },
+      {
+        id: 'gemini-2.5-pro',
+        name: 'Gemini 2.5 Pro',
+        provider: 'Google',
+        description: 'Most capable Gemini model with advanced reasoning'
+      }
+    ];
   }
 
   /**
@@ -707,13 +766,177 @@ export class MCPClient extends EventEmitter {
   }
 
   /**
-   * Process a query using OpenAI and available MCP tools
+   * Process a query using Gemini AI (simplified version without function calling for now)
+   */
+  async processQueryWithGemini(
+    query: string,
+    conversationHistory: MCPMessage[] = [],
+    authToken?: string,
+    userId?: string,
+    model: 'gemini-2.0-flash' | 'gemini-2.5-flash' | 'gemini-2.5-pro' = 'gemini-2.5-flash'
+  ): Promise<{
+    response: string;
+    toolCalls: any[];
+    tokensUsed: number;
+  }> {
+    try {
+      // Get user context for access control
+      const userContext = userId ? await this.getUserContext(userId) : null;
+      
+      // Prepare system prompt
+      const systemPrompt = `You are an intelligent AI assistant for a comprehensive log tracking application. You provide personalized, context-aware assistance based on user roles and permissions.
+
+${userContext ? `
+🎯 CURRENT USER CONTEXT:
+👤 User Information:
+- Name: ${userContext.userName}
+- Email: ${userContext.userEmail}
+- User ID: ${userContext.userId}
+- Role: ${userContext.isAdmin ? '🔴 ADMIN' : '🔵 USER'}
+
+📊 User Access Summary:
+- User Groups: ${userContext.userGroups.length} groups
+- Assigned Applications: ${userContext.assignedApplications.length} applications
+- Pinned Applications: ${userContext.pinnedApplications.length} applications
+
+🔍 Detailed User Groups:
+${userContext.userGroupDetails.map(group => `  • ${group.name} (${group.is_admin ? 'Admin Group' : 'User Group'}) - ${group.assigned_applications.length} assigned apps`).join('\n')}
+
+${!userContext.isAdmin ? `
+📱 PRE-FETCHED APPLICATION DATA:
+Your Assigned Applications:
+${userContext.assignedApplicationDetails.map(app => `  • ${app.name} (${app.environment}) - ${app.hostname} - ${app.isActive ? 'Active' : 'Inactive'} - ${app.description}`).join('\n')}
+
+Your Pinned Applications:
+${userContext.pinnedApplicationDetails.map(app => `  • ${app.name} (${app.environment}) - ${app.hostname} - ${app.isActive ? 'Active' : 'Inactive'} - ${app.description}`).join('\n')}
+` : ''}
+
+⚙️ User Settings:
+- Auto Refresh: ${userContext.settings.autoRefresh ? 'Enabled' : 'Disabled'}
+- Auto Refresh Time: ${userContext.settings.autoRefreshTime} seconds
+- Logs Per Page: ${userContext.settings.logsPerPage}
+
+${userContext.isAdmin ? `
+🔴 ADMIN ACCESS PRIVILEGES:
+✅ FULL SYSTEM ACCESS - You have complete administrative control over the entire system
+✅ Can access ALL users, ALL applications, ALL user groups, ALL logs, ALL settings
+✅ Can perform system-wide operations and administrative tasks
+` : `
+🔵 USER ACCESS PRIVILEGES:
+🔒 HIGHLY RESTRICTED ACCESS - You can only access data related to your assigned applications and user groups
+✅ Can access your own user data (pinned apps, settings)
+✅ All your application and user group data is pre-fetched and available in context above
+`}
+
+${userContext.isAdmin ? `
+🎯 ADMIN-SPECIFIC GUIDANCE:
+- You can answer questions about ANY user, application, or system-wide data
+- You can perform administrative tasks and system maintenance
+- You can analyze system-wide trends and patterns
+- You can help with user management and access control
+` : `
+🎯 USER-SPECIFIC GUIDANCE:
+- When users say "my" or "mine", use the pre-fetched data from context above
+- "My user groups" = use pre-fetched userGroupDetails from context
+- "My applications" = use pre-fetched assignedApplicationDetails from context
+- "My pinned apps" = use pre-fetched pinnedApplicationDetails from context
+- Provide helpful information based on the user's context and permissions
+`}
+` : '⚠️ NO USER CONTEXT: Access control cannot be determined. Proceed with caution and ask for clarification if needed.'}
+
+⚠️ IMPORTANT RULES:
+1. NEVER ask for user ID - automatically use the authenticated user's context
+2. ALWAYS apply appropriate access controls based on user role
+3. When users say "my" or "mine", automatically use their personal data from context
+4. Provide clear, helpful explanations for all information
+5. Suggest relevant follow-up queries when appropriate
+6. Focus on user-friendly information and avoid technical jargon
+
+${userContext && !userContext.isAdmin ? `
+🔒 SECURITY REMINDER: You are operating with USER permissions. You can only access data related to your assigned applications and user groups. If you need broader access, contact an administrator.` : ''}`;
+
+      // Prepare conversation history for Gemini
+      const contents = [
+        { role: 'user', parts: [{ text: systemPrompt }] },
+        { role: 'model', parts: [{ text: 'I understand. I am ready to help you with your log tracking application queries.' }] }
+      ];
+
+      // Add conversation history
+      conversationHistory.forEach(msg => {
+        contents.push({
+          role: msg.role === 'user' ? 'user' : 'model',
+          parts: [{ text: msg.content }]
+        });
+      });
+
+      // Add current query
+      contents.push({
+        role: 'user',
+        parts: [{ text: query }]
+      });
+
+      // Get the Gemini model
+      const geminiModel = this.gemini.getGenerativeModel({ model });
+
+      // Generate content with Gemini
+      const result = await geminiModel.generateContent({
+        contents,
+        generationConfig: {
+          temperature: 0.7,
+          maxOutputTokens: 1000
+        }
+      });
+
+      const response = result.response;
+      const text = response.text();
+
+      return {
+        response: text,
+        toolCalls: [],
+        tokensUsed: 0 // Gemini doesn't provide token usage in the same way
+      };
+
+    } catch (error) {
+      console.error('Error processing query with Gemini:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Process a query using the specified AI model
    */
   async processQuery(
     query: string,
     conversationHistory: MCPMessage[] = [],
     authToken?: string,
-    userId?: string
+    userId?: string,
+    model?: AIModel
+  ): Promise<{
+    response: string;
+    toolCalls: any[];
+    tokensUsed: number;
+  }> {
+    const selectedModel = model || this.defaultModel;
+
+    // Route to appropriate AI provider
+    if (selectedModel.startsWith('openai-')) {
+      return this.processQueryWithOpenAI(query, conversationHistory, authToken, userId, selectedModel as 'openai-gpt-4o-mini' | 'openai-gpt-4o');
+    } else if (selectedModel.startsWith('gemini-')) {
+      return this.processQueryWithGemini(query, conversationHistory, authToken, userId, selectedModel as 'gemini-2.0-flash' | 'gemini-2.5-flash' | 'gemini-2.5-pro');
+    } else {
+      throw new Error(`Unsupported model: ${selectedModel}`);
+    }
+  }
+
+  /**
+   * Process a query using OpenAI (renamed from original processQuery)
+   */
+  async processQueryWithOpenAI(
+    query: string,
+    conversationHistory: MCPMessage[] = [],
+    authToken?: string,
+    userId?: string,
+    model: 'openai-gpt-4o-mini' | 'openai-gpt-4o' = 'openai-gpt-4o-mini'
   ): Promise<{
     response: string;
     toolCalls: any[];
@@ -884,354 +1107,6 @@ ${this.tools.map(tool => {
   }
 }).join('\n')}
 
-🎯 COMPREHENSIVE USE CASES & QUERY PATTERNS:
-
-${userContext ? `
-=== 0. EFFICIENT QUERY PATTERNS ===
-• "Get all user groups" → Single query: {"database": "test", "collection": "usergroups", "filter": {}}
-• "Show all groups" → Single query: {"database": "test", "collection": "usergroups", "filter": {}}
-• "List all applications" → Single query: {"database": "test", "collection": "applications", "filter": {}}
-• "Show all users" → Single query: {"database": "test", "collection": "users", "filter": {}}
-• "Pin an application" → Two-step: Find app by name, then update user's pinned_applications
-• "Unpin an application" → Two-step: Find app by name, then update user's pinned_applications
-✅ EFFICIENT: Use single queries and avoid unnecessary follow-up queries
-
-=== USER NAME RESOLUTION (EFFICIENT) ===
-• When you need user names from user IDs, use single query with $in operator:
-  {"database": "test", "collection": "users", "filter": {"_id": {"$in": [USER_ID_ARRAY]}}}
-• NEVER make individual queries for each user ID
-• ALWAYS use $in operator for multiple user IDs
-• For "get all user groups" queries, only make follow-up queries if specifically asked for user names
-
-=== SPECIFIC QUERY OPTIMIZATION ===
-• "Get all user groups" → Single query only: {"database": "test", "collection": "usergroups", "filter": {}}
-• Do NOT automatically make follow-up queries for user names unless specifically requested
-• The user groups query already returns all necessary information
-• Only resolve user names if the user explicitly asks for member details
-
-=== 1. LOG ANALYSIS USE CASES ===
-
-BASIC LOG QUERIES:
-1. "Show my logs" → 
-   find logs where application_id is in user's assigned apps:
-   {"database": "test", "collection": "logs", "filter": {"application_id": {"$in": [${userContext.assignedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}}}
-
-2. "Show error logs" → 
-   find error logs for user's applications:
-   {"database": "test", "collection": "logs", "filter": {"application_id": {"$in": [${userContext.assignedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}, "log_level": "error"}}
-
-3. "Show recent logs" → 
-   find recent logs sorted by timestamp:
-   {"database": "test", "collection": "logs", "filter": {"application_id": {"$in": [${userContext.assignedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}}, "sort": {"timestamp": -1}, "limit": 50}
-
-ADVANCED LOG ANALYSIS:
-4. "Summarize logs across my applications" → 
-   Use aggregate to group and count by log_level and application:
-   {"database": "test", "collection": "logs", "pipeline": [
-     {"$match": {"application_id": {"$in": [${userContext.assignedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}}},
-     {"$group": {"_id": {"app": "$application_id", "level": "$log_level"}, "count": {"$sum": 1}}},
-     {"$sort": {"count": -1}}
-   ]}
-
-5. "Diagnose issues by correlating events" → 
-   Find logs with error patterns and related warnings:
-   {"database": "test", "collection": "logs", "filter": {"application_id": {"$in": [${userContext.assignedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}, "log_level": {"$in": ["error", "warn"]}}, "sort": {"timestamp": -1}}
-
-6. "Show logs from specific time period" → 
-   Find logs within date range:
-   {"database": "test", "collection": "logs", "filter": {"application_id": {"$in": [${userContext.assignedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}, "timestamp": {"$gte": "2024-01-01T00:00:00Z", "$lte": "2024-01-31T23:59:59Z"}}}
-
-${userContext.isAdmin ? `
-=== 2. NATURAL LANGUAGE APPLICATION & USER GROUP CREATION ===
-
-APPLICATION CREATION PATTERNS:
-1. "Create an app named 'InventoryService' with hostname 'localhost'" → 
-   insert-many applications:
-   {"database": "test", "collection": "applications", "documents": [{
-     "name": "InventoryService",
-     "hostname": "localhost", 
-     "environment": "Development",
-     "isActive": true,
-     "description": "Inventory management service"
-   }]}
-   
-   ✅ CORRECT EXAMPLE (The system will automatically add createdAt, updatedAt, and __v fields):
-   {"database": "test", "collection": "applications", "documents": [{
-     "name": "InventoryService",
-     "hostname": "localhost", 
-     "environment": "Development",
-     "isActive": true,
-     "description": "Inventory management service"
-   }]}
-
-2. "Create app 'StockService' and assign it to group 'Ops'" → 
-   Step 1: Create application
-   Step 2: Find Ops group and update assigned_applications array
-
-USER GROUP CREATION PATTERNS:
-3. "Create a group named 'Backend Team'" → 
-   insert-many usergroups:
-   {"database": "test", "collection": "usergroups", "documents": [{
-     "name": "Backend Team",
-     "is_admin": false,
-     "is_active": true,
-     "assigned_applications": [],
-     "members": []
-   }]}
-   
-   ✅ The system will automatically add createdAt, updatedAt, and __v fields
-
-4. "Create admin group 'System Administrators'" → 
-   insert-many usergroups:
-   {"database": "test", "collection": "usergroups", "documents": [{
-     "name": "System Administrators",
-     "is_admin": true,
-     "is_active": true,
-     "assigned_applications": [],
-     "members": []
-   }]}
-   
-   ✅ The system will automatically add createdAt, updatedAt, and __v fields
-
-=== 3. NATURAL LANGUAGE EDITING & PERMISSIONS ===
-
-APPLICATION EDITING:
-5. "Rename 'InventoryService' to 'StockService'" → 
-   update-many applications:
-   {"database": "test", "collection": "applications", "filter": {"name": "InventoryService"}, "update": {"$set": {"name": "StockService"}}}
-
-6. "Deactivate 'legacy-app'" → 
-   update-many applications:
-   {"database": "test", "collection": "applications", "filter": {"name": "legacy-app"}, "update": {"$set": {"isActive": false}}}
-
-USER GROUP MEMBERSHIP:
-7. "Add 'backend-team@gosaas.io' to 'Ops' group" → 
-   Step 1: Find user by email
-   Step 2: Update usergroups members array:
-   update-many usergroups:
-   {"database": "test", "collection": "usergroups", "filter": {"name": "Ops"}, "update": {"$addToSet": {"members": {"$oid": "USER_ID"}}}}
-
-8. "Remove 'john.doe@company.com' from 'Development' group" → 
-   update-many usergroups:
-   {"database": "test", "collection": "usergroups", "filter": {"name": "Development"}, "update": {"$pull": {"members": {"$oid": "USER_ID"}}}}
-
-APPLICATION ASSIGNMENTS:
-9. "Assign 'StockService' to 'Ops' group" → 
-   Step 1: Find application by name
-   Step 2: Update usergroups assigned_applications:
-   update-many usergroups:
-   {"database": "test", "collection": "usergroups", "filter": {"name": "Ops"}, "update": {"$addToSet": {"assigned_applications": {"$oid": "APP_ID"}}}}
-
-10. "Revoke access of 'legacy-app' from all user groups" → 
-    update-many usergroups:
-    {"database": "test", "collection": "usergroups", "filter": {}, "update": {"$pull": {"assigned_applications": {"$oid": "APP_ID"}}}}
-
-PERSONAL CONTEXT QUERIES:
-11. "Show my user groups" → 
-    find usergroups where members array contains user ID:
-    {"database": "test", "collection": "usergroups", "filter": {"members": {"$oid": "${userContext.userId}"}}}
-    
-12. "Get all user groups" (admin) or "Show all groups" → 
-    find all usergroups (for admin users only):
-    {"database": "test", "collection": "usergroups", "filter": {}}
-    ✅ EFFICIENT: Single query returns all groups with member IDs - use pre-fetched context or single $in query for user names if needed
-
-13. "List my applications" → 
-    find applications where _id is in user's assigned apps:
-    {"database": "test", "collection": "applications", "filter": {"_id": {"$in": [${userContext.assignedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}}}
-
-14. "List members in Quality Assurance group" → 
-    Step 1: Find group by name:
-    {"database": "test", "collection": "usergroups", "filter": {"name": "Quality Assurance"}}
-    Step 2: If you need user names, use a single efficient query with $in operator:
-    {"database": "test", "collection": "users", "filter": {"_id": {"$in": [MEMBER_IDS_FROM_STEP_1]}}}
-    ✅ EFFICIENT: Use single query with $in operator instead of multiple individual queries
-
-15. "Show my active applications" → 
-    find applications where _id is in assigned apps AND isActive is true:
-    {"database": "test", "collection": "applications", "filter": {"_id": {"$in": [${userContext.assignedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}, "isActive": true}}
-
-16. "Show my pinned apps" → 
-    find applications where _id is in user's pinned apps:
-    {"database": "test", "collection": "applications", "filter": {"_id": {"$in": [${userContext.pinnedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}}}
-
-17. "Pin an application" or "Add app to pinned" → 
-    Step 1: Find application by name:
-    {"database": "test", "collection": "applications", "filter": {"name": "APP_NAME"}}
-    Step 2: Add to user's pinned_applications array:
-    {"database": "test", "collection": "users", "filter": {"_id": {"$oid": "${userContext.userId}"}}, "update": {"$addToSet": {"pinned_applications": {"$oid": "APP_ID"}}}}
-
-18. "Unpin an application" or "Remove app from pinned" → 
-    Step 1: Find application by name:
-    {"database": "test", "collection": "applications", "filter": {"name": "APP_NAME"}}
-    Step 2: Remove from user's pinned_applications array:
-    {"database": "test", "collection": "users", "filter": {"_id": {"$oid": "${userContext.userId}"}}, "update": {"$pull": {"pinned_applications": {"$oid": "APP_ID"}}}}
-
-19. "Show my user profile" → 
-    find user document with user ID:
-    {"database": "test", "collection": "users", "filter": {"_id": {"$oid": "${userContext.userId}"}}}
-
-SYSTEM-WIDE ADMIN QUERIES:
-20. "Show all users" → {"database": "test", "collection": "users", "filter": {}}
-21. "List all applications" → {"database": "test", "collection": "applications", "filter": {}}
-22. "System-wide logs" → {"database": "test", "collection": "logs", "filter": {}}
-23. "User group statistics" → {"database": "test", "collection": "usergroups", "filter": {}}
-24. "Application performance" → {"database": "test", "collection": "applications", "filter": {"isActive": true}}
-
-` : `
-USER QUERIES (LOGS & USER COLLECTIONS ONLY):
-• "Show my active applications" → Use pre-fetched assignedApplicationDetails from context (filter by isActive: true)
-• "Recent logs for my apps" → {"database": "test", "collection": "logs", "filter": {"application_id": {"$in": [${userContext.assignedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}}, "sort": {"timestamp": -1}}
-• "Error logs from my applications" → {"database": "test", "collection": "logs", "filter": {"application_id": {"$in": [${userContext.assignedApplications.map(id => `{"$oid": "${id}"}`).join(', ')}]}, "log_level": "error"}}
-• "My user profile" → {"database": "test", "collection": "users", "filter": {"_id": {"$oid": "${userContext.userId}"}}}
-• "My user groups" → Use pre-fetched userGroupDetails from context
-• "My pinned apps" → Use pre-fetched pinnedApplicationDetails from context
-• "Pin an application" → Find app by name, then add to pinned_applications array using $addToSet
-• "Unpin an application" → Find app by name, then remove from pinned_applications array using $pull
-`}
-` : ''}
-
-🔧 MONGODB TOOL USAGE PATTERNS:
-
-1. DATABASE EXPLORATION:
-   - Start with "list-databases" to see available databases
-   - Use "list-collections" with database name to explore collections
-   - Use "collection-schema" to understand data structure
-
-🚀 ADVANCED USE CASES & NATURAL LANGUAGE PROCESSING:
-
-${userContext ? `
-=== LOG ANALYSIS CAPABILITIES ===
-• "Summarize logs across my applications" - Use aggregate to group by log_level and application
-• "Diagnose issues by correlating events" - Find error patterns and related warnings across time
-• "Show logs from last 24 hours" - Filter by timestamp range
-• "Find all error logs from GoCAR application" - Filter by application and log_level
-• "Show warning logs from production environment" - Filter by environment and log_level
-
-${userContext.isAdmin ? `
-=== NATURAL LANGUAGE CREATION & EDITING ===
-
-APPLICATION MANAGEMENT:
-• "Create an app named 'InventoryService' with hostname 'localhost'" - Use insert-many with proper schema
-• "Create app 'StockService' and assign it to group 'Ops'" - Multi-step: create app, then update group
-• "Rename 'InventoryService' to 'StockService'" - Use update-many with name filter
-• "Deactivate 'legacy-app'" - Set isActive to false
-• "Change hostname of 'user-service' to 'api.company.com'" - Update hostname field
-
-USER GROUP MANAGEMENT:
-• "Create a group named 'Backend Team'" - Use insert-many with is_admin: false
-• "Create admin group 'System Administrators'" - Use insert-many with is_admin: true
-• "Add 'backend-team@gosaas.io' to 'Ops' group" - Find user by email, then update members array
-• "Remove 'john.doe@company.com' from 'Development' group" - Use $pull to remove from members
-• "Assign 'StockService' to 'Ops' group" - Find app by name, then update assigned_applications
-• "Revoke access of 'legacy-app' from all user groups" - Use $pull on all groups
-
-PERSONAL APPLICATION MANAGEMENT:
-• "Pin 'GoCAR' application" - Find app by name, then add to user's pinned_applications using $addToSet
-• "Unpin 'GoCAR' application" - Find app by name, then remove from user's pinned_applications using $pull
-• "Add 'user-service' to my pinned apps" - Find app by name, then add to user's pinned_applications
-• "Remove 'legacy-app' from my pinned apps" - Find app by name, then remove from user's pinned_applications
-
-PERMISSION MANAGEMENT:
-• "Give admin access to 'alice@company.com'" - Find user, then add to admin group
-• "Remove admin privileges from 'bob@company.com'" - Remove from admin groups
-• "Assign all production apps to 'Ops' group" - Find production apps, then update group
-• "Create read-only access for 'viewers' group" - Create group with limited permissions
-
-MULTI-STEP OPERATIONS:
-• "Set up a new development environment with apps A, B, C" - Create apps, create group, assign apps
-• "Migrate user 'john' from 'Dev' to 'Ops' group" - Remove from Dev, add to Ops
-• "Archive old applications and create new ones" - Deactivate old apps, create new ones
-• "Pin 'GoCAR' to my dashboard" - Find app by name, then add to user's pinned_applications
-• "Unpin 'legacy-app' from my dashboard" - Find app by name, then remove from user's pinned_applications
-` : `
-USER QUERIES (Read-only access):
-• "Show my application logs" - Filter by user's assigned applications
-• "Find errors in my apps" - Filter by log_level: "error" and user's apps
-• "Show recent activity" - Sort by timestamp for user's applications
-• "Summarize my app performance" - Aggregate logs for user's applications
-• "Pin an application" - Find app by name, then add to pinned_applications array
-• "Unpin an application" - Find app by name, then remove from pinned_applications array
-`}
-` : ''}
-
-2. DATA QUERYING:
-   - Use "find" for document retrieval with filters, projections, and sorting
-   - Use "count" for document counting with optional filters
-   - Use "aggregate" for complex data analysis and grouping
-
-3. CORRECT FILTERING EXAMPLES:
-   - User-specific: {"_id": {"$oid": "${userContext?.userId || 'user_id'}"}}
-   - Application-specific: {"_id": {"$in": [${userContext?.assignedApplications.map(id => `{"$oid": "${id}"}`).join(', ') || '{"$oid": "app_id"}'}]}}
-   - Active applications: {"isActive": true} ⚠️ NOTE: Field is "isActive", not "status"
-   - User groups by member: {"members": {"$oid": "${userContext?.userId || 'user_id'}"}}
-   - Time-based: {"timestamp": {"$gte": "2024-01-01", "$lte": "2024-12-31"}}
-   - Log level: {"log_level": {"$in": ["error", "warn"]}}
-
-4. AGGREGATION PATTERNS:
-   - Group by application: [{"$group": {"_id": "$application_id", "count": {"$sum": 1}}}]
-   - Time-based grouping: [{"$group": {"_id": {"$dateToString": {"format": "%Y-%m-%d", "date": "$timestamp"}}, "count": {"$sum": 1}}}]
-   - Error rate calculation: [{"$group": {"_id": "$application_id", "total": {"$sum": 1}, "errors": {"$sum": {"$cond": [{"$eq": ["$log_level", "error"]}, 1, 0]}}}}]
-
-${userContext ? `
-🎯 PERSONALIZED RESPONSES:
-- Always address the user by name: ${userContext.userName}
-- Provide context-aware explanations based on their role and access level
-- Suggest relevant follow-up queries based on their assigned applications and groups
-- When showing data, explain how it relates to their specific context
-- If no data is found, explain why and suggest alternatives
-
-📋 RESPONSE FORMATTING GUIDELINES:
-
-1. **User Groups Queries** ("my user groups", "groups I'm in"):
-   - Show only: Group names and admin status
-   - Format: Simple comma-separated list
-   - Example: "You are a member of: Admin Group (Admin), Development Team"
-   - NO bullet points, NO markdown, NO technical details
-   - Store full details in context for follow-up questions
-
-2. **Applications Queries** ("my apps", "active apps", "my applications"):
-   - Show only: Application names and environments
-   - Format: Simple comma-separated list
-   - Example: "Your active applications: GoCAR (Development), GoCAD (Development), user-service (Production)"
-   - NO bullet points, NO markdown, NO technical details
-   - Store full details in context for follow-up questions
-
-3. **Logs Queries** ("my logs", "recent logs"):
-   - Show only: Log count, recent activity summary
-   - Format: Summary with key metrics
-   - Example: "Found 1,247 logs in the last 24 hours across your applications"
-   - Store detailed logs in context for follow-up questions
-
-4. **General Data Display**:
-   - NEVER show ObjectIDs, internal IDs, or technical metadata
-   - Focus on user-friendly information (names, descriptions, status)
-   - Use clean formatting without markdown symbols (** **)
-   - Provide concise, readable summaries
-   - NO numbered lists, NO bullet points, NO bold formatting
-   - Use simple comma-separated lists or natural language
-   - NO "Created At", "Updated At", "Active Status" or other technical fields
-
-5. **Follow-up Context**:
-   - When user asks for "details" or "more info", provide full data from context
-   - Keep detailed information available for 2-3 follow-up prompts
-   - Offer to show specific details when relevant
-
-${userContext.isAdmin ? `
-🔴 ADMIN RESPONSE STYLE:
-- Provide comprehensive system-wide insights
-- Include administrative recommendations when appropriate
-- Highlight potential issues or areas needing attention
-- Offer system optimization suggestions
-` : `
-🔵 USER RESPONSE STYLE:
-- Focus on personal and relevant information
-- Explain how data relates to their specific applications and groups
-- Provide actionable insights for their assigned resources
-- Suggest ways to optimize their workflow
-`}
-` : ''}
-
 ⚠️ IMPORTANT RULES:
 1. NEVER ask for user ID - automatically use the authenticated user's context
 2. ALWAYS apply appropriate access controls based on user role
@@ -1254,66 +1129,6 @@ ${userContext.isAdmin ? `
     - Use pre-fetched context data when available
     - Avoid unnecessary follow-up queries
 
-🎨 RESPONSE FORMATTING EXAMPLES:
-
-**User Groups Response:**
-❌ BAD: "1. **Admin Group** (Admin) - **Active Status:** Yes - **Assigned Applications:** - GoCAR - GoCAD - **Created At:** July 2, 2025"
-✅ GOOD: "You are a member of: Admin Group (Admin), Development Team"
-
-
-
-**Applications Response:**
-❌ BAD: "1. **GoCAR** - **Hostname:** localhost - **Environment:** Development - **Description:** This is a placeholder..."
-✅ GOOD: "Your active applications: GoCAR (Development), GoCAD (Development), user-service (Production)"
-
-**Logs Response:**
-❌ BAD: "Found 1,247 documents in the collection 'logs': [{"_id": {"$oid": "..."}, "application_id": {"$oid": "..."}]"
-✅ GOOD: "Found 1,247 logs in the last 24 hours across your applications. Recent activity shows 89 errors and 1,158 info messages."
-
-**Follow-up Response:**
-When user asks "give me details" or "show me more info", then provide full data with proper formatting.
-
-🚫 STRICT FORMATTING RULES:
-- NEVER use numbered lists (1., 2., 3.)
-- NEVER use bullet points (-, •, *)
-- NEVER use bold formatting (**text**)
-- NEVER show technical fields (Created At, Updated At, Active Status, IDs)
-- ⚠️ NEVER show User IDs - ALWAYS fetch and display user names instead
-- ⚠️ CRITICAL: When showing user group members, ALWAYS make follow-up queries to resolve User IDs to names
-- ALWAYS use simple comma-separated lists
-- ALWAYS focus on user-friendly information only
-
-👥 USER NAME RESOLUTION - EFFICIENT APPROACH:
-When displaying user information (members, users, etc.):
-1. ✅ Use efficient single queries with $in operator instead of multiple individual queries
-2. ✅ NEVER display User IDs to the user - ALWAYS fetch and display user names
-3. ✅ For user group members: When you get a usergroups result with member IDs, use a single efficient query
-4. ✅ Use efficient find query: {"database": "test", "collection": "users", "filter": {"_id": {"$in": [USER_IDS_ARRAY]}}}
-5. ✅ Extract the "name" field from the user documents
-6. ✅ Display only the user names, never the IDs
-7. ✅ Example: If usergroups query returns members: [{"$oid": "686537574ddafa6df2987e26"}, {"$oid": "6865076e568c37c6aa0e54bb"}], use single query with $in operator
-8. ✅ EFFICIENT: For "list members" or "show members" queries, use single query with $in operator to resolve all User IDs to names at once
-
-🔧 MULTI-STEP OPERATION HANDLING:
-For complex operations involving multiple collections:
-1. ALWAYS break down into sequential steps
-2. Use find queries to locate existing records by name/email
-3. Use insert-many for creation operations
-4. Use update-many for modification operations
-5. Confirm each step before proceeding to the next
-6. Provide clear feedback on what was accomplished
-
-📝 CREATION & EDITING BEST PRACTICES:
-• When creating applications: Always include name, hostname, environment, isActive, description
-  ✅ The system will automatically add createdAt, updatedAt, and __v fields
-• When creating user groups: Always include name, is_admin, is_active, empty arrays for members/assigned_applications
-  ✅ The system will automatically add createdAt, updatedAt, and __v fields
-• When adding users to groups: First find user by email, then update group's members array
-• When assigning apps to groups: First find app by name, then update group's assigned_applications array
-• When pinning applications: First find app by name, then add to user's pinned_applications using $addToSet
-• When unpinning applications: First find app by name, then remove from user's pinned_applications using $pull
-• When editing: Use exact field names from schema (isActive, not status; members, not userId)
-
 ${userContext && !userContext.isAdmin ? `
 🔒 SECURITY REMINDER: You are operating with USER permissions. You can only access data related to your assigned applications and user groups. If you need broader access, contact an administrator.` : ''}`
         },
@@ -1331,9 +1146,17 @@ ${userContext && !userContext.isAdmin ? `
         }
       }));
 
+      // Map model names to OpenAI model names
+      const openaiModelMap: Record<string, string> = {
+        'openai-gpt-4o-mini': 'gpt-4o-mini',
+        'openai-gpt-4o': 'gpt-4o'
+      };
+
+      const openaiModel = openaiModelMap[model] || 'gpt-4o-mini';
+
       // Call OpenAI
       const response = await this.openai.chat.completions.create({
-        model: 'gpt-4o-mini',
+        model: openaiModel,
         messages,
         tools,
         tool_choice: 'auto',
@@ -1414,7 +1237,7 @@ ${userContext && !userContext.isAdmin ? `
 
           // Check if AI wants to make more tool calls
           const nextResponse = await this.openai.chat.completions.create({
-            model: 'gpt-4o-mini',
+            model: openaiModel,
             messages: currentMessages,
             tools,
             tool_choice: 'auto',
@@ -1442,7 +1265,7 @@ ${userContext && !userContext.isAdmin ? `
 
         // If we hit max iterations, get final response
         const finalResponse = await this.openai.chat.completions.create({
-          model: 'gpt-4o-mini',
+          model: openaiModel,
           messages: currentMessages,
           temperature: 0.7,
           max_tokens: 1000
@@ -1466,7 +1289,7 @@ ${userContext && !userContext.isAdmin ? `
       };
 
     } catch (error) {
-      console.error('Error processing query with MCP client:', error);
+      console.error('Error processing query with OpenAI:', error);
       throw error;
     }
   }

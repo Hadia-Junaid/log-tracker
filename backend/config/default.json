@@ -41,5 +41,8 @@
   },
   "openai": {
     "apiKey": ""
+  },
+  "gemini": {
+    "apiKey": ""
   }
 }

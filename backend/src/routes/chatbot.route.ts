@@ -13,7 +13,9 @@ import {
   restartMongoDBServer,
   savePrompt,
   getSavedPrompts,
-  deleteSavedPrompt
+  deleteSavedPrompt,
+  getAvailableModels,
+  setDefaultModel
 } from '../controllers/chatbot.controller';
 
 const router = Router();
@@ -49,5 +51,12 @@ router.get('/mcp/status', authenticate, getMCPStatus);
 
 // POST /api/chatbot/mcp/restart-mongodb - Restart MongoDB MCP server
 router.post('/mcp/restart-mongodb', authenticate, restartMongoDBServer);
+
+// Model management endpoints
+// GET /api/chatbot/models - Get available AI models
+router.get('/models', authenticate, getAvailableModels);
+
+// POST /api/chatbot/models/default - Set default AI model
+router.post('/models/default', authenticate, setDefaultModel);
 
 export default router; 

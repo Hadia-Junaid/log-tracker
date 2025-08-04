@@ -6,7 +6,14 @@ export const chatbotMessageSchema = Joi.object({
     userId: Joi.string().optional(),
     sessionId: Joi.string().optional().allow(''),
     timestamp: Joi.date().optional()
-  }).optional()
+  }).optional(),
+  model: Joi.string().optional().valid(
+    'openai-gpt-4o-mini',
+    'openai-gpt-4o',
+    'gemini-2.0-flash',
+    'gemini-2.5-flash',
+    'gemini-2.5-pro'
+  )
 });
 
 export const mcpConnectSchema = Joi.object({
