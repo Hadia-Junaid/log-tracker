@@ -102,10 +102,6 @@ export function ChatDialog({ isOpen, onClose }: Props) {
         };
     }, [isOpen, onClose]);
 
-    const getRecentConversationHistory = () => {
-        // Get last 4 messages (2 exchanges) if available
-        return messages.slice(-4);
-    };
 
     const handleSubmit = async () => {
         if (!inputValue.trim()) return;

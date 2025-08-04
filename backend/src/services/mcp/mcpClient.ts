@@ -60,7 +60,8 @@ export class MCPChatClient {
           assignedApps,
           query,
           is_admin,
-          history
+          history,
+          userid
         );
         logger.info(`initial prompt is ${initialPrompt}`)
         const messages: any[] = [{
@@ -139,46 +140,68 @@ export class MCPChatClient {
               const toolName = toolCall.function.name;
               const toolArgs = toolCall.function.args || {};
               logger.info(`⚙️ Calling MCP tool: ${toolName} with args ${JSON.stringify(toolArgs)}`);
-              if (is_admin) {
-                // Prevent update/insert/delete on logs and users in admin view
-                if (
-                  (toolName.includes("insert") || toolName.includes("update") || toolName.includes("delete")) &&
-                  (toolArgs.collection === "logs" || toolArgs.collection === "users")
-                ) {
-                  logger.warn(`Blocked ${toolName} on ${toolArgs.collection} (admin cannot modify logs/users)`);
-                  finalText.push(`❌ Admin is not allowed to modify '${toolArgs.collection}' collection.`);
-                  continue;
-                }} else {
-                if (toolName.includes("insert") || toolName.includes("update") || toolName.includes("delete")) {
-                  logger.warn(`Blocked tool call ${toolName} (user is not admin)`);
-                  finalText.push("❌ You are not allowed to modify data.");
-                  continue; }
-    
-                if(toolArgs.collection !== "logs"){
-                  logger.warn(`Blocked tool call ${toolName} (user is not admin)`);
-                  finalText.push("❌ You are not allowed to access any collection other than logs.");
-                  continue;
-                }
-              
-              if ((toolName.includes("find") || toolName.includes("count") || toolName.includes("aggregate"))) {
-                  // Restrict logs to assigned apps only
-                  const assignedAppIds = assignedApps
-                    .filter((a) => a.isActive) 
-                    .map((a) => ({ $oid: a.id }));    
-                  if (!toolArgs.filter) toolArgs.filter = {};
-    
-                  if (toolArgs.filter.application_id) {
-                    toolArgs.filter.$and = [
-                      { application_id: toolArgs.filter.application_id },
-                      { application_id: { $in: assignedAppIds } },
-                    ];
-                    delete toolArgs.filter.application_id;
-                  } else {
-                    toolArgs.filter.application_id = { $in: assignedAppIds };
+              let users_flag : boolean = false
+              if (toolArgs.collection === "users") {
+                // Only allow reading any user docs for admin, but updates only for self
+                users_flag = true;
+                if (toolName.includes("update") || toolName.includes("delete") || toolName.includes("insert")) {
+
+                  if (String(toolArgs.filter?._id?.$oid) !== String(userid)) {
+                      finalText.push("❌ You can only update your own user document.");
+                      continue;
+                    }
+
+                } else if (toolName.includes("find") || toolName.includes("aggregate") || toolName.includes("count")) {
+                  // Admin can read all, non-admin only self
+                  if (!is_admin) {
+                    toolArgs.filter = { _id: { $oid: userid } };
+                    logger.info(`⚙️ After filtering Calling MCP tool: ${toolName} with args ${JSON.stringify(toolArgs)}`);
                   }
-                logger.info(`⚙️ After filtering Calling MCP tool: ${toolName} with args ${JSON.stringify(toolArgs)}`);
-              } }
-    
+                }
+              }
+              if(!users_flag){
+
+                if (is_admin) {
+                // Prevent update/insert/delete on logs and users in admin view
+                  if (
+                    (toolName.includes("insert") || toolName.includes("update") || toolName.includes("delete")) &&
+                    (toolArgs.collection === "logs")
+                  ) {
+                    logger.warn(`Blocked ${toolName} on ${toolArgs.collection} (admin cannot modify logs)`);
+                    finalText.push(`❌ Admin is not allowed to modify '${toolArgs.collection}' collection.`);
+                    continue;
+                  }} else {
+                  if (toolName.includes("insert") || toolName.includes("update") || toolName.includes("delete")) {
+                    logger.warn(`Blocked tool call ${toolName} (user is not admin)`);
+                    finalText.push("❌ You are not allowed to modify data.");
+                    continue; }
+      
+                  if(toolArgs.collection !== "logs"){
+                    logger.warn(`Blocked tool call ${toolName} (user is not admin)`);
+                    finalText.push("❌ You are not allowed to access any collection other than logs.");
+                    continue;
+                  }
+                
+                if ((toolName.includes("find") || toolName.includes("count") || toolName.includes("aggregate"))) {
+                    // Restrict logs to assigned apps only
+                    const assignedAppIds = assignedApps
+                      .filter((a) => a.isActive) 
+                      .map((a) => ({ $oid: a.id }));    
+                    if (!toolArgs.filter) toolArgs.filter = {};
+      
+                    if (toolArgs.filter.application_id) {
+                      toolArgs.filter.$and = [
+                        { application_id: toolArgs.filter.application_id },
+                        { application_id: { $in: assignedAppIds } },
+                      ];
+                      delete toolArgs.filter.application_id;
+                    } else {
+                      toolArgs.filter.application_id = { $in: assignedAppIds };
+                    }
+                  logger.info(`⚙️ After filtering Calling MCP tool: ${toolName} with args ${JSON.stringify(toolArgs)}`);
+                } }
+              }
+              
               let result;
               try {
                 result = await this.mcp.callTool({

@@ -4,7 +4,8 @@ export function buildInitialPrompt(
   assignedApps: { id: string; name: string; isActive : boolean, hostname: string, environment: string, description: string }[],
   query: string,
   is_admin: boolean,
-  history: string
+  history: string,
+  userid: string
 ): string {
   const assignedAppsText = assignedApps.length
   ? assignedApps
@@ -34,13 +35,14 @@ export function buildInitialPrompt(
     `;
   if (!is_admin) {
     return `
-        You are an AI assistant that can query MongoDB using the following collections (logs, applications) and schemas in the test database:
+        You are an AI assistant that can query MongoDB using the following collections (logs, applications, users) and schemas in the test database:
 
         ${schemaInfo}
 
         **The current user is NOT an admin.**
-        - They can ONLY read from the \`logs\` collection.
-        - They CANNOT insert, update, or delete any data.
+        - They can read their own document in the \`users\` collection (The id of this user is _id: ${userid}).They can update the following fields in their own document in users collection: pinned_applications, saved_messages and settings.
+        - Other than their own users collection document, they can ONLY read from the \`logs\` collection.
+        - They CANNOT insert, update, or delete any other data. 
         - You can give information to the user regarding their assigned application.
 
         **Assigned Applications for this user:**
@@ -63,7 +65,9 @@ export function buildInitialPrompt(
 
         **The current user is an ADMIN.**
         - Admin can **read from all collections**.
-        - Admin can **read and update all collections EXCEPT \`logs\` and \`users\`**, which are **read-only**.
+        - Admin can **read and update all collections EXCEPT \`logs\` **, which is **read-only**.
+        - They CANNOT insert, update, or delete any data **except for their own user document in the \`users\` collection.** (The id of this user is _id: ${userid}).
+
         - Admin already has access to **all applications**, so you can directly use them in tool calls without checking assigned apps.
 
         **Available Applications:**

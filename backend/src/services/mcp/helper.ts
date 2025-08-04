@@ -12,9 +12,14 @@ export function loadSchemaDescriptions(is_admin: boolean): string {
   let schemaSummary = "Database Collections and Schemas:\n";
 
   for (const file of files) {
-    // if not admin, only include applications and logs schemas
-    if (!is_admin && !file.includes("Application") && !file.includes("Log")) {
-      continue;
+    if (!is_admin) {
+      // Only allow Application, Log, and User (but not UserGroup) for non-admins
+      const isAllowed = (
+        file.includes("Application") ||
+        file.includes("Log") ||
+        (file.includes("User") && !file.includes("UserGroup"))
+      );
+      if (!isAllowed) continue;
     }
 
     const content = fs.readFileSync(path.join(modelsDir, file), "utf-8");
