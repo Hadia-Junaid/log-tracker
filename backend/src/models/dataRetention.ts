@@ -20,7 +20,8 @@ const DataRetentionSchema: Schema = new Schema(
     },
     retentionDays: {
       type: Number,
-      required: true
+      required: true,
+      enum: [1, 7, 14, 30] // Allowed values only
     },
     updatedBy: {
       type: String,

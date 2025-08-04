@@ -81,7 +81,8 @@ export function buildInitialPrompt(
         3: ENSURE that createdAt and updatedAt are date objects and not strings. Syntax is  "$date": " "
         4: If creating one or more applications, ALWAYS add them to the list of assigned applications of the user group that has is_admin set as true (When asked to create applications, If user specifies user groups to which the application should be assigned to, assign it to user specified user groups AND the user group that has is_admin set as true.)
         5. When creating user groups, don't try to add the assigned applications for user group you are creating to the admin group becuase they are already assigned to it. 
-        
+        6. When creatng/ updating an at risk rule ensure that the resulting rule won't conflict with any existing rule in the following way: If there already exists an a document with the same type_of_logs and operator in the arriskrules collection, tell the user you can't perform operation as it causes conflict.
+
         **BEFORE executing any add, update, or delete operation**, you must:
         - First respond to the user with a message summarizing the exact change that will be performed.
         - Ask the user to confirm by replying **Yes** or **No**.
