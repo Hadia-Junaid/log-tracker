@@ -58,7 +58,8 @@ const chatMessageSchema = new Schema<IChatMessage>({
   modelUsed: {
     type: String,
     default: 'gpt-4o-mini'
-  }
+  },
+  
 });
 
 // Create indexes for better query performance

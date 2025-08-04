@@ -1,6 +1,6 @@
 import { h } from "preact";
 import { useEffect, useState, useRef } from "preact/hooks";
-import { ChatbotAPI, ChatHistoryResponse, MCPStatusResponse, AIModel } from "../api/chatbot";
+import { ChatbotAPI, ChatHistoryResponse, MCPStatusResponse } from "../api/chatbot";
 import { useUser } from "../context/UserContext";
 import SavedPromptsDialog from "./SavedPromptsDialog";
 import "../styles/floatingChat.css";
@@ -53,10 +53,6 @@ export default function FloatingChat() {
   const [sessionId, setSessionId] = useState<string>("");
   const [mcpStatus, setMcpStatus] = useState<MCPStatusResponse | null>(null);
   const [showSavedPrompts, setShowSavedPrompts] = useState(false);
-  const [availableModels, setAvailableModels] = useState<AIModel[]>([]);
-  const [selectedModel, setSelectedModel] = useState<string>("");
-  const [defaultModel, setDefaultModel] = useState<string>("");
-  const [showModelSelector, setShowModelSelector] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { user } = useUser();
 
@@ -74,7 +70,6 @@ export default function FloatingChat() {
     if (isOpen) {
       loadChatHistory();
       checkMCPStatus();
-      loadAvailableModels();
     }
   }, [isOpen]);
 
@@ -130,19 +125,6 @@ export default function FloatingChat() {
     }
   };
 
-  const loadAvailableModels = async () => {
-    try {
-      const response = await ChatbotAPI.getAvailableModels();
-      if (response.success) {
-        setAvailableModels(response.models);
-        setDefaultModel(response.defaultModel);
-        setSelectedModel(response.defaultModel);
-      }
-    } catch (err) {
-      console.error("Failed to load available models:", err);
-    }
-  };
-
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading) return;
 
@@ -160,7 +142,7 @@ export default function FloatingChat() {
     setError(null);
 
     try {
-      const response = await ChatbotAPI.sendMessage(inputMessage, sessionId, selectedModel);
+      const response = await ChatbotAPI.sendMessage(inputMessage, sessionId);
 
       if (response.success) {
         const assistantMessage: ChatMessage = {
@@ -265,13 +247,6 @@ export default function FloatingChat() {
             <div class="chat-actions">
               <button
                 class="oj-button oj-button-text"
-                onClick={() => setShowModelSelector(!showModelSelector)}
-                title="Select AI Model"
-              >
-                <span class="oj-icon oj-ux-ico-settings"></span>
-              </button>
-              <button
-                class="oj-button oj-button-text"
                 onClick={() => setShowSavedPrompts(true)}
                 title="Saved Prompts"
               >
@@ -294,54 +269,6 @@ export default function FloatingChat() {
               </button>
             </div>
           </div>
-
-          {/* Model Selector */}
-          {showModelSelector && (
-            <div class="model-selector">
-              <div class="model-selector-header">
-                <h4>Select AI Model</h4>
-                <button
-                  class="oj-button oj-button-text"
-                  onClick={() => setShowModelSelector(false)}
-                  title="Close"
-                >
-                  <span class="oj-icon oj-ux-ico-close"></span>
-                </button>
-              </div>
-              <div class="model-list">
-                {availableModels.map((model) => (
-                  <div
-                    key={model.id}
-                    class={`model-option ${selectedModel === model.id ? 'selected' : ''}`}
-                    onClick={() => setSelectedModel(model.id)}
-                  >
-                    <div class="model-info">
-                      <div class="model-name">{model.name}</div>
-                      <div class="model-provider">{model.provider}</div>
-                      <div class="model-description">{model.description}</div>
-                    </div>
-                    {selectedModel === model.id && (
-                      <span class="oj-icon oj-ux-ico-check"></span>
-                    )}
-                  </div>
-                ))}
-              </div>
-              <div class="model-selector-actions">
-                <button
-                  class="oj-button oj-button-text"
-                  onClick={() => setSelectedModel(defaultModel)}
-                >
-                  Reset to Default
-                </button>
-                <button
-                  class="oj-button oj-button-primary"
-                  onClick={() => setShowModelSelector(false)}
-                >
-                  Apply
-                </button>
-              </div>
-            </div>
-          )}
 
           {/* Messages */}
           <div class="chat-messages">
@@ -464,7 +391,6 @@ export default function FloatingChat() {
               Press Enter to send, Shift+Enter for new line
               {" • MCP Mode Active"}
               {mcpStatus?.mongoDBStatus?.connected && " • MongoDB Connected"}
-              {selectedModel && ` • ${availableModels.find(m => m.id === selectedModel)?.name || selectedModel}`}
             </div>
           </div>
         </div>

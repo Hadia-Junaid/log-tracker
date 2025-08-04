@@ -32,20 +32,6 @@ export interface ChatbotResponse {
     connectionString: string;
   };
   availableTools?: string[];
-  modelUsed?: string;
-}
-
-export interface AIModel {
-  id: string;
-  name: string;
-  provider: string;
-  description: string;
-}
-
-export interface ModelsResponse {
-  success: boolean;
-  models: AIModel[];
-  defaultModel: string;
 }
 
 export interface MCPStatusResponse {
@@ -79,8 +65,7 @@ export class ChatbotAPI {
   // Send a message to the chatbot (MCP mode only)
   static async sendMessage(
     message: string, 
-    sessionId?: string,
-    model?: string
+    sessionId?: string
   ): Promise<ChatbotResponse> {
     const payload: any = {
       message
@@ -89,11 +74,6 @@ export class ChatbotAPI {
     // Only include context if sessionId is provided and not empty
     if (sessionId && sessionId.trim()) {
       payload.context = { sessionId };
-    }
-
-    // Include model if specified
-    if (model) {
-      payload.model = model;
     }
 
     const response = await axios.post('/chatbot/message', payload);
@@ -148,17 +128,6 @@ export class ChatbotAPI {
 
   static async restartMongoDBServer(): Promise<{ success: boolean; message: string }> {
     const response = await axios.post('/chatbot/mcp/restart-mongodb');
-    return response.data;
-  }
-
-  // Model management methods
-  static async getAvailableModels(): Promise<ModelsResponse> {
-    const response = await axios.get('/chatbot/models');
-    return response.data;
-  }
-
-  static async setDefaultModel(model: string): Promise<{ success: boolean; message: string; defaultModel: string }> {
-    const response = await axios.post('/chatbot/models/default', { model });
     return response.data;
   }
 } 

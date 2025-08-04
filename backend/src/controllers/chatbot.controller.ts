@@ -7,7 +7,7 @@ import config from 'config';
 
 export const processChatbotMessage = async (req: Request, res: Response): Promise<void> => {
   try {
-    const { message, context, model } = req.body;
+    const { message, context } = req.body;
     const userId = (req as any).user?.id || (req as any).user?.email;
     const sessionId = context?.sessionId || uuidv4();
     const authToken = req.headers.authorization?.replace('Bearer ', '') || '';
@@ -21,10 +21,6 @@ export const processChatbotMessage = async (req: Request, res: Response): Promis
       res.status(400).json({ error: 'Message is required and must be a string' });
       return;
     }
-
-    // Validate model if provided
-    const availableModels = mcpClient.getAvailableModels();
-    const selectedModel = model && availableModels.find(m => m.id === model) ? model : mcpClient.getDefaultModel();
 
     // Get recent conversation history (last 10 messages)
     const recentMessages = await ChatMessage.find({ userId })
@@ -60,7 +56,7 @@ export const processChatbotMessage = async (req: Request, res: Response): Promis
       }
 
       if (mcpClient.isServerConnected()) {
-        result = await mcpClient.processQuery(message, conversationHistory, jwtToken, userId, selectedModel);
+        result = await mcpClient.processQuery(message, conversationHistory, jwtToken, userId);
       } else {
         throw new Error('MCP client connection failed');
       }
@@ -82,7 +78,7 @@ export const processChatbotMessage = async (req: Request, res: Response): Promis
       response: result.response,
       functionCalls: result.toolCalls,
       tokensUsed: result.tokensUsed,
-      modelUsed: selectedModel
+      modelUsed: 'gpt-4o-mini'
     });
 
     await chatMessage.save();
@@ -98,8 +94,7 @@ export const processChatbotMessage = async (req: Request, res: Response): Promis
       functionCalls: result.toolCalls,
       mcpConnected: mcpClient.isServerConnected(),
       mongoDBStatus,
-      availableTools: mcpClient.getAvailableTools().map(t => t.name),
-      modelUsed: selectedModel
+      availableTools: mcpClient.getAvailableTools().map(t => t.name)
     });
 
   } catch (error) {
@@ -366,62 +361,6 @@ export const deleteSavedPrompt = async (req: Request, res: Response): Promise<vo
 
   } catch (error) {
     console.error('Error deleting prompt:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-};
-
-export const getAvailableModels = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const models = mcpClient.getAvailableModels();
-    const defaultModel = mcpClient.getDefaultModel();
-
-    res.json({
-      success: true,
-      models,
-      defaultModel
-    });
-
-  } catch (error) {
-    console.error('Error getting available models:', error);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Internal server error',
-      details: error instanceof Error ? error.message : 'Unknown error'
-    });
-  }
-};
-
-export const setDefaultModel = async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { model } = req.body;
-
-    if (!model) {
-      res.status(400).json({ error: 'Model is required' });
-      return;
-    }
-
-    const availableModels = mcpClient.getAvailableModels();
-    const isValidModel = availableModels.find(m => m.id === model);
-
-    if (!isValidModel) {
-      res.status(400).json({ error: 'Invalid model specified' });
-      return;
-    }
-
-    mcpClient.setDefaultModel(model);
-
-    res.json({
-      success: true,
-      message: 'Default model updated successfully',
-      defaultModel: model
-    });
-
-  } catch (error) {
-    console.error('Error setting default model:', error);
     res.status(500).json({ 
       success: false, 
       error: 'Internal server error',
