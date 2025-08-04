@@ -276,11 +276,22 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
         });
       }
 
-      // If toolMessage was returned (role === "function")
+      // If there was a function response from confirmation (the backend executed a tool)
+      if (response.data.role === "function" && response.data.parts) {
+        newMessages.push({
+          id: "functionResponse" + Date.now().toString(),
+          type: "function_response",
+          text: JSON.stringify(response.data.parts[0].functionResponse, null, 2),
+          role: "function",
+          timestamp: new Date(),
+        });
+      }
+
+      // If toolMessage was returned (role === "function") - this is for immediate execution
       if (response.data.toolResponse) {
         newMessages.push({
-          id: Date.now().toString(),
-          type: "function",
+          id: "functionResponse" + Date.now().toString(),
+          type: "function_response",
           text: JSON.stringify(
             response.data.toolResponse.parts[0].functionResponse,
             null,
@@ -291,15 +302,17 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
         });
       }
 
-      // Then push the actual AI response
-      newMessages.push({
-        id: "model" + Date.now().toString(),
-        type: response.data.type || "response",
-        text: response.data.message,
-        role: "model",
-        timestamp: new Date(),
-        toolId: response.data.toolId,
-      });
+      // Then push the actual AI response (only if there's a message)
+      if (response.data.message) {
+        newMessages.push({
+          id: "model" + Date.now().toString(),
+          type: response.data.type || "response",
+          text: response.data.message,
+          role: "model",
+          timestamp: new Date(),
+          toolId: response.data.toolId,
+        });
+      }
 
       setMessages((prev) => [...prev, ...newMessages]);
     } catch (error) {
@@ -469,13 +482,24 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
         });
       }
 
-      // If toolMessage was returned (role === "function")
+      // If there was a function response from confirmation (the backend executed a tool)
+      if (response.data.role === "function" && response.data.parts) {
+        newMessages.push({
+          id: "functionResponse" + Date.now().toString(),
+          type: "function_response",
+          text: JSON.stringify(response.data.parts[0].functionResponse, null, 2),
+          role: "function",
+          timestamp: new Date(),
+        });
+      }
+
+      // If toolMessage was returned (role === "function") - this is for immediate execution
       if (response.data.toolResponse) {
         newMessages.push({
-          id: Date.now().toString(),
-          type: "function",
+          id: "functionResponse" + Date.now().toString(),
+          type: "function_response",
           text: JSON.stringify(
-            response.data.toolResponse,
+            response.data.toolResponse.parts[0].functionResponse,
             null,
             2
           ),
@@ -484,7 +508,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
         });
       }
 
-      // Then push the actual AI response
+      // Then push the actual AI response (only if there's a message)
       if (response.data.message) {
         newMessages.push({
           id: Date.now().toString(),
