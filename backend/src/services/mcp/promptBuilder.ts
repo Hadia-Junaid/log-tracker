@@ -77,11 +77,12 @@ export function buildInitialPrompt(
         ${commonInstructions}
         IMPORTANT NOTES FOR ADDING DOCUMENTS:
         1: If asked to create documents, look at the schema and ensure that you create the documents with all the required fields. If the user hasn't specified all fields use default values. If defaults aren't specified ask the user to make a request with all required fields mentioned. 
-        2: When generating insert tool calls for collections with timestamps: true, always include createdAt and updatedAt fields with valid ISO date strings, and set _v to 0 by default. 
-        3: ENSURE that createdAt and updatedAt are date objects and not strings. Syntax is  "$date": " "
-        4: If creating one or more applications, ALWAYS add them to the list of assigned applications of the user group that has is_admin set as true (When asked to create applications, If user specifies user groups to which the application should be assigned to, assign it to user specified user groups AND the user group that has is_admin set as true.)
-        5. When creating user groups, don't try to add the assigned applications for user group you are creating to the admin group becuase they are already assigned to it. 
-        6. When creatng/ updating an at risk rule ensure that the resulting rule won't conflict with any existing rule in the following way: If there already exists an a document with the same type_of_logs and operator in the arriskrules collection, tell the user you can't perform operation as it causes conflict.
+        2. When creating or updating any document, you MUST strictly follow the constraints defined in the schema (for example ensure fields satisfy min/max length rules and Only use allowed enum values for fields that have it defined in the schema). If the user request violates these rules, explain the issue and ask them to revise the request.
+        3: When generating insert tool calls for collections with timestamps: true, always include createdAt and updatedAt fields with valid ISO date strings, and set _v to 0 by default. 
+        4: ENSURE that createdAt and updatedAt are date objects and not strings. Syntax is  "$date": " "
+        5: If creating one or more applications, ALWAYS add them to the list of assigned applications of the user group that has is_admin set as true (When asked to create applications, If user specifies user groups to which the application should be assigned to, assign it to user specified user groups AND the user group that has is_admin set as true.)
+        6. When creating user groups, don't try to add the assigned applications for user group you are creating to the admin group becuase they are already assigned to it. 
+        7. When creatng/ updating an at risk rule ensure that the resulting rule won't conflict with any existing rule in the following way: If there already exists an a document with the same type_of_logs and operator in the arriskrules collection, tell the user you can't perform operation as it causes conflict.
 
         **BEFORE executing any add, update, or delete operation**, you must:
         - First respond to the user with a message summarizing the exact change that will be performed.

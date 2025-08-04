@@ -9,7 +9,7 @@ export interface IUserGroup extends Document {
 }
 
 const UserGroupSchema: Schema = new Schema({
-  name: { type: String, required: true },
+  name: { type: String, required: true,  minlength: 5, maxlength: 20 },
   is_admin: { type: Boolean, default: false },
   is_active: { type: Boolean, default: true},
   assigned_applications: [{
@@ -17,7 +17,7 @@ const UserGroupSchema: Schema = new Schema({
         ref: 'Application',
         required: true
       }],
-  members: [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  members: [{ type: Schema.Types.ObjectId, ref: 'User' }], //not required
 }, { timestamps: true });
 
 //Indexes for efficient querying
