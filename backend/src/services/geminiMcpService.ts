@@ -180,7 +180,7 @@ class MCPClient {
         1) When creating or modifying any application or user group, always fetch the schema of the collection first to ensure you get field names right.
         2) If creating a new application, make sure they are assigned to the admin group ALWAYS whether or not the user asks.
         3) If user is asking about a specific application or user group, and the name doesnt match exactly, retry with a case-insensitive search or any possible similar variations.
-        4) Once a user has said "I confirm this tool call", you can assume that the tool call that confirmation was requested for has already been executed in history and you don't need to do it again.
+        4) If there are multiple tool calls with write operations to be made, make them one at a time so that the user can confirm each one individually.
         Here is the current user object:
         ${JSON.stringify(user, null, 2)}
         `,

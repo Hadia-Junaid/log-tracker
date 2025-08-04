@@ -20,7 +20,7 @@ import { useUser } from "../context/UserContext";
 interface ChatMessage {
   id: string;
   text: string;
-  isUser: boolean;
+  role: string; // "user", "model", "function", etc.
   timestamp: Date;
   type?: string;
   toolId?: string; // For confirmation messages
@@ -47,7 +47,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     {
       id: "welcome",
       text: initialMessageText,
-      isUser: false,
+      role: "model",
       timestamp: new Date(),
       type: "response",
     },
@@ -64,7 +64,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
       {
         id: "welcome-new",
         text: initialMessageText,
-        isUser: false,
+        role: "model",
         timestamp: new Date(),
       },
     ]);
@@ -159,7 +159,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       text: textToSend,
-      isUser: true,
+      role: "user",
       timestamp: new Date(),
     };
 
@@ -172,22 +172,68 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
 
     setIsTyping(true);
 
-    // Copy last 4 messages but not the welcome message
-    const filteredMessages = messages.filter(
-      (msg) => msg.id !== "welcome-new" && msg.id !== "welcome"
-    );
-    const previousChat = filteredMessages.slice(-6).map((msg) => ({
-      role: msg.isUser ? "user" : "model",
-      content: msg.text,
-    }));
+    // Build clean chat history - include user messages, model responses, function calls AND function responses
+    const chatHistory = messages
+      .filter((msg) => 
+        msg.id !== "welcome-new" && 
+        msg.id !== "welcome" && 
+        msg.type !== "confirmed" && 
+        msg.type !== "confirmation_required"
+        // Don't filter out anything else - include function calls and responses
+      )
+      .slice(-15) // Keep more messages to include function calls and responses
+      .map((msg) => {
+        if (msg.role === "user") {
+          return {
+            role: "user",
+            parts: [{ text: msg.text }]
+          };
+        } else if (msg.role === "model" && msg.type === "function_call") {
+          // Parse the stored function call and format it correctly
+          try {
+            const functionCall = JSON.parse(msg.text);
+            return {
+              role: "model",
+              parts: [{ functionCall: functionCall }]
+            };
+          } catch (e) {
+            console.error("Error parsing function call:", e);
+            return {
+              role: "model",
+              parts: [{ text: msg.text }]
+            };
+          }
+        } else if (msg.role === "function") {
+          // This is a function response
+          try {
+            const functionResponse = JSON.parse(msg.text);
+            return {
+              role: "function",
+              parts: [{ functionResponse: functionResponse }]
+            };
+          } catch (e) {
+            console.error("Error parsing function response:", e);
+            return {
+              role: "function",
+              parts: [{ text: msg.text }]
+            };
+          }
+        } else if (msg.role === "model" && msg.type === "function") {
+          // This is toolDetails - skip it as it's not part of the conversation
+          return null;
+        } else {
+          // Regular model response
+          return {
+            role: "model",
+            parts: [{ text: msg.text }]
+          };
+        }
+      })
+      .filter(msg => msg !== null); // Remove null entries
 
-    // Build Gemini contents format
+    // Add the new user message
     const currentChat = [
-      ...previousChat.map((m) => ({
-        role: m.role,
-        parts: [{ text: m.content }],
-      })),
-      // add the new user message
+      ...chatHistory,
       { role: "user", parts: [{ text: textToSend }] },
     ];
 
@@ -200,6 +246,36 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
 
       const newMessages: ChatMessage[] = [];
 
+      // If there are toolDetails, this means there was a function call that needs confirmation
+      // Store the function call in the proper format for chat history
+      if (response.data.toolDetails) {
+        const functionCall = {
+          name: response.data.toolDetails.toolName,
+          args: response.data.toolDetails.toolArgs
+        };
+        
+        newMessages.push({
+          id: "functionCall" + Date.now().toString(),
+          type: "function_call",
+          text: JSON.stringify(functionCall, null, 2),
+          role: "model",
+          timestamp: new Date(),
+          toolId: response.data.toolId,
+        });
+      }
+
+      // If there was a function call that was executed immediately, store it properly for chat history
+      if (response.data.functionCall) {
+        newMessages.push({
+          id: "functionCall" + Date.now().toString(),
+          type: "function_call",
+          text: JSON.stringify(response.data.functionCall, null, 2),
+          role: "model",
+          timestamp: new Date(),
+          toolId: response.data.toolId,
+        });
+      }
+
       // If toolMessage was returned (role === "function")
       if (response.data.toolResponse) {
         newMessages.push({
@@ -209,28 +285,18 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
             response.data.toolResponse.parts[0].functionResponse,
             null,
             2
-          ), // format nicely
-          isUser: false,
-          timestamp: new Date(),
-        });
-      }
-
-      if (response.data.toolDetails) {
-        newMessages.push({
-          id: Date.now().toString(),
-          type: "function",
-          text: JSON.stringify(response.data.toolDetails, null, 2), // format nicely
-          isUser: false,
+          ),
+          role: "function",
           timestamp: new Date(),
         });
       }
 
       // Then push the actual AI response
       newMessages.push({
-        id: Date.now().toString(),
+        id: "model" + Date.now().toString(),
         type: response.data.type || "response",
         text: response.data.message,
-        isUser: false,
+        role: "model",
         timestamp: new Date(),
         toolId: response.data.toolId,
       });
@@ -241,7 +307,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
       const errorMessage: ChatMessage = {
         id: Date.now().toString(),
         text: "Sorry, I couldn't process your request. Please try again later.",
-        isUser: false,
+        role: "model",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -254,10 +320,13 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
     message: ChatMessage,
     confirmed: boolean
   ) => {
-    // Update the message type to "response" to hide the buttons
+    console.log("Messages in confirmation handler:", messages);
+    console.log("Message passed: ", message);
+
+    // Update the message type to "confirmed" to hide the buttons
     setMessages((prev) =>
       prev.map((msg) =>
-        msg.id === message.id ? { ...msg, type: "response" } : msg
+        msg.id === message.id ? { ...msg, type: "confirmed" } : msg
       )
     );
 
@@ -266,13 +335,13 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
       const cancellationMessage: ChatMessage = {
         id: Date.now().toString(),
         text: "Operation cancelled.",
-        isUser: false,
+        role: "model",
         timestamp: new Date(),
         type: "response",
       };
       setMessages((prev) => [...prev, cancellationMessage]);
 
-      //Optimistically send an API call to delete the pending operation from MongoDB
+      // Optimistically send an API call to delete the pending operation from MongoDB
       try {
         axios.delete("/chat/pending-operation", {
           data: { toolId: message.toolId },
@@ -286,33 +355,70 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
 
     setIsTyping(true);
 
-    const confirmationMessage: ChatMessage = {
-      id: Date.now().toString(),
-      text: "I confirm this tool call.",
-      isUser: true,
-      timestamp: new Date(),
-      type: "confirmation",
-      toolId: message.toolId,
-    };
+    // Build the chat history for confirmation
+    // Include user messages, model responses, function calls, and function responses
+    const chatHistory = messages
+      .filter((msg) => 
+        msg.id !== "welcome-new" && 
+        msg.id !== "welcome" && 
+        msg.type !== "confirmed" && 
+        msg.type !== "confirmation_required"
+        // Don't filter out anything else - include function calls and responses
+      )
+      .map((msg) => {
+        if (msg.role === "user") {
+          return {
+            role: "user",
+            parts: [{ text: msg.text }]
+          };
+        } else if (msg.role === "model" && msg.type === "function_call") {
+          // Parse the stored function call and format it correctly
+          try {
+            const functionCall = JSON.parse(msg.text);
+            return {
+              role: "model",
+              parts: [{ functionCall: functionCall }]
+            };
+          } catch (e) {
+            console.error("Error parsing function call:", e);
+            return {
+              role: "model",
+              parts: [{ text: msg.text }]
+            };
+          }
+        } else if (msg.role === "function") {
+          // This is a function response
+          try {
+            const functionResponse = JSON.parse(msg.text);
+            return {
+              role: "function",
+              parts: [{ functionResponse: functionResponse }]
+            };
+          } catch (e) {
+            console.error("Error parsing function response:", e);
+            return {
+              role: "function",
+              parts: [{ text: msg.text }]
+            };
+          }
+        } else if (msg.role === "model" && msg.type === "function") {
+          // This is toolDetails - skip it as it's not part of the conversation
+          return null;
+        } else {
+          // Regular model response
+          return {
+            role: "model",
+            parts: [{ text: msg.text }]
+          };
+        }
+      })
+      .filter(msg => msg !== null); // Remove null entries
 
-    // setMessages((prev) => [...prev, confirmationMessage]);
+    console.log("Clean chat history for confirmation:", chatHistory);
 
-    // Copy last 4 messages but not the welcome message
-    const filteredMessages = messages.filter(
-      (msg) => msg.id !== "welcome-new" && msg.id !== "welcome"
-    );
-    const previousChat = filteredMessages.map((msg) => ({
-      role: msg.isUser ? "user" : "model",
-      content: msg.text,
-    }));
-
-    // Build Gemini contents format with confirmation type
+    // Build Gemini contents format with confirmation
     const currentChat = [
-      ...previousChat.map((m) => ({
-        role: m.role,
-        parts: [{ text: m.content }],
-      })),
-      // add the confirmation message
+      ...chatHistory,
       {
         role: "user",
         parts: [{ text: "I confirm this tool call." }],
@@ -333,6 +439,36 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
 
       const newMessages: ChatMessage[] = [];
 
+      // If there are toolDetails, this means there was a function call that needs confirmation
+      // Store the function call in the proper format for chat history
+      if (response.data.toolDetails) {
+        const functionCall = {
+          name: response.data.toolDetails.toolName,
+          args: response.data.toolDetails.toolArgs
+        };
+        
+        newMessages.push({
+          id: "functionCall" + Date.now().toString(),
+          type: "function_call",
+          text: JSON.stringify(functionCall, null, 2),
+          role: "model",
+          timestamp: new Date(),
+          toolId: response.data.toolId,
+        });
+      }
+
+      // If there was a function call that was executed immediately, store it properly for chat history
+      if (response.data.functionCall) {
+        newMessages.push({
+          id: "functionCall" + Date.now().toString(),
+          type: "function_call",
+          text: JSON.stringify(response.data.functionCall, null, 2),
+          role: "model",
+          timestamp: new Date(),
+          toolId: response.data.toolId,
+        });
+      }
+
       // If toolMessage was returned (role === "function")
       if (response.data.toolResponse) {
         newMessages.push({
@@ -342,43 +478,33 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
             response.data.toolResponse,
             null,
             2
-          ), // format nicely
-          isUser: false,
-          timestamp: new Date(),
-        });
-      }
-
-      if (response.data.toolDetails) {
-        newMessages.push({
-          id: Date.now().toString(),
-          type: "function",
-          text: JSON.stringify(response.data.toolDetails, null, 2), // format nicely
-          isUser: false,
+          ),
+          role: "function",
           timestamp: new Date(),
         });
       }
 
       // Then push the actual AI response
       if (response.data.message) {
-      newMessages.push({
-        id: Date.now().toString(),
-        type: response.data.type || "response",
-        text: response.data.message,
-        isUser: false,
-        timestamp: new Date(),
-        toolId: response.data.toolId,
-      });
-    }
+        newMessages.push({
+          id: Date.now().toString(),
+          type: response.data.type || "response",
+          text: response.data.message,
+          role: "model",
+          timestamp: new Date(),
+          toolId: response.data.toolId,
+        });
+      }
 
       setMessages((prev) => [...prev, ...newMessages]);
 
-      console.log("Messages after AI confirmation:", messages);
+      console.log("Messages after AI confirmation:", newMessages);
     } catch (error) {
       console.error("Error sending confirmation:", error);
       const errorMessage: ChatMessage = {
         id: Date.now().toString(),
         text: "Sorry, I couldn't process the confirmation. Please try again later.",
-        isUser: false,
+        role: "model",
         timestamp: new Date(),
       };
       setMessages((prev) => [...prev, errorMessage]);
@@ -518,10 +644,17 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
             ) : (
               <div class="chat-messages-container">
                 <div class="chat-messages">
-                  {messages.map((message) => (
+                  {messages
+                    .filter((message) => 
+                      (message.role === "user") || 
+                      (message.role === "model" && 
+                       message.type !== "function" && 
+                       message.type !== "function_call")
+                    )
+                    .map((message) => (
                     <div
                       key={message.id}
-                      class={`chat-message ${message.isUser ? "user-message" : "ai-message"}`}
+                      class={`chat-message ${message.role === "user" ? "user-message" : "ai-message"}`}
                     >
                       <div class="message-wrapper">
                         <div class="message-content">
@@ -562,7 +695,7 @@ export function ChatInterface({ isOpen, onClose }: ChatInterfaceProps) {
                             {formatTime(message.timestamp)}
                           </div>
                         </div>
-                        {message.isUser && (
+                        {message.role === "user" && (
                           <div class="message-actions">
                             <oj-button
                               class="save-message-button"
