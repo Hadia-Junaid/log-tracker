@@ -11,9 +11,9 @@ declare module 'express' {
 
 
 export async function chatHandler(req: Request, res: Response) {
-    const is_admin = false;
+    //const is_admin = false;
     const userId = req.user.id;
-    //const is_admin = req.user.is_admin;
+    const is_admin = req.user.is_admin;
     const client = getMcpClient();
     const { query, history } = req.body;
     const response = await client.processQuery(query, userId, is_admin, history);
